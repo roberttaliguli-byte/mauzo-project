@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Mteja;
+use App\Models\History;
+use Illuminate\Support\Facades\Auth;
+
+class MtejaController extends Controller
+{
+    /**
+     * Display all customers belonging to the logged-in user's company.
+     */
+    public function index()
+    {
+        $company = Auth::user()->company;
+
+        // Fetch only customers for the logged-in user's company
+        $wateja = Mteja::where('company_id', $company->id)->get();
+
+        return view('wateja.index', compact('wateja'));
+    }
+
+    /**
+     * Store a new customer and record history.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'jina' => 'required|string|max:255',
+            'simu' => 'required|string|max:20',
+            'barua_pepe' => 'nullable|email|max:255',
+            'anapoishi' => 'nullable|string|max:255',
+            'maelezo' => 'nullable|string',
+        ]);
+
+        $company = Auth::user()->company;
+
+        // ✅ Attach company_id automatically
+        $mteja = $company->wateja()->create([
+            'jina' => $request->jina,
+            'simu' => $request->simu,
+            'barua_pepe' => $request->barua_pepe,
+            'anapoishi' => $request->anapoishi,
+            'maelezo' => $request->maelezo,
+        ]);
+
+        // 🧾 Record history
+        History::create([
+            'user'    => Auth::user()->name,
+            'action'  => 'Aliongeza Mteja',
+            'details' => "Mteja mpya: {$mteja->jina}, Simu: {$mteja->simu}",
+        ]);
+
+        return redirect()->route('wateja.index')->with('success', 'Mteja ameongezwa kikamilifu!');
+    }
+
+    /**
+     * Update customer details and record changes in history.
+     */
+    public function update(Request $request, Mteja $mteja)
+    {
+        // Ensure this record belongs to the same company
+        if ($mteja->company_id !== Auth::user()->company_id) {
+            abort(403, 'Huna ruhusa ya kubadilisha mteja huyu.');
+        }
+
+        $request->validate([
+            'jina' => 'required|string|max:255',
+            'simu' => 'required|string|max:20',
+            'barua_pepe' => 'nullable|email|max:255',
+            'anapoishi' => 'nullable|string|max:255',
+            'maelezo' => 'nullable|string',
+        ]);
+
+        $oldData = $mteja->getOriginal();
+
+        $mteja->update($request->only('jina', 'simu', 'barua_pepe', 'anapoishi', 'maelezo'));
+
+        // Detect changes
+        $changes = [];
+        foreach (['jina', 'simu', 'barua_pepe', 'anapoishi', 'maelezo'] as $field) {
+            if ($oldData[$field] != $mteja->$field) {
+                $changes[] = ucfirst($field) . ": '{$oldData[$field]}' → '{$mteja->$field}'";
+            }
+        }
+
+        $changeDetails = empty($changes) ? 'Hakuna mabadiliko makubwa.' : implode(', ', $changes);
+
+        // 🧾 Record history
+        History::create([
+            'user'    => Auth::user()->name,
+            'action'  => 'Amebadilisha Mteja',
+            'details' => "Mteja: {$mteja->jina} - {$changeDetails}",
+        ]);
+
+        return redirect()->route('wateja.index')->with('success', 'Taarifa za mteja zimebadilishwa kikamilifu!');
+    }
+
+    /**
+     * Delete a customer and record in history.
+     */
+    public function destroy(Mteja $mteja)
+    {
+        if ($mteja->company_id !== Auth::user()->company_id) {
+            abort(403, 'Huna ruhusa ya kufuta mteja huyu.');
+        }
+
+        $name = $mteja->jina;
+        $simu = $mteja->simu;
+
+        $mteja->delete();
+
+        // 🧾 Record history
+        History::create([
+            'user'    => Auth::user()->name,
+            'action'  => 'Amefuta Mteja',
+            'details' => "Mteja: {$name}, Simu: {$simu}",
+        ]);
+
+        return redirect()->route('wateja.index')->with('success', 'Mteja amefutwa kikamilifu!');
+    }
+}
