@@ -20,7 +20,7 @@ class User extends Authenticatable
 
 // inside User model
 protected $fillable = [
-    'name', 'email', 'password', 'username', 'company_id'
+    'name', 'email', 'password', 'username', 'company_id', 'role',
 ];
 
 

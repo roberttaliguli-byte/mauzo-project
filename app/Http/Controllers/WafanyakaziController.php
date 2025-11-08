@@ -50,8 +50,9 @@ class WafanyakaziController extends Controller
             'simu_ndugu' => $request->simu_ndugu,
             'username' => $request->username,
             'password' => $request->password ? bcrypt($request->password) : null,
-            'tarehe_kuzaliwa' => $request->tarehe_kuzaliwa,
+            'tarehe_kuzaliwa' => $request->tarehe_kuzaliwa,          
             'company_id' => Auth::user()->company_id, // ✅ Link to company
+            'getini' => 'simama', // ✅ Default value for getini
         ]);
 
         return redirect()->route('wafanyakazi.index')->with('success', 'Mfanyakazi amesajiliwa kikamilifu!');
@@ -87,6 +88,7 @@ class WafanyakaziController extends Controller
             'username' => 'nullable|string|max:255',
             'password' => 'nullable|string|max:255',
             'tarehe_kuzaliwa' => 'nullable|date',
+            'getini' => 'in:simama,ingia',
         ]);
 
         $data = $request->all();

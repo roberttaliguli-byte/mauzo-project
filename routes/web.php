@@ -16,36 +16,36 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\DashboardController;
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
-
-
+// =========================
+// Public routes
+// =========================
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'registerPost'])->name('register.post');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
 
+Route::get('/', function () {
+    return redirect()->route('login');
+});
 
-
-
+// =========================
+// Protected routes (auth middleware)
+// =========================
 Route::middleware('auth')->group(function () {
-    Route::get('/password/change', [ProfileController::class, 'editPassword'])->name('password.change');
-    Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Dashboard route (points to controller)
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
+
     Route::get('/password/change', [PasswordController::class, 'showChangeForm'])->name('password.change');
     Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
+
+    Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
-// protected route example
-Route::get('/dashboard', function() {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
-
-Route::get('/', function () {
-return redirect('/login');
-});
 // Wateja Routes
 // ================================
 Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');

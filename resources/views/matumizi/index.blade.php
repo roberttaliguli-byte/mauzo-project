@@ -1,266 +1,441 @@
 @extends('layouts.app')
 
 @section('title', 'Matumizi - DEMODAY')
+@section('page-title', 'Matumizi')
+@section('page-subtitle', 'Usimamizi wa matumizi yote - ' . now()->format('d/m/Y'))
 
 @section('content')
-<div x-data="{
-        active: 'taarifa',
-        search: '',
-        showEditModal: false,
-        showDeleteModal: false,
-        editItem: {},
-        deleteId: null,
-        today: '{{ now()->format('d/m/Y') }}',
-    }" class="min-h-screen">
-
-    <!-- Tabs -->
-    <div class="bg-gray-100 px-6 py-3 border-b flex gap-6 text-gray-700 font-medium print:hidden">
-        <button 
-            @click="active='taarifa'" 
-            :class="active==='taarifa' ? 'text-blue-700 font-bold underline' : 'hover:text-blue-600'">
-            Taarifa za Matumizi
-        </button>
-        <button 
-            @click="active='ingiza'" 
-            :class="active==='ingiza' ? 'text-blue-700 font-bold underline' : 'hover:text-blue-600'">
-            Ingiza Matumizi
-        </button>
-    </div>
-
-    <!-- Main Area -->
-    <main class="p-6 overflow-auto">
-
-        <!-- ===================== Taarifa za Matumizi ===================== -->
-        <div x-show="active==='taarifa'" x-cloak>
-            <div class="flex justify-between items-center mb-4 print:hidden">
-                <h3 class="text-lg font-semibold">Taarifa za Matumizi</h3>
-                <div class="flex gap-2">
-                    <input type="text" placeholder="Tafuta..." x-model="search" class="border px-2 py-1 rounded" />
-                    <button onclick="window.print()" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
-                        <i class="fas fa-print"></i> Print
-                    </button>
+<div x-data="matumiziApp()" class="space-y-6">
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-red-100 text-red-600 mr-4">
+                    <i class="fas fa-money-bill-wave text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Jumla ya Matumizi (Mwezi)</p>
+                    <h3 class="text-2xl font-bold text-gray-800">TZS @php echo number_format($matumizi->sum('gharama'), 2); @endphp</h3>
                 </div>
             </div>
-
-            <!-- Printable Header -->
-            <div class="hidden print:block text-center mb-4">
-                <h2 class="text-xl font-bold">Ripoti ya Matumizi - DEMODAY</h2>
-                <p class="text-gray-600 text-sm">Imechapishwa: {{ now()->format('d/m/Y H:i') }}</p>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-blue-100 text-blue-600 mr-4">
+                    <i class="fas fa-calendar-day text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Matumizi Ya Leo</p>
+                    <h3 class="text-2xl font-bold text-gray-800">TZS @php 
+                        $todayTotal = $matumizi->where('created_at', '>=', today())->sum('gharama');
+                        echo number_format($todayTotal, 2);
+                    @endphp</h3>
+                </div>
             </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-green-100 text-green-600 mr-4">
+                    <i class="fas fa-list text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Idadi ya Matumizi</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ $matumizi->count() }}</h3>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+            <div class="flex items-center">
+                <div class="p-3 rounded-lg bg-purple-100 text-purple-600 mr-4">
+                    <i class="fas fa-chart-pie text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Wastani wa Matumizi</p>
+                    <h3 class="text-2xl font-bold text-gray-800">TZS @php 
+                        $average = $matumizi->count() > 0 ? $matumizi->avg('gharama') : 0;
+                        echo number_format($average, 2);
+                    @endphp</h3>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            <!-- Data Table -->
-            <table class="w-full table-auto border-collapse text-sm">
-                <thead class="bg-gray-200 print:bg-gray-100">
-                    <tr>
-                        <th class="border px-4 py-2 text-left">Tarehe</th>
-                        <th class="border px-4 py-2 text-left">Matumizi</th>
-                        <th class="border px-4 py-2 text-left">Maelezo</th>
-                        <th class="border px-4 py-2 text-right">Gharama</th>
-                        <th class="border px-4 py-2 text-left">Muda</th>
-                        <th class="border px-4 py-2 text-center print:hidden">Vitendo</th>
+    <!-- Page Navigation Tabs -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 card-hover">
+        <div class="flex space-x-6 border-b border-gray-200">
+            <button 
+                @click="activeTab = 'taarifa'" 
+                :class="activeTab === 'taarifa' ? 'border-b-2 border-green-500 text-green-600 font-semibold' : 'text-gray-500 hover:text-gray-700'" 
+                class="pb-3 px-1 transition-colors flex items-center"
+            >
+                <i class="fas fa-table mr-2"></i>Taarifa za Matumizi
+            </button>
+            <button 
+                @click="activeTab = 'ingiza'" 
+                :class="activeTab === 'ingiza' ? 'border-b-2 border-green-500 text-green-600 font-semibold' : 'text-gray-500 hover:text-gray-700'" 
+                class="pb-3 px-1 transition-colors flex items-center"
+            >
+                <i class="fas fa-plus-circle mr-2"></i>Ingiza Matumizi Mpya
+            </button>
+        </div>
+    </div>
+
+<!-- Matumizi Information Tab -->
+<div x-show="activeTab === 'taarifa'" class="space-y-6">
+    <!-- Search and Actions -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-800">Orodha ya Matumizi</h2>
+            <div class="flex space-x-3">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        placeholder="Tafuta matumizi..." 
+                        x-model="searchQuery"
+                        class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                </div>
+                <button 
+                    onclick="window.print()" 
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                >
+                    <i class="fas fa-print mr-2"></i> Print
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gradient-to-r from-green-600 to-green-700 border-b">
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-white">Tarehe & Muda</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-white">Aina ya Matumizi</th>
+                        <th class="px-6 py-4 text-left text-sm font-semibold text-white">Maelezo</th>
+                        <th class="px-6 py-4 text-right text-sm font-semibold text-white">Gharama (TZS)</th>
+                        <th class="px-6 py-4 text-center text-sm font-semibold text-white print:hidden">Vitendo</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-100">
                     @forelse($matumizi as $item)
-                        <tr 
-                            x-show="search === '' || '{{ strtolower($item->aina) }}'.includes(search.toLowerCase()) || '{{ strtolower($item->maelezo) }}'.includes(search.toLowerCase())"
-                            :class="('{{ $item->created_at->format('d/m/Y') }}' === today) ? 'bg-yellow-100' : ''">
-                            <td class="border px-4 py-2">{{ $item->created_at->format('d/m/Y') }}</td>
-                            <td class="border px-4 py-2">{{ $item->aina }}</td>
-                            <td class="border px-4 py-2">{{ $item->maelezo }}</td>
-                            <td class="border px-4 py-2 text-right">{{ number_format($item->gharama, 2) }}</td>
-                            <td class="border px-4 py-2">{{ $item->created_at->format('H:i') }}</td>
-                            <td class="border px-4 py-2 text-center print:hidden">
-                                <button class="text-blue-600 hover:underline mr-2" @click="editItem = {{ $item->toJson() }}; showEditModal = true;">Badili</button>
-                                <button class="text-red-600 hover:underline" @click="deleteId = {{ $item->id }}; showDeleteModal = true;">Futa</button>
+                        <tr class="hover:bg-green-50 transition-all duration-200 
+                            @if($item->created_at->format('Y-m-d') === now()->format('Y-m-d')) bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400 @else bg-white @endif"
+                            x-show="searchQuery === '' || 
+                                   '{{ strtolower($item->aina) }}'.includes(searchQuery.toLowerCase()) || 
+                                   '{{ strtolower($item->maelezo) }}'.includes(searchQuery.toLowerCase())">
+                            
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-semibold text-gray-800">{{ $item->created_at->format('d/m/Y') }}</div>
+                                <div class="text-xs text-green-600 font-medium">{{ $item->created_at->format('H:i') }}</div>
+                            </td>
+                            
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold 
+                                    @if($item->aina === 'Mshahara') bg-green-100 text-green-800 border border-green-200
+                                    @elseif($item->aina === 'Bank') bg-emerald-100 text-emerald-800 border border-emerald-200
+                                    @elseif($item->aina === 'Kodi TRA') bg-teal-100 text-teal-800 border border-teal-200
+                                    @elseif($item->aina === 'Kodi Pango') bg-lime-100 text-lime-800 border border-lime-200
+                                    @else bg-green-50 text-green-700 border border-green-100 @endif">
+                                    {{ $item->aina }}
+                                </span>
+                            </td>
+                            
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-700">{{ $item->maelezo ?: '--' }}</div>
+                            </td>
+                            
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-bold text-green-700">{{ number_format($item->gharama, 2) }}</div>
+                            </td>
+                            
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium print:hidden">
+                                <div class="flex justify-center space-x-3">
+                                    <button 
+                                        @click="editItem({{ $item->toJson() }})" 
+                                        class="text-amber-600 hover:text-amber-800 transition-colors transform hover:scale-110"
+                                        title="Badili"
+                                    >
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button 
+                                        @click="deleteItem({{ $item->id }}, '{{ $item->aina }}')" 
+                                        class="text-red-500 hover:text-red-700 transition-colors transform hover:scale-110"
+                                        title="Futa"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4">Hakuna matumizi bado.</td>
+                            <td colspan="5" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-receipt text-5xl text-green-300 mb-4"></i>
+                                    <p class="text-lg font-semibold text-gray-600 mb-2">Hakuna matumizi bado.</p>
+                                    <p class="text-sm text-gray-500 mb-4">Anza kwa kuongeza matumizi yako ya kwanza</p>
+                                    <button 
+                                        @click="activeTab = 'ingiza'" 
+                                        class="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105 flex items-center shadow-lg"
+                                    >
+                                        <i class="fas fa-plus-circle mr-2"></i> Ingiza Matumizi ya Kwanza
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>
+                @if($matumizi->count() > 0)
+                <tfoot>
+                    <tr class="bg-gradient-to-r from-green-800 to-green-900">
+                        <td colspan="3" class="px-6 py-4 text-sm font-bold text-white text-right">Jumla ya Matumizi:</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="text-sm font-bold text-white text-lg">
+                                TZS {{ number_format($matumizi->sum('gharama'), 2) }}
+                            </div>
+                        </td>
+                        <td class="print:hidden"></td>
+                    </tr>
+                </tfoot>
+                @endif
             </table>
         </div>
 
-        <!-- ===================== Ingiza Matumizi ===================== -->
-        <div x-show="active==='ingiza'" x-cloak>
-            <form method="POST" action="{{ route('matumizi.store') }}">
-                @csrf
-                <div x-data="{ selectedAina: '' }" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="font-medium">Chagua Aina ya Matumizi</label>
-                        <select name="aina" x-model="selectedAina" class="w-full border p-2 rounded" required>
-                            <option value="">-- Chagua Aina --</option>
-                            <option value="Bank">Bank</option>
-                            <option value="Mshahara">Mshahara</option>
-                            <option value="Kodi TRA">Kodi TRA</option>
-                            <option value="Kodi Pango">Kodi Pango</option>
-                            <option value="Mengineyo">Mengineyo</option>
-                        </select>
 
-                        <div x-show="selectedAina === 'Mengineyo'" class="mt-2">
-                            <label class="font-medium">Andika Aina Mpya ya Matumizi</label>
-                            <input 
-                                type="text" 
-                                name="aina_mpya" 
-                                class="w-full border p-2 rounded mt-1" 
-                                placeholder="Mfano: Chakula, Mafuta..." 
-                                required>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="font-medium">Maelezo</label>
-                        <input type="text" name="maelezo" class="w-full border p-2 rounded" placeholder="Maelezo ya matumizi (hiari)">
-                    </div>
-
-                    <div>
-                        <label class="font-medium">Gharama</label>
-                        <input type="number" name="gharama" class="w-full border p-2 rounded" placeholder="Kiasi cha gharama" required>
-                    </div>
-                </div>
-
-                <div class="flex gap-4 mt-4">
-                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">💾 Hifadhi</button>
-                    <button type="reset" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">↺ Weka Upya</button>
-                </div>
-            </form>
-        </div>
-    </main>
-
-    <!-- ===================== Edit Modal ===================== -->
-    <div x-show="showEditModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-        <div class="bg-white rounded-lg p-6 w-96 shadow">
-            <h2 class="text-lg font-semibold mb-4">Badili Matumizi</h2>
-            <form :action="'/matumizi/' + editItem.id" method="POST">
-                @csrf
-                @method('PUT')
-                <label>Aina</label>
-                <input type="text" name="aina" x-model="editItem.aina" class="w-full border p-2 rounded mb-2">
-                <label>Maelezo</label>
-                <input type="text" name="maelezo" x-model="editItem.maelezo" class="w-full border p-2 rounded mb-2">
-                <label>Gharama</label>
-                <input type="number" name="gharama" x-model="editItem.gharama" class="w-full border p-2 rounded mb-4">
-                <div class="flex justify-end gap-3">
-                    <button type="button" @click="showEditModal=false" class="bg-gray-400 text-white px-3 py-1 rounded">Ghairi</button>
-                    <button type="submit" class="bg-blue-600 text-white px-3 py-1 rounded">Hifadhi</button>
-                </div>
-            </form>
-        </div>
     </div>
+</div>
+    <!-- Ingiza Matumizi Tab -->
+    <div x-show="activeTab === 'ingiza'" class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">Ingiza Matumizi Mpya</h2>
+        <form method="POST" action="{{ route('matumizi.store') }}" class="space-y-6">
+            @csrf
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Aina ya Matumizi</label>
+                    <select name="aina" x-model="selectedAina" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                        <option value="">-- Chagua Aina ya Matumizi --</option>
+                        <option value="Bank">Bank</option>
+                        <option value="Mshahara">Mshahara</option>
+                        <option value="Kodi TRA">Kodi TRA</option>
+                        <option value="Kodi Pango">Kodi Pango</option>
+                        <option value="Mengineyo">Mengineyo</option>
+                    </select>
 
-    <!-- ===================== Delete Confirmation ===================== -->
-    <div x-show="showDeleteModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-        <div class="bg-white rounded-lg p-6 w-80 shadow text-center">
-            <p class="mb-4 text-gray-800">Una uhakika unataka kufuta matumizi haya?</p>
-            <form :action="'/matumizi/' + deleteId" method="POST" class="flex justify-center gap-3">
-                @csrf
-                @method('DELETE')
-                <button type="button" @click="showDeleteModal=false" class="bg-gray-400 text-white px-4 py-2 rounded">Hapana</button>
-                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded">Ndiyo, Futa</button>
-            </form>
+                    <div x-show="selectedAina === 'Mengineyo'" class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Andika Aina Mpya ya Matumizi</label>
+                        <input 
+                            type="text" 
+                            name="aina_mpya" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" 
+                            placeholder="Mfano: Chakula, Mafuta, Umeme..." 
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Maelezo</label>
+                    <input 
+                        type="text" 
+                        name="maelezo" 
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" 
+                        placeholder="Maelezo ya ziada kuhusu matumizi..."
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Kiasi cha Gharama (TZS)</label>
+                    <input 
+                        type="number" 
+                        name="gharama" 
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" 
+                        placeholder="Ingiza kiasi cha matumizi" 
+                        step="0.01"
+                        min="0"
+                        required
+                    >
+                </div>
+
+                <div class="flex items-end">
+                    <div class="w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tarehe</label>
+                        <input 
+                            type="date" 
+                            name="tarehe" 
+                            value="{{ now()->format('Y-m-d') }}"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <button 
+                    type="submit" 
+                    class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                >
+                    <i class="fas fa-save mr-2"></i> Hifadhi Matumizi
+                </button>
+                <button 
+                    type="reset" 
+                    class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors flex items-center"
+                >
+                    <i class="fas fa-redo mr-2"></i> Safisha Fomu
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div 
+    x-show="showEditModal" 
+    x-cloak
+    class="fixed inset-0 z-50 flex items-center justify-center modal-overlay"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+>
+    <div 
+        class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4"
+        @click.outside="showEditModal = false"
+    >
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Badili Taarifa za Matumizi</h3>
+        </div>
+        <form :action="'/matumizi/' + editingItem.id" method="POST" class="p-6 space-y-4">
+            @csrf
+            @method('PUT')
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Aina ya Matumizi</label>
+                <input 
+                    type="text" 
+                    name="aina" 
+                    x-model="editingItem.aina"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                >
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Maelezo</label>
+                <input 
+                    type="text" 
+                    name="maelezo" 
+                    x-model="editingItem.maelezo"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                >
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Kiasi cha Gharama (TZS)</label>
+                <input 
+                    type="number" 
+                    name="gharama" 
+                    x-model="editingItem.gharama"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    step="0.01"
+                    min="0"
+                    required
+                >
+            </div>
+            <div class="flex justify-end space-x-3 pt-4">
+                <button 
+                    type="button" 
+                    @click="showEditModal = false"
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                    Ghairi
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                    Hifadhi Mabadiliko
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div 
+    x-show="showDeleteModal"
+    x-cloak
+    class="fixed inset-0 z-50 flex items-center justify-center modal-overlay bg-black bg-opacity-50"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+>
+
+    <div 
+        class="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4"
+        @click.outside="showDeleteModal = false"
+    >
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Thibitisha Kufuta Matumizi</h3>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-700 mb-6">
+                Una uhakika unataka kufuta matumizi ya <span x-text="deletingItemName" class="font-semibold"></span>?
+                Hatua hii haiwezi kutenduliwa.
+            </p>
+            <div class="flex justify-end space-x-3">
+                <button 
+                    @click="showDeleteModal = false"
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                    Ghairi
+                </button>
+                <form :action="'/matumizi/' + deletingItemId" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button 
+                        type="submit" 
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                        Ndio, Futa
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 @endsection
-@push('styles')
-<style>
-    [x-cloak] {
-        display: none !important;
-    }
 
-    /* ======= Table Styling (Screen) ======= */
-    table {
-        border-collapse: collapse;
-        width: 100%;
-        font-size: 14px;
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-
-    th {
-        background-color: #1f2937; /* dark gray */
-        color: white;
-        font-weight: 600;
-        text-align: left;
-        padding: 10px 12px;
-        border: 1px solid #374151;
-    }
-
-    td {
-        padding: 9px 12px;
-        border: 1px solid #d1d5db;
-        color: #374151;
-    }
-
-    tbody tr:nth-child(even) {
-        background-color: #f9fafb;
-    }
-
-    tbody tr:hover {
-        background-color: #eef2ff;
-    }
-
-    /* Highlight today's records */
-    tr.bg-yellow-100 {
-        background-color: #fef3c7 !important;
-    }
-
-    /* ======= Print Styling ======= */
-    @media print {
-        body {
-            background: white !important;
-            -webkit-print-color-adjust: exact !important;
-            color-adjust: exact !important;
-        }
-
-        aside,
-        header,
-        .print\:hidden,
-        .print\:hidden * {
-            display: none !important;
-        }
-
-        table {
-            width: 100%;
-            font-size: 13px;
-            border: 1px solid #000;
-        }
-
-        th {
-            background-color: #e5e7eb !important;
-            color: #000 !important;
-            border: 1px solid #000;
-            font-weight: bold;
-            padding: 6px;
-        }
-
-        td {
-            border: 1px solid #000;
-            padding: 5px;
-        }
-
-        h2 {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 6px;
-        }
-
-        p {
-            margin-bottom: 12px;
-            font-size: 13px;
-            color: #333;
-        }
-
-        @page {
-            size: A4 portrait;
-            margin: 1.5cm;
+@push('scripts')
+<script>
+function matumiziApp() {
+    return {
+        activeTab: 'taarifa',
+        searchQuery: '',
+        selectedAina: '',
+        showEditModal: false,
+        showDeleteModal: false,
+        editingItem: {},
+        deletingItemId: null,
+        deletingItemName: '',
+        
+        editItem(item) {
+            this.editingItem = { ...item };
+            this.showEditModal = true;
+        },
+        
+        deleteItem(id, name) {
+            this.deletingItemId = id;
+            this.deletingItemName = name;
+            this.showDeleteModal = true;
         }
     }
-</style>
+}
+</script>
 @endpush
-
-

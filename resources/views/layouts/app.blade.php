@@ -3,154 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Dashboard')</title>
+    <title>@yield('title', 'DEMODAY')</title>
+    <style>[x-cloak]{display:none!important}</style>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js for sidebar toggle -->
+    
+    <!-- Alpine.js for interactivity -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" crossorigin="anonymous"></script>
+    
+    <style>
+        /* Custom Styles */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sidebar-item {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .sidebar-item:hover::before {
+            left: 100%;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .notification-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #01723d;
+            border-radius: 10px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #00632d;
+        }
+        
+        .active-nav-item {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        [x-cloak] { display: none !important; }
+    </style>
+    
+    @stack('styles')
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-50 font-sans">
 
-<div x-data="{ sidebarOpen: true }" class="flex h-screen overflow-hidden">
+<div x-data="app()" class="flex h-screen overflow-hidden">
 
-    <!-- Sidebar -->
+    <!-- Enhanced Sidebar -->
     <aside 
-        :class="sidebarOpen ? 'w-64' : 'w-16'" 
-        class="bg-green-800 text-white flex flex-col transition-all duration-300"
+        :class="sidebarOpen ? 'w-64' : 'w-20'" 
+        class="gradient-bg text-white flex flex-col transition-all duration-300 shadow-xl z-20"
     >
-        <div class="p-6 text-center border-b border-gray-700 flex flex-col items-center">
-            <div x-show="sidebarOpen" x-transition class="text-2xl font-bold mb-1">DEMODAY</div>
-            <div x-show="sidebarOpen" x-transition class="text-sm">Boss</div>
+        <!-- Logo Section -->
+        <div class="p-5 text-center border-b border-green-700 flex flex-col items-center">
+            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-green-800 font-bold text-lg mb-2">
+                D
+            </div>
+            <div x-show="sidebarOpen" x-transition class="text-xl font-bold mb-1">DEMODAY</div>
+            <div x-show="sidebarOpen" x-transition class="text-xs text-green-200">Boss System</div>
             <button 
                 @click="sidebarOpen = !sidebarOpen" 
-                class="mt-2 text-gray-300 hover:text-white text-xl focus:outline-none"
+                class="mt-3 p-2 rounded-full bg-green-700 hover:bg-green-600 transition-all duration-200"
             >
-                ☰
+                <span x-show="sidebarOpen">◀</span>
+                <span x-show="!sidebarOpen">▶</span>
             </button>
         </div>
 
-        <nav class="flex-1 p-4 space-y-2">
-            <a href="{{ url('/dashboard') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>🏠</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Dashboard</span>
-            </a>
-            <a href="{{ url('/mauzo') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>🛒</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Mauzo</span>
-            </a>
-            <a href="{{ url('/madeni') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>💳</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Madeni</span>
-            </a>
-            <a href="{{ url('/matumizi') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>💰</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Matumizi</span>
-            </a>
-            <a href="{{ url('/bidhaa') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>📦</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Bidhaa</span>
-            </a>
-            <a href="{{ url('/manunuzi') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>🚚</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Manunuzi</span>
-            </a>
-            <a href="{{ url('/wafanyakazi') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>👔</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Wafanyakazi</span>
-            </a>
-            <a href="{{ url('/masaplaya') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>🏆</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Masaplaya</span>
-            </a>
-            <a href="{{ url('/wateja') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>👥</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Wateja</span>
-            </a>
-            <a href="{{ url('/uchambuzi') }}" class="flex items-center px-4 py-2 hover:bg-yellow-600 rounded transition" :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                <span>📊</span>
-                <span x-show="sidebarOpen" x-transition class="ml-3">Uchambuzi</span>
-            </a>
+        <!-- Navigation Menu -->
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin">
+            @include('partials.navigation')
         </nav>
+        
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-green-700 text-center">
+            <div x-show="sidebarOpen" x-transition class="text-xs text-green-200">
+                {{ now()->format('d/m/Y H:i') }}
+            </div>
+        </div>
     </aside>
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col transition-all duration-300">
+    <div class="flex-1 flex flex-col overflow-hidden">
 
-        <!-- Header -->
-        <header class="bg-white shadow px-6 py-4 flex justify-end items-center space-x-6 text-gray-600">
-            <!-- Email Icon -->
-            <button title="Barua Pepe" class="hover:text-green-700">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                     viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-            </button>
+        <!-- Enhanced Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">@yield('page-title', 'Dashboard')</h1>
+                    <p class="text-sm text-gray-600 mt-1">@yield('page-subtitle', 'Karibu tena, Meneja!')</p>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Search Bar -->
 
-            <!-- Alert Icon -->
-            <button title="Arifa" class="hover:text-green-700 relative">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                     viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V4a2 2 0 10-4 0v1.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                </svg>
-                <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            <!-- Profile Dropdown -->
-            <div class="relative">
-                <button id="profileMenuButton" title="Profaili"
-                        class="hover:text-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 rounded-full p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                         viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </button>
-
-                <div id="profileDropdown"
-                     class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-                    <a href="{{ route('password.change') }}"
-                       class="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-700">
-                        🔐 Badili Neno Siri
-                    </a>
-                    <a href="{{ route('company.info') }}"
-                       class="block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-700">
-                        🏢 Taarifa ya Kampuni
-                    </a>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit"
-                                class="w-full text-left px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-700">
-                            🚪 Toka
+                    <!-- Notification bell -->
+                    <button class="relative p-2 text-gray-600 hover:text-green-600 transition-colors">
+                        <span class="text-xl">🔔</span>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center notification-dot">3</span>
+                    </button>
+                    
+                    <!-- Messages -->
+                    <button class="relative p-2 text-gray-600 hover:text-green-600 transition-colors">
+                        <span class="text-xl">✉️</span>
+                        <span class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">5</span>
+                    </button>
+                    
+                    <!-- User profile -->
+                    <div class="relative" x-data="{ profileOpen: false }">
+                        <button @click="profileOpen = !profileOpen" 
+                                class="flex items-center space-x-2 focus:outline-none">
+                            <div class="w-10 h-10 bg-gradient-to-r from-green-600 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+                                B
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <div class="text-sm font-medium text-gray-700">Boss</div>
+                                <div class="text-xs text-gray-500">Meneja</div>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
-                    </form>
+                        
+                        <!-- Profile Dropdown -->
+                        <div x-show="profileOpen" @click.away="profileOpen = false" 
+                             x-transition:enter="transition ease-out duration-100" 
+                             x-transition:enter-start="transform opacity-0 scale-95" 
+                             x-transition:enter-end="transform opacity-100 scale-100" 
+                             x-transition:leave="transition ease-in duration-75" 
+                             x-transition:leave-start="transform opacity-100 scale-100" 
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+                            <a href="{{ route('password.change') }}" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">
+                                🔐 Badili Neno Siri
+                            </a>
+                            <a href="{{ route('company.info') }}" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">
+                                🏢 Taarifa ya Kampuni
+                            </a>
+                            <div class="border-t border-gray-100 my-1"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" 
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">
+                                    🚪 Toka
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    const button = document.getElementById('profileMenuButton');
-                    const dropdown = document.getElementById('profileDropdown');
-
-                    button.addEventListener('click', () => {
-                        dropdown.classList.toggle('hidden');
-                    });
-
-                    document.addEventListener('click', (e) => {
-                        if (!button.contains(e.target) && !dropdown.contains(e.target)) {
-                            dropdown.classList.add('hidden');
-                        }
-                    });
-                });
-            </script>
         </header>
 
         <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto p-6">
+        <main class="flex-1 overflow-y-auto p-6 scrollbar-thin">
             @yield('content')
         </main>
     </div>
 </div>
 
+<script>
+function app() {
+    return {
+        sidebarOpen: true,
+        searchQuery: '',
+        // Add any global app state here
+    }
+}
+</script>
+
+@stack('scripts')
 </body>
 </html>

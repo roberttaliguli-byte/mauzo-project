@@ -21,7 +21,6 @@ class MatumiziController extends Controller
             ->get();
 
         return view('matumizi.index', compact('matumizi'));
-        
     }
 
     /**
@@ -34,6 +33,7 @@ class MatumiziController extends Controller
             'maelezo' => 'nullable|string',
             'aina' => 'nullable|string|max:255',
             'aina_mpya' => 'nullable|string|max:255',
+            'tarehe' => 'nullable|date',
         ]);
 
         $company = Auth::user()->company;
@@ -47,6 +47,7 @@ class MatumiziController extends Controller
             'aina' => $aina,
             'maelezo' => $request->maelezo,
             'gharama' => $request->gharama,
+            'created_at' => $request->tarehe ?: now(),
         ]);
 
         // 🧾 Hifadhi historia

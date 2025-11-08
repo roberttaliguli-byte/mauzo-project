@@ -22,6 +22,7 @@ class Wafanyakazi extends Model
         'username',
         'password',
         'tarehe_kuzaliwa',
+        'getini',
         'company_id', // ✅ added for company linkage
     ];
 

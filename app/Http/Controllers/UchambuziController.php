@@ -141,26 +141,39 @@ class UchambuziController extends Controller
             'today' => $sikuData,
         ];
 
-        // ===============================
-        // 7️⃣ Thamani ya Kampuni (company total value)
-        // ===============================
-        $thamaniKampuni = $company->bidhaa->sum(fn($b) => $b->idadi * $b->bei_kuuza);
-        $thamaniKampuniFormatted = 'Tsh ' . number_format($thamaniKampuni, 2);
+// ===============================
+// 7️⃣ Thamani ya Kampuni (company total value)
+// ===============================
 
-        // ===============================
-        // 8️⃣ Bidhaa List
-        // ===============================
-        $bidhaaList = $company->bidhaa()
-            ->select('jina', 'aina', 'kipimo', 'idadi', 'bei_kuuza')
-            ->get()
-            ->map(function ($b) {
-                $b->thamani = $b->idadi * $b->bei_kuuza;
-                return $b;
-            });
+// Before sales (based on bei_nunua)
+$thamaniBefore = $company->bidhaa->sum(fn($b) => $b->idadi * $b->bei_nunua);
 
-        // ===============================
-        // Return View
-        // ===============================
+// After sales (based on bei_kuuza)
+$thamaniAfter = $company->bidhaa->sum(fn($b) => $b->idadi * $b->bei_kuuza);
+
+// Faida (Profit)
+$faida = $thamaniAfter - $thamaniBefore;
+
+// Formatted total for top summary
+$thamaniKampuniFormatted = 'Tsh ' . number_format($thamaniAfter, 2);
+
+// ===============================
+// 8️⃣ Bidhaa List (for table)
+// ===============================
+$bidhaaList = $company->bidhaa()
+    ->select('jina', 'aina', 'kipimo', 'idadi', 'bei_nunua', 'bei_kuuza')
+    ->get()
+    ->map(function ($b) {
+        $b->thamani_kabla = $b->idadi * $b->bei_nunua;
+        $b->thamani_baada = $b->idadi * $b->bei_kuuza;
+        $b->faida = $b->thamani_baada - $b->thamani_kabla;
+        return $b;
+    });
+
+// ===============================
+// Return to View
+// ===============================
+
         return view('uchambuzi.index', compact(
             'faidaBidhaa',
             'faidaSiku',
@@ -169,7 +182,11 @@ class UchambuziController extends Controller
             'mauzo',
             'mwenendoSummary',
             'thamaniKampuniFormatted',
-            'bidhaaList'
+            'bidhaaList',
+            'thamaniBefore',
+            'thamaniAfter',
+            'faida',
+                    
         ));
     }
 

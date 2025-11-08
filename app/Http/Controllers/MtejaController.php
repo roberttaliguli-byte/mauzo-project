@@ -19,7 +19,15 @@ class MtejaController extends Controller
         // Fetch only customers for the logged-in user's company
         $wateja = Mteja::where('company_id', $company->id)->get();
 
-        return view('wateja.index', compact('wateja'));
+        // Add statistics for the dashboard
+        $stats = [
+            'total_customers' => $wateja->count(),
+            'new_customers_this_month' => $wateja->where('created_at', '>=', now()->startOfMonth())->count(),
+            'total_debts' => 'TZS 0', // You can add debt calculation later
+            'vip_customers' => 0, // You can add VIP logic later
+        ];
+
+        return view('wateja.index', compact('wateja', 'stats'));
     }
 
     /**
@@ -120,5 +128,29 @@ class MtejaController extends Controller
         ]);
 
         return redirect()->route('wateja.index')->with('success', 'Mteja amefutwa kikamilifu!');
+    }
+
+    /**
+     * Search customers (for AJAX requests)
+     */
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+        $companyId = Auth::user()->company_id;
+
+        $wateja = Mteja::where('company_id', $companyId)
+            ->where(function($q) use ($query) {
+                $q->where('jina', 'LIKE', "%{$query}%")
+                  ->orWhere('simu', 'LIKE', "%{$query}%")
+                  ->orWhere('barua_pepe', 'LIKE', "%{$query}%")
+                  ->orWhere('anapoishi', 'LIKE', "%{$query}%");
+            })
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'wateja' => $wateja,
+            'count' => $wateja->count(),
+        ]);
     }
 }
