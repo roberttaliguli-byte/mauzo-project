@@ -126,6 +126,105 @@ class MadeniController extends Controller
     }
 
     /**
+     * Show the form for editing a debt.
+     */
+    public function edit($id)
+    {
+        $companyId = Auth::user()->company_id;
+        $deni = Madeni::where('id', $id)
+                      ->where('company_id', $companyId)
+                      ->firstOrFail();
+        
+        return view('madeni.edit', compact('deni'));
+    }
+
+    /**
+     * Update a debt (company specific).
+     */
+    public function update(Request $request, Madeni $madeni)
+    {
+        $companyId = Auth::user()->company_id;
+
+        // Check authorization
+        abort_unless($madeni->company_id === $companyId, 403, 'Huna ruhusa ya kubadilisha deni hili.');
+
+        $request->validate([
+            'bidhaa_id'     => 'required|exists:bidhaas,id',
+            'idadi'         => 'required|integer|min:1',
+            'bei'           => 'required|numeric|min:0',
+            'jina_mkopaji'  => 'required|string|max:255',
+            'simu'          => 'nullable|string|max:20',
+        ]);
+
+        return DB::transaction(function () use ($request, $madeni, $companyId) {
+            // Get old and new product
+            $oldBidhaa = $madeni->bidhaa;
+            $newBidhaa = Bidhaa::where('id', $request->bidhaa_id)
+                               ->where('company_id', $companyId)
+                               ->firstOrFail();
+
+            // Calculate differences
+            $oldIdadi = $madeni->idadi;
+            $newIdadi = $request->idadi;
+
+            // If product changed, return old stock and reduce new stock
+            if ($oldBidhaa->id !== $newBidhaa->id) {
+                // Return old product stock
+                $oldBidhaa->increment('idadi', $oldIdadi);
+                
+                // Check new product stock
+                if ($newIdadi > $newBidhaa->idadi) {
+                    return back()->withErrors(['idadi' => "Idadi imezidi stock iliyopo ({$newBidhaa->idadi})."]);
+                }
+                
+                // Reduce new product stock
+                $newBidhaa->decrement('idadi', $newIdadi);
+            } else {
+                // Same product, adjust stock based on quantity change
+                $difference = $newIdadi - $oldIdadi;
+                
+                if ($difference > 0) {
+                    // Increased quantity, check stock
+                    if ($difference > $newBidhaa->idadi) {
+                        return back()->withErrors(['idadi' => "Idadi imezidi stock iliyopo ({$newBidhaa->idadi})."]);
+                    }
+                    $newBidhaa->decrement('idadi', $difference);
+                } elseif ($difference < 0) {
+                    // Decreased quantity, return stock
+                    $newBidhaa->increment('idadi', abs($difference));
+                }
+            }
+
+            // Calculate new total and balance
+            $newJumla = $request->idadi * $request->bei;
+            $amountPaid = $madeni->jumla - $madeni->baki; // Amount already paid
+            $newBaki = max($newJumla - $amountPaid, 0);
+
+            // Update customer info if needed
+            if ($madeni->mteja_id) {
+                $madeni->mteja->update([
+                    'jina' => $request->jina_mkopaji,
+                    'simu' => $request->simu ?? $madeni->simu,
+                ]);
+            }
+
+            // Update debt
+            $madeni->update([
+                'bidhaa_id'    => $request->bidhaa_id,
+                'idadi'        => $request->idadi,
+                'bei'          => $request->bei,
+                'jumla'        => $newJumla,
+                'baki'         => $newBaki,
+                'jina_mkopaji' => $request->jina_mkopaji,
+                'simu'         => $request->simu ?? $madeni->simu,
+            ]);
+
+            return redirect()->route('madeni.index')
+                ->with('success', 'Taarifa za deni zimebadilishwa kikamilifu!');
+        });
+    }
+
+    /**
      * Record a repayment for a debt (company specific).
      */
     public function rejesha(Request $request, Madeni $madeni)
@@ -181,22 +280,19 @@ class MadeniController extends Controller
         return DB::transaction(function () use ($madeni) {
             $bidhaa = $madeni->bidhaa;
 
+            // Return stock only if debt is not fully paid
             if ($bidhaa && $madeni->baki > 0) {
                 $bidhaa->increment('idadi', $madeni->idadi);
             }
 
+            // Delete all related repayments first
+            $madeni->marejeshos()->delete();
+
+            // Delete the debt
             $madeni->delete();
 
             return redirect()->route('madeni.index')
                 ->with('success', 'Deni limefutwa kikamilifu na stock imeboreshwa.');
         });
     }
-
-    public function edit($id)
-{
-    $deni = Madeni::findOrFail($id);
-    // return your edit view with the data
-    return view('madeni.edit', compact('deni'));
-}
-
 }

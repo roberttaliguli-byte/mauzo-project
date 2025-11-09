@@ -30,7 +30,7 @@
 
     <!-- TAB 1: Orodha ya Wateja -->
     <div x-show="activeTab === 'taarifa'" class="space-y-6">
-        <div class="bg-amber-400 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="bg-green-200 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-gray-800">Orodha ya Wateja</h2>
                 <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">

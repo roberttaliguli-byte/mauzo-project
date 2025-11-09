@@ -60,6 +60,10 @@ Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.in
 Route::post('/matumizi', [MatumiziController::class, 'store'])->name('matumizi.store');
 Route::put('/matumizi/{id}', [MatumiziController::class, 'update'])->name('matumizi.update');
 Route::delete('/matumizi/{id}', [MatumiziController::class, 'destroy'])->name('matumizi.destroy');
+// Matumizi Routes
+Route::resource('matumizi', MatumiziController::class);
+Route::post('/matumizi/sajili-aina', [MatumiziController::class, 'sajiliAina'])->name('matumizi.sajili-aina');
+Route::delete('/matumizi/aina/{id}', [MatumiziController::class, 'destroyAina'])->name('matumizi.destroy-aina');
 
 // ================================
 // Wafanyakazi Routes
@@ -77,9 +81,11 @@ Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
 Route::post('/mauzo', [MauzoController::class, 'store'])->name('mauzo.store');
 Route::delete('/mauzo/{mauzo}', [MauzoController::class, 'destroy'])->name('mauzo.destroy');
 Route::post('/mauzo/kikapu/store', [MauzoController::class, 'storeKikapu']) ->name('mauzo.store.kikapu');
+Route::post('/mauzo/kikapu/kopesha', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kikapu.loan');
 Route::post('/mauzo/kopesha', [MauzoController::class, 'storeKikapuLoan'])
     ->name('mauzo.store.kopesha');
 
+    
 // ✅ Hifadhi Mauzo kwa kutumia Barcode
 Route::post('/mauzo/barcode', [MauzoController::class, 'storeBarcode'])->name('mauzo.store.barcode');
 
@@ -123,10 +129,12 @@ Route::delete('/manunuzi/{manunuzi}', [ManunuziController::class, 'destroy'])->n
 // ================================
 Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
 Route::post('/madeni', [MadeniController::class, 'store'])->name('madeni.store');
-Route::post('/madeni/{madeni}/rejesha', [MadeniController::class, 'rejesha'])->name('madeni.rejesha');
-Route::delete('/madeni/{madeni}', [MadeniController::class, 'destroy'])->name('madeni.destroy');
+
 Route::resource('madeni', MadeniController::class);
 
+Route::put('/madeni/{madeni}', [MadeniController::class, 'update'])->name('madeni.update');
+Route::post('/madeni/{madeni}/rejesha', [MadeniController::class, 'rejesha'])->name('madeni.rejesha');
+Route::delete('/madeni/{madeni}', [MadeniController::class, 'destroy'])->name('madeni.destroy');
 
 // ================================
 // Uchambuzi Routes

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Matumizi;
+use App\Models\AinaYaMatumizi; // Add this model
 use Illuminate\Support\Facades\Auth;
 use App\Models\History;
 
@@ -20,7 +21,15 @@ class MatumiziController extends Controller
             ->latest()
             ->get();
 
-        return view('matumizi.index', compact('matumizi'));
+        // Get all registered expense types for this company
+        $aina_za_matumizi = AinaYaMatumizi::where('company_id', $company->id)
+            ->withCount(['matumizi' => function($query) use ($company) {
+                $query->where('company_id', $company->id);
+            }])
+            ->latest()
+            ->get();
+
+        return view('matumizi.index', compact('matumizi', 'aina_za_matumizi'));
     }
 
     /**
@@ -58,6 +67,48 @@ class MatumiziController extends Controller
         ]);
 
         return redirect()->route('matumizi.index')->with('success', 'Matumizi yamehifadhiwa kwa mafanikio!');
+    }
+
+    /**
+     * Sajili aina mpya ya matumizi
+     */
+    public function sajiliAina(Request $request)
+    {
+        $request->validate([
+            'jina' => 'required|string|max:255',
+            'maelezo' => 'nullable|string',
+            'rangi' => 'nullable|string',
+            'kategoria' => 'nullable|string'
+        ]);
+
+        $company = Auth::user()->company;
+
+        // Check if expense type already exists for this company
+        $existingAina = AinaYaMatumizi::where('company_id', $company->id)
+            ->where('jina', $request->jina)
+            ->first();
+
+        if ($existingAina) {
+            return redirect()->back()->with('error', 'Aina ya matumizi tayari imesajiliwa!');
+        }
+
+        // Create new expense type
+        AinaYaMatumizi::create([
+            'jina' => $request->jina,
+            'maelezo' => $request->maelezo,
+            'rangi' => $request->rangi,
+            'kategoria' => $request->kategoria,
+            'company_id' => $company->id,
+        ]);
+
+        // 🧾 Hifadhi historia
+        History::create([
+            'user' => Auth::user()->name,
+            'action' => 'Amesajili Aina Mpya ya Matumizi',
+            'details' => "Aina: {$request->jina}, Kategoria: {$request->kategoria}",
+        ]);
+
+        return redirect()->route('matumizi.index')->with('success', 'Aina mpya ya matumizi imesajiliwa kikamilifu!');
     }
 
     /**
@@ -115,5 +166,37 @@ class MatumiziController extends Controller
         ]);
 
         return redirect()->route('matumizi.index')->with('success', 'Matumizi yamefutwa kikamilifu.');
+    }
+
+    /**
+     * Futa aina ya matumizi
+     */
+    public function destroyAina($id)
+    {
+        $aina = AinaYaMatumizi::findOrFail($id);
+
+        if ($aina->company_id !== Auth::user()->company_id) {
+            abort(403, 'Huna ruhusa ya kufuta aina hii ya matumizi.');
+        }
+
+        // Check if this expense type is being used
+        $matumiziCount = Matumizi::where('company_id', Auth::user()->company_id)
+            ->where('aina', $aina->jina)
+            ->count();
+
+        if ($matumiziCount > 0) {
+            return redirect()->back()->with('error', 'Huwezi kufuta aina hii ya matumizi kwa sababu inatumika kwenye matumizi ' . $matumiziCount . '.');
+        }
+
+        $aina->delete();
+
+        // 🧾 Rekodi historia
+        History::create([
+            'user' => Auth::user()->name,
+            'action' => 'Amefuta Aina ya Matumizi',
+            'details' => "Aina: {$aina->jina}",
+        ]);
+
+        return redirect()->route('matumizi.index')->with('success', 'Aina ya matumizi imefutwa kikamilifu.');
     }
 }

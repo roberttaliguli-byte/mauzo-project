@@ -11,7 +11,7 @@
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
             <div class="w-2 h-6 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-            Vipimo vya Kiuchumi (Leo)
+            Muhtasari wa mauzo(Leo)
         </h2>
     </div>
     
@@ -78,7 +78,7 @@
                     <div class="p-3 bg-white/20 rounded-2xl">
                         <i class="fas fa-chart-line text-xl"></i>
                     </div>
-                    <div class="text-white/70 text-sm font-medium">Faida</div>
+                    <div class="text-white/70 text-sm font-medium">Fedha halisi</div>
                 </div>
                 <div class="font-bold text-3xl mb-2">{{ number_format($faidaHalisiLeo, 0) }} <span class="text-sm">Tsh</span></div>
                 <div class="flex items-center text-white/80 text-sm">
@@ -93,11 +93,11 @@
 <!-- Stock Overview & Top Products Side by Side -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <!-- Left Side: Stock Overview -->
-    <div class="bg-emerald-200 rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div class="bg-emerald-200 hover-emerald rounded-2xl shadow-sm border border-gray-100 p-6">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <div class="w-2 h-5 bg-gradient-to-b from-green-500 to-emerald-500 rounded-full"></div>
-                Muhtasari wa Hisa
+                Muhtasari wa Bidhaa
             </h3>
             <div class="text-sm text-gray-500">
                 <i class="fas fa-boxes mr-1"></i> Jumla
@@ -136,7 +136,7 @@
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <div class="w-2 h-5 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
-                Bidhaa Zenye Mauzo Makubwa Leo
+                Bidhaa Zenye Mauzo Makubwa
             </h3>
             <span class="text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 px-3 py-1 rounded-full">
                 <i class="fas fa-crown mr-1"></i> Top 3
@@ -176,7 +176,7 @@
                     <div class="inline-flex p-4 rounded-2xl bg-gray-100 text-gray-400 mb-4">
                         <i class="fas fa-chart-bar text-2xl"></i>
                     </div>
-                    <h4 class="text-lg font-medium text-gray-600 mb-2">Hakuna mauzo ya leo bado</h4>
+                    <h4 class="text-lg font-medium text-gray-600 mb-2">Hakuna mauzo kwa sasa</h4>
                     <p class="text-gray-500 text-sm">Mauzo yanaonekana hapo baadaye</p>
                 </div>
             @endif
@@ -190,7 +190,7 @@
     <div class="bg-emerald-200 rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2 mb-6">
             <div class="w-2 h-5 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
-            Hali ya Hisa
+            Hali ya Bidhaa
         </h3>
         
         <div class="grid grid-cols-3 gap-4">

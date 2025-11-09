@@ -44,6 +44,8 @@ $bidhaaTopSales = Bidhaa::where('company_id', $companyId)
                         ->take(3)
                         ->get();
 
+
+                        
         // --- Today Financial Metrics ---
         $mauzoLeo = Mauzo::whereHas('bidhaa', fn($q) => $q->where('company_id', $companyId))
                           ->whereDate('created_at', $today)

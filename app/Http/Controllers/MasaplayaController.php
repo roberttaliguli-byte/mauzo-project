@@ -10,20 +10,21 @@ use Illuminate\Support\Facades\Auth;
 class MasaplayaController extends Controller
 {
     /**
-     * Orodha ya wasambazaji wa kampuni ya mtumiaji aliyeingia
+     * Display list of all masaplaya (suppliers)
      */
     public function index()
     {
         $company = Auth::user()->company;
 
-        // Fetch only suppliers belonging to this company
-        $masaplaya = Masaplaya::where('company_id', $company->id)->latest()->get();
+        $masaplaya = Masaplaya::where('company_id', $company->id)
+            ->latest()
+            ->get();
 
         return view('masaplaya.index', compact('masaplaya'));
     }
 
     /**
-     * Hifadhi masaplaya mpya
+     * Store a new masaplaya
      */
     public function store(Request $request)
     {
@@ -38,17 +39,8 @@ class MasaplayaController extends Controller
 
         $company = Auth::user()->company;
 
-        // ✅ Create supplier linked to the logged-in user’s company
-        $masaplaya = $company->masaplaya()->create([
-            'jina' => $request->jina,
-            'simu' => $request->simu,
-            'barua_pepe' => $request->barua_pepe,
-            'anaopoishi' => $request->anaopoishi,
-            'ofisi' => $request->ofisi,
-            'maelezo' => $request->maelezo,
-        ]);
+        $masaplaya = $company->masaplaya()->create($request->all());
 
-        // 🧾 Record to history
         History::create([
             'user'    => Auth::user()->name,
             'action'  => 'Ameongeza Masaplaya',
@@ -59,11 +51,10 @@ class MasaplayaController extends Controller
     }
 
     /**
-     * Badilisha taarifa za masaplaya
+     * Update an existing masaplaya
      */
     public function update(Request $request, Masaplaya $masaplaya)
     {
-        // Ensure this record belongs to the user's company
         if ($masaplaya->company_id !== Auth::user()->company_id) {
             abort(403, 'Huna ruhusa ya kubadilisha msambazaji huyu.');
         }
@@ -77,50 +68,33 @@ class MasaplayaController extends Controller
             'maelezo' => 'nullable|string',
         ]);
 
-        $oldData = $masaplaya->getOriginal();
+        $masaplaya->update($request->all());
 
-        $masaplaya->update($request->only('jina', 'simu', 'barua_pepe', 'anaopoishi', 'ofisi', 'maelezo'));
-
-        // Detect changes
-        $changes = [];
-        foreach (['jina', 'simu', 'barua_pepe', 'anaopoishi', 'ofisi', 'maelezo'] as $field) {
-            if ($oldData[$field] != $masaplaya->$field) {
-                $changes[] = ucfirst($field) . ": '{$oldData[$field]}' → '{$masaplaya->$field}'";
-            }
-        }
-
-        $changeDetails = empty($changes) ? 'Hakuna mabadiliko makubwa.' : implode(', ', $changes);
-
-        // 🧾 Record to history
         History::create([
             'user'    => Auth::user()->name,
             'action'  => 'Amebadilisha Masaplaya',
-            'details' => "Masaplaya: {$masaplaya->jina} - {$changeDetails}",
+            'details' => "Masaplaya: {$masaplaya->jina} amebadilishwa.",
         ]);
 
-        return redirect()->route('masaplaya.index')->with('success', 'Taarifa za masaplaya zimebadilishwa kikamilifu!');
+        return redirect()->route('masaplaya.index')->with('success', 'Taarifa zimebadilishwa kikamilifu!');
     }
 
     /**
-     * Futa masaplaya
+     * Delete masaplaya
      */
     public function destroy(Masaplaya $masaplaya)
     {
-        // Ensure record belongs to user’s company
         if ($masaplaya->company_id !== Auth::user()->company_id) {
             abort(403, 'Huna ruhusa ya kufuta msambazaji huyu.');
         }
 
         $name = $masaplaya->jina;
-        $simu = $masaplaya->simu;
-
         $masaplaya->delete();
 
-        // 🧾 Record to history
         History::create([
             'user'    => Auth::user()->name,
             'action'  => 'Amefuta Masaplaya',
-            'details' => "Masaplaya: {$name}, Simu: {$simu}",
+            'details' => "Masaplaya: {$name}",
         ]);
 
         return redirect()->route('masaplaya.index')->with('success', 'Masaplaya amefutwa kikamilifu!');

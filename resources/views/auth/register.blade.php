@@ -289,6 +289,3 @@
 @endsection
 
 
-roberttaliguli-byte/mauzo-project
-
-C:\xampp\htdocs\mauzo
