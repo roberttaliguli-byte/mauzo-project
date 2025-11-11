@@ -84,7 +84,7 @@
 
   <!-- Auto Summary -->
   <div x-show="!manualDateSelect" 
-       class="bg-amber-500 border border-blue-100 rounded-xl p-6 shadow-inner space-y-3 transition-all duration-500">
+       class="bg-gray border border-black-100 rounded-xl p-6 shadow-inner space-y-3 transition-all duration-500">
 
     <h3 class="font-bold text-black text-lg">Muhtasari wa <span x-text="viewType"></span></h3>
     <template x-if="summary">
@@ -152,26 +152,27 @@
   <!-- Title -->
   <h2 class="text-2xl font-bold text-green-800 mb-2">💼 Thamani ya Kampuni</h2>
 
-  <!-- Summary Boxes -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!-- Before Sales -->
-    <div class="bg-amber-500 text-black rounded-2xl p-5 shadow-md transform hover:scale-105 transition">
-      <h3 class="text-lg font-semibold mb-1">Thamani Kabla ya mauzo</h3>
-      <p class="text-2xl font-bold" x-text="format(beforeSales)"></p>
-    </div>
-
-    <!-- After Sales -->
-    <div class="bg-amber-400 text-black rounded-2xl p-5 shadow-md transform hover:scale-105 transition">
-      <h3 class="text-lg font-semibold mb-1">Thamani Baadaya mauzo</h3>
-      <p class="text-2xl font-bold" x-text="format(afterSales)"></p>
-    </div>
-
-    <!-- Profit -->
-    <div class="bg-amber-500 text-black rounded-2xl p-5 shadow-md transform hover:scale-105 transition">
-      <h3 class="text-lg font-semibold mb-1">Faida (Profit)</h3>
-      <p class="text-2xl font-bold" x-text="format(faida)"></p>
-    </div>
+ <!-- Summary Boxes -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Before Sales -->
+  <div class="bg-white text-black rounded-2xl p-5 shadow-md border border-gray-300 transform hover:scale-105 transition">
+    <h3 class="text-lg font-semibold mb-1">Thamani Kabla ya mauzo</h3>
+    <p class="text-2xl font-bold" x-text="format(beforeSales)"></p>
   </div>
+
+  <!-- After Sales -->
+  <div class="bg-white text-black rounded-2xl p-5 shadow-md border border-gray-300 transform hover:scale-105 transition">
+    <h3 class="text-lg font-semibold mb-1">Thamani Baadaya mauzo</h3>
+    <p class="text-2xl font-bold" x-text="format(afterSales)"></p>
+  </div>
+
+  <!-- Profit -->
+  <div class="bg-white text-black rounded-2xl p-5 shadow-md border border-gray-300 transform hover:scale-105 transition">
+    <h3 class="text-lg font-semibold mb-1">Faida (Profit)</h3>
+    <p class="text-2xl font-bold" x-text="format(faida)"></p>
+  </div>
+</div>
+
 
   <!-- Company Total Value -->
   <div class="mt-6">

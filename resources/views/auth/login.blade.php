@@ -17,7 +17,8 @@
     <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent mb-1">
       Karibu Tena
     </h1>
-    <p class="text-gray-300 text-sm">Ingia kwenye akaunti yako</p>
+    <p class="text-gray-300 text-sm">Ingia kwenye mfumo</p>
+    <p class="text-gray-400 text-xs mt-1">(Mwajiri, Msimamizi au Mfanyakazi)</p>
   </div>
 
   <form method="POST" action="{{ route('login.post') }}" class="space-y-4">
@@ -144,12 +145,14 @@
       </div>
     </div>
 
-    <!-- Forgot Password -->
+    <!-- User Type Info -->
     <div class="text-center">
-      <a href="#" class="inline-flex items-center gap-1 text-gray-400 hover:text-yellow-400 transition-colors duration-300 text-xs group">
-        <i class="fas fa-question-circle text-xs"></i>
-        <span>Huwezi kuingia? <span class="text-yellow-400 group-hover:text-yellow-300 font-semibold">Pata Neno la Siri</span></span>
-      </a>
+      <p class="text-gray-400 text-xs mb-2">Unaweza kuingia kama:</p>
+      <div class="flex justify-center gap-4 text-xs">
+        <span class="text-yellow-400">• Mwajiri</span>
+        <span class="text-blue-400">• Msimamizi</span>
+        <span class="text-green-400">• Mfanyakazi</span>
+      </div>
     </div>
   </form>
 </div>

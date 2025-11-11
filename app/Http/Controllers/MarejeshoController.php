@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Marejesho;
 use App\Models\Madeni;
+use App\Models\Mauzo;
+use App\Models\Bidhaa;
 
 class MarejeshoController extends Controller
 {

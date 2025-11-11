@@ -11,26 +11,50 @@ use App\Models\Bidhaa;
 use App\Models\Matumizi;
 use App\Models\Madeni;
 use App\Models\Mteja;
+use App\Models\Marejesho;
+
 
 class MauzoController extends Controller
 {
     // -----------------------------
     //  Display main sales page
     // -----------------------------
-    public function index()
-    {
-        $companyId = Auth::user()->company_id;
+public function index()
+{
+    $companyId = Auth::user()->company_id;
 
-        $bidhaa = Bidhaa::where('company_id', $companyId)->orderBy('jina')->get();
-        $mauzos = Mauzo::with('bidhaa')
-            ->where('company_id', $companyId)
-            ->latest()
-            ->get();
-        $matumizi = Matumizi::where('company_id', $companyId)->latest()->get();
-        $wateja = Mteja::where('company_id', $companyId)->orderBy('jina')->get();
+    $bidhaa = Bidhaa::where('company_id', $companyId)
+        ->orderBy('jina')
+        ->get();
 
-        return view('mauzo.index', compact('bidhaa', 'mauzos', 'matumizi', 'wateja'));
-    }
+    $mauzos = Mauzo::with('bidhaa')
+        ->where('company_id', $companyId)
+        ->latest()
+        ->get();
+
+    $matumizi = Matumizi::where('company_id', $companyId)
+        ->latest()
+        ->get();
+
+    $wateja = Mteja::where('company_id', $companyId)
+        ->orderBy('jina')
+        ->get();
+
+    // 🔥 Add this line
+    $madeni = Madeni::with('bidhaa')
+        ->where('company_id', $companyId)
+        ->latest()
+        ->get();
+
+     $marejeshos = DB::table('marejeshos')
+        ->join('madenis', 'marejeshos.madeni_id', '=', 'madenis.id')
+        ->where('madenis.company_id', $companyId)
+        ->select('marejeshos.*')
+        ->get();
+
+    return view('mauzo.index', compact('bidhaa', 'mauzos', 'matumizi', 'wateja', 'madeni','marejeshos'));
+}
+
 
     // -----------------------------
     //  Store sale (normal or loan)

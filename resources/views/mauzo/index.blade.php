@@ -194,138 +194,280 @@
                 </h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-                    <!-- Mapato -->
-                    <div class="group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                        <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-4 rounded-2xl shadow-xl border border-blue-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                    <i class="fas fa-money-bill-wave text-white text-lg"></i>
-                                </div>
-                                <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-blue-100 uppercase tracking-wide mb-1">Mapato</div>
-                            <div class="font-bold text-2xl text-white mb-1">{{ number_format($mauzos->where('created_at', '>=', today())->sum('jumla')) }}</div>
-                            <div class="text-xs text-blue-100 flex items-center">
-                                <i class="fas fa-trending-up mr-1"></i>
-                                Jumla ya mauzo
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Faida -->
-                    <div class="group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                        <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 p-4 rounded-2xl shadow-xl border border-green-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                    <i class="fas fa-chart-line text-white text-lg"></i>
-                                </div>
-                                <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">Faida</div>
-                            <div class="font-bold text-2xl text-white mb-1">
-                                @php
-                                    $faidaLeo = 0;
-                                    foreach($mauzos->where('created_at', '>=', today()) as $mauzo) {
-                                        $faidaLeo += ($mauzo->bei - ($mauzo->bidhaa->bei_nunua ?? 0)) * $mauzo->idadi;
-                                    }
-                                @endphp
-                                {{ number_format($faidaLeo) }}
-                            </div>
-                            <div class="text-xs text-green-100 flex items-center">
-                                <i class="fas fa-calculator mr-1"></i>
-                                Mapato - Gharama
-                            </div>
-                        </div>
-                    </div>
+<!-- Mapato -->
+<div class="group relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
 
-                    <!-- Matumizi -->
-                    <div class="group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                        <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-4 rounded-2xl shadow-xl border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                    <i class="fas fa-receipt text-white text-lg"></i>
-                                </div>
-                                <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-amber-100 uppercase tracking-wide mb-1">Matumizi</div>
-                            <div class="font-bold text-2xl text-white mb-1">{{ number_format($matumizi->where('created_at', '>=', today())->sum('gharama')) }}</div>
-                            <div class="text-xs text-amber-100 flex items-center">
-                                <i class="fas fa-hand-holding-usd mr-1"></i>
-                                Gharama zote
-                            </div>
-                        </div>
-                    </div>
+    <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-4 rounded-2xl shadow-xl border border-blue-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
 
-                    <!-- Fedha Leo -->
-                    <div class="group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-cyan-700 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                        <div class="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-4 rounded-2xl shadow-xl border border-purple-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                    <i class="fas fa-wallet text-white text-lg"></i>
-                                </div>
-                                <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-purple-100 uppercase tracking-wide mb-1">Fedha Leo</div>
-                            <div class="font-bold text-2xl text-white mb-1">
-                                {{ number_format($mauzos->where('created_at', '>=', today())->sum('jumla') - $matumizi->where('created_at', '>=', today())->sum('gharama')) }}
-                            </div>
-                            <div class="text-xs text-purple-100 flex items-center">
-                                <i class="fas fa-cash-register mr-1"></i>
-                                Fedha taslimu
-                            </div>
-                        </div>
-                    </div>
+        <!-- Top Icon and Arrow -->
+        <div class="flex justify-between items-start mb-3">
+            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <i class="fas fa-money-bill-wave text-white text-lg"></i>
+            </div>
+            <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
+        </div>
 
-                    <!-- Faida Halisi Leo -->
-                    <div class="group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                        <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-4 rounded-2xl shadow-xl border border-teal-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                    <i class="fas fa-chart-pie text-white text-lg"></i>
-                                </div>
-                                <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-teal-100 uppercase tracking-wide mb-1">Faida Halisi</div>
-                            <div class="font-bold text-2xl text-white mb-1">
-                                @php
-                                    $faidaLeo = 0;
-                                    foreach($mauzos->where('created_at', '>=', today()) as $mauzo) {
-                                        $faidaLeo += ($mauzo->bei - ($mauzo->bidhaa->bei_nunua ?? 0)) * $mauzo->idadi;
-                                    }
-                                    $faidaHalisi = $faidaLeo - $matumizi->where('created_at', '>=', today())->sum('gharama');
-                                @endphp
-                                {{ number_format($faidaHalisi) }}
-                            </div>
-                            <div class="text-xs text-teal-100 flex items-center">
-                                <i class="fas fa-filter mr-1"></i>
-                                Baada ya matumizi
-                            </div>
-                        </div>
-                    </div>
+        <!-- Title -->
+        <div class="text-xs font-semibold text-blue-100 uppercase tracking-wide mb-2">
+            Mapato ya leo
+        </div>
+
+        <!-- Mapato Data -->
+        @php
+            $mapatoMauzo = $mauzos->where('created_at', '>=', today())->sum('jumla');
+            $mapatoMadeni = $marejeshos->where('tarehe', today()->toDateString())->sum('kiasi');
+            $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
+        @endphp
+
+        <div class="space-y-2 text-white text-sm">
+            <div class="flex justify-between items-center">
+                <span class="text-blue-100">Mauzo:</span>
+                <span class="font-semibold">{{ number_format($mapatoMauzo) }}</span>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <span class="text-blue-100">Madeni:</span>
+                <span class="font-semibold">{{ number_format($mapatoMadeni) }}</span>
+            </div>
+
+            <div class="flex justify-between items-center border-t border-white/20 pt-2 mt-2">
+                <span class="text-blue-50 font-semibold">Jumla:</span>
+                <span class="font-bold text-lg">{{ number_format($jumlaMapato) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Faida -->
+<div class="group relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+
+    <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 p-4 rounded-2xl shadow-xl border border-green-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
+        
+        <!-- Icon & Arrow -->
+        <div class="flex justify-between items-start mb-3">
+            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <i class="fas fa-chart-line text-white text-lg"></i>
+            </div>
+            <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
+        </div>
+
+        <!-- Title -->
+        <div class="text-xs font-semibold text-green-100 uppercase tracking-wide mb-2">
+            Faida ya leo
+        </div>
+
+        <!-- Faida Data -->
+@php
+    $faidaMauzo = $mauzos->where('created_at', '>=', today())
+        ->sum(fn($m) => ($m->bei - ($m->bidhaa->bei_nunua ?? 0)) * $m->idadi);
+
+    $faidaMarejesho = 0;
+    $todayMarejeshos = $marejeshos->where('tarehe', today()->toDateString());
+    
+    // Debug: Check what we're working with
+    // dd($todayMarejeshos->first()); // Uncomment to see the first item
+    
+    foreach($todayMarejeshos as $marejesho) {
+        // Check if relationships are loaded
+        if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+            $profitMargin = $marejesho->madeni->bidhaa->bei_kuuza - $marejesho->madeni->bidhaa->bei_nunua;
+            $paymentRatio = $marejesho->kiasi / $marejesho->madeni->jumla;
+            $faidaMarejesho += $profitMargin * $marejesho->madeni->idadi * $paymentRatio;
+        }
+    }
+
+    $jumlaFaida = $faidaMauzo + $faidaMarejesho;
+@endphp
+
+<div class="space-y-2 text-white text-sm">
+    <div class="flex justify-between items-center">
+        <span class="text-green-100">Mauzo:</span>
+        <span class="font-semibold">{{ number_format($faidaMauzo) }}</span>
+    </div>
+
+    <div class="flex justify-between items-center">
+        <span class="text-green-100">Marejesho:</span>
+        <span class="font-semibold">{{ number_format($faidaMarejesho) }}</span>
+    </div>
+
+    <div class="flex justify-between items-center border-t border-white/20 pt-2 mt-2">
+        <span class="text-green-50 font-semibold">Jumla:</span>
+        <span class="font-bold text-lg">{{ number_format($jumlaFaida) }}</span>
+    </div>
+</div>
+
+        
+    </div>
+</div>
+
+
+<!-- Matumizi -->
+<div class="group relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+
+    <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-4 rounded-2xl shadow-xl border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
+
+        <div class="flex justify-between items-start mb-3">
+            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <i class="fas fa-receipt text-white text-lg"></i>
+            </div>
+            <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
+        </div>
+
+        <div class="text-xs font-semibold text-amber-100 uppercase tracking-wide mb-2">Matumizi</div>
+
+        <div class="space-y-2 text-white text-sm">
+            @php
+                $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
+                $matumiziWiki = $matumizi->where('created_at', '>=', now()->startOfWeek())->sum('gharama');
+                $matumiziJumla = $matumizi->sum('gharama');
+            @endphp
+
+            <div class="flex justify-between items-center">
+                <span class="text-amber-100">Leo:</span>
+                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-amber-100">Wiki hii:</span>
+                <span class="font-semibold">{{ number_format($matumiziWiki) }}</span>
+            </div>
+            <div class="flex justify-between items-center border-t border-white/20 pt-2 mt-2">
+                <span class="text-amber-50 font-semibold">Jumla:</span>
+                <span class="font-bold text-lg">{{ number_format($matumiziJumla) }}</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- Fedha Leo -->
+<div class="group relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-cyan-700 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+
+    <div class="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-4 rounded-2xl shadow-xl border border-cyan-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
+
+        <div class="flex justify-between items-start mb-3">
+            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <i class="fas fa-wallet text-white text-lg"></i>
+            </div>
+            <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
+        </div>
+
+        <div class="text-xs font-semibold text-cyan-100 uppercase tracking-wide mb-2">Fedha Leo</div>
+
+        @php
+            $mauzoLeo = $mauzos->where('created_at', '>=', today())->sum('jumla');
+            $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
+            $fedhaLeo = $mauzoLeo - $matumiziLeo;
+        @endphp
+
+        <div class="space-y-2 text-white text-sm">
+            <div class="flex justify-between items-center">
+                <span class="text-cyan-100">Mapato:</span>
+                <span class="font-semibold">{{ number_format($mauzoLeo) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-cyan-100">Matumizi:</span>
+                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+            </div>
+            <div class="flex justify-between items-center border-t border-white/20 pt-2 mt-2">
+                <span class="text-cyan-50 font-semibold">Jumla:</span>
+                <span class="font-bold text-lg">{{ number_format($fedhaLeo) }}</span>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+
+<!-- Faida Halisi -->
+<div class="group relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+
+    <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-4 rounded-2xl shadow-xl border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
+
+        <div class="flex justify-between items-start mb-3">
+            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <i class="fas fa-chart-pie text-white text-lg"></i>
+            </div>
+            <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
+        </div>
+
+        <div class="text-xs font-semibold text-teal-100 uppercase tracking-wide mb-2">Faida Halisi</div>
+
+        @php
+            $faidaMauzo = $mauzos->where('created_at', '>=', today())
+                ->sum(fn($m) => ($m->bei - ($m->bidhaa->bei_nunua ?? 0)) * $m->idadi);
+            $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
+            $faidaHalisi = $faidaMauzo - $matumiziLeo;
+        @endphp
+
+        <div class="space-y-2 text-white text-sm">
+            <div class="flex justify-between items-center">
+                <span class="text-teal-100">Faida:</span>
+                <span class="font-semibold">{{ number_format($faidaMauzo) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-teal-100">Matumizi:</span>
+                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+            </div>
+            <div class="flex justify-between items-center border-t border-white/20 pt-2 mt-2">
+                <span class="text-teal-50 font-semibold">Halisi:</span>
+                <span class="font-bold text-lg">{{ number_format($faidaHalisi) }}</span>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
 
                     <!-- Jumla Kuu -->
-                    <div class="group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-r from-rose-500 to-rose-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                        <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 rounded-2xl shadow-xl border border-rose-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-                                    <i class="fas fa-chart-bar text-white text-lg"></i>
-                                </div>
-                                <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
-                            </div>
-                            <div class="text-xs font-semibold text-rose-100 uppercase tracking-wide mb-1">Jumla Kuu</div>
-                            <div class="font-bold text-2xl text-white mb-1">{{ number_format($mauzos->sum('jumla')) }}</div>
-                            <div class="text-xs text-rose-100 flex items-center">
-                                <i class="fas fa-balance-scale mr-1"></i>
-                                Muhtasari mkuu
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Jumla Kuu -->
+<div class="group relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-rose-500 to-rose-600 rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+
+    <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-4 rounded-2xl shadow-xl border border-rose-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-2xl cursor-pointer">
+
+        <div class="flex justify-between items-start mb-3">
+            <div class="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                <i class="fas fa-chart-bar text-white text-lg"></i>
+            </div>
+            <i class="fas fa-arrow-right text-white/60 text-sm group-hover:translate-x-1 transition-transform"></i>
+        </div>
+
+        <div class="text-xs font-semibold text-rose-100 uppercase tracking-wide mb-2">Jumla Kuu</div>
+
+        @php
+            $jumlaMauzo = $mauzos->sum('jumla');
+            $jumlaMatumizi = $matumizi->sum('gharama');
+            $jumlaFaida = $jumlaMauzo - $jumlaMatumizi;
+        @endphp
+
+        <div class="space-y-2 text-white text-sm">
+            <div class="flex justify-between items-center">
+                <span class="text-rose-100">Mapato:</span>
+                <span class="font-semibold">{{ number_format($jumlaMauzo) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-rose-100">Matumizi:</span>
+                <span class="font-semibold">{{ number_format($jumlaMatumizi) }}</span>
+            </div>
+            <div class="flex justify-between items-center border-t border-white/20 pt-2 mt-2">
+                <span class="text-rose-50 font-semibold">Jumla:</span>
+                <span class="font-bold text-lg">{{ number_format($jumlaFaida) }}</span>
+            </div>
+        </div>
+
+      
+    </div>
+</div>
+
                 </div>
             </div>
         </div>

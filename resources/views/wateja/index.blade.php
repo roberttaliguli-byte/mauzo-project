@@ -30,9 +30,9 @@
 
     <!-- TAB 1: Orodha ya Wateja -->
     <div x-show="activeTab === 'taarifa'" class="space-y-6">
-        <div class="bg-green-200 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="bg-gray-100 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-gray-800">Orodha ya Wateja</h2>
+                <h2 class="text-xl font-bold text-black">Orodha ya Wateja</h2>
                 <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
                     <i class="fas fa-print mr-2"></i> Print
                 </button>
@@ -42,15 +42,15 @@
                 <table class="w-full table-auto">
                     <thead>
                         <tr class="bg-white border-b">
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-black-700">Jina</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-black-700">Simu</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-black-700">Barua Pepe</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-black-700">Anapoishi</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-black-700">Tarehe</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-black-700">Vitendo</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-black">Jina</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-black">Simu</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-black">Barua Pepe</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-black">Anapoishi</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-black">Tarehe</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-black">Vitendo</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
+                    <tbody class="divide-y divide-gray">
                         @forelse($wateja as $mteja)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -59,14 +59,14 @@
                                         {{ substr($mteja->jina, 0, 1) }}
                                     </div>
                                     <div class="ml-4">
-                                        <div class="text-sm font-medium text-black-900">{{ $mteja->jina }}</div>
+                                        <div class="text-sm font-medium text-black">{{ $mteja->jina }}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-black-600">{{ $mteja->simu }}</td>
-                            <td class="px-6 py-4 text-sm text-black-600">{{ $mteja->barua_pepe ?: '--' }}</td>
-                            <td class="px-6 py-4 text-sm text-black-600">{{ $mteja->anapoishi ?: '--' }}</td>
-                            <td class="px-6 py-4 text-sm text-black-600">{{ $mteja->created_at->format('d/m/Y') }}</td>
+                            <td class="px-6 py-4 text-sm text-black">{{ $mteja->simu }}</td>
+                            <td class="px-6 py-4 text-sm text-black">{{ $mteja->barua_pepe ?: '--' }}</td>
+                            <td class="px-6 py-4 text-sm text-black">{{ $mteja->anapoishi ?: '--' }}</td>
+                            <td class="px-6 py-4 text-sm text-black">{{ $mteja->created_at->format('d/m/Y') }}</td>
                             <td class="px-6 py-4 text-sm font-medium">
                                 <div class="flex space-x-2">
                                     <button 

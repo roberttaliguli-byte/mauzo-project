@@ -16,12 +16,16 @@ class Marejesho extends Model
         'tarehe',
     ];
 
+    
+
     /**
      * 🧩 A rejesho belongs to one deni (madeni)
      */
     public function madeni()
     {
         return $this->belongsTo(Madeni::class, 'madeni_id');
+
+        
     }
 
     /**

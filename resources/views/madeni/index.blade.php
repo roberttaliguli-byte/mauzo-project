@@ -9,7 +9,7 @@
 <div class="space-y-6">
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-green-300 rounded-2xl shadow-lg border border-green-200 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-green-200 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-green-100 text-green-600 mr-4">
                     <i class="fas fa-money-bill-wave text-xl"></i>
@@ -21,7 +21,7 @@
             </div>
         </div>
         
-        <div class="bg-amber-300 rounded-2xl shadow-lg border border-amber-400 p-6 card-hover">
+        <div class="white rounded-2xl shadow-lg border border-red-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-red-100 text-red-600 mr-4">
                     <i class="fas fa-hand-holding-usd text-xl"></i>
@@ -33,7 +33,7 @@
             </div>
         </div>
         
-        <div class="bg-emerald-300 rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-blue-100 text-blue-600 mr-4">
                     <i class="fas fa-users text-xl"></i>
@@ -45,7 +45,7 @@
             </div>
         </div>
         
-        <div class="bg-yellow-300 rounded-2xl shadow-lg border border-yellow-400 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-yellow-400 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-amber-100 text-amber-600 mr-4">
                     <i class="fas fa-boxes text-xl"></i>
@@ -113,7 +113,7 @@
     <!-- TAB 1: Orodha ya Madeni -->
     <div id="madeni-tab-content" class="space-y-6 tab-content">
         <!-- Search and Actions -->
-        <div class="bg-green-100 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-gray-800">Orodha ya Madeni Yanayongoza</h2>
                 <div class="flex space-x-3">

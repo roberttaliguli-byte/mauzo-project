@@ -9,7 +9,7 @@
 <div class="space-y-6">
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-emerald-200 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-green-100 text-green-600 mr-4">
                     <i class="fas fa-shopping-cart text-xl"></i>
@@ -21,7 +21,7 @@
             </div>
         </div>
         
-        <div class="bg-amber-200 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-emerald-100 text-emerald-600 mr-4">
                     <i class="fas fa-boxes text-xl"></i>
@@ -33,7 +33,7 @@
             </div>
         </div>
         
-        <div class="bg-amber-200 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-blue-100 text-blue-600 mr-4">
                     <i class="fas fa-money-bill-wave text-xl"></i>
@@ -45,7 +45,7 @@
             </div>
         </div>
         
-        <div class="bg-purple-200 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-purple-100 text-purple-600 mr-4">
                     <i class="fas fa-truck text-xl"></i>

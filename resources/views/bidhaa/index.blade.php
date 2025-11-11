@@ -9,7 +9,7 @@
 <div class="space-y-6">
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-emerald-200 rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-green-100 text-green-600 mr-4">
                     <i class="fas fa-boxes text-xl"></i>
@@ -21,7 +21,7 @@
             </div>
         </div>
         
-        <div class="bg-amber-200 rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-emerald-100 text-emerald-600 mr-4">
                     <i class="fas fa-cubes text-xl"></i>
@@ -33,7 +33,7 @@
             </div>
         </div>
         
-        <div class="bg-red-200 rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-amber-100 text-amber-600 mr-4">
                     <i class="fas fa-exclamation-triangle text-xl"></i>
@@ -45,7 +45,7 @@
             </div>
         </div>
         
-        <div class="bg-green-200 rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-green-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-red-100 text-red-600 mr-4">
                     <i class="fas fa-calendar-times text-xl"></i>
@@ -120,7 +120,7 @@
     <!-- TAB 1: Taarifa za Bidhaa -->
     <div id="taarifa-tab-content" class="space-y-6 tab-content">
         <!-- Search and Actions -->
-        <div class="bg-amber-400 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
+        <div class="bg-gray-200 rounded-2xl shadow-lg border border-gray-100 p-6 card-hover">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-gray-800">Orodha ya Bidhaa</h2>
                 <div class="flex space-x-3">

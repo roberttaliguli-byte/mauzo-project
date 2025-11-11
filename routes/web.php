@@ -25,6 +25,10 @@ Route::post('/register', [AuthController::class, 'registerPost'])->name('registe
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
 
+
+
+
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -73,6 +77,8 @@ Route::post('/wafanyakazi', [WafanyakaziController::class, 'store'])->name('wafa
 Route::get('/wafanyakazi/{id}/edit', [WafanyakaziController::class, 'edit'])->name('wafanyakazi.edit');
 Route::put('/wafanyakazi/{id}', [WafanyakaziController::class, 'update'])->name('wafanyakazi.update');
 Route::delete('/wafanyakazi/{id}', [WafanyakaziController::class, 'destroy'])->name('wafanyakazi.destroy');
+
+Route::get('/wafanyakazi/export-pdf', [WafanyakaziController::class, 'exportPdf'])->name('wafanyakazi.export.pdf');
 
 // ================================
 // Mauzo Routes
