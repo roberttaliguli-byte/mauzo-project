@@ -15,23 +15,20 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LandingController; // 
 
 // =========================
 // Public routes
 // =========================
+
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'registerPost'])->name('register.post');
 
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
 
-
-
-
-
-Route::get('/', function () {
-    return redirect()->route('login');
-});
 
 // =========================
 // Protected routes (auth middleware)

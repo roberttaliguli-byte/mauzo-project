@@ -186,7 +186,7 @@ class MadeniController extends Controller
                 if ($difference > 0) {
                     // Increased quantity, check stock
                     if ($difference > $newBidhaa->idadi) {
-                        return back()->withErrors(['idadi' => "Idadi imezidi stock iliyopo ({$newBidhaa->idadi})."]);
+                        return back()->withErrors(['idadi' => "Idadi imezidi stock iliyopo ({$newBaidhaa->idadi})."]);
                     }
                     $newBidhaa->decrement('idadi', $difference);
                 } elseif ($difference < 0) {
@@ -243,7 +243,7 @@ class MadeniController extends Controller
         }
 
         return DB::transaction(function () use ($request, $madeni, $companyId) {
-            // Save repayment
+            // Save repayment to marejeshos table
             $madeni->marejeshos()->create([
                 'kiasi'       => $request->kiasi,
                 'tarehe'      => $request->tarehe,
@@ -253,14 +253,18 @@ class MadeniController extends Controller
             // Update debt balance
             $madeni->decrement('baki', $request->kiasi);
 
-            // Add sale record
+            // Create sales record for the repayment with proper tracking
             Mauzo::create([
                 'company_id' => $companyId,
                 'bidhaa_id'  => $madeni->bidhaa_id,
-                'idadi'      => 0,
-                'bei'        => $madeni->bei,
-                'punguzo'    => 0,
-                'jumla'      => $request->kiasi,
+                'madeni_id'  => $madeni->id,
+                'idadi'      => $madeni->idadi, // Original quantity taken
+                'bei'        => $madeni->bei,   // Original selling price
+                'punguzo'    => $madeni->jumla - $request->kiasi, // Discount = original total - paid amount
+                'jumla'      => $request->kiasi, // Actual paid amount
+                'is_debt_repayment' => true,
+                'created_at' => $request->tarehe,
+                'updated_at' => $request->tarehe,
             ]);
 
             return redirect()->route('madeni.index')

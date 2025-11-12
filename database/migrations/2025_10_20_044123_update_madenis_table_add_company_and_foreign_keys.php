@@ -22,7 +22,6 @@ return new class extends Migration
             }
 
             // Ensure bidhaa_id has foreign key
-            $table->foreign('bidhaa_id')->references('id')->on('bidhaas')->onDelete('cascade');
         });
     }
 

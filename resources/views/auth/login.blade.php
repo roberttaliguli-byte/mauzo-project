@@ -8,8 +8,8 @@
   <div class="text-center mb-6">
     <div class="flex justify-center mb-3">
       <div class="relative">
-        <div class="absolute inset-0 bg-yellow-400/20 rounded-full blur-lg"></div>
-        <div class="relative h-12 w-12 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-md">
+        <div class="absolute inset-0 bg-green-400/20 rounded-full blur-lg"></div>
+        <div class="relative h-12 w-12 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center shadow-md">
           <i class="fas fa-lock text-white text-lg"></i>
         </div>
       </div>
@@ -145,16 +145,25 @@
       </div>
     </div>
 
-    <!-- User Type Info -->
-    <div class="text-center">
-      <p class="text-gray-400 text-xs mb-2">Unaweza kuingia kama:</p>
-      <div class="flex justify-center gap-4 text-xs">
-        <span class="text-yellow-400">• Mwajiri</span>
-        <span class="text-blue-400">• Msimamizi</span>
-        <span class="text-green-400">• Mfanyakazi</span>
-      </div>
-    </div>
-  </form>
+<!-- User Type Info -->
+<div class="text-center mt-6">
+  <p class="text-gray-400 text-xs mb-2">Unaweza kuingia kama:</p>
+  <div class="flex justify-center gap-4 text-xs mb-4">
+    <span class="text-yellow-400">• Mwajiri</span>
+    <span class="text-blue-400">• Msimamizi</span>
+    <span class="text-green-400">• Mfanyakazi</span>
+  </div>
+
+  <!-- Additional Links -->
+  <div class="flex justify-center gap-6 text-xs">
+    <a href="{{ route('landing') }}" class="text-white/90 hover:text-yellow-400 font-semibold transition-colors duration-300 flex items-center gap-1 group">
+      <i class="fas fa-home group-hover:scale-110 transition-transform text-xs"></i> Rudi Home
+    </a>
+<a class="text-white/50 cursor-not-allowed font-semibold transition-colors duration-300 flex items-center gap-1 group">
+  <i class="fas fa-user-shield text-xs"></i> Admin Login
+</a>
+
+  </div>
 </div>
 
 <style>

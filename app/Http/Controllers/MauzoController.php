@@ -52,6 +52,10 @@ public function index()
         ->select('marejeshos.*')
         ->get();
 
+     $marejeshos = Marejesho::with(['madeni.bidhaa'])
+        ->where('company_id', $companyId)
+        ->get();
+        
     return view('mauzo.index', compact('bidhaa', 'mauzos', 'matumizi', 'wateja', 'madeni','marejeshos'));
 }
 
