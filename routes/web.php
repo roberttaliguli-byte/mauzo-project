@@ -16,6 +16,23 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController; // 
+use App\Http\Controllers\AdminController;
+
+
+
+
+    Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('admin/makampuni', [CompanyController::class, 'makampuni'])->name('admin.makampuni');
+    
+    Route::post('/admin/approve-user/{id}', [AdminController::class, 'approveUser'])->name('admin.approveUser');
+
+    
+    Route::post('/admin/company/{id}/verify', [AdminController::class, 'verify'])->name('admin.verify');
+    Route::delete('/admin/company/{id}', [AdminController::class, 'destroy'])->name('admin.destroy');
+
+
+});
 
 // =========================
 // Public routes

@@ -5,15 +5,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class Company extends Model
 {
+
     protected $fillable = [
-        'company_name','owner_name','owner_gender','owner_dob',
-        'location','region','phone','email'
-    ];
+    'company_name', 'owner_name', 'owner_gender', 'owner_dob',
+    'location', 'region', 'phone', 'email',
+    'is_verified', 'package', 'database_name'
+];
+
 
     public function users()
     {
         return $this->hasMany(User::class);
     }
+
+    public function user()
+{
+    return $this->hasOne(\App\Models\User::class, 'company_id');
+}
+
 
     // Relationships to data
 public function bidhaa()

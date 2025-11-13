@@ -284,10 +284,8 @@
     >
         <!-- Logo Section -->
         <div class="p-5 text-center border-b border-green-700 flex flex-col items-center">
-            <div class="flex items-center justify-center w-10 h-10 rounded-full bg-white text-green-800 font-bold text-lg mb-2">
-                D
-            </div>
-            <div x-show="sidebarOpen" x-transition class="text-xl font-bold mb-1">DEMODAY</div>
+ <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" alt="Mauzo Logo" class="logo">
+          <div x-show="sidebarOpen" class="text-xl font-bold tracking-wide">MAUZO</div>
             <div x-show="sidebarOpen" x-transition class="text-xs text-green-200">Boss System</div>
             <button 
                 @click="sidebarOpen = !sidebarOpen" 

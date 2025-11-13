@@ -159,9 +159,10 @@
     <a href="{{ route('landing') }}" class="text-white/90 hover:text-yellow-400 font-semibold transition-colors duration-300 flex items-center gap-1 group">
       <i class="fas fa-home group-hover:scale-110 transition-transform text-xs"></i> Rudi Home
     </a>
-<a class="text-white/50 cursor-not-allowed font-semibold transition-colors duration-300 flex items-center gap-1 group">
-  <i class="fas fa-user-shield text-xs"></i> Admin Login
+<a href="{{ route('login') }}?type=admin" class="text-white/90 hover:text-yellow-400 font-semibold transition-colors duration-300 flex items-center gap-1 group">
+    <i class="fas fa-user-shield text-xs"></i> Admin Login
 </a>
+
 
   </div>
 </div>

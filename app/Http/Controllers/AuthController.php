@@ -40,13 +40,11 @@ class AuthController extends Controller
             'region'       => 'required|string|max:255',
             'phone'        => 'required|string|max:50',
             'company_email'=> 'nullable|email|max:255',
-
-            // User login info
             'username'     => 'required|string|max:50|unique:users,username',
             'password'     => 'required|string|min:6|confirmed',
         ]);
 
-        // ✅ Step 1: Create the company record
+        // Create the company
         $company = Company::create([
             'company_name' => $validated['company_name'],
             'owner_name'   => $validated['owner_name'],
@@ -58,20 +56,17 @@ class AuthController extends Controller
             'email'        => $validated['company_email'] ?? null,
         ]);
 
-        // ✅ Step 2: Create the user associated with that company
+        // Create the user (must be approved by admin)
         $user = User::create([
-            'company_id' => $company->id,
-            'username'   => $validated['username'],
-            'name'       => $validated['owner_name'],
-            'email'      => $validated['company_email'] ?? null,
-            'password'   => Hash::make($validated['password']),
+            'company_id'  => $company->id,
+            'username'    => $validated['username'],
+            'name'        => $validated['owner_name'],
+            'email'       => $validated['company_email'] ?? null,
+            'password'    => Hash::make($validated['password']),
+            'is_approved' => false,
         ]);
 
-        // ✅ Step 3: Log in the new user automatically
-        Auth::login($user);
-
-        // Redirect to dashboard instead of login (user is already logged in)
-        return redirect()->route('login')->with('success', 'Umejisajili kwa mafanikio!');
+        return redirect()->route('login')->with('success', 'Umejisajili kwa mafanikio! Subiri admin kuthibitisha akaunti yako.');
     }
 
     /**
@@ -92,13 +87,33 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // ✅ Authenticate using username
+        // Hardcoded admin login
+        if ($credentials['username'] === 'admin' && $credentials['password'] === 'admin123') {
+            session(['is_admin' => true]);
+            return redirect()->route('admin.dashboard')
+                ->with('success', 'Umeingia kama Admin!');
+        }
+
+        // Normal user login
         if (Auth::attempt([
             'username' => $credentials['username'],
             'password' => $credentials['password']
         ], $request->boolean('remember'))) {
 
+            $user = Auth::user();
+
+            // Check if user is approved
+if ($user->company && !$user->company->is_user_approved) {
+    Auth::logout();
+
+    return back()->withErrors([
+        'login' => 'Akaunti yako bado haijathibitishwa. Tafadhali subiri admin akamilishe mchakato wa uidhinishaji wa kampuni yako.'
+    ])->onlyInput('username');
+}
+
+
             $request->session()->regenerate();
+            session()->forget('is_admin');
 
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Umeingia kwa mafanikio!');
@@ -115,6 +130,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
+        session()->forget('is_admin');
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
