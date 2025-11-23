@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Company;
+use App\Models\User;
 
 class AdminController extends Controller
 {
@@ -19,35 +20,48 @@ class AdminController extends Controller
     }
 
     /**
-     * Verify a company registration.
+     * Approve the boss user connected to a company.
      */
- 
+    public function approveUser($id)
+    {
+        $company = Company::findOrFail($id);
 
-public function verify($id)
-{
-    $company = Company::findOrFail($id);
+        // Mark user as approved
+        $company->is_user_approved = true;
+        $company->save();
 
-    // Verify company
-    $company->update(['is_verified' => true]);
-
-    // Approve the user linked to the company
-    $user = $company->user ?? \App\Models\User::where('company_id', $company->id)->first();
-    if ($user) {
-        $user->update(['is_approved' => true]);
+        return redirect()->back()->with('success', 'Mtumiaji ameidhinishwa kikamilifu!');
     }
 
-    return back()->with('success', 'Kampuni na akaunti yake vimeidhinishwa kikamilifu!');
-}
+    /**
+     * Verify the company.
+     */
+    public function verifyCompany($id)
+    {
+        $company = Company::findOrFail($id);
 
-public function approveUser($id)
-{
-    $company = Company::findOrFail($id);
-    $company->is_user_approved = true;
-    $company->save();
+        // Mark company as verified
+        $company->is_verified = true;
+        $company->save();
 
-    return redirect()->back()->with('success', 'User approved successfully!');
-}
+        return redirect()->back()->with('success', 'Kampuni imeidhinishwa kikamilifu!');
+    }
 
+    /**
+     * One-Click Full Approval:
+     * Verify company AND approve its user.
+     */
+    public function approveAll($id)
+    {
+        $company = Company::findOrFail($id);
+
+        // Verify company
+        $company->is_verified = true;
+        $company->is_user_approved = true;
+        $company->save();
+
+        return redirect()->back()->with('success', 'Kampuni na mtumiaji vimeidhinishwa kikamilifu!');
+    }
 
     /**
      * Delete a company.
@@ -57,6 +71,6 @@ public function approveUser($id)
         $company = Company::findOrFail($id);
         $company->delete();
 
-        return back()->with('success', 'Kampuni imefutwa kikamilifu!');
+        return redirect()->back()->with('success', 'Kampuni imefutwa kikamilifu!');
     }
 }

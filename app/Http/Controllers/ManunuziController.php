@@ -15,7 +15,8 @@ class ManunuziController extends Controller
      */
     public function index()
     {
-        $companyId = Auth::user()->company_id;
+    
+    $companyId = Auth::user()->company_id;
 
         // Only show manunuzi for this company
         $manunuzi = Manunuzi::with('bidhaa')

@@ -4,8 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Wafanyakazi extends Model
+class Wafanyakazi extends Authenticatable
+
 {
     use HasFactory;
 
@@ -21,10 +23,15 @@ class Wafanyakazi extends Model
         'simu_ndugu',
         'username',
         'password',
+        'role',
         'tarehe_kuzaliwa',
         'getini',
         'company_id', // ✅ added for company linkage
     ];
+
+
+    protected $hidden = ['password'];
+
 
     /**
      * ✅ Uhusiano na kampuni (Company)

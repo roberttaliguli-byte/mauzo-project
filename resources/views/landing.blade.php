@@ -463,7 +463,7 @@
           <div class="popular-badge">Inayopendwa</div>
           <h3 class="text-2xl font-bold text-gray-800 mb-2">Kifurushi cha Premium</h3>
           <div class="my-6">
-            <span class="text-4xl font-bold text-amber-600">TZS 100,000</span>
+            <span class="text-4xl font-bold text-amber-600">TZS 150,000</span>
             <span class="text-gray-600">/ mwaka 1</span>
           </div>
           <ul class="space-y-4 mb-8 text-left">

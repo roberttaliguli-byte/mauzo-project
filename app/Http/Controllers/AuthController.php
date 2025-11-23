@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\User;
+use App\Models\Wafanyakazi; // ✅ Added for employee login
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -64,6 +65,7 @@ class AuthController extends Controller
             'email'       => $validated['company_email'] ?? null,
             'password'    => Hash::make($validated['password']),
             'is_approved' => false,
+            'role'        => 'boss', // ✅ Set role
         ]);
 
         return redirect()->route('login')->with('success', 'Umejisajili kwa mafanikio! Subiri admin kuthibitisha akaunti yako.');
@@ -94,7 +96,7 @@ class AuthController extends Controller
                 ->with('success', 'Umeingia kama Admin!');
         }
 
-        // Normal user login
+        // 1️⃣ Normal boss user login
         if (Auth::attempt([
             'username' => $credentials['username'],
             'password' => $credentials['password']
@@ -103,14 +105,14 @@ class AuthController extends Controller
             $user = Auth::user();
 
             // Check if user is approved
-if ($user->company && !$user->company->is_user_approved) {
-    Auth::logout();
+            if ($user->company && !$user->company->is_user_approved) {
+                Auth::logout();
 
-    return back()->withErrors([
-        'login' => 'Akaunti yako bado haijathibitishwa. Tafadhali subiri admin akamilishe mchakato wa uidhinishaji wa kampuni yako.'
-    ])->onlyInput('username');
-}
-
+                return back()->withErrors([
+                    'login' => 'Akaunti yako bado haijathibitishwa. Tafadhali subiri admin akamilishe mchakato wa uidhinishaji wa kampuni yako.'
+                ])->onlyInput('username');
+            }
+            
 
             $request->session()->regenerate();
             session()->forget('is_admin');
@@ -118,10 +120,35 @@ if ($user->company && !$user->company->is_user_approved) {
             return redirect()->intended(route('dashboard'))
                 ->with('success', 'Umeingia kwa mafanikio!');
         }
+// mfanyakazi login
 
+$mfanyakazi = Wafanyakazi::where('username', $credentials['username'])->first();
+
+if ($mfanyakazi && Hash::check($credentials['password'], $mfanyakazi->password)) {
+
+    // Only allow login if getini = 'ingia'
+    if ($mfanyakazi->getini !== 'ingia') {
         return back()->withErrors([
-            'login' => 'Jina la kuingia au neno la siri si sahihi.',
+            'login' => 'Hujaruhusiwa kuingia kwa sasa.'
         ])->onlyInput('username');
+    }
+
+    // Login mfanyakazi
+    
+    Auth::guard('mfanyakazi')->login($mfanyakazi);
+    
+
+
+    return redirect()->route('mfanyakazi.dashboard')
+        ->with('success', 'Umeingia kama Mfanyakazi!');
+
+        
+}
+
+// If login fails
+return back()->withErrors([
+    'login' => 'Jina la kuingia au neno la siri si sahihi.'
+])->onlyInput('username');
     }
 
     /**

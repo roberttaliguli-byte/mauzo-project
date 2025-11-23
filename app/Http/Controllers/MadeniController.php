@@ -19,6 +19,8 @@ class MadeniController extends Controller
     public function index()
     {
         $companyId = Auth::user()->company_id;
+        
+
 
         // Fetch debts for this company only
         $madeni = Madeni::with('bidhaa', 'marejeshos')
@@ -120,7 +122,7 @@ class MadeniController extends Controller
                 'tarehe_malipo' => $request->tarehe_malipo,
             ]);
 
-            return redirect()->route('madeni.index')
+            return redirect()->route('mauzo.index')
                 ->with('success', 'Deni jipya limehifadhiwa kikamilifu kwa kampuni yako!');
         });
     }
@@ -186,7 +188,7 @@ class MadeniController extends Controller
                 if ($difference > 0) {
                     // Increased quantity, check stock
                     if ($difference > $newBidhaa->idadi) {
-                        return back()->withErrors(['idadi' => "Idadi imezidi stock iliyopo ({$newBaidhaa->idadi})."]);
+                        return back()->withErrors(['idadi' => "Idadi imezidi stock iliyopo ({$newBidhaa->idadi})."]);
                     }
                     $newBidhaa->decrement('idadi', $difference);
                 } elseif ($difference < 0) {
@@ -227,50 +229,40 @@ class MadeniController extends Controller
     /**
      * Record a repayment for a debt (company specific).
      */
-    public function rejesha(Request $request, Madeni $madeni)
-    {
-        $companyId = Auth::user()->company_id;
+public function rejesha(Request $request, Madeni $madeni)
+{
+    $companyId = Auth::user()->company_id;
 
-        abort_unless($madeni->company_id === $companyId, 403, 'Huna ruhusa ya kurejesha deni hili.');
+    abort_unless($madeni->company_id === $companyId, 403, 'Huna ruhusa ya kurejesha deni hili.');
 
-        $request->validate([
-            'kiasi'  => 'required|numeric|min:1',
-            'tarehe' => 'required|date',
+    $request->validate([
+        'kiasi'  => 'required|numeric|min:1',
+        'tarehe' => 'required|date',
+    ]);
+
+    if ($request->kiasi > $madeni->baki) {
+        return back()->withErrors(['kiasi' => "Kiasi kimezidi baki lililopo ({$madeni->baki})."]);
+    }
+
+    return DB::transaction(function () use ($request, $madeni, $companyId) {
+
+        // 1️⃣ Save repayment only in marejeshos table
+        $madeni->marejeshos()->create([
+            'kiasi'       => $request->kiasi,
+            'tarehe'      => $request->tarehe,
+            'company_id'  => $companyId,
         ]);
 
-        if ($request->kiasi > $madeni->baki) {
-            return back()->withErrors(['kiasi' => "Kiasi kimezidi baki lililopo ({$madeni->baki})."]);
-        }
+        // 2️⃣ Update remaining balance
+        $madeni->decrement('baki', $request->kiasi);
 
-        return DB::transaction(function () use ($request, $madeni, $companyId) {
-            // Save repayment to marejeshos table
-            $madeni->marejeshos()->create([
-                'kiasi'       => $request->kiasi,
-                'tarehe'      => $request->tarehe,
-                'company_id'  => $companyId,
-            ]);
+        // 3️⃣ ❌ DO NOT create Mauzo (remove duplicate sales record)
 
-            // Update debt balance
-            $madeni->decrement('baki', $request->kiasi);
+        return redirect()->route('madeni.index')
+            ->with('success', 'Rejesho limehifadhiwa kikamilifu kwa kampuni yako!');
+    });
+}
 
-            // Create sales record for the repayment with proper tracking
-            Mauzo::create([
-                'company_id' => $companyId,
-                'bidhaa_id'  => $madeni->bidhaa_id,
-                'madeni_id'  => $madeni->id,
-                'idadi'      => $madeni->idadi, // Original quantity taken
-                'bei'        => $madeni->bei,   // Original selling price
-                'punguzo'    => $madeni->jumla - $request->kiasi, // Discount = original total - paid amount
-                'jumla'      => $request->kiasi, // Actual paid amount
-                'is_debt_repayment' => true,
-                'created_at' => $request->tarehe,
-                'updated_at' => $request->tarehe,
-            ]);
-
-            return redirect()->route('madeni.index')
-                ->with('success', 'Rejesho limehifadhiwa kikamilifu kwa kampuni yako!');
-        });
-    }
 
     /**
      * Delete a debt (company specific).

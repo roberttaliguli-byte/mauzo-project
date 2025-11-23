@@ -15,37 +15,46 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $companyId = Auth::user()->company_id;
         $today = Carbon::today();
 
-        // --- Stock / Inventory Metrics (all-time) ---
+        // Determine which guard is logged in
+        if (Auth::guard('mfanyakazi')->check()) {
+            $user = Auth::guard('mfanyakazi')->user();
+            $companyId = $user->company_id ?? null;
+        } else {
+            $user = Auth::user(); // default web guard (Boss)
+            $companyId = $user->company_id ?? null;
+            
+        }
+
+        if (!$companyId) {
+            abort(403, 'Company not found for user.');
+        }
+
+        // --- Stock / Inventory Metrics ---
         $jumlaBidhaa = Bidhaa::where('company_id', $companyId)->count();
         $jumlaIdadi = Bidhaa::where('company_id', $companyId)->sum('idadi');
         $thamani = Bidhaa::where('company_id', $companyId)
-                         ->select(DB::raw('SUM(idadi * bei_nunua) as jumla'))
+                         ->selectRaw('SUM(idadi * bei_nunua) as jumla')
                          ->value('jumla');
 
         $bidhaaZilizopo = Bidhaa::where('company_id', $companyId)
                                 ->where('idadi', '>', 0)
                                 ->count();
-
         $bidhaaZimeisha = Bidhaa::where('company_id', $companyId)
                                  ->where('idadi', 0)
                                  ->count();
-
         $bidhaaKaribiaKuisha = Bidhaa::where('company_id', $companyId)
                                      ->where('idadi', '<', 10)
                                      ->count();
 
-// --- Top-selling products (all-time) ---
-$bidhaaTopSales = Bidhaa::where('company_id', $companyId)
-                        ->withSum('mauzos', 'idadi') // sum all sales for each product
-                        ->orderByDesc('mauzos_sum_idadi')
-                        ->take(3)
-                        ->get();
+        // --- Top-selling products ---
+        $bidhaaTopSales = Bidhaa::where('company_id', $companyId)
+                                ->withSum('mauzos', 'idadi')
+                                ->orderByDesc('mauzos_sum_idadi')
+                                ->take(3)
+                                ->get();
 
-
-                        
         // --- Today Financial Metrics ---
         $mauzoLeo = Mauzo::whereHas('bidhaa', fn($q) => $q->where('company_id', $companyId))
                           ->whereDate('created_at', $today)
@@ -61,12 +70,9 @@ $bidhaaTopSales = Bidhaa::where('company_id', $companyId)
 
         $faidaHalisiLeo = $mauzoLeo - ($manunuziLeo + $matumiziLeo);
 
-        // --- Madeni Summary ---
-$jumlaMadeni = Madeni::where('company_id', $companyId)
-                      ->sum('baki'); // total outstanding debt
-
-$idadiMadeni = Madeni::where('company_id', $companyId)
-                      ->count(); // total number of debt records
+        // --- Debt Summary ---
+        $jumlaMadeni = Madeni::where('company_id', $companyId)->sum('baki');
+        $idadiMadeni = Madeni::where('company_id', $companyId)->count();
 
         return view('dashboard.index', compact(
             'jumlaBidhaa',

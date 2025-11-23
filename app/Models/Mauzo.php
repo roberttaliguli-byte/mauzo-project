@@ -12,10 +12,12 @@ class Mauzo extends Model
     protected $fillable = [
         'company_id',
         'bidhaa_id',
+        'madeni_id',          // ✅ ADD THIS
         'idadi',
         'bei',
         'punguzo',
         'jumla',
+        'is_debt_repayment',  // ✅ ADD THIS
     ];
 
     /**

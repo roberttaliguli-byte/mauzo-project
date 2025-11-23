@@ -23,7 +23,9 @@ class MarejeshoController extends Controller
             'tarehe'  => 'required|date',
         ]);
 
+        
         $companyId = Auth::user()->company_id;
+
 
         // Fetch deni and ensure it belongs to the same company
         $deni = Madeni::where('id', $request->deni_id)

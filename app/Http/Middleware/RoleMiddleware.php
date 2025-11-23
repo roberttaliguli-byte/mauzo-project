@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Middleware;
 
 use Closure;
@@ -8,25 +9,32 @@ use Illuminate\Support\Facades\Auth;
 class RoleMiddleware
 {
     /**
-     * Usage: ->middleware(['auth','role:boss']) or ->middleware(['auth','role:mfanyakazi'])
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string  $role
+     * @return mixed
      */
-    public function handle(Request $request, Closure $next, ...$roles)
+    public function handle(Request $request, Closure $next, $role)
     {
-        $user = Auth::user();
+        // Determine which guard to use based on role
+        $guard = $role === 'mfanyakazi' ? 'mfanyakazi' : 'web';
 
+        $user = Auth::guard($guard)->user();
+
+        // Not logged in
         if (!$user) {
-            // not logged in
-            return redirect()->route('login');
+            return redirect()->route('login')->with('error', 'Tafadhali ingia kwanza.');
         }
 
-        if (!in_array($user->role, $roles)) {
-            // you can redirect to their dashboard instead of abort
-            if ($user->role === 'mfanyakazi') {
-                return redirect()->route('mfanyakazi.dashboard')->with('error', 'Huna ruhusa kufikia ukurasa huu.');
-            }
-            return redirect()->route('dashboard')->with('error', 'Huna ruhusa kufikia ukurasa huu.');
+        // Role mismatch
+        if ($user->role !== $role) {
+            Auth::guard($guard)->logout(); // log out user if role mismatch
+            return redirect()->route('login')->with('error', 'Huaruhusiwi kuingia hapa.');
         }
 
+        // Everything ok
         return $next($request);
     }
 }

@@ -24,191 +24,185 @@
         </div>
     </div>
     @endif
-<!-- Companies Table -->
-<div class="bg-white rounded-xl shadow-md overflow-hidden">
-    <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 class="text-lg font-semibold text-emerald-700">
-            📋 Orodha ya Makampuni Yaliyosajiliwa
-        </h3>
-        <span class="text-sm text-gray-500">
-            Jumla: <strong>{{ $total }}</strong>
-        </span>
-    </div>
 
-    <!-- Table -->
-    <div class="overflow-x-auto">
-        <table class="min-w-full border-collapse">
-            <thead class="bg-emerald-700 text-white">
-                <tr>
-                    <th class="px-4 py-3 text-left text-sm font-semibold">No.</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold">Kampuni</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold">Mmiliki</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold">Kifurushi</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold">Database</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold">Db Ipo?</th>
-                    <th class="px-4 py-3 text-left text-sm font-semibold">Usajili</th>
-                    <th class="px-4 py-3 text-center text-sm font-semibold">Hali</th>
-                    <th class="px-4 py-3 text-center text-sm font-semibold">Kitendo</th>
-                    <th class="px-4 py-3 text-center text-sm font-semibold">Taarifa</th>
-                    <th class="px-4 py-3 text-center text-sm font-semibold">Futa</th>
-                </tr>
-            </thead>
+    <!-- Companies Table -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-emerald-700">
+                📋 Orodha ya Makampuni Yaliyosajiliwa
+            </h3>
+            <span class="text-sm text-gray-500">
+                Jumla: <strong>{{ $total }}</strong>
+            </span>
+        </div>
 
-            <tbody class="divide-y divide-gray-100">
-                @foreach ($companies as $index => $company)
-                <tr class="hover:bg-emerald-50 transition">
-                    <!-- No -->
-                    <td class="px-4 py-2 text-sm text-gray-700">{{ $index + 1 }}</td>
+        <!-- Table -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse">
+                <thead class="bg-emerald-700 text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">No.</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Kampuni</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Mmiliki</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Kifurushi</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Database</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Db Ipo?</th>
+                        <th class="px-4 py-3 text-left text-sm font-semibold">Usajili</th>
+                        <th class="px-4 py-3 text-center text-sm font-semibold">Vitendo</th>
+                    </tr>
+                </thead>
 
-                    <!-- Company -->
-                    <td class="px-4 py-2 font-semibold text-gray-800">
-                        {{ $company->company_name }}
-                    </td>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach ($companies as $index => $company)
+                    <tr class="hover:bg-emerald-50 transition">
+                        <!-- No -->
+                        <td class="px-4 py-3 text-sm text-gray-700">{{ $index + 1 }}</td>
 
-                    <!-- Owner -->
-                    <td class="px-4 py-2 text-gray-700">
-                        {{ $company->owner_name }}
-                    </td>
+                        <!-- Company -->
+                        <td class="px-4 py-3 font-semibold text-gray-800">
+                            {{ $company->company_name }}
+                        </td>
 
-                    <!-- Package -->
-                    <td class="px-4 py-2 text-center">
-                        <span class="inline-block px-2 py-1 text-xs rounded-full bg-emerald-100 text-emerald-700 font-medium">
-                            {{ $company->package ?? 'Hakuna' }}
-                        </span>
-                    </td>
+                        <!-- Owner -->
+                        <td class="px-4 py-3 text-gray-700">
+                            {{ $company->owner_name }}
+                        </td>
 
-                    <!-- Database name -->
-                    <td class="px-4 py-2 text-gray-600">
-                        {{ $company->database_name ?? '-' }}
-                    </td>
-
-                    <!-- Database exists -->
-                    <td class="px-4 py-2 text-center">
-                        @if($company->database_name)
-                            <span class="inline-block px-2 py-1 text-xs rounded-full bg-emerald-200 text-emerald-800 font-semibold">
-                                Ndiyo
+                        <!-- Package -->
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-block px-2 py-1 text-xs rounded-full bg-emerald-100 text-emerald-700 font-medium">
+                                {{ $company->package ?? 'Hakuna' }}
                             </span>
-                        @else
-                            <span class="inline-block px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800 font-semibold">
-                                Hapana
-                            </span>
-                        @endif
-                    </td>
+                        </td>
 
-                    <!-- Registration date -->
-                    <td class="px-4 py-2 text-gray-600">
-                        {{ $company->created_at->format('d M, Y') }}
-                    </td>
+                        <!-- Database name -->
+                        <td class="px-4 py-3 text-gray-600">
+                            {{ $company->database_name ?? '-' }}
+                        </td>
 
-                    <!-- Status -->
-                    <td class="px-4 py-2 text-center">
-                        <span class="inline-block px-2 py-1 text-xs rounded-full 
-                            {{ $company->is_verified ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700' }} 
-                            font-semibold">
-                            {{ $company->is_verified ? 'Kampuni Imeidhinishwa' : 'Haijathibitishwa' }}
-                        </span>
-                        <br>
-                        <span class="inline-block px-2 py-1 text-xs rounded-full 
-                            {{ $company->is_user_approved ? 'bg-emerald-100 text-emerald-800' : 'bg-yellow-100 text-yellow-800' }} 
-                            font-semibold">
-                            {{ $company->is_user_approved ? 'Mtumiaji Ameidhinishwa' : 'Mtumiaji Hajaidhinishwa' }}
-                        </span>
-                    </td>
+                        <!-- Database exists -->
+                        <td class="px-4 py-3 text-center">
+                            @if($company->database_name)
+                                <span class="inline-block px-2 py-1 text-xs rounded-full bg-emerald-200 text-emerald-800 font-semibold">
+                                    Ndiyo
+                                </span>
+                            @else
+                                <span class="inline-block px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800 font-semibold">
+                                    Hapana
+                                </span>
+                            @endif
+                        </td>
 
-                    <!-- Approve button -->
-                    <td class="px-4 py-2 text-center">
-                        @if(!$company->is_user_approved)
-                    <form action="{{ route('admin.approveUser', $company->id) }}" method="POST">
-                        @csrf
-                        <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white text-sm px-3 py-1 rounded-md">
-                            <i class="fas fa-user-check mr-1"></i> Idhinisha
-                        </button>
-                    </form>
+                        <!-- Registration date -->
+                        <td class="px-4 py-3 text-gray-600">
+                            {{ $company->created_at->format('d M, Y') }}
+                        </td>
 
-                        @else
-                            <span class="inline-block px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full font-semibold">
-                                👤 Ameidhinishwa
-                            </span>
-                        @endif
-                    </td>
-
-                    <!-- Info button -->
-                    <td class="px-4 py-2 text-center">
-                        <button
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-3 py-1 rounded-md info-btn transition"
-                            data-target="modal-{{ $company->id }}">
-                            <i class="fas fa-info-circle mr-1"></i> Taarifa
-                        </button>
-                    </td>
-
-                    <!-- Delete button -->
-                    <td class="px-4 py-2 text-center">
-                        <form action="{{ route('admin.destroy', $company->id) }}" method="POST" class="delete-form inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="button"
-                                class="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded-md delete-btn transition"
-                                data-company="{{ $company->company_name }}">
-                                <i class="fas fa-trash mr-1"></i> Futa
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-
-                <!-- Info Modal -->
-                <div id="modal-{{ $company->id }}" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50">
-                    <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl overflow-hidden animate-scale-in">
-                        <div class="bg-emerald-700 text-white px-4 py-3 flex justify-between items-center">
-                            <h5 class="font-semibold">Taarifa za {{ $company->company_name }}</h5>
-                            <button class="text-white hover:text-gray-200 close-btn" data-target="modal-{{ $company->id }}">✖</button>
-                        </div>
-
-                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
-                            <div>
-                                <p><strong>Kampuni:</strong> {{ $company->company_name }}</p>
-                                <p><strong>Mmiliki:</strong> {{ $company->owner_name }}</p>
-                                <p><strong>Simu:</strong> {{ $company->phone }}</p>
-                                <p><strong>Email:</strong> {{ $company->email }}</p>
-                                <p><strong>Region:</strong> {{ $company->region }}</p>
-                            </div>
-                            <div>
-                                <p><strong>Kifurushi:</strong> {{ $company->package ?? '-' }}</p>
-                                <p><strong>Database:</strong> {{ $company->database_name ?? '-' }}</p>
-                                <p><strong>Usajili:</strong> {{ $company->created_at->format('d/m/Y H:i') }}</p>
-                                <p><strong>Status:</strong>
-                                    @if($company->is_verified)
-                                        <span class="inline-block px-2 py-1 text-xs bg-emerald-100 text-emerald-800 rounded-full font-semibold">Imethibitishwa</span>
+                        <!-- Actions -->
+                        <td class="px-4 py-3">
+                            <div class="flex flex-col gap-2 items-center">
+                                <div class="flex gap-2">
+                                    <!-- APPROVE USER BUTTON -->
+                                    @if(!$company->is_user_approved)
+                                        <form action="{{ route('admin.approveUser', $company->id) }}" method="POST">
+                                            @csrf
+                                            <button class="bg-yellow-600 hover:bg-yellow-700 text-white text-xs px-3 py-1 rounded-md transition">
+                                                👤 Idhinisha Mtumiaji
+                                            </button>
+                                        </form>
                                     @else
-                                        <span class="inline-block px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full font-semibold">Haijathibitishwa</span>
+                                        <span class="inline-block px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full font-semibold">
+                                            👤 Ameidhinishwa
+                                        </span>
+                                    @endif
+
+                                    <!-- VERIFY COMPANY BUTTON -->
+                                    @if(!$company->is_verified)
+                                        <form action="{{ route('admin.verifyCompany', $company->id) }}" method="POST">
+                                            @csrf
+                                            <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1 rounded-md transition">
+                                                🏢 Thibitisha Kampuni
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="inline-block px-2 py-1 text-xs bg-emerald-100 text-emerald-800 rounded-full font-semibold">
+                                            🏢 Imethibitishwa
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <!-- Info button -->
+                                    <button
+                                        class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1 rounded-md info-btn transition"
+                                        data-target="modal-{{ $company->id }}">
+                                        <i class="fas fa-info-circle mr-1"></i> Taarifa
+                                    </button>
+
+                                    <!-- Delete button -->
+                                    <button
+                                        class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-md delete-btn transition"
+                                        data-company="{{ $company->company_name }}"
+                                        data-id="{{ $company->id }}">
+                                        <i class="fas fa-trash mr-1"></i> Futa
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Info Modal -->
+                    <div id="modal-{{ $company->id }}" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50">
+                        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl overflow-hidden animate-scale-in">
+                            <div class="bg-emerald-700 text-white px-4 py-3 flex justify-between items-center">
+                                <h5 class="font-semibold">Taarifa za {{ $company->company_name }}</h5>
+                                <button class="text-white hover:text-gray-200 close-btn" data-target="modal-{{ $company->id }}">✖</button>
+                            </div>
+
+                            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+                                <div>
+                                    <p><strong>Kampuni:</strong> {{ $company->company_name }}</p>
+                                    <p><strong>Mmiliki:</strong> {{ $company->owner_name }}</p>
+                                    <p><strong>Simu:</strong> {{ $company->phone }}</p>
+                                    <p><strong>Email:</strong> {{ $company->email }}</p>
+                                    <p><strong>Region:</strong> {{ $company->region }}</p>
+                                </div>
+                                <div>
+                                    <p><strong>Kifurushi:</strong> {{ $company->package ?? '-' }}</p>
+                                    <p><strong>Database:</strong> {{ $company->database_name ?? '-' }}</p>
+                                    <p><strong>Usajili:</strong> {{ $company->created_at->format('d/m/Y H:i') }}</p>
+                                    <p><strong>Status Kampuni:</strong>
+                                        @if($company->is_verified)
+                                            <span class="inline-block px-2 py-1 text-xs bg-emerald-100 text-emerald-800 rounded-full font-semibold">Imethibitishwa</span>
+                                        @else
+                                            <span class="inline-block px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full font-semibold">Haijathibitishwa</span>
+                                        @endif
+                                    </p>
+                                    <p><strong>Status Mtumiaji:</strong> 
+                                    @if($company->is_user_approved)
+                                        <span class="text-green-700 font-semibold">Ameidhinishwa</span>
+                                    @else
+                                        <span class="text-red-600 font-semibold">Hajaidhinishwa</span>
                                     @endif
                                 </p>
-                                <p><strong>Mtumiaji:</strong> 
-                                @if($company->is_user_approved)
-                                    <span class="text-green-700 font-semibold">Ameidhinishwa</span>
-                                @else
-                                    <span class="text-red-600 font-semibold">Hajaidhinishwa</span>
-                                @endif
-                            </p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 px-4 py-3 text-right">
+                                <button
+                                    class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md close-btn"
+                                    data-target="modal-{{ $company->id }}">
+                                    Funga
+                                </button>
                             </div>
                         </div>
-
-                        <div class="bg-gray-50 px-4 py-3 text-right">
-                            <button
-                                class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md close-btn"
-                                data-target="modal-{{ $company->id }}">
-                                Funga
-                            </button>
-                        </div>
                     </div>
-                </div>
-                @endforeach
-            </tbody>
-        </table>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
-
-
 </div>
 
 <!-- Delete Confirmation Modal -->
@@ -233,11 +227,15 @@
                 class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md transition">
                 Ghairi
             </button>
-            <button
-                id="confirm-delete"
-                class="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md transition">
-                <i class="fas fa-trash mr-1"></i> Futa
-            </button>
+            <form id="delete-form" method="POST" class="inline">
+                @csrf
+                @method('DELETE')
+                <button
+                    type="submit"
+                    class="px-4 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-md transition">
+                    <i class="fas fa-trash mr-1"></i> Futa
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -305,26 +303,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Delete confirmation
-    let deleteForm = null;
-    
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const companyName = btn.getAttribute('data-company');
-            deleteForm = btn.closest('.delete-form');
+            const companyId = btn.getAttribute('data-id');
             
             document.getElementById('delete-company-name').textContent = companyName;
+            
+            document.getElementById('delete-form').action = "{{ route('admin.destroyCompany', ':id') }}".replace(':id', companyId);
+            
             document.getElementById('delete-modal').classList.remove('hidden');
             document.getElementById('delete-modal').classList.add('flex');
         });
     });
 
-    // Confirm delete
-    document.getElementById('confirm-delete').addEventListener('click', () => {
-        if (deleteForm) {
-            deleteForm.submit();
-        }
-    });
-
+    // Confirm delete is now handled by the form submission
     // Cancel delete
     document.getElementById('cancel-delete').addEventListener('click', () => {
         closeDeleteModal();
@@ -361,7 +354,6 @@ function closeNotification() {
 function closeDeleteModal() {
     document.getElementById('delete-modal').classList.add('hidden');
     document.getElementById('delete-modal').classList.remove('flex');
-    deleteForm = null;
 }
 </script>
 @endsection

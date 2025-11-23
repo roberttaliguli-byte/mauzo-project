@@ -21,14 +21,14 @@
             </div>
         </div>
         
-        <div class="white rounded-2xl shadow-lg border border-red-100 p-6 card-hover">
+        <div class="bg-white rounded-2xl shadow-lg border border-red-100 p-6 card-hover">
             <div class="flex items-center">
                 <div class="p-3 rounded-lg bg-red-100 text-red-600 mr-4">
                     <i class="fas fa-hand-holding-usd text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-sm text-black-500 font-medium">Mikopo Inayongoza</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ $madeni->count() }}</h3>
+                    <p class="text-sm text-black font-medium">Mikopo yote</p>
+                    <h3 class="text-2xl font-bold text-black">{{ $madeni->count() }}</h3>
                 </div>
             </div>
         </div>

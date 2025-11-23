@@ -15,29 +15,31 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LandingController; // 
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminController;
 
+// =========================
+// Admin routes
+// =========================
+Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function () {
 
-
-
-    Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('admin/makampuni', [CompanyController::class, 'makampuni'])->name('admin.makampuni');
-    
-    Route::post('/admin/approve-user/{id}', [AdminController::class, 'approveUser'])->name('admin.approveUser');
+    Route::get('/admin/makampuni', [CompanyController::class, 'makampuni'])->name('admin.makampuni');
 
-    
-    Route::post('/admin/company/{id}/verify', [AdminController::class, 'verify'])->name('admin.verify');
-    Route::delete('/admin/company/{id}', [AdminController::class, 'destroy'])->name('admin.destroy');
+    Route::post('/admin/approve-user/{id}', [AdminController::class, 'approveUser'])
+        ->name('admin.approveUser');
 
+    Route::post('/admin/company/{id}/verify', [AdminController::class, 'verifyCompany'])
+        ->name('admin.verifyCompany');
 
+    Route::delete('/admin/company/{id}', [AdminController::class, 'destroy'])
+        ->name('admin.destroyCompany');
 });
+
 
 // =========================
 // Public routes
 // =========================
-
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -46,23 +48,67 @@ Route::post('/register', [AuthController::class, 'registerPost'])->name('registe
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
 
-
 // =========================
 // Protected routes (auth middleware)
 // =========================
 Route::middleware('auth')->group(function () {
-
-    // Dashboard route (points to controller)
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
+    // Common routes for all authenticated users
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
-
     Route::get('/password/change', [PasswordController::class, 'showChangeForm'])->name('password.change');
     Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
-
     Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // =========================
+    // Boss routes
+    // =========================
+    Route::middleware('role:boss')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
+        Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
+        Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
+        Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
+        Route::get('/manunuzi', [ManunuziController::class, 'index'])->name('manunuzi.index');
+        Route::get('/wafanyakazi', [WafanyakaziController::class, 'index'])->name('wafanyakazi.index');
+        Route::get('/masaplaya', [MasaplayaController::class, 'index'])->name('masaplaya.index');
+        Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
+        Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
+    });
+
+    // =========================
+    // Mfanyakazi routes
+    // =========================
+    Route::middleware('role:mfanyakazi')->group(function () {
+        Route::get('/mfanyakazi/dashboard', [DashboardController::class, 'mfanyakaziDashboard'])->name('mfanyakazi.dashboard');
+
+        // Pages allowed for Mfanyakazi
+        Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
+        Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
+        Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
+        Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
+        Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
+    });
 });
+
+    // =========================
+    // Mfanyakazi routes
+    // =========================
+    Route::middleware('role:mfanyakazi')->group(function () {
+        Route::get('/mfanyakazi/dashboard', [DashboardController::class, 'index'])->name('mfanyakazi.dashboard');
+
+        // Only the pages allowed for Mfanyakazi
+        Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
+        Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
+        Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
+        Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
+        Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
+
+        
+    });
+
+
+
 
 // Wateja Routes
 // ================================

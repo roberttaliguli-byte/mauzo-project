@@ -21,7 +21,9 @@ class MauzoController extends Controller
     // -----------------------------
 public function index()
 {
-    $companyId = Auth::user()->company_id;
+    
+    
+   $companyId = Auth::user()->company_id;
 
     $bidhaa = Bidhaa::where('company_id', $companyId)
         ->orderBy('jina')
@@ -116,11 +118,8 @@ public function index()
 
                 $results[] = $mauzo;
             }
+             return response()->json([ 'message' => 'Mauzo yamerekodiwa kikamilifu!', 'mauzo' => $results ]);
 
-            return response()->json([
-                'message' => 'Mauzo yamerekodiwa kikamilifu!',
-                'mauzo' => $results
-            ]);
         });
     }
 
@@ -190,8 +189,7 @@ public function index()
                 'baki'          => $request->jumla,
             ]);
 
-            return redirect()->route('madeni.index')
-                             ->with('success', 'Kopesha limehifadhiwa kikamilifu!');
+           return redirect()->back()->with('success', 'Deni limerekodiwa kikamilifu!');
         });
     }
 
@@ -335,4 +333,5 @@ public function index()
             'message' => 'Bidhaa zimekopeshwa kwa mafanikio!',
         ]);
     }
+    
 }

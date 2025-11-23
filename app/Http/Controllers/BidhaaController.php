@@ -13,7 +13,9 @@ class BidhaaController extends Controller
      */
     public function index()
     {
+        
         $companyId = Auth::user()->company_id;
+
 
         // Show only products belonging to this company
         $bidhaa = Bidhaa::where('company_id', $companyId)

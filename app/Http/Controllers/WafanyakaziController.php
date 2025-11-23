@@ -13,7 +13,9 @@ class WafanyakaziController extends Controller
      */
     public function index()
     {
+    
         $companyId = Auth::user()->company_id;
+
 
         $wafanyakazi = Wafanyakazi::where('company_id', $companyId)
             ->latest()

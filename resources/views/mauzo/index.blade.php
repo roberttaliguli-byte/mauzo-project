@@ -8,18 +8,15 @@
 @section('content')
 <div class="space-y-6">
     
-<!-- Notification System - Centered Modern -->
-<div id="notification" class="fixed top-6 inset-x-0 flex justify-center z-50 hidden">
-    <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border transform transition-all duration-300 scale-95">
-        <div class="flex flex-col items-center text-center">
-            <div id="notification-icon" class="text-4xl mb-4"></div>
-            <p id="notification-message" class="text-lg font-semibold"></p>
+    <!-- Notification System -->
+    <div id="notification" class="fixed top-6 inset-x-0 flex justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border transform transition-all duration-300 scale-95">
+            <div class="flex flex-col items-center text-center">
+                <div id="notification-icon" class="text-4xl mb-4"></div>
+                <p id="notification-message" class="text-lg font-semibold"></p>
+            </div>
         </div>
     </div>
-    
-<div class="fixed inset-0 bg-black bg-opacity-30 -z-10"></div> -->
-</div>
-
 
     <!-- Page Navigation Tabs -->
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 card-hover">
@@ -43,145 +40,114 @@
         </div>
     </div>
 
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-xl p-4">
-            <div class="flex items-center">
-                <div class="p-2 rounded-lg bg-green-100 text-green-600 mr-3">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div>
-                    <p class="text-green-800 font-medium">{{ session('success') }}</p>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="bg-gradient-to-r from-red-50 to-pink-50 border border-red-300 rounded-xl p-4">
-            <div class="flex items-center">
-                <div class="p-2 rounded-lg bg-red-100 text-red-600 mr-3">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div>
-                    <h4 class="text-red-800 font-medium">Hitilafu katika Uwasilishaji</h4>
-                    <ul class="list-disc list-inside text-red-700 mt-1">
-                        @foreach($errors->all() as $error)
-                            <li class="text-sm">{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-    @endif
-
     <!-- TAB 1: Sehemu ya Mauzo -->
     <div id="sehemu-tab-content" class="space-y-6 tab-content active">
         <!-- Sales Form -->
-        <div class="bg-gradient-to-br from-green-100 to-green-200 rounded-2xl shadow-lg border border-green-200 p-8 card-hover">
-            <h2 class="text-2xl font-bold text-black-800 mb-6 flex items-center border-b border-emerald-700 pb-2">
+        <div class="bg-white rounded-2xl shadow-lg border border-green-200 p-6">
+            <h2 class="text-xl font-bold text-emerald-800 mb-4 flex items-center">
                 <i class="fas fa-cash-register mr-2 text-emerald-600"></i>
                 Rekodi Mauzo Mapya
             </h2>
 
-            <form method="POST" action="{{ route('mauzo.store') }}" class="mb-8 bg-gradient-to-br from-amber-200 to-amber-300 p-6 rounded-2xl border border-emerald-100 shadow-sm" id="sales-form">
+            <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-4" id="sales-form">
                 @csrf
 
-                <!-- First Line -->
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                    <!-- Bidhaa -->
-                    <div class="md:col-span-2">
-                        <label for="bidhaaSelect" class="block mb-2 font-bold text-emerald-800 flex items-center gap-2">
-                            <i class="fas fa-box text-emerald-600 text-sm"></i>
-                            Chagua Bidhaa
-                        </label>
-                        <select id="bidhaaSelect" name="bidhaa_id" class="w-full rounded-lg border-2 border-emerald-200 bg-white p-3 text-sm shadow-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-300">
-                            <option value="">Chagua Bidhaa...</option>
-                            @foreach($bidhaa as $item)
-                                <option value="{{ $item->id }}" data-bei="{{ $item->bei_kuuza }}" data-stock="{{ $item->idadi }}">
-                                    {{ $item->jina }} ({{ $item->aina }})
-                                </option>
-                            @endforeach
-                        </select>
+                <!-- Product and Basic Info Row -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Bidhaa with Search -->
+                    <div>
+                        <label class="block text-sm font-semibold text-emerald-800 mb-1">Bidhaa</label>
+                        <div class="relative">
+                            <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200 mb-2">
+                            <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
+                                <option value="">Chagua Bidhaa...</option>
+                                @foreach($bidhaa as $item)
+                                    <option value="{{ $item->id }}" data-bei="{{ $item->bei_kuuza }}" data-stock="{{ $item->idadi }}">
+                                        {{ $item->jina }} ({{ $item->aina }}) - Stock: {{ $item->idadi }} - Bei: {{ number_format($item->bei_kuuza) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Idadi -->
                     <div>
-                        <label class="block mb-2 font-bold text-emerald-800 flex items-center gap-2">
-                            <i class="fas fa-hashtag text-emerald-600 text-sm"></i>
-                            Idadi
-                        </label>
-                        <input type="number" name="idadi" id="quantity-input" min="1" value="1" class="w-full border-2 border-emerald-200 rounded-lg p-3 text-sm shadow-sm focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 hover:border-emerald-300 transition-all duration-300">
+                        <label class="block text-sm font-semibold text-emerald-800 mb-1">Idadi</label>
+                        <input type="number" name="idadi" id="quantity-input" min="1" value="1" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
                     </div>
 
                     <!-- Bei -->
                     <div>
-                        <label class="block mb-2 font-bold text-emerald-800 flex items-center gap-2">
-                            <i class="fas fa-tag text-emerald-600 text-sm"></i>
-                            Bei (Tsh)
-                        </label>
-                        <input type="number" name="bei" id="price-input" readonly class="w-full bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-lg p-3 text-sm shadow-inner text-emerald-800 font-semibold cursor-not-allowed">
+                        <label class="block text-sm font-semibold text-emerald-800 mb-1">Bei (Tsh)</label>
+                        <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
+                    </div>
+
+                    <!-- Stock -->
+                    <div>
+                        <label class="block text-sm font-semibold text-emerald-800 mb-1">Stock Ipo</label>
+                        <input type="number" id="stock-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
+                    </div>
+                </div>
+
+                <!-- Discount Section -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Punguzo kwa Kila Bidhaa -->
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="punguzo-bidhaa-check" class="h-4 w-4 text-amber-600">
+                            <label class="text-sm font-semibold text-amber-800">Punguzo kwa Kila Bidhaa</label>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="number" name="punguzo_bidhaa" id="discount-bidhaa-input" min="0" placeholder="Kiasi" disabled class="flex-1 border border-amber-200 rounded-lg p-2 text-sm disabled:bg-gray-100">
+                            <select id="discount-bidhaa-type" disabled class="w-20 border border-amber-200 rounded-lg p-2 text-sm disabled:bg-gray-100">
+                                <option value="fixed">Tsh</option>
+                                <option value="percent">%</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Punguzo kwa Jumla -->
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="punguzo-jumla-check" class="h-4 w-4 text-green-600">
+                            <label class="text-sm font-semibold text-green-800">Punguzo kwa Jumla</label>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="number" name="punguzo_jumla" id="discount-jumla-input" min="0" placeholder="Kiasi" disabled class="flex-1 border border-green-200 rounded-lg p-2 text-sm disabled:bg-gray-100">
+                            <select id="discount-jumla-type" disabled class="w-20 border border-green-200 rounded-lg p-2 text-sm disabled:bg-gray-100">
+                                <option value="fixed">Tsh</option>
+                                <option value="percent">%</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Jumla -->
-                    <div>
-                        <label class="block mb-2 font-bold text-emerald-800 flex items-center gap-2">
-                            <i class="fas fa-calculator text-emerald-600 text-sm"></i>
-                            Jumla (Tsh)
-                        </label>
-                        <input type="number" name="jumla" id="total-input" readonly class="w-full bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-lg p-3 text-sm shadow-inner text-emerald-800 font-semibold cursor-not-allowed">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-semibold text-emerald-800">Jumla (Tsh)</label>
+                        <input type="number" name="jumla" id="total-input" readonly class="w-full bg-green-50 border border-green-300 rounded-lg p-2 text-sm font-bold text-green-800">
                     </div>
                 </div>
 
-                <!-- Second Line -->
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <!-- Stock Ipo -->
-                    <div>
-                        <label class="block mb-2 font-bold text-emerald-800 flex items-center gap-2">
-                            <i class="fas fa-boxes text-emerald-600 text-sm"></i>
-                            Stock Ipo
-                        </label>
-                        <input type="number" id="stock-input" readonly class="w-full bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-lg p-3 text-sm shadow-inner text-emerald-800 font-semibold cursor-not-allowed">
-                    </div>
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-3 gap-3 pt-2">
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-1">
+                        <i class="fas fa-cash-register"></i>
+                        Uza
+                    </button>
 
-                    <!-- Punguzo -->
-                    <div class="md:col-span-2">
-                        <label class="block mb-2 font-bold text-emerald-800 flex items-center gap-2">
-                            <i class="fas fa-percentage text-emerald-600 text-sm"></i>
-                            Punguzo
-                        </label>
-                        <div class="flex items-center gap-2 mb-2">
-                            <input type="checkbox" id="punguzo-check" class="h-4 w-4 text-amber-600 focus:ring-amber-400 rounded border-amber-300">
-                            <label for="punguzo-check" class="text-sm font-medium text-amber-800">Toa punguzo</label>
-                        </div>
-                        <input type="number" name="punguzo" id="discount-input" min="0" placeholder="Kiasi..." disabled class="w-full border-2 border-amber-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-amber-200 focus:border-amber-500 hover:border-amber-300 transition-all duration-300 disabled:bg-gray-100 disabled:border-gray-200">
-                    </div>
+                    <button type="button" id="kopesha-btn" class="bg-amber-600 hover:bg-amber-700 text-white p-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-1">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Kopesha
+                    </button>
 
-                    <!-- Actions -->
-                    <div class="md:col-span-2">
-                        <label class="block mb-2 font-bold text-emerald-800 flex items-center gap-2">
-                            <i class="fas fa-bolt text-emerald-600 text-sm"></i>
-                            Vitendo
-                        </label>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button type="submit" class="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-3 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg text-xs">
-                                <i class="fas fa-cash-register text-white text-xs"></i>
-                                Uza
-                            </button>
-
-                            <button type="button" id="kopesha-btn" class="bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-yellow-600 text-white px-3 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg text-xs">
-                                <i class="fas fa-hand-holding-usd text-white text-xs"></i>
-                                Kopesha
-                            </button>
-
-                            <button type="button" id="add-to-cart-btn" class="bg-gradient-to-r from-green-500 to-green-700 hover:from-brown-600 hover:to-brown-600 text-white px-3 py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg text-xs">
-                                <i class="fas fa-cart-plus text-white text-xs"></i>
-                                Kikapu
-                            </button>
-                        </div>
-                    </div>
+                    <button type="button" id="add-to-cart-btn" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-1">
+                        <i class="fas fa-cart-plus"></i>
+                        Kikapu
+                    </button>
                 </div>
             </form>
+        </div>
+    
 
             <!-- Taarifa Fupi ya Fedha -->
             <div class="mt-8">
@@ -967,7 +933,6 @@
 }
 </style>
 @endpush
-
 @push('scripts')
 <script>
 class MauzoManager {
@@ -982,6 +947,8 @@ class MauzoManager {
         this.bindEvents();
         this.updateCartCount();
         this.setTodayDate();
+        this.initBidhaaSearch();
+        this.initBarcodeRows();
     }
 
     bindEvents() {
@@ -1014,6 +981,60 @@ class MauzoManager {
         
         // Cart events
         this.bindCartEvents();
+
+        // Delete sale events
+        this.bindDeleteEvents();
+    }
+
+    initBidhaaSearch() {
+        const bidhaaSearch = document.getElementById('bidhaaSearch');
+        const bidhaaSelect = document.getElementById('bidhaaSelect');
+
+        if (!bidhaaSearch || !bidhaaSelect) return;
+
+        // Show select dropdown when search input is focused
+        bidhaaSearch.addEventListener('focus', () => {
+            bidhaaSelect.classList.remove('hidden');
+        });
+
+        // Filter options based on search input
+        bidhaaSearch.addEventListener('input', (e) => {
+            const filter = e.target.value.toLowerCase();
+            const options = bidhaaSelect.getElementsByTagName('option');
+            
+            for (let i = 0; i < options.length; i++) {
+                const text = options[i].textContent.toLowerCase();
+                if (text.includes(filter)) {
+                    options[i].style.display = '';
+                } else {
+                    options[i].style.display = 'none';
+                }
+            }
+        });
+
+        // Update search input when option is selected
+        bidhaaSelect.addEventListener('change', () => {
+            if (bidhaaSelect.value) {
+                const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
+                bidhaaSearch.value = selectedOption.text.split(' - ')[0];
+                bidhaaSelect.classList.add('hidden');
+                this.updateProductDetails();
+            }
+        });
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#bidhaaSearch') && !e.target.closest('#bidhaaSelect')) {
+                bidhaaSelect.classList.add('hidden');
+            }
+        });
+    }
+
+    initBarcodeRows() {
+        // Add events to initial barcode rows
+        document.querySelectorAll('.barcode-row').forEach(row => {
+            this.addBarcodeRowEvents(row);
+        });
     }
 
     showTab(tabName) {
@@ -1042,87 +1063,269 @@ class MauzoManager {
     bindSalesFormEvents() {
         const bidhaaSelect = document.getElementById('bidhaaSelect');
         const quantityInput = document.getElementById('quantity-input');
-        const discountCheck = document.getElementById('punguzo-check');
-        const discountInput = document.getElementById('discount-input');
+        const discountBidhaaCheck = document.getElementById('punguzo-bidhaa-check');
+        const discountJumlaCheck = document.getElementById('punguzo-jumla-check');
+        const discountBidhaaInput = document.getElementById('discount-bidhaa-input');
+        const discountJumlaInput = document.getElementById('discount-jumla-input');
+        const discountBidhaaType = document.getElementById('discount-bidhaa-type');
+        const discountJumlaType = document.getElementById('discount-jumla-type');
         const kopeshaBtn = document.getElementById('kopesha-btn');
         const addToCartBtn = document.getElementById('add-to-cart-btn');
+        const salesForm = document.getElementById('sales-form');
+
+        if (!salesForm) return;
 
         // Product selection
-        bidhaaSelect.addEventListener('change', () => {
-            this.updateProductDetails();
-        });
+        if (bidhaaSelect) {
+            bidhaaSelect.addEventListener('change', () => {
+                this.updateProductDetails();
+            });
+        }
 
         // Quantity change
-        quantityInput.addEventListener('input', () => {
-            this.updateTotals();
-        });
+        if (quantityInput) {
+            quantityInput.addEventListener('input', () => {
+                this.updateTotals();
+            });
+        }
 
-        // Discount toggle
-        discountCheck.addEventListener('change', () => {
-            discountInput.disabled = !discountCheck.checked;
-            if (!discountCheck.checked) {
-                discountInput.value = '';
-            }
-            this.updateTotals();
-        });
+        // Discount toggles
+        if (discountBidhaaCheck) {
+            discountBidhaaCheck.addEventListener('change', () => {
+                discountBidhaaInput.disabled = !discountBidhaaCheck.checked;
+                if (discountBidhaaType) discountBidhaaType.disabled = !discountBidhaaCheck.checked;
+                this.updateTotals();
+            });
+        }
 
-        // Discount input
-        discountInput.addEventListener('input', () => {
-            this.updateTotals();
-        });
+        if (discountJumlaCheck) {
+            discountJumlaCheck.addEventListener('change', () => {
+                discountJumlaInput.disabled = !discountJumlaCheck.checked;
+                if (discountJumlaType) discountJumlaType.disabled = !discountJumlaCheck.checked;
+                this.updateTotals();
+            });
+        }
+
+        // Discount inputs
+        if (discountBidhaaInput) {
+            discountBidhaaInput.addEventListener('input', () => this.updateTotals());
+        }
+        if (discountJumlaInput) {
+            discountJumlaInput.addEventListener('input', () => this.updateTotals());
+        }
+        if (discountBidhaaType) {
+            discountBidhaaType.addEventListener('change', () => this.updateTotals());
+        }
+        if (discountJumlaType) {
+            discountJumlaType.addEventListener('change', () => this.updateTotals());
+        }
 
         // Kopesha button
-        kopeshaBtn.addEventListener('click', () => {
-            this.openKopeshaModal();
-        });
+        if (kopeshaBtn) {
+            kopeshaBtn.addEventListener('click', () => {
+                this.openKopeshaModal();
+            });
+        }
 
         // Add to cart button
-        addToCartBtn.addEventListener('click', () => {
-            this.addToCart();
+        if (addToCartBtn) {
+            addToCartBtn.addEventListener('click', () => {
+                this.addToCart();
+            });
+        }
+
+        // Form submission
+        salesForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitForm(e.target);
         });
     }
 
     updateProductDetails() {
         const select = document.getElementById('bidhaaSelect');
+        const priceInput = document.getElementById('price-input');
+        const stockInput = document.getElementById('stock-input');
+        const quantityInput = document.getElementById('quantity-input');
+        
+        if (!select || !priceInput || !stockInput) return;
+
         const selectedOption = select.options[select.selectedIndex];
         
         if (selectedOption.value) {
             const price = parseFloat(selectedOption.dataset.bei) || 0;
             const stock = parseInt(selectedOption.dataset.stock) || 0;
             
-            document.getElementById('price-input').value = price;
-            document.getElementById('stock-input').value = stock;
+            priceInput.value = price;
+            stockInput.value = stock;
             
             // Update kopesha form hidden fields
-            document.getElementById('kopesha-bidhaa-id').value = selectedOption.value;
-            document.getElementById('kopesha-bei').value = price;
+            const kopeshaBidhaaId = document.getElementById('kopesha-bidhaa-id');
+            const kopeshaBei = document.getElementById('kopesha-bei');
+            if (kopeshaBidhaaId) kopeshaBidhaaId.value = selectedOption.value;
+            if (kopeshaBei) kopeshaBei.value = price;
             
             // Reset quantity if it exceeds stock
-            const quantityInput = document.getElementById('quantity-input');
-            if (parseInt(quantityInput.value) > stock) {
+            if (quantityInput && parseInt(quantityInput.value) > stock) {
                 quantityInput.value = stock;
             }
         } else {
-            document.getElementById('price-input').value = '';
-            document.getElementById('stock-input').value = '';
+            priceInput.value = '';
+            stockInput.value = '';
         }
         
         this.updateTotals();
     }
 
     updateTotals() {
-        const quantity = parseInt(document.getElementById('quantity-input').value) || 0;
-        const price = parseFloat(document.getElementById('price-input').value) || 0;
-        const discount = document.getElementById('punguzo-check').checked ? 
-            parseFloat(document.getElementById('discount-input').value) || 0 : 0;
+        const quantityInput = document.getElementById('quantity-input');
+        const priceInput = document.getElementById('price-input');
+        const totalInput = document.getElementById('total-input');
         
-        const total = Math.max(0, (quantity * price) - discount);
-        document.getElementById('total-input').value = total;
+        if (!quantityInput || !priceInput || !totalInput) return;
+
+        const quantity = parseInt(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        
+        // Calculate base total
+        let baseTotal = quantity * price;
+        let finalTotal = baseTotal;
+
+        // Apply product discount (per item)
+        const discountBidhaaCheck = document.getElementById('punguzo-bidhaa-check');
+        if (discountBidhaaCheck && discountBidhaaCheck.checked) {
+            const discountBidhaaInput = document.getElementById('discount-bidhaa-input');
+            const discountBidhaaType = document.getElementById('discount-bidhaa-type');
+            
+            if (discountBidhaaInput && discountBidhaaType) {
+                const discountValue = parseFloat(discountBidhaaInput.value) || 0;
+                const discountType = discountBidhaaType.value;
+                
+                if (discountType === 'percent') {
+                    // Apply percentage discount to each item
+                    const discountPerItem = (price * discountValue) / 100;
+                    finalTotal = (price - discountPerItem) * quantity;
+                } else {
+                    // Apply fixed discount to each item
+                    finalTotal = (price - discountValue) * quantity;
+                }
+            }
+        }
+        
+        // Apply total discount (on final amount)
+        const discountJumlaCheck = document.getElementById('punguzo-jumla-check');
+        if (discountJumlaCheck && discountJumlaCheck.checked) {
+            const discountJumlaInput = document.getElementById('discount-jumla-input');
+            const discountJumlaType = document.getElementById('discount-jumla-type');
+            
+            if (discountJumlaInput && discountJumlaType) {
+                const discountValue = parseFloat(discountJumlaInput.value) || 0;
+                const discountType = discountJumlaType.value;
+                
+                if (discountType === 'percent') {
+                    finalTotal -= (finalTotal * discountValue) / 100;
+                } else {
+                    finalTotal -= discountValue;
+                }
+            }
+        }
+        
+        // Ensure total doesn't go below 0
+        finalTotal = Math.max(0, finalTotal);
+        totalInput.value = finalTotal.toFixed(2);
         
         // Update kopesha form
-        document.getElementById('kopesha-idadi').value = quantity;
-        document.getElementById('kopesha-jumla').value = total;
-        document.getElementById('kopesha-baki').value = total;
+        const kopeshaIdadi = document.getElementById('kopesha-idadi');
+        const kopeshaJumla = document.getElementById('kopesha-jumla');
+        const kopeshaBaki = document.getElementById('kopesha-baki');
+        
+        if (kopeshaIdadi) kopeshaIdadi.value = quantity;
+        if (kopeshaJumla) kopeshaJumla.value = finalTotal;
+        if (kopeshaBaki) kopeshaBaki.value = finalTotal;
+    }
+
+async submitForm(form) {
+    const bidhaaId = document.getElementById('bidhaaSelect').value;
+    const quantity = document.getElementById('quantity-input').value;
+
+    if (!bidhaaId || !quantity || quantity < 1) {
+        this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+        return;
+    }
+
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: formData
+        });
+
+        // 🟢 FIX: Check response before parsing JSON
+        let data = {};
+        try {
+            data = await response.json();
+        } catch (jsonError) {
+            console.warn("Response is not JSON");
+        }
+
+        if (response.ok) {
+            this.showNotification('Mauzo yamehifadhiwa kikamilifu!', 'success');
+            this.resetForm();
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
+    }
+}
+
+
+    resetForm() {
+        const salesForm = document.getElementById('sales-form');
+        if (!salesForm) return;
+
+        salesForm.reset();
+        
+        const bidhaaSearch = document.getElementById('bidhaaSearch');
+        const priceInput = document.getElementById('price-input');
+        const stockInput = document.getElementById('stock-input');
+        const totalInput = document.getElementById('total-input');
+        const quantityInput = document.getElementById('quantity-input');
+        
+        if (bidhaaSearch) bidhaaSearch.value = '';
+        if (priceInput) priceInput.value = '';
+        if (stockInput) stockInput.value = '';
+        if (totalInput) totalInput.value = '';
+        if (quantityInput) quantityInput.value = 1;
+        
+        // Reset discount inputs
+        const discountBidhaaCheck = document.getElementById('punguzo-bidhaa-check');
+        const discountJumlaCheck = document.getElementById('punguzo-jumla-check');
+        const discountBidhaaInput = document.getElementById('discount-bidhaa-input');
+        const discountJumlaInput = document.getElementById('discount-jumla-input');
+        const discountBidhaaType = document.getElementById('discount-bidhaa-type');
+        const discountJumlaType = document.getElementById('discount-jumla-type');
+        
+        if (discountBidhaaCheck) discountBidhaaCheck.checked = false;
+        if (discountJumlaCheck) discountJumlaCheck.checked = false;
+        if (discountBidhaaInput) {
+            discountBidhaaInput.value = '';
+            discountBidhaaInput.disabled = true;
+        }
+        if (discountJumlaInput) {
+            discountJumlaInput.value = '';
+            discountJumlaInput.disabled = true;
+        }
+        if (discountBidhaaType) discountBidhaaType.disabled = true;
+        if (discountJumlaType) discountJumlaType.disabled = true;
     }
 
     openKopeshaModal() {
@@ -1136,49 +1339,73 @@ class MauzoManager {
 
         // Fill customer details if customer is selected
         const mtejaSelect = document.getElementById('mteja-select');
-        mtejaSelect.addEventListener('change', this.fillMtejaDetails.bind(this));
+        if (mtejaSelect) {
+            mtejaSelect.addEventListener('change', this.fillMtejaDetails.bind(this));
+        }
 
-        document.getElementById('kopesha-modal').classList.remove('hidden');
+        const kopeshaModal = document.getElementById('kopesha-modal');
+        if (kopeshaModal) {
+            kopeshaModal.classList.remove('hidden');
+        }
     }
 
     fillMtejaDetails() {
         const select = document.getElementById('mteja-select');
+        if (!select) return;
+
         const selectedOption = select.options[select.selectedIndex];
+        const kopeshaJina = document.getElementById('kopesha-jina');
+        const kopeshaSimu = document.getElementById('kopesha-simu');
+        const kopeshaBaruaPepe = document.getElementById('kopesha-barua-pepe');
+        const kopeshaAnapoishi = document.getElementById('kopesha-anapoishi');
         
         if (selectedOption.value) {
-            document.getElementById('kopesha-jina').value = selectedOption.dataset.jina || '';
-            document.getElementById('kopesha-simu').value = selectedOption.dataset.simu || '';
-            document.getElementById('kopesha-barua-pepe').value = selectedOption.dataset.barua_pepe || '';
-            document.getElementById('kopesha-anapoishi').value = selectedOption.dataset.anapoishi || '';
+            if (kopeshaJina) kopeshaJina.value = selectedOption.dataset.jina || '';
+            if (kopeshaSimu) kopeshaSimu.value = selectedOption.dataset.simu || '';
+            if (kopeshaBaruaPepe) kopeshaBaruaPepe.value = selectedOption.dataset.barua_pepe || '';
+            if (kopeshaAnapoishi) kopeshaAnapoishi.value = selectedOption.dataset.anapoishi || '';
         } else {
-            document.getElementById('kopesha-jina').value = '';
-            document.getElementById('kopesha-simu').value = '';
-            document.getElementById('kopesha-barua-pepe').value = '';
-            document.getElementById('kopesha-anapoishi').value = '';
+            if (kopeshaJina) kopeshaJina.value = '';
+            if (kopeshaSimu) kopeshaSimu.value = '';
+            if (kopeshaBaruaPepe) kopeshaBaruaPepe.value = '';
+            if (kopeshaAnapoishi) kopeshaAnapoishi.value = '';
         }
     }
 
     addToCart() {
         const bidhaaSelect = document.getElementById('bidhaaSelect');
+        const quantityInput = document.getElementById('quantity-input');
+        const priceInput = document.getElementById('price-input');
+        
+        if (!bidhaaSelect || !quantityInput || !priceInput) return;
+
         const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
-        const quantity = parseInt(document.getElementById('quantity-input').value) || 0;
-        const price = parseFloat(document.getElementById('price-input').value) || 0;
-        const discount = document.getElementById('punguzo-check').checked ? 
-            parseFloat(document.getElementById('discount-input').value) || 0 : 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        
+        const discountBidhaaCheck = document.getElementById('punguzo-bidhaa-check');
+        const discountJumlaCheck = document.getElementById('punguzo-jumla-check');
+        const discountBidhaaInput = document.getElementById('discount-bidhaa-input');
+        const discountJumlaInput = document.getElementById('discount-jumla-input');
+        const discountBidhaaType = document.getElementById('discount-bidhaa-type');
+        const discountJumlaType = document.getElementById('discount-jumla-type');
 
         if (!selectedOption.value || quantity < 1) {
             this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
             return;
         }
 
-        const productName = selectedOption.text.split(' (')[0]; // Get product name without type
-        const total = (quantity * price) - discount;
+        const productName = selectedOption.text.split(' (')[0];
+        const total = parseFloat(document.getElementById('total-input').value) || 0;
 
         const cartItem = {
             jina: productName,
             bei: price,
             idadi: quantity,
-            punguzo: discount,
+            punguzo_bidhaa: discountBidhaaCheck && discountBidhaaCheck.checked ? parseFloat(discountBidhaaInput.value) || 0 : 0,
+            punguzo_jumla: discountJumlaCheck && discountJumlaCheck.checked ? parseFloat(discountJumlaInput.value) || 0 : 0,
+            discount_bidhaa_type: discountBidhaaType ? discountBidhaaType.value : 'fixed',
+            discount_jumla_type: discountJumlaType ? discountJumlaType.value : 'fixed',
             jumla: total,
             bidhaa_id: selectedOption.value,
             timestamp: new Date().toISOString()
@@ -1189,31 +1416,31 @@ class MauzoManager {
         this.updateCartCount();
         
         this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
-        
-        // Reset form
-        document.getElementById('bidhaaSelect').value = '';
-        document.getElementById('quantity-input').value = 1;
-        document.getElementById('punguzo-check').checked = false;
-        document.getElementById('discount-input').value = '';
-        document.getElementById('discount-input').disabled = true;
-        this.updateProductDetails();
+        this.resetForm();
     }
 
     bindBarcodeEvents() {
-        // Add barcode row
-        document.getElementById('add-barcode-row').addEventListener('click', () => {
-            this.addBarcodeRow();
-        });
+        const addBarcodeRowBtn = document.getElementById('add-barcode-row');
+        const barcodeForm = document.getElementById('barcode-form');
 
-        // Barcode form submission
-        document.getElementById('barcode-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.submitBarcodeSales();
-        });
+        if (addBarcodeRowBtn) {
+            addBarcodeRowBtn.addEventListener('click', () => {
+                this.addBarcodeRow();
+            });
+        }
+
+        if (barcodeForm) {
+            barcodeForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitBarcodeSales();
+            });
+        }
     }
 
     addBarcodeRow() {
         const tbody = document.getElementById('barcode-tbody');
+        if (!tbody) return;
+
         const newRow = document.createElement('tr');
         newRow.className = 'barcode-row';
         newRow.innerHTML = `
@@ -1243,8 +1470,6 @@ class MauzoManager {
         `;
         
         tbody.appendChild(newRow);
-        
-        // Add event listeners to new row
         this.addBarcodeRowEvents(newRow);
     }
 
@@ -1253,22 +1478,28 @@ class MauzoManager {
         const quantityInput = row.querySelector('.quantity-input');
         const removeBtn = row.querySelector('.remove-barcode-row');
 
-        barcodeInput.addEventListener('change', () => {
-            this.fetchBidhaaByBarcode(barcodeInput);
-        });
+        if (barcodeInput) {
+            barcodeInput.addEventListener('change', () => {
+                this.fetchBidhaaByBarcode(barcodeInput);
+            });
+        }
 
-        quantityInput.addEventListener('input', () => {
-            this.updateBarcodeRowTotal(row);
-        });
+        if (quantityInput) {
+            quantityInput.addEventListener('input', () => {
+                this.updateBarcodeRowTotal(row);
+            });
+        }
 
-        removeBtn.addEventListener('click', () => {
-            if (document.querySelectorAll('.barcode-row').length > 1) {
-                row.remove();
-                this.updateBarcodeTotal();
-            } else {
-                this.showNotification('Huwezi kufuta safu ya mwisho!', 'warning');
-            }
-        });
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                if (document.querySelectorAll('.barcode-row').length > 1) {
+                    row.remove();
+                    this.updateBarcodeTotal();
+                } else {
+                    this.showNotification('Huwezi kufuta safu ya mwisho!', 'warning');
+                }
+            });
+        }
     }
 
     fetchBidhaaByBarcode(input) {
@@ -1284,49 +1515,62 @@ class MauzoManager {
         const product = this.bidhaaList.find(b => b.barcode === barcode);
         
         if (product) {
-            productName.value = product.jina;
-            productPrice.value = product.bei_kuuza;
-            stockInput.value = product.idadi;
+            if (productName) productName.value = product.jina;
+            if (productPrice) productPrice.value = product.bei_kuuza;
+            if (stockInput) stockInput.value = product.idadi;
             
             // Reset quantity if it exceeds stock
-            if (parseInt(quantityInput.value) > product.idadi) {
+            if (quantityInput && parseInt(quantityInput.value) > product.idadi) {
                 quantityInput.value = product.idadi;
             }
             
             this.updateBarcodeRowTotal(row);
         } else {
-            productName.value = '';
-            productPrice.value = '';
-            stockInput.value = '';
+            if (productName) productName.value = '';
+            if (productPrice) productPrice.value = '';
+            if (stockInput) stockInput.value = '';
             this.showNotification('Bidhaa haipatikani kwa barcode hii!', 'error');
         }
     }
 
     updateBarcodeRowTotal(row) {
-        const price = parseFloat(row.querySelector('.product-price').value) || 0;
-        const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
-        const stock = parseInt(row.querySelector('.stock-input').value) || 0;
+        const productPrice = row.querySelector('.product-price');
+        const quantityInput = row.querySelector('.quantity-input');
+        const stockInput = row.querySelector('.stock-input');
+        const totalInput = row.querySelector('.total-input');
+
+        if (!productPrice || !quantityInput || !totalInput) return;
+
+        const price = parseFloat(productPrice.value) || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const stock = stockInput ? parseInt(stockInput.value) || 0 : 0;
         
-        if (quantity > stock) {
+        if (stock > 0 && quantity > stock) {
             this.showNotification('Idadi uliyoiingiza inazidi idadi iliyopo!', 'error');
-            row.querySelector('.quantity-input').value = stock;
+            quantityInput.value = stock;
             return;
         }
         
         const total = price * quantity;
-        row.querySelector('.total-input').value = total;
+        totalInput.value = total;
         
         this.updateBarcodeTotal();
     }
 
     updateBarcodeTotal() {
+        const barcodeTotal = document.getElementById('barcode-total');
+        if (!barcodeTotal) return;
+
         let total = 0;
         document.querySelectorAll('.barcode-row').forEach(row => {
-            const rowTotal = parseFloat(row.querySelector('.total-input').value) || 0;
-            total += rowTotal;
+            const totalInput = row.querySelector('.total-input');
+            if (totalInput) {
+                const rowTotal = parseFloat(totalInput.value) || 0;
+                total += rowTotal;
+            }
         });
         
-        document.getElementById('barcode-total').textContent = total.toLocaleString() + '/=';
+        barcodeTotal.textContent = total.toLocaleString() + '/=';
     }
 
     submitBarcodeSales() {
@@ -1334,16 +1578,21 @@ class MauzoManager {
         let hasValidItems = false;
 
         document.querySelectorAll('.barcode-row').forEach(row => {
-            const barcode = row.querySelector('.barcode-input').value.trim();
-            const quantity = parseInt(row.querySelector('.quantity-input').value) || 0;
+            const barcodeInput = row.querySelector('.barcode-input');
+            const quantityInput = row.querySelector('.quantity-input');
             
-            if (barcode && quantity > 0) {
-                items.push({
-                    barcode: barcode,
-                    idadi: quantity,
-                    punguzo: 0
-                });
-                hasValidItems = true;
+            if (barcodeInput && quantityInput) {
+                const barcode = barcodeInput.value.trim();
+                const quantity = parseInt(quantityInput.value) || 0;
+                
+                if (barcode && quantity > 0) {
+                    items.push({
+                        barcode: barcode,
+                        idadi: quantity,
+                        punguzo: 0
+                    });
+                    hasValidItems = true;
+                }
             }
         });
 
@@ -1413,158 +1662,203 @@ class MauzoManager {
     }
 
     bindModalEvents() {
+        // Close modal functions
+        const closeModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
+        };
+
         // Kopesha modal
-        const kopeshaModal = document.getElementById('kopesha-modal');
         const closeKopeshaBtn = document.getElementById('close-kopesha-modal');
-
-        closeKopeshaBtn.addEventListener('click', () => {
-            kopeshaModal.classList.add('hidden');
-        });
-
-        kopeshaModal.addEventListener('click', (e) => {
-            if (e.target === kopeshaModal || e.target.classList.contains('modal-overlay')) {
-                kopeshaModal.classList.add('hidden');
-            }
-        });
+        const kopeshaModal = document.getElementById('kopesha-modal');
+        
+        if (closeKopeshaBtn && kopeshaModal) {
+            closeKopeshaBtn.addEventListener('click', () => closeModal('kopesha-modal'));
+            kopeshaModal.addEventListener('click', (e) => {
+                if (e.target === kopeshaModal || e.target.classList.contains('modal-overlay')) {
+                    closeModal('kopesha-modal');
+                }
+            });
+        }
 
         // Kikapu modal
-        const kikapuModal = document.getElementById('kikapu-modal');
         const closeKikapuBtn = document.getElementById('close-kikapu-modal');
+        const kikapuModal = document.getElementById('kikapu-modal');
         
-        closeKikapuBtn.addEventListener('click', () => {
-            kikapuModal.classList.add('hidden');
-        });
-
-        kikapuModal.addEventListener('click', (e) => {
-            if (e.target === kikapuModal || e.target.classList.contains('modal-overlay')) {
-                kikapuModal.classList.add('hidden');
-            }
-        });
+        if (closeKikapuBtn && kikapuModal) {
+            closeKikapuBtn.addEventListener('click', () => closeModal('kikapu-modal'));
+            kikapuModal.addEventListener('click', (e) => {
+                if (e.target === kikapuModal || e.target.classList.contains('modal-overlay')) {
+                    closeModal('kikapu-modal');
+                }
+            });
+        }
 
         // Kopesha Kikapu modal
-        const kopeshaKikapuModal = document.getElementById('kopesha-kikapu-modal');
         const closeKopeshaKikapuBtn = document.getElementById('close-kopesha-kikapu-modal');
-
-        closeKopeshaKikapuBtn.addEventListener('click', () => {
-            kopeshaKikapuModal.classList.add('hidden');
-        });
-
-        kopeshaKikapuModal.addEventListener('click', (e) => {
-            if (e.target === kopeshaKikapuModal || e.target.classList.contains('modal-overlay')) {
-                kopeshaKikapuModal.classList.add('hidden');
-            }
-        });
+        const kopeshaKikapuModal = document.getElementById('kopesha-kikapu-modal');
+        
+        if (closeKopeshaKikapuBtn && kopeshaKikapuModal) {
+            closeKopeshaKikapuBtn.addEventListener('click', () => closeModal('kopesha-kikapu-modal'));
+            kopeshaKikapuModal.addEventListener('click', (e) => {
+                if (e.target === kopeshaKikapuModal || e.target.classList.contains('modal-overlay')) {
+                    closeModal('kopesha-kikapu-modal');
+                }
+            });
+        }
 
         // Delete sale modal
-        const deleteSaleModal = document.getElementById('delete-sale-modal');
         const cancelDeleteSale = document.getElementById('cancel-delete-sale');
-
-        cancelDeleteSale.addEventListener('click', () => {
-            deleteSaleModal.classList.add('hidden');
-        });
-
-        deleteSaleModal.addEventListener('click', (e) => {
-            if (e.target === deleteSaleModal || e.target.classList.contains('modal-overlay')) {
-                deleteSaleModal.classList.add('hidden');
-            }
-        });
+        const deleteSaleModal = document.getElementById('delete-sale-modal');
+        
+        if (cancelDeleteSale && deleteSaleModal) {
+            cancelDeleteSale.addEventListener('click', () => closeModal('delete-sale-modal'));
+            deleteSaleModal.addEventListener('click', (e) => {
+                if (e.target === deleteSaleModal || e.target.classList.contains('modal-overlay')) {
+                    closeModal('delete-sale-modal');
+                }
+            });
+        }
 
         // Close modals on Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                kopeshaModal.classList.add('hidden');
-                kikapuModal.classList.add('hidden');
-                kopeshaKikapuModal.classList.add('hidden');
-                deleteSaleModal.classList.add('hidden');
+                closeModal('kopesha-modal');
+                closeModal('kikapu-modal');
+                closeModal('kopesha-kikapu-modal');
+                closeModal('delete-sale-modal');
             }
         });
     }
 
     bindCartEvents() {
-        // Clear cart
-        document.getElementById('clear-cart').addEventListener('click', () => {
-            this.clearCart();
+        const clearCartBtn = document.getElementById('clear-cart');
+        const checkoutCartBtn = document.getElementById('checkout-cart');
+        const kopeshaKikapuBtn = document.getElementById('kopesha-kikapu-btn');
+        const kopeshaKikapuForm = document.getElementById('kopesha-kikapu-form');
+
+        if (clearCartBtn) {
+            clearCartBtn.addEventListener('click', () => {
+                this.clearCart();
+            });
+        }
+
+        if (checkoutCartBtn) {
+            checkoutCartBtn.addEventListener('click', () => {
+                this.checkoutCart();
+            });
+        }
+
+        if (kopeshaKikapuBtn) {
+            kopeshaKikapuBtn.addEventListener('click', () => {
+                this.openKopeshaKikapuModal();
+            });
+        }
+
+        if (kopeshaKikapuForm) {
+            kopeshaKikapuForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitKopeshaKikapu();
+            });
+        }
+    }
+
+    bindDeleteEvents() {
+        // Add delete sale events
+        document.querySelectorAll('.delete-sale-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const saleId = this.dataset.id;
+                const deleteModal = document.getElementById('delete-sale-modal');
+                const deleteForm = document.getElementById('delete-sale-form');
+                
+                if (deleteForm && deleteModal) {
+                    deleteForm.action = `/mauzo/${saleId}`;
+                    deleteModal.classList.remove('hidden');
+                }
+            });
         });
 
-        // Checkout cart
-        document.getElementById('checkout-cart').addEventListener('click', () => {
-            this.checkoutCart();
-        });
-
-        // Kopesha from cart
-        document.getElementById('kopesha-kikapu-btn').addEventListener('click', () => {
-            this.openKopeshaKikapuModal();
-        });
-
-        // Kopesha kikapu form submission
-        document.getElementById('kopesha-kikapu-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.submitKopeshaKikapu();
-        });
+        // Print table
+        const printTableBtn = document.getElementById('print-table');
+        if (printTableBtn) {
+            printTableBtn.addEventListener('click', function() {
+                window.print();
+            });
+        }
     }
 
     showKikapuModal() {
         this.updateCartDisplay();
-        document.getElementById('kikapu-modal').classList.remove('hidden');
-    }
-
-openKopeshaKikapuModal() {
-    if (this.cart.length === 0) {
-        this.showNotification('Kikapu hakina bidhaa!', 'error');
-        return;
-    }
-    document.getElementById('kopesha-kikapu-modal').classList.remove('hidden');
-}
-
-submitKopeshaKikapu() {
-    const mtejaSelect = document.getElementById('kikapu-mteja-select');
-    const selectedMteja = mtejaSelect.value;
-    
-    if (!selectedMteja) {
-        this.showNotification('Tafadhali chagua mteja!', 'error');
-        return;
-    }
-
-    fetch("{{ route('mauzo.store.kikapu.loan') }}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ 
-            jina: selectedMteja,
-            items: this.cart 
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            this.showNotification(data.message, 'success');
-            this.clearCart();
-            document.getElementById('kikapu-modal').classList.add('hidden');
-            document.getElementById('kopesha-kikapu-modal').classList.add('hidden');
-            
-            // Reset the select
-            mtejaSelect.value = '';
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        } else {
-            this.showNotification(data.message || 'Kuna tatizo kwenye kukopesha bidhaa!', 'error');
+        const kikapuModal = document.getElementById('kikapu-modal');
+        if (kikapuModal) {
+            kikapuModal.classList.remove('hidden');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        this.showNotification('Kuna tatizo kwenye kukopesha bidhaa!', 'error');
-    });
-}
+    }
+
+    openKopeshaKikapuModal() {
+        if (this.cart.length === 0) {
+            this.showNotification('Kikapu hakina bidhaa!', 'error');
+            return;
+        }
+        const kopeshaKikapuModal = document.getElementById('kopesha-kikapu-modal');
+        if (kopeshaKikapuModal) {
+            kopeshaKikapuModal.classList.remove('hidden');
+        }
+    }
+
+    submitKopeshaKikapu() {
+        const mtejaSelect = document.getElementById('kikapu-mteja-select');
+        if (!mtejaSelect) return;
+
+        const selectedMteja = mtejaSelect.value;
+        
+        if (!selectedMteja) {
+            this.showNotification('Tafadhali chagua mteja!', 'error');
+            return;
+        }
+
+        fetch("{{ route('mauzo.store.kikapu.loan') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ 
+                jina: selectedMteja,
+                items: this.cart 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                this.showNotification(data.message, 'success');
+                this.clearCart();
+                this.closeModal('kikapu-modal');
+                this.closeModal('kopesha-kikapu-modal');
+                
+                // Reset the select
+                mtejaSelect.value = '';
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                this.showNotification(data.message || 'Kuna tatizo kwenye kukopesha bidhaa!', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kukopesha bidhaa!', 'error');
+        });
+    }
 
     updateCartDisplay() {
         const cartTbody = document.getElementById('cart-tbody');
         const emptyMessage = document.getElementById('empty-cart-message');
         const cartContent = document.getElementById('cart-content');
         const cartTotal = document.getElementById('cart-total');
+
+        if (!cartTbody || !emptyMessage || !cartContent || !cartTotal) return;
 
         if (this.cart.length === 0) {
             emptyMessage.classList.remove('hidden');
@@ -1585,7 +1879,7 @@ submitKopeshaKikapu() {
                     <td class="border px-3 py-2">${item.jina}</td>
                     <td class="border px-3 py-2 text-center">${item.idadi}</td>
                     <td class="border px-3 py-2 text-right">${item.bei.toLocaleString()}</td>
-                    <td class="border px-3 py-2 text-right">${item.punguzo.toLocaleString()}</td>
+                    <td class="border px-3 py-2 text-right">${(item.punguzo_bidhaa + item.punguzo_jumla).toLocaleString()}</td>
                     <td class="border px-3 py-2 text-right">${item.jumla.toLocaleString()}</td>
                     <td class="border px-3 py-2 text-center">
                         <button type="button" class="remove-cart-item text-red-500 hover:text-red-700 transition" data-index="${index}" title="Ondoa Bidhaa">
@@ -1643,7 +1937,7 @@ submitKopeshaKikapu() {
             if (data.status === 'success') {
                 this.showNotification(data.message, 'success');
                 this.clearCart();
-                document.getElementById('kikapu-modal').classList.add('hidden');
+                this.closeModal('kikapu-modal');
                 setTimeout(() => {
                     window.location.reload();
                 }, 2000);
@@ -1657,17 +1951,24 @@ submitKopeshaKikapu() {
         });
     }
 
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.add('hidden');
+    }
+
     saveCart() {
         localStorage.setItem('mauzo_cart', JSON.stringify(this.cart));
     }
 
     updateCartCount() {
         const cartCount = document.getElementById('cart-count');
-        if (this.cart.length > 0) {
-            cartCount.textContent = this.cart.length;
-            cartCount.classList.remove('hidden');
-        } else {
-            cartCount.classList.add('hidden');
+        if (cartCount) {
+            if (this.cart.length > 0) {
+                cartCount.textContent = this.cart.length;
+                cartCount.classList.remove('hidden');
+            } else {
+                cartCount.classList.add('hidden');
+            }
         }
     }
 
@@ -1681,70 +1982,49 @@ submitKopeshaKikapu() {
         });
     }
 
-  showNotification(message, type = 'success') {
-    const notification = document.getElementById('notification');
-    const notificationIcon = document.getElementById('notification-icon');
-    const notificationMessage = document.getElementById('notification-message');
-    
-    // Set icon and color based on type
-    let iconClass, borderColor;
-    switch(type) {
-        case 'success':
-            iconClass = 'fas fa-check-circle text-green-500';
-            borderColor = 'border-green-200';
-            break;
-        case 'error':
-            iconClass = 'fas fa-times-circle text-red-500';
-            borderColor = 'border-red-200';
-            break;
-        case 'warning':
-            iconClass = 'fas fa-exclamation-triangle text-amber-500';
-            borderColor = 'border-amber-200';
-            break;
-        default:
-            iconClass = 'fas fa-info-circle text-blue-500';
-            borderColor = 'border-blue-200';
+    showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        const notificationIcon = document.getElementById('notification-icon');
+        const notificationMessage = document.getElementById('notification-message');
+        
+        if (!notification || !notificationIcon || !notificationMessage) return;
+
+        let iconClass, borderColor;
+        switch(type) {
+            case 'success':
+                iconClass = 'fas fa-check-circle text-green-500';
+                borderColor = 'border-green-200';
+                break;
+            case 'error':
+                iconClass = 'fas fa-times-circle text-red-500';
+                borderColor = 'border-red-200';
+                break;
+            case 'warning':
+                iconClass = 'fas fa-exclamation-triangle text-amber-500';
+                borderColor = 'border-amber-200';
+                break;
+            default:
+                iconClass = 'fas fa-info-circle text-blue-500';
+                borderColor = 'border-blue-200';
+        }
+        
+        notificationIcon.className = iconClass;
+        notification.querySelector('.bg-white').className = `bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border-2 ${borderColor} transform transition-all duration-300 scale-95`;
+        notificationMessage.textContent = message;
+        
+        // Show notification
+        notification.classList.remove('hidden');
+        
+        // Auto hide after 2 seconds
+        setTimeout(() => {
+            notification.classList.add('hidden');
+        }, 2000);
     }
-    
-    notificationIcon.className = iconClass;
-    notification.querySelector('.bg-white').className = `bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border-2 ${borderColor} transform transition-all duration-300 scale-95`;
-    notificationMessage.textContent = message;
-    
-    // Show notification
-    notification.classList.remove('hidden');
-    
-    // Auto hide after 2 seconds
-    setTimeout(() => {
-        notification.classList.add('hidden');
-    }, 2000);
-}
 }
 
-// Initialize barcode rows events when page loads
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    const mauzoManager = new MauzoManager();
-    
-    // Add events to initial barcode row
-    document.querySelectorAll('.barcode-row').forEach(row => {
-        mauzoManager.addBarcodeRowEvents(row);
-    });
-
-    // Add delete sale events
-    document.querySelectorAll('.delete-sale-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const saleId = this.dataset.id;
-            const deleteModal = document.getElementById('delete-sale-modal');
-            const deleteForm = document.getElementById('delete-sale-form');
-            
-            deleteForm.action = `/mauzo/${saleId}`;
-            deleteModal.classList.remove('hidden');
-        });
-    });
-
-    // Print table
-    document.getElementById('print-table').addEventListener('click', function() {
-        window.print();
-    });
+    new MauzoManager();
 });
 </script>
 @endpush
