@@ -509,28 +509,34 @@
             <i class="icofont-phone text-2xl text-amber-600"></i>
           </div>
           <h3 class="text-xl font-bold text-gray-800 mb-2">Piga Simu</h3>
-          <p class="text-gray-600">+255 (0) 713 169 114</p>
+          <p class="text-gray-600">+255 (0) 685 496 334</p>
           <p class="text-gray-600">+255 (0) 714 019 466</p>
           <a href="tel:+255713169114" class="inline-block mt-3 px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition">Piga Sasa</a>
         </div>
         
-        <div class="feature-card p-6 text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-300 flex items-center justify-center">
-            <i class="icofont-email text-2xl text-dark-green"></i>
-          </div>
-          <h3 class="text-xl font-bold text-gray-800 mb-2">Tuma Barua Pepe</h3>
-          <p class="text-gray-600">info@mauzosheet.com</p>
-          <a href="mailto:info@mauzosheet.com" class="inline-block mt-3 px-4 py-2 bg-black text-white rounded-lg font-medium hover:bg-green-800 transition">Tuma Barua</a>
-        </div>
+<div class="feature-card p-6 text-center">
+  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-300 flex items-center justify-center">
+    <i class="icofont-email text-2xl text-dark-green"></i>
+  </div>
+
+  <h3 class="text-xl font-bold text-gray-800 mb-2">Tuma Barua Pepe</h3>
+  <p class="text-gray-600">mauzosheet9@gmail.com</p>
+
+  <a href="mailto:mauzosheet9@gmail.com" 
+     class="inline-block mt-3 px-4 py-2 bg-black text-white rounded-lg font-medium hover:bg-green-800 transition">
+     Tuma Barua
+  </a>
+</div>
+
         
         <div class="feature-card p-6 text-center">
           <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-200 flex items-center justify-center">
             <i class="icofont-brand-whatsapp text-2xl text-amber-600"></i>
           </div>
           <h3 class="text-xl font-bold text-gray-800 mb-2">WhatsApp</h3>
-          <p class="text-gray-600">+255 (0) 713 169 114</p>
+          <p class="text-gray-600">+255 (0) 685 496 334</p>
           <p class="text-gray-600">+255 (0) 714 019 466</p>
-          <a href="https://wa.me/255713169114" target="_blank" class="inline-block mt-3 px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition">Tuma Ujumbe</a>
+          <a href="https://wa.me/255685496334" target="_blank" class="inline-block mt-3 px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition">Tuma Ujumbe</a>
         </div>
       </div>
       

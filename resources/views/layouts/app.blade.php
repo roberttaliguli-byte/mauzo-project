@@ -335,25 +335,29 @@
                 <div class="flex items-center space-x-4">
                     <!-- Search Bar -->
 
-                    <!-- Notification bell -->
-                    <button class="relative p-2 transition-colors" :class="{
-                        'text-gray-600 hover:text-green-600': colorMode === 'color-mode-default',
-                        'text-gray-400 hover:text-green-400': colorMode === 'color-mode-dark',
-                        'text-gray-500 hover:text-green-500': colorMode === 'color-mode-light'
-                    }">
-                        <span class="text-xl">🔔</span>
-                        <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center notification-dot">3</span>
-                    </button>
-                    
-                    <!-- Messages -->
-                    <button class="relative p-2 transition-colors" :class="{
-                        'text-gray-600 hover:text-green-600': colorMode === 'color-mode-default',
-                        'text-gray-400 hover:text-green-400': colorMode === 'color-mode-dark',
-                        'text-gray-500 hover:text-green-500': colorMode === 'color-mode-light'
-                    }">
-                        <span class="text-xl">✉️</span>
-                        <span class="absolute -top-1 -right-1 bg-blue-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">5</span>
-                    </button>
+<!-- SINGLE ALERT MESSAGE DROPDOWN -->
+<div x-data="{ openPro: false }" class="relative">
+
+    <!-- Alert Icon -->
+    <button @click="openPro = !openPro"
+        class="relative p-2 text-gray-600 hover:text-green-600 transition">
+        <span class="text-xl">🔔</span>
+    </button>
+
+    <!-- Dropdown -->
+    <div x-show="openPro"
+         @click.away="openPro = false"
+         x-transition
+         class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl p-4 z-40">
+
+        <div class="px-4 py-3 bg-green-600 text-white rounded-lg text-sm shadow">
+            Tumia Mauzo Sheet Pro kwa sasa
+        </div>
+
+    </div>
+</div>
+
+
                     
                     <!-- User profile -->
                     <div class="relative" x-data="{ profileOpen: false }">

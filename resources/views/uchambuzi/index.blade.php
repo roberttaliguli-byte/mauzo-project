@@ -1,228 +1,254 @@
 @extends('layouts.app')
 
-@section('title', 'Uchambuzi')
+@section('title', 'Uchambuzi wa Biashara')
 @section('page-title', 'Dashibodi ya Taarifa')
 @section('page-subtitle', 'Uchambuzi wa Biashara kwa Grafu na Takwimu')
 
 @section('content')
-<div class="bg-gray-100 min-h-screen p-4" x-data="dashboardApp()" x-init="init()">
+<div class="bg-gray-50 min-h-screen" x-data="dashboardApp()" x-init="init()">
   <!-- 🔹 Header -->
-  <header class="bg-amber-500 shadow px-6 py-4 flex justify-between ">
-    <h1 class="text-xl font-semibold text-black">TAARIFA KATIKA MAUZO</h1>
-    <div class="flex items-center space-x-4">
-      <button @click="setTab('graphs')" :class="tab==='graphs' ? 'font-bold underline text-green-900' : ''">Graphs</button>
-      <button @click="setTab('mwenendo')" :class="tab==='mwenendo' ? 'font-bold underline text-green-800' : ''">Mwenendo</button>
-      <button @click="setTab('kampuni')" :class="tab==='kampuni' ? 'font-bold underline text-green-800' : ''">Thamani ya Kampuni</button>
-      <button @click="setTab('historia')" :class="tab==='historia' ? 'font-bold underline text-green-800' : ''">Historia</button>
+  <header class="bg-white shadow-sm border-b px-6 py-4">
+    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+      <h1 class="text-2xl font-bold text-gray-800">TAARIFA KATIKA MAUZO</h1>
+      <div class="flex flex-wrap gap-2">
+        <button @click="setTab('graphs')" 
+                :class="tab === 'graphs' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
+                class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
+          📊 Grafu
+        </button>
+        <button @click="setTab('mwenendo')" 
+                :class="tab === 'mwenendo' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
+                class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
+          📈 Mwenendo
+        </button>
+        <button @click="setTab('kampuni')" 
+                :class="tab === 'kampuni' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
+                class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
+          💼 Thamani ya Kampuni
+        </button>
+        <button @click="setTab('historia')" 
+                :class="tab === 'historia' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
+                class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
+          🕒 Historia
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- 🔹 MAIN CONTENT -->
   <main class="p-6 space-y-6">
     <!-- ✅ GRAPHS TAB -->
-    <div x-show="tab==='graphs'" class="bg-white rounded shadow p-6" x-cloak>
-      <div class="flex flex-wrap mb-6 border-b pb-2 space-x-2">
+    <div x-show="tab === 'graphs'" class="bg-white rounded-xl shadow-sm p-6" x-cloak>
+      <div class="flex flex-wrap gap-2 mb-6 border-b pb-4">
         <template x-for="(item, key) in graphTabs" :key="key">
           <button @click="setGraph(key)"
-            :class="graph===key ? 'bg-green-500 text-white font-semibold border-b-4 border-green-700' : 'bg-green-100 text-black-700 hover:bg-green-300'"
-            class="px-4 py-2 rounded-t transition-all duration-200"
+            :class="graph === key ? 'bg-green-600 text-white font-semibold shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+            class="px-4 py-2 rounded-lg transition-all duration-200"
             x-text="item"></button>
         </template>
       </div>
 
       <div class="h-96">
-        <canvas x-show="graph==='faidaBidhaa'" id="faidaBidhaaChart" x-cloak></canvas>
-        <canvas x-show="graph==='faidaSiku'" id="faidaSikuChart" x-cloak></canvas>
-        <canvas x-show="graph==='mauzoSiku'" id="mauzoSikuChart" x-cloak></canvas>
-        <canvas x-show="graph==='gharama'" id="gharamaChart" x-cloak></canvas>
-        <canvas x-show="graph==='mauzo'" id="mauzoChart" x-cloak></canvas>
+        <canvas x-show="graph === 'faidaBidhaa'" id="faidaBidhaaChart" x-cloak></canvas>
+        <canvas x-show="graph === 'faidaSiku'" id="faidaSikuChart" x-cloak></canvas>
+        <canvas x-show="graph === 'mauzoSiku'" id="mauzoSikuChart" x-cloak></canvas>
+        <canvas x-show="graph === 'gharama'" id="gharamaChart" x-cloak></canvas>
+        <canvas x-show="graph === 'mauzo'" id="mauzoChart" x-cloak></canvas>
       </div>
     </div>
 
-<!-- ✅ MWENENDO TAB -->
-<div x-show="tab === 'mwenendo'" 
-     class="bg-white rounded-2xl shadow-lg p-8 transition-all duration-500" 
-     x-cloak 
-     x-data="mwenendoApp()">
+    <!-- ✅ MWENENDO TAB -->
+    <div x-show="tab === 'mwenendo'" 
+         class="bg-white rounded-xl shadow-sm p-6" 
+         x-cloak 
+         x-data="mwenendoApp()">
 
-  <!-- Header -->
-  <div class="flex justify-between items-center border-b pb-4 mb-6">
-    <div>
-      <h2 class="text-2xl font-semibold text-gray-800">📈 Mwenendo wa Biashara</h2>
-      <p class="text-sm text-gray-500">Chagua kipindi au tarehe ili kuona takwimu za biashara zako.</p>
-    </div>
-    <button @click="refresh()" 
-            class="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition">
-      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 4v6h6M20 20v-6h-6M5 19A9 9 0 0119 5"/>
-      </svg>
-      Refresh
-    </button>
-  </div>
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 border-b pb-4 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">📈 Mwenendo wa Biashara</h2>
+          <p class="text-gray-600 mt-1">Chagua kipindi au tarehe ili kuona takwimu za biashara zako.</p>
+        </div>
+        <button @click="refresh()" 
+                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Pakua Upya
+        </button>
+      </div>
 
-  <!-- Selection -->
-  <div class="flex flex-wrap items-center gap-4 mb-6">
-    <div>
-      <label class="font-medium text-gray-700">⏳ Chagua Muda:</label>
-      <select x-model="viewType" 
-              @change="toggleDatePicker(false)" 
-              class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-300 focus:outline-none">
-        <option disabled selected>Chagua muda</option>
-        <option>Siku</option>
-        <option>Wiki</option>
-        <option>Mwezi</option>
-        <option>Mwaka</option>
-      </select>
-    </div>
+      <!-- Selection -->
+      <div class="flex flex-wrap items-center gap-4 mb-6">
+        <div class="flex-1 min-w-[200px]">
+          <label class="block font-medium text-gray-700 mb-2">⏳ Chagua Muda:</label>
+          <select x-model="viewType" 
+                  @change="toggleDatePicker(false)" 
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200">
+            <option value="Siku">Siku</option>
+            <option value="Wiki">Wiki</option>
+            <option value="Mwezi">Mwezi</option>
+            <option value="Mwaka">Mwaka</option>
+          </select>
+        </div>
 
-    <button @click="toggleDatePicker(true)" 
-            class="bg-gradient-to-r from-green-600 to-green-400 text-white px-4 py-2 rounded-lg hover:opacity-90 shadow-md transition-all">
-      Au chagua tarehe mwenyewe
-    </button>
-  </div>
+        <button @click="toggleDatePicker(true)" 
+                class="bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-600 shadow-md transition-all duration-200 mt-6">
+          📅 Chagua Tarehe Mwenyewe
+        </button>
+      </div>
 
-  <!-- Auto Summary -->
-  <div x-show="!manualDateSelect" 
-       class="bg-gray border border-black-100 rounded-xl p-6 shadow-inner space-y-3 transition-all duration-500">
+      <!-- Auto Summary -->
+      <div x-show="!manualDateSelect" 
+           class="bg-gray-50 border border-gray-200 rounded-xl p-6 space-y-4 transition-all duration-300">
 
-    <h3 class="font-bold text-black text-lg">Muhtasari wa <span x-text="viewType"></span></h3>
-    <template x-if="summary">
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-700 mt-2">
-        <template x-for="[label, value] of Object.entries(summary)" :key="label">
-          <div class="bg-white border rounded-lg px-3 py-2 flex justify-between shadow-sm hover:shadow-md transition">
-            <span class="font-medium" x-text="label"></span>
-            <span class="text-green-600 font-semibold" x-text="format(value)"></span>
+        <h3 class="font-bold text-gray-800 text-lg">Muhtasari wa <span x-text="viewType"></span></h3>
+        
+        <template x-if="summary">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <template x-for="[label, value] of Object.entries(summary)" :key="label">
+              <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200">
+                <div class="text-sm text-gray-600 font-medium" x-text="label"></div>
+                <div class="text-xl font-bold text-green-600 mt-1" x-text="format(value)"></div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <template x-if="!summary">
+          <div class="text-center py-8 text-gray-500">
+            Hakuna data inayopatikana kwa kipindi hiki.
           </div>
         </template>
       </div>
-    </template>
-  </div>
 
-  <!-- Manual Date Selection -->
-  <div x-show="manualDateSelect" 
-       class="border rounded-xl p-6 bg-gray-50 space-y-4 shadow-inner transition-all duration-500">
+      <!-- Manual Date Selection -->
+      <div x-show="manualDateSelect" 
+           class="border border-gray-200 rounded-xl p-6 bg-gray-50 space-y-4 transition-all duration-300">
 
-    <h3 class="font-semibold text-gray-700 text-lg">📅 Angalia Mwenendo kwa Tarehe</h3>
-    <div class="flex flex-wrap gap-4 items-end">
-      <div>
-        <label class="block text-sm font-medium text-gray-600">Kuanzia Tarehe:</label>
-        <input type="date" x-model="dateFrom" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring focus:ring-blue-200 focus:outline-none">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-600">Mpaka Tarehe:</label>
-        <input type="date" x-model="dateTo" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring focus:ring-blue-200 focus:outline-none">
-      </div>
+        <h3 class="font-semibold text-gray-800 text-lg">📅 Angalia Mwenendo kwa Tarehe</h3>
+        
+        <div class="flex flex-wrap gap-4 items-end">
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Kuanzia Tarehe:</label>
+            <input type="date" x-model="dateFrom" 
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200">
+          </div>
+          
+          <div class="flex-1 min-w-[200px]">
+            <label class="block text-sm font-medium text-gray-600 mb-1">Mpaka Tarehe:</label>
+            <input type="date" x-model="dateTo" 
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200">
+          </div>
 
-      <div class="flex gap-2">
-        <button @click="fetchCustomSummary()" 
-                class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 shadow-md transition">
-          Angalia
-        </button>
-        <button @click="toggleDatePicker(false)" 
-                class="text-gray-500 underline text-sm hover:text-gray-700">
-          Rudi kwa chaguo la muda
-        </button>
-      </div>
-    </div>
+          <div class="flex gap-2">
+            <button @click="fetchCustomSummary()" 
+                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 shadow-md transition-all duration-200">
+              🔍 Angalia
+            </button>
+            <button @click="toggleDatePicker(false)" 
+                    class="text-gray-600 bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all duration-200">
+              ↩ Rudi
+            </button>
+          </div>
+        </div>
 
-    <template x-if="customSummary">
-      <div class="mt-6 bg-white border rounded-lg p-4 shadow">
-        <h4 class="text-blue-700 font-semibold mb-3">Matokeo ya kipindi kilichochaguliwa:</h4>
-        <template x-for="[label, value] of Object.entries(customSummary)" :key="label">
-          <p class="flex justify-between text-sm"><strong x-text="label"></strong> <span x-text="format(value)" class="text-green-600 font-semibold"></span></p>
+        <template x-if="customSummary">
+          <div class="mt-6 bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h4 class="text-green-700 font-semibold mb-4 text-lg">Matokeo ya kipindi kilichochaguliwa:</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <template x-for="[label, value] of Object.entries(customSummary)" :key="label">
+                <div class="border border-gray-200 rounded-lg p-3">
+                  <div class="text-sm font-medium text-gray-600" x-text="label"></div>
+                  <div class="text-lg font-bold text-green-600" x-text="format(value)"></div>
+                </div>
+              </template>
+            </div>
+          </div>
         </template>
       </div>
-    </template>
-  </div>
-</div>
-
-<!-- ✅ KAMPUNI TAB -->
-<div 
-  x-show="tab==='kampuni'" 
-  x-data="{
-    beforeSales: {{ $thamaniBefore }},
-    afterSales: {{ $thamaniAfter }},
-    faida: {{ $faida }},
-    format(num) { return 'Tsh ' + new Intl.NumberFormat().format(num); }
-  }"
-  class="bg-gradient-to-br from-white to-amber-50 rounded-2xl shadow-lg p-6 mt-6 space-y-6"
-  x-cloak
->
-  <!-- Title -->
-  <h2 class="text-2xl font-bold text-green-800 mb-2">💼 Thamani ya Kampuni</h2>
-
- <!-- Summary Boxes -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  <!-- Before Sales -->
-  <div class="bg-white text-black rounded-2xl p-5 shadow-md border border-gray-300 transform hover:scale-105 transition">
-    <h3 class="text-lg font-semibold mb-1">Thamani Kabla ya mauzo</h3>
-    <p class="text-2xl font-bold" x-text="format(beforeSales)"></p>
-  </div>
-
-  <!-- After Sales -->
-  <div class="bg-white text-black rounded-2xl p-5 shadow-md border border-gray-300 transform hover:scale-105 transition">
-    <h3 class="text-lg font-semibold mb-1">Thamani Baadaya mauzo</h3>
-    <p class="text-2xl font-bold" x-text="format(afterSales)"></p>
-  </div>
-
-  <!-- Profit -->
-  <div class="bg-white text-black rounded-2xl p-5 shadow-md border border-gray-300 transform hover:scale-105 transition">
-    <h3 class="text-lg font-semibold mb-1">Faida (Profit)</h3>
-    <p class="text-2xl font-bold" x-text="format(faida)"></p>
-  </div>
-</div>
-
-
-  <!-- Company Total Value -->
-  <div class="mt-6">
-    <h3 class="font-semibold text-md mb-2 text-black">Thamani ya Jumla ya Kampuni</h3>
-    <div class="text-3xl font-bold text-green-800">
-      {{ $thamaniKampuniFormatted }}
     </div>
-  </div>
 
-  <!-- Table -->
-  <div class="mt-8">
-    <h3 class="font-semibold text-md mb-3 text-green-700">Orodha ya Bidhaa</h3>
-    <div class="overflow-x-auto bg-white rounded-xl shadow">
-      <table class="min-w-full text-sm text-left border border-gray-100 rounded-lg">
-        <thead class="bg-amber-600 text-white">
-          <tr>
-            <th class="px-4 py-2 border-b">Bidhaa</th>
-            <th class="px-4 py-2 border-b">Aina</th>
-            <th class="px-4 py-2 border-b">Kipimo</th>
-            <th class="px-4 py-2 border-b text-right">Idadi</th>
-            <th class="px-4 py-2 border-b text-right">Bei Nunua</th>
-            <th class="px-4 py-2 border-b text-right">Bei Kuuza</th>
-            <th class="px-4 py-2 border-b text-right">Faida</th>
-          </tr>
-        </thead>
-        <tbody>
-          @foreach($bidhaaList as $item)
-            <tr class="hover:bg-green-50">
-              <td class="px-4 py-2 border-b">{{ $item->jina }}</td>
-              <td class="px-4 py-2 border-b">{{ $item->aina }}</td>
-              <td class="px-4 py-2 border-b">{{ $item->kipimo ?? '-' }}</td>
-              <td class="px-4 py-2 border-b text-right">{{ number_format($item->idadi) }}</td>
-              <td class="px-4 py-2 border-b text-right">Tsh {{ number_format($item->bei_nunua, 2) }}</td>
-              <td class="px-4 py-2 border-b text-right">Tsh {{ number_format($item->bei_kuuza, 2) }}</td>
-              <td class="px-4 py-2 border-b text-right text-green-700 font-semibold">
-                Tsh {{ number_format($item->faida, 2) }}
-              </td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
+    <!-- ✅ KAMPUNI TAB -->
+    <div x-show="tab === 'kampuni'" 
+         x-data="kampuniData()"
+         class="bg-white rounded-xl shadow-sm p-6"
+         x-cloak>
+      
+      <!-- Title -->
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">💼 Thamani ya Kampuni</h2>
+      <p class="text-gray-600 mb-6">Muhtasari wa thamani ya kampuni na faida kutokana na mauzo</p>
+
+      <!-- Summary Boxes -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Thamani Kabla ya Mauzo</h3>
+          <p class="text-2xl font-bold text-blue-600" x-text="format(beforeSales)"></p>
+        </div>
+
+        <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Thamani Baada ya Mauzo</h3>
+          <p class="text-2xl font-bold text-green-600" x-text="format(afterSales)"></p>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
+          <h3 class="text-lg font-semibold text-gray-700 mb-2">Faida (Profit)</h3>
+          <p class="text-2xl font-bold text-amber-600" x-text="format(faida)"></p>
+        </div>
+      </div>
+
+      <!-- Company Total Value -->
+      <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
+        <h3 class="font-semibold text-gray-700 mb-3">Thamani ya Jumla ya Kampuni</h3>
+        <div class="text-3xl font-bold text-green-600">
+          {{ $thamaniKampuniFormatted }}
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div>
+        <h3 class="font-semibold text-gray-800 mb-4 text-lg">Orodha ya Bidhaa</h3>
+        <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl shadow-sm">
+          <table class="min-w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="px-4 py-3 text-left font-semibold text-gray-700">Bidhaa</th>
+                <th class="px-4 py-3 text-left font-semibold text-gray-700">Aina</th>
+                <th class="px-4 py-3 text-left font-semibold text-gray-700">Kipimo</th>
+                <th class="px-4 py-3 text-right font-semibold text-gray-700">Idadi</th>
+                <th class="px-4 py-3 text-right font-semibold text-gray-700">Bei Nunua</th>
+                <th class="px-4 py-3 text-right font-semibold text-gray-700">Bei Kuuza</th>
+                <th class="px-4 py-3 text-right font-semibold text-gray-700">Faida</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              @foreach($bidhaaList as $item)
+                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                  <td class="px-4 py-3 text-gray-900">{{ $item->jina }}</td>
+                  <td class="px-4 py-3 text-gray-600">{{ $item->aina }}</td>
+                  <td class="px-4 py-3 text-gray-600">{{ $item->kipimo ?? '-' }}</td>
+                  <td class="px-4 py-3 text-right text-gray-900">{{ number_format($item->idadi) }}</td>
+                  <td class="px-4 py-3 text-right text-gray-600">Tsh {{ number_format($item->bei_nunua, 2) }}</td>
+                  <td class="px-4 py-3 text-right text-gray-600">Tsh {{ number_format($item->bei_kuuza, 2) }}</td>
+                  <td class="px-4 py-3 text-right font-semibold text-green-600">
+                    Tsh {{ number_format($item->faida, 2) }}
+                  </td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-
 
     <!-- ✅ HISTORIA TAB -->
-    <div x-show="tab==='historia'" class="bg-white rounded shadow p-6" x-cloak>
-      <h2 class="font-semibold mb-4">Historia ya Mfumo</h2>
+    <div x-show="tab === 'historia'" class="bg-white rounded-xl shadow-sm p-6" x-cloak>
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">🕒 Historia ya Mfumo</h2>
       <p class="text-gray-600">Taarifa kuhusu historia ya mfumo, mabadiliko, na takwimu zitapatikana hapa.</p>
+      <div class="mt-6 p-8 text-center border-2 border-dashed border-gray-300 rounded-xl">
+        <p class="text-gray-500">Inafanya kazi - Ukurasa wa historia utaanza hivi karibuni</p>
+      </div>
     </div>
   </main>
 </div>
@@ -270,11 +296,21 @@ document.addEventListener('alpine:init', () => {
 
       let config = {};
       switch(name) {
-        case 'faidaBidhaa': config = this.barChart(this.faidaByBidhaa, 'jina', 'faida', 'rgba(255,99,132,0.7)', 'Faida'); break;
-        case 'faidaSiku': config = this.lineChart(this.faidaBySiku, 'day', 'faida', 'rgba(54,162,235,0.9)', 'Faida Siku'); break;
-        case 'mauzoSiku': config = this.lineChart(this.mauzoBySiku, 'day', 'total', 'rgba(255,206,86,0.9)', 'Mauzo Siku'); break;
-        case 'gharama': config = this.barChart(this.gharamaByBidhaa, 'jina', 'total', 'rgba(75,192,192,0.7)', 'Gharama'); break;
-        case 'mauzo': config = this.barChart(this.mauzoByBidhaa, 'jina', 'total', 'rgba(153,102,255,0.7)', 'Mauzo Jumla'); break;
+        case 'faidaBidhaa': 
+          config = this.barChart(this.faidaByBidhaa, 'jina', 'faida', 'rgba(79, 70, 229, 0.8)', 'Faida kwa Bidhaa');
+          break;
+        case 'faidaSiku': 
+          config = this.lineChart(this.faidaBySiku, 'day', 'faida', 'rgba(16, 185, 129, 0.8)', 'Faida kwa Siku');
+          break;
+        case 'mauzoSiku': 
+          config = this.lineChart(this.mauzoBySiku, 'day', 'total', 'rgba(245, 158, 11, 0.8)', 'Mauzo kwa Siku');
+          break;
+        case 'gharama': 
+          config = this.barChart(this.gharamaByBidhaa, 'jina', 'total', 'rgba(239, 68, 68, 0.8)', 'Gharama');
+          break;
+        case 'mauzo': 
+          config = this.barChart(this.mauzoByBidhaa, 'jina', 'total', 'rgba(139, 92, 246, 0.8)', 'Mauzo Jumla');
+          break;
       }
 
       this.charts[name] = new Chart(ctx, config);
@@ -285,7 +321,14 @@ document.addEventListener('alpine:init', () => {
         type: 'bar',
         data: {
           labels: data.map(i => i[labelKey]),
-          datasets: [{ label, data: data.map(i => Number(i[valueKey])), backgroundColor: color }]
+          datasets: [{ 
+            label, 
+            data: data.map(i => Number(i[valueKey])), 
+            backgroundColor: color,
+            borderColor: color.replace('0.8', '1'),
+            borderWidth: 1,
+            borderRadius: 4
+          }]
         },
         options: this.chartOptions()
       };
@@ -296,7 +339,15 @@ document.addEventListener('alpine:init', () => {
         type: 'line',
         data: {
           labels: data.map(i => i[labelKey]),
-          datasets: [{ label, data: data.map(i => Number(i[valueKey])), borderColor: color, backgroundColor: color + '33', tension: 0.3 }]
+          datasets: [{ 
+            label, 
+            data: data.map(i => Number(i[valueKey])), 
+            borderColor: color,
+            backgroundColor: color.replace('0.8', '0.1'),
+            borderWidth: 3,
+            tension: 0.3,
+            fill: true
+          }]
         },
         options: this.chartOptions()
       };
@@ -306,8 +357,31 @@ document.addEventListener('alpine:init', () => {
       return {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: true }, tooltip: { enabled: true } },
-        scales: { y: { beginAtZero: true } }
+        plugins: { 
+          legend: { 
+            display: true,
+            position: 'top'
+          }, 
+          tooltip: { 
+            enabled: true,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleColor: 'white',
+            bodyColor: 'white'
+          } 
+        },
+        scales: { 
+          y: { 
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
       };
     },
 
@@ -322,10 +396,24 @@ document.addEventListener('alpine:init', () => {
     dateFrom: '',
     dateTo: '',
     summary: null,
+    customSummary: null,
     mwenendoSummary: @json($mwenendoSummary ?: []),
 
-    toggleDatePicker(val) { this.manualDateSelect = val; if(!val) this.updateSummary(); },
-    format(v) { return new Intl.NumberFormat('sw-TZ',{style:'currency',currency:'TZS'}).format(v || 0); },
+    toggleDatePicker(val) { 
+      this.manualDateSelect = val; 
+      if(!val) {
+        this.customSummary = null;
+        this.updateSummary(); 
+      }
+    },
+    
+    format(v) { 
+      return new Intl.NumberFormat('sw-TZ', {
+        style: 'currency', 
+        currency: 'TZS',
+        minimumFractionDigits: 0
+      }).format(v || 0); 
+    },
 
     updateSummary() {
       const key = this.viewType.toLowerCase();
@@ -334,14 +422,48 @@ document.addEventListener('alpine:init', () => {
     },
 
     async fetchCustomSummary() {
-      if(!this.dateFrom || !this.dateTo) return;
+      if(!this.dateFrom || !this.dateTo) {
+        alert('Tafadhali chagua tarehe zote za kuanzia na mpaka');
+        return;
+      }
+      
       try {
+        // Show loading state
+        this.customSummary = null;
+        
         const res = await fetch(`/api/mwenendo?from=${this.dateFrom}&to=${this.dateTo}`);
-        this.summary = await res.json();
-      } catch(e) { console.error('Hitilafu:', e); }
+        if (!res.ok) throw new Error('Network response was not ok');
+        
+        this.customSummary = await res.json();
+      } catch(e) { 
+        console.error('Hitilafu:', e);
+        alert('Kumetokea hitilafu wakati wa kupakua data. Tafadhali jaribu tena.');
+      }
     },
 
-    init() { this.updateSummary(); }
+    refresh() {
+      this.updateSummary();
+      this.customSummary = null;
+      this.manualDateSelect = false;
+    },
+
+    init() { 
+      this.updateSummary(); 
+    }
+  }));
+
+  Alpine.data('kampuniData', () => ({
+    beforeSales: {{ $thamaniBefore }},
+    afterSales: {{ $thamaniAfter }},
+    faida: {{ $faida }},
+    
+    format(num) { 
+      return new Intl.NumberFormat('sw-TZ', {
+        style: 'currency',
+        currency: 'TZS',
+        minimumFractionDigits: 0
+      }).format(num); 
+    }
   }));
 });
 </script>

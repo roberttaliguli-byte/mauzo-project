@@ -34,6 +34,9 @@ Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function
 
     Route::delete('/admin/company/{id}', [AdminController::class, 'destroy'])
         ->name('admin.destroyCompany');
+        // routes/web.php
+Route::post('/admin/companies/{id}/set-package', [AdminController::class, 'setPackageTime'])->name('admin.setPackageTime');
+
 });
 
 
