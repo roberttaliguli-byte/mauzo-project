@@ -7,6 +7,8 @@ use App\Models\Bidhaa;
 use App\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,31 +17,55 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
- public function boot(): void
-{
-    $today = Carbon::today();
+    public function boot(): void
+    {
+        // Hakikisha tuwezi kufanya queries za database
+        try {
+            DB::connection()->getPdo();
 
-    // ALERTS: expired, expiring soon, or OUT OF STOCK
-    $alertsCount = Bidhaa::whereDate('expiry', '<', $today)
-        ->orWhereDate('expiry', '<=', $today->copy()->addDays(30))
-        ->orWhere('idadi', '<=', 0) // out of stock
-        ->count();
+            // Hakikisha meza zipo
+            if (!Schema::hasTable('bidhaas') || !Schema::hasTable('companies')) {
+                $this->shareEmptyData();
+                return;
+            }
 
-    // MESSAGES: companies not verified
-    $messagesCount = Company::where('is_verified', 0)->count();
+            $today = Carbon::today();
 
-    // ALERT LIST: include out-of-stock too
-    $alertsList = Bidhaa::whereDate('expiry', '<', $today)
-        ->orWhereDate('expiry', '<=', $today->copy()->addDays(30))
-        ->orWhere('idadi', '<=', 0)
-        ->orderBy('expiry', 'asc')
-        ->get();
+            // ALERTS: expired, expiring soon, or OUT OF STOCK
+            $alertsCount = Bidhaa::whereDate('expiry', '<', $today)
+                ->orWhereDate('expiry', '<=', $today->copy()->addDays(30))
+                ->orWhere('idadi', '<=', 0)
+                ->count();
 
-    View::share([
-        'alertsCount' => $alertsCount,
-        'messagesCount' => $messagesCount,
-        'alertsList' => $alertsList,
-    ]);
+            // MESSAGES: companies not verified
+            $messagesCount = Company::where('is_verified', 0)->count();
+
+            // ALERT LIST: include out-of-stock too
+            $alertsList = Bidhaa::whereDate('expiry', '<', $today)
+                ->orWhereDate('expiry', '<=', $today->copy()->addDays(30))
+                ->orWhere('idadi', '<=', 0)
+                ->orderBy('expiry', 'asc')
+                ->get();
+
+            View::share([
+                'alertsCount' => $alertsCount,
+                'messagesCount' => $messagesCount,
+                'alertsList' => $alertsList,
+            ]);
+
+        } catch (\Exception $e) {
+            // Database haipo au haijaandaliwa bado
+            $this->shareEmptyData();
+        }
+    }
+
+    private function shareEmptyData(): void
+    {
+        View::share([
+            'alertsCount' => 0,
+            'messagesCount' => 0,
+            'alertsList' => collect(),
+        ]);
+    }
 }
 
-}

@@ -104,8 +104,17 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
+            // Check if user has a company
+            if (!$user->company_id) {
+                Auth::logout();
+
+                return back()->withErrors([
+                    'login' => 'Akaunti yako haina kampuni iliyohusishwa. Tafadhali wasiliana na admin.'
+                ])->onlyInput('username');
+            }
+
             // Check if user is approved
-            if ($user->company && !$user->company->is_user_approved) {
+            if (!$user->company->is_user_approved) {
                 Auth::logout();
 
                 return back()->withErrors([
