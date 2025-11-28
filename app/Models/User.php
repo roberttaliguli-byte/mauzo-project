@@ -20,9 +20,16 @@ class User extends Authenticatable
 
 // inside User model
 protected $fillable = [
-    'name', 'email', 'password', 'username', 'company_id', 'role',
+    'company_id',
+    'username',
+    'name',
+    'email',
+    'password',
+    'role',
+    'email_verification_token',
+    'is_approved',
+    'email_verified_at'
 ];
-
 
 public function company()
 {

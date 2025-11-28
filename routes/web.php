@@ -17,28 +17,48 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ReportController as MainReportController;
 
 // =========================
-// Admin routes
+// Admin routes (with middleware)
 // =========================
-Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function () {
+Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
 
-    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/admin/makampuni', [CompanyController::class, 'makampuni'])->name('admin.makampuni');
+    // Dashboard
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    Route::post('/admin/approve-user/{id}', [AdminController::class, 'approveUser'])
-        ->name('admin.approveUser');
+    // Companies
+    Route::get('/makampuni', [AdminController::class, 'makampuni'])->name('makampuni');
 
-    Route::post('/admin/company/{id}/verify', [AdminController::class, 'verifyCompany'])
-        ->name('admin.verifyCompany');
+    // Reports
+    Route::prefix('reports')->group(function () {
+        Route::get('/', [MainReportController::class, 'index'])->name('reports');
+        Route::get('/generate', [MainReportController::class, 'generate'])->name('reports.generate');
+        Route::get('/export', [MainReportController::class, 'export'])->name('reports.export');
 
-    Route::delete('/admin/company/{id}', [AdminController::class, 'destroy'])
-        ->name('admin.destroyCompany');
-        // routes/web.php
-Route::post('/admin/companies/{id}/set-package', [AdminController::class, 'setPackageTime'])->name('admin.setPackageTime');
+        // Download Reports (Excel/PDF)
+        Route::get('/download/{format}', [MainReportController::class, 'downloadCompaniesReport'])
+            ->name('reports.download');
+        Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
+            ->name('reports.download-companies');
+    });
 
+    // Change Password
+    Route::get('/change-password', [AdminController::class, 'showChangePassword'])->name('password.show');
+    Route::post('/change-password', [AdminController::class, 'updatePassword'])->name('password.update');
+
+    // Approve user
+    Route::post('/approve-user/{id}', [AdminController::class, 'approveUser'])->name('approveUser');
+
+    // Verify company
+    Route::post('/company/{id}/verify', [AdminController::class, 'verifyCompany'])->name('verifyCompany');
+
+    // Delete company
+    Route::delete('/company/{id}', [AdminController::class, 'destroy'])->name('destroyCompany');
+
+    // Set package time
+    Route::post('/companies/{id}/set-package', [AdminController::class, 'setPackageTime'])->name('setPackageTime');
 });
-
 
 // =========================
 // Public routes
@@ -51,6 +71,11 @@ Route::post('/register', [AuthController::class, 'registerPost'])->name('registe
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
 
+// Email Verification Link
+Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail'])
+    ->name('verify.email');
+
+    
 // =========================
 // Protected routes (auth middleware)
 // =========================

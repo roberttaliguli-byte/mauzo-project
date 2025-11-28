@@ -24,16 +24,24 @@ public function dashboard()
     /**
      * Approve the boss user connected to a company.
      */
-    public function approveUser($id)
-    {
-        $company = Company::findOrFail($id);
+public function approveUser($id)
+{
+    $company = Company::findOrFail($id);
 
-        // Mark user as approved
-        $company->is_user_approved = true;
-        $company->save();
+    // Approve company user
+    $company->is_user_approved = true;
+    $company->save();
 
-        return redirect()->back()->with('success', 'Mtumiaji ameidhinishwa kikamilifu!');
+    // Approve main user (boss)
+    $user = User::where('company_id', $company->id)->first();
+    if ($user) {
+        $user->is_approved = true;
+        $user->save();
     }
+
+    return redirect()->back()->with('success', 'Mtumiaji ameidhinishwa kikamilifu!');
+}
+
 
     /**
      * Set package and time for a company.
@@ -86,17 +94,24 @@ public function dashboard()
      * One-Click Full Approval:
      * Verify company AND approve its user.
      */
-    public function approveAll($id)
-    {
-        $company = Company::findOrFail($id);
+public function approveAll($id)
+{
+    $company = Company::findOrFail($id);
 
-        // Verify company
-        $company->is_verified = true;
-        $company->is_user_approved = true;
-        $company->save();
+    // Approve company
+    $company->is_verified = true;
+    $company->is_user_approved = true;
+    $company->save();
 
-        return redirect()->back()->with('success', 'Kampuni na mtumiaji vimeidhinishwa kikamilifu!');
+    // Approve user connected to company
+    $user = User::where('company_id', $company->id)->first();
+    if ($user) {
+        $user->is_approved = true;
+        $user->save();
     }
+
+    return redirect()->back()->with('success', 'Kampuni na mtumiaji vimeidhinishwa kikamilifu!');
+}
 
     /**
      * Delete a company.

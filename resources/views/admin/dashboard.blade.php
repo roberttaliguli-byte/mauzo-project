@@ -179,61 +179,61 @@
                             </div>
                         </td>
 
-                        <!-- Actions -->
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex flex-col space-y-2">
-                                <!-- Status Actions -->
-                                <div class="flex space-x-2">
-                                    @if(!$company->is_user_approved)
-                                    <form action="{{ route('admin.approveUser', $company->id) }}" method="POST" class="flex-1">
-                                        @csrf
-                                        <button class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
-                                            <i class="fas fa-user-check text-xs"></i>
-                                            <span>Idhinisha Mtumiaji</span>
-                                        </button>
-                                    </form>
-                                    @else
-                                    <div class="flex-1 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg flex items-center justify-center space-x-2">
-                                        <i class="fas fa-check-circle text-xs"></i>
-                                        <span>Imeidhinishwa</span>
-                                    </div>
-                                    @endif
+ <!-- Actions -->
+<td class="px-6 py-4 whitespace-nowrap">
+    <div class="flex flex-col space-y-2">
 
-                                    @if(!$company->is_verified)
-                                    <form action="{{ route('admin.verifyCompany', $company->id) }}" method="POST" class="flex-1">
-                                        @csrf
-                                        <button class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
-                                            <i class="fas fa-shield-alt text-xs"></i>
-                                            <span>Thibitisha</span>
-                                        </button>
-                                    </form>
-                                    @else
-                                    <div class="flex-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-3 py-2 rounded-lg flex items-center justify-center space-x-2">
-                                        <i class="fas fa-check-circle text-xs"></i>
-                                        <span>Imethibitishwa</span>
-                                    </div>
-                                    @endif
-                                </div>
+        <!-- ONE SMART BUTTON -->
+        @if(!$company->is_user_approved)
+            <!-- Approve User -->
+            <form action="{{ route('admin.approveUser', $company->id) }}" method="POST">
+                @csrf
+                <button class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
+                    <i class="fas fa-user-check text-xs"></i>
+                    <span>Idhinisha Mtumiaji</span>
+                </button>
+            </form>
 
-                                <!-- Action Buttons -->
-                                <div class="flex space-x-2">
-                                    <button
-                                        class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md info-btn flex items-center justify-center space-x-2"
-                                        data-target="modal-{{ $company->id }}">
-                                        <i class="fas fa-info-circle text-xs"></i>
-                                        <span>Taarifa</span>
-                                    </button>
+        @elseif(!$company->is_verified)
+            <!-- Verify Company -->
+            <form action="{{ route('admin.verifyCompany', $company->id) }}" method="POST">
+                @csrf
+                <button class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
+                    <i class="fas fa-shield-alt text-xs"></i>
+                    <span>Thibitisha</span>
+                </button>
+            </form>
 
-                                    <button
-                                        class="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md delete-btn flex items-center justify-center space-x-2"
-                                        data-company="{{ $company->company_name }}"
-                                        data-id="{{ $company->id }}">
-                                        <i class="fas fa-trash text-xs"></i>
-                                        <span>Futa</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </td>
+        @else
+            <!-- Completed -->
+            <div class="w-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-3 py-2 rounded-lg flex items-center justify-center space-x-2">
+                <i class="fas fa-check-circle text-xs"></i>
+                <span>Kamilika</span>
+            </div>
+        @endif
+
+
+        <!-- OTHER ACTIONS (Info + Delete) -->
+        <div class="flex space-x-2">
+            <button
+                class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md info-btn flex items-center justify-center space-x-2"
+                data-target="modal-{{ $company->id }}">
+                <i class="fas fa-info-circle text-xs"></i>
+                <span>Taarifa</span>
+            </button>
+
+            <button
+                class="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md delete-btn flex items-center justify-center space-x-2"
+                data-company="{{ $company->company_name }}"
+                data-id="{{ $company->id }}">
+                <i class="fas fa-trash text-xs"></i>
+                <span>Futa</span>
+            </button>
+        </div>
+
+    </div>
+</td>
+
                     </tr>
 
                     <!-- Company Details Modal -->

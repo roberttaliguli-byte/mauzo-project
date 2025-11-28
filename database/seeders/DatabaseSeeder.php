@@ -87,20 +87,21 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 3. Create additional test user
-        User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('password'),
-            'role' => 'boss',
-            'is_approved' => true,
-            'company_id' => $companies[0]->id,
-            'username' => 'admin',
-            'email_verified_at' => now(),
-            'remember_token' => Str::random(10),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+
+        // admin
+User::create([
+    'name' => 'System Admin',
+    'email' => 'admin@example.com',
+    'password' => Hash::make('password'), // Use a strong password
+    'role' => 'admin',  // <-- important
+    'is_approved' => true,
+    'company_id' => null, // Admin doesn't need a company
+    'username' => 'admin',
+    'email_verified_at' => now(),
+    'remember_token' => Str::random(10),
+    'created_at' => now(),
+    'updated_at' => now(),
+]);
 
         // 4. Seed other tables with company relationships
         foreach ($companies as $company) {
