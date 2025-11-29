@@ -209,3 +209,7 @@ if (Auth::attempt([
         return redirect('/login')->with('success', 'Logged out successfully.');
     }
 }
+
+
+
+

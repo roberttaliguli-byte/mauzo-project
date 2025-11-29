@@ -81,7 +81,7 @@
                             Kifurushi
                         </th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            Database
+                            Muda Uliobaki
                         </th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                             Usajili
@@ -128,47 +128,42 @@
                                     @if($company->package) bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200
                                     @else bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200 @endif"
                                 data-target="package-modal-{{ $company->id }}">
+
                                 <i class="fas fa-box-open text-xs"></i>
                                 <span>{{ $company->package ?? 'Hakuna' }}</span>
                                 <i class="fas fa-edit text-xs opacity-60"></i>
                             </button>
                         </td>
+<!-- Remaining Days -->
+<td class="px-6 py-4 whitespace-nowrap">
+    @if($company->package && $company->package_start && $company->package_end)
+        @php
+            // Use floor() to get whole days only
+            $remaining = floor(now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false));
+        @endphp
 
-                        <!-- Database Information -->
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center space-x-2">
-                                <div class="flex-shrink-0">
-                                    @if($company->database_name)
-                                    <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-database text-emerald-600 text-xs"></i>
-                                    </div>
-                                    @else
-                                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-database text-gray-400 text-xs"></i>
-                                    </div>
-                                    @endif
-                                </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ $company->database_name ?? 'Hakuna' }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        @if($company->database_name)
-                                        <span class="inline-flex items-center space-x-1 text-emerald-600">
-                                            <i class="fas fa-check-circle text-xs"></i>
-                                            <span>Ipo</span>
-                                        </span>
-                                        @else
-                                        <span class="inline-flex items-center space-x-1 text-gray-500">
-                                            <i class="fas fa-times-circle text-xs"></i>
-                                            <span>Haipo</span>
-                                        </span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-
+        <div class="text-sm">
+            @if($remaining > 0)
+                <span class="inline-flex items-center space-x-1 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full border border-blue-200 text-xs font-medium">
+                    <i class="fas fa-clock text-xs"></i>
+                    <span>Siku {{ $remaining }} </span>
+                </span>
+            @elseif($remaining === 0)
+                <span class="inline-flex items-center space-x-1 px-3 py-1.5 bg-amber-50 text-amber-700 rounded-full border border-amber-200 text-xs font-medium">
+                    <i class="fas fa-exclamation-circle text-xs"></i>
+                    <span>Inaisha Leo</span>
+                </span>
+            @else
+                <span class="inline-flex items-center space-x-1 px-3 py-1.5 bg-red-50 text-red-700 rounded-full border border-red-200 text-xs font-medium">
+                    <i class="fas fa-times-circle text-xs"></i>
+                    <span>Kimeisha ({{ abs($remaining) }} siku)</span>
+                </span>
+            @endif
+        </div>
+    @else
+        <span class="text-sm text-gray-500 italic">Hakuna kifurushi</span>
+    @endif
+</td>
                         <!-- Registration Date -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 font-medium">
@@ -179,61 +174,58 @@
                             </div>
                         </td>
 
- <!-- Actions -->
-<td class="px-6 py-4 whitespace-nowrap">
-    <div class="flex flex-col space-y-2">
+                        <!-- Actions -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-col space-y-2">
 
-        <!-- ONE SMART BUTTON -->
-        @if(!$company->is_user_approved)
-            <!-- Approve User -->
-            <form action="{{ route('admin.approveUser', $company->id) }}" method="POST">
-                @csrf
-                <button class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
-                    <i class="fas fa-user-check text-xs"></i>
-                    <span>Idhinisha Mtumiaji</span>
-                </button>
-            </form>
+                                <!-- ONE SMART BUTTON -->
+                                @if(!$company->is_user_approved)
+                                    <!-- Approve User -->
+                                    <form action="{{ route('admin.approveUser', $company->id) }}" method="POST">
+                                        @csrf
+                                        <button class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
+                                            <i class="fas fa-user-check text-xs"></i>
+                                            <span>Idhinisha Mtumiaji</span>
+                                        </button>
+                                    </form>
 
-        @elseif(!$company->is_verified)
-            <!-- Verify Company -->
-            <form action="{{ route('admin.verifyCompany', $company->id) }}" method="POST">
-                @csrf
-                <button class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
-                    <i class="fas fa-shield-alt text-xs"></i>
-                    <span>Thibitisha</span>
-                </button>
-            </form>
+                                @elseif(!$company->is_verified)
+                                    <!-- Verify Company -->
+                                    <form action="{{ route('admin.verifyCompany', $company->id) }}" method="POST">
+                                        @csrf
+                                        <button class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
+                                            <i class="fas fa-shield-alt text-xs"></i>
+                                            <span>Thibitisha</span>
+                                        </button>
+                                    </form>
 
-        @else
-            <!-- Completed -->
-            <div class="w-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-3 py-2 rounded-lg flex items-center justify-center space-x-2">
-                <i class="fas fa-check-circle text-xs"></i>
-                <span>Kamilika</span>
-            </div>
-        @endif
+                                @else
+                                    <!-- Completed -->
+                                    <div class="w-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-3 py-2 rounded-lg flex items-center justify-center space-x-2">
+                                        <i class="fas fa-check-circle text-xs"></i>
+                                        <span>Kamilika</span>
+                                    </div>
+                                @endif
 
+                                <!-- OTHER ACTIONS (Info + Delete) -->
+                                <div class="flex space-x-2">
+                                    <button
+                                        class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md info-btn flex items-center justify-center space-x-2"
+                                        data-target="modal-{{ $company->id }}">
+                                        <i class="fas fa-info-circle text-xs"></i>
+                                        <span>Taarifa</span>
+                                    </button>
 
-        <!-- OTHER ACTIONS (Info + Delete) -->
-        <div class="flex space-x-2">
-            <button
-                class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md info-btn flex items-center justify-center space-x-2"
-                data-target="modal-{{ $company->id }}">
-                <i class="fas fa-info-circle text-xs"></i>
-                <span>Taarifa</span>
-            </button>
-
-            <button
-                class="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md delete-btn flex items-center justify-center space-x-2"
-                data-company="{{ $company->company_name }}"
-                data-id="{{ $company->id }}">
-                <i class="fas fa-trash text-xs"></i>
-                <span>Futa</span>
-            </button>
-        </div>
-
-    </div>
-</td>
-
+                                    <button
+                                        class="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md delete-btn flex items-center justify-center space-x-2"
+                                        data-company="{{ $company->company_name }}"
+                                        data-id="{{ $company->id }}">
+                                        <i class="fas fa-trash text-xs"></i>
+                                        <span>Futa</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
 
                     <!-- Company Details Modal -->
@@ -301,10 +293,25 @@
                                                 <span class="text-sm text-gray-600">Kifurushi:</span>
                                                 <span class="text-sm font-medium text-gray-900">{{ $company->package ?? 'Haijawekwa' }}</span>
                                             </div>
-                                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
-                                                <span class="text-sm text-gray-600">Database:</span>
-                                                <span class="text-sm font-medium text-gray-900">{{ $company->database_name ?? 'Haijawekwa' }}</span>
-                                            </div>
+                                      
+                                                @if($company->package && $company->package_start && $company->package_end)
+                                                    @php
+                                                        $remaining = floor(now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false));
+                                                    @endphp
+                                                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                                        <span class="text-sm text-gray-600">Muda Uliobaki:</span>
+                                                        <span class="text-sm font-medium text-gray-900">
+                                                            @if($remaining > 0)
+                                                                Siku {{ $remaining }} zimebaki
+                                                            @elseif($remaining === 0)
+                                                                Inaisha Leo
+                                                            @else
+                                                                Kimeisha ({{ abs($remaining) }} siku)
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                @endif                                                                      
+
                                             <div class="flex justify-between items-center py-2 border-b border-gray-100">
                                                 <span class="text-sm text-gray-600">Tarehe ya Usajili:</span>
                                                 <span class="text-sm font-medium text-gray-900">{{ $company->created_at->format('d/m/Y H:i') }}</span>
@@ -472,7 +479,7 @@
                 </div>
                 <p class="text-sm text-red-600 flex items-center justify-center space-x-1">
                     <i class="fas fa-info-circle text-xs"></i>
-                    <span>Taarifa zote za kampuni hii zitafutwa kabisa</span>
+                    <span>Taarifi zote za kampuni hii zitafutwa kabisa</span>
                 </p>
             </div>
         </div>

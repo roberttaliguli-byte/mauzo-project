@@ -313,8 +313,9 @@
                     </label>
                     <select name="type" id="type" 
                             class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white">
-                        <option value="excel">📊 Excel (.xlsx)</option>
                         <option value="pdf">📄 PDF (.pdf)</option>
+                            <option value="excel">📊 Excel (.xlsx)</option>
+                        
                     </select>
                 </div>
 
@@ -332,7 +333,7 @@
             <div class="border-t border-gray-200 pt-6">
                 <p class="text-sm font-semibold text-gray-700 mb-4">Pakua Haraka:</p>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <a href="{{ route('admin.reports.download-companies', ['period' => 'today', 'type' => 'excel']) }}" 
+                    <a href="{{ route('admin.reports.download-companies', ['period' => 'today', 'type' => 'pdf']) }}" 
                        class="bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl transition-all duration-200 text-center group">
                         <div class="flex items-center justify-center space-x-2">
                             <i class="fas fa-file-excel text-blue-600"></i>
@@ -340,7 +341,7 @@
                         </div>
                     </a>
                     
-                    <a href="{{ route('admin.reports.download-companies', ['period' => 'this_week', 'type' => 'excel']) }}" 
+                    <a href="{{ route('admin.reports.download-companies', ['period' => 'this_week', 'type' => 'pdf']) }}" 
                        class="bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 px-4 py-3 rounded-xl transition-all duration-200 text-center group">
                         <div class="flex items-center justify-center space-x-2">
                             <i class="fas fa-file-excel text-green-600"></i>
@@ -356,7 +357,7 @@
                         </div>
                     </a>
                     
-                    <a href="{{ route('admin.reports.download-companies', ['period' => 'all', 'type' => 'excel']) }}" 
+                    <a href="{{ route('admin.reports.download-companies', ['period' => 'all', 'type' => 'pdf']) }}" 
                        class="bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 px-4 py-3 rounded-xl transition-all duration-200 text-center group">
                         <div class="flex items-center justify-center space-x-2">
                             <i class="fas fa-file-excel text-purple-600"></i>
