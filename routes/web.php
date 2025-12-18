@@ -18,8 +18,19 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReportController as MainReportController;
+use App\Http\Controllers\UserReportController;
 
-// =========================
+Route::prefix('user')->group(function () {
+    // Page to select report type & time period
+    Route::get('reports/select', [UserReportController::class, 'select'])
+        ->name('user.reports.select');
+
+    // Download PDF
+    Route::get('reports/download', [UserReportController::class, 'download'])
+        ->name('user.reports.download');
+});
+
+// ========================
 // Admin routes (with middleware)
 // =========================
 Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
@@ -42,6 +53,8 @@ Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->prefix('admin'
         Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
             ->name('reports.download-companies');
     });
+
+
 
     // Change Password
     Route::get('/change-password', [AdminController::class, 'showChangePassword'])->name('password.show');

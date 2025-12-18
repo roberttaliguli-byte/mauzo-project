@@ -6,34 +6,45 @@
 
 @section('content')
 <div class="bg-gray-50 min-h-screen" x-data="dashboardApp()" x-init="init()">
-  <!-- 🔹 Header -->
-  <header class="bg-white shadow-sm border-b px-6 py-4">
-    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-      <h1 class="text-2xl font-bold text-gray-800">TAARIFA KATIKA MAUZO</h1>
-      <div class="flex flex-wrap gap-2">
-        <button @click="setTab('graphs')" 
-                :class="tab === 'graphs' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
-                class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
-          📊 Grafu
-        </button>
-        <button @click="setTab('mwenendo')" 
-                :class="tab === 'mwenendo' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
-                class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
-          📈 Mwenendo
-        </button>
-        <button @click="setTab('kampuni')" 
-                :class="tab === 'kampuni' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
-                class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
-          💼 Thamani ya Kampuni
-        </button>
-        <button @click="setTab('historia')" 
-                :class="tab === 'historia' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
-                class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
-          🕒 Historia
-        </button>
-      </div>
+<!-- 🔹 Header -->
+<header class="bg-white shadow-sm border-b px-6 py-4">
+  <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+    <h1 class="text-2xl font-bold text-gray-800">TAARIFA KATIKA MAUZO</h1>
+    <div class="flex flex-wrap gap-2">
+      <button @click="setTab('graphs')" 
+              :class="tab === 'graphs' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
+              class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
+        📊 Grafu
+      </button>
+
+      <button @click="setTab('mwenendo')" 
+              :class="tab === 'mwenendo' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
+              class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
+        📈 Mwenendo
+      </button>
+
+      <button @click="setTab('kampuni')" 
+              :class="tab === 'kampuni' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
+              class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
+        💼 Thamani ya Kampuni
+      </button>
+
+      <!-- 📄 Ripoti button styled like others -->
+      <a href="{{ route('user.reports.select') }}" 
+         class="px-4 py-2 rounded-lg font-medium transition-all duration-200
+                bg-gray-100 text-gray-700 hover:bg-gray-200 shadow-sm">
+        📄 Pakua Ripoti
+      </a>
+
+      <button @click="setTab('historia')" 
+              :class="tab === 'historia' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
+              class="px-4 py-2 rounded-lg font-medium transition-all duration-200">
+        🕒 Historia
+      </button>
     </div>
-  </header>
+  </div>
+</header>
+
 
   <!-- 🔹 MAIN CONTENT -->
   <main class="p-6 space-y-6">

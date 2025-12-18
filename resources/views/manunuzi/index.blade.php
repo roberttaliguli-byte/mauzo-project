@@ -304,7 +304,8 @@
                     >
                         <option value=""> </option>
                         @foreach($bidhaa as $b)
-                        <option value="{{ $b->id }}">{{ $b->jina }} - {{ $b->aina }}</option>
+                        <option value="{{ $b->id }}">{{ $b->jina }} - {{ $b->aina }} - {{ $b->kipimo }}</option>
+                                       
                         @endforeach
                     </select>
                     <label class="absolute left-4 top-2 text-gray-400 text-sm transition-all
@@ -370,7 +371,7 @@
                                           peer-placeholder-shown:top-4 peer-placeholder-shown:text-gray-400
                                           peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-green-600
                                           peer-focus:text-sm font-medium">
-                                Kiasi cha Bei (TZS) *
+                                Kiasi cha Bei-nunua (TZS) *
                             </label>
                         </div>
                     </div>

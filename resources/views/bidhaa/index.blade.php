@@ -384,7 +384,7 @@
                             name="expiry" 
                             placeholder=" " 
                             class="peer border border-gray-300 rounded-lg w-full p-4 pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" 
-                            required
+    
                         >
                         <label class="absolute left-4 top-2 text-gray-400 text-sm transition-all
                                       peer-placeholder-shown:top-4 peer-placeholder-shown:text-gray-400

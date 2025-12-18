@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Services\GeneralReportService;
 
 use App\Models\Bidhaa;
 use App\Models\Mauzo;

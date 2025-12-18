@@ -62,9 +62,10 @@
                             <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
                                 <option value="">Chagua Bidhaa...</option>
                                 @foreach($bidhaa as $item)
-                                    <option value="{{ $item->id }}" data-bei="{{ $item->bei_kuuza }}" data-stock="{{ $item->idadi }}">
-                                        {{ $item->jina }} ({{ $item->aina }}) - Stock: {{ $item->idadi }} - Bei: {{ number_format($item->bei_kuuza) }}
-                                    </option>
+                                <option value="{{ $item->id }}" data-bei="{{ $item->bei_kuuza }}">
+                                    {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }}
+                                </option>
+
                                 @endforeach
                             </select>
                         </div>
