@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Services\GeneralReportService;
 
+use App\Services\GeneralReportService;
 use App\Models\Bidhaa;
 use App\Models\Mauzo;
 use App\Models\Manunuzi;
 use App\Models\Matumizi;
 use App\Models\Madeni;
+use App\Models\Company;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -25,12 +26,14 @@ class DashboardController extends Controller
         } else {
             $user = Auth::user(); // default web guard (Boss)
             $companyId = $user->company_id ?? null;
-            
         }
 
         if (!$companyId) {
             abort(403, 'Company not found for user.');
         }
+
+        // --- Fetch Company ---
+        $company = Company::find($companyId);
 
         // --- Stock / Inventory Metrics ---
         $jumlaBidhaa = Bidhaa::where('company_id', $companyId)->count();
@@ -75,7 +78,9 @@ class DashboardController extends Controller
         $jumlaMadeni = Madeni::where('company_id', $companyId)->sum('baki');
         $idadiMadeni = Madeni::where('company_id', $companyId)->count();
 
+        // --- Pass Company to the view ---
         return view('dashboard.index', compact(
+            'company', // ✅ new line added
             'jumlaBidhaa',
             'jumlaIdadi',
             'thamani',

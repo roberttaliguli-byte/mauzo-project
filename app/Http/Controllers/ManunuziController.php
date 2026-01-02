@@ -13,22 +13,23 @@ class ManunuziController extends Controller
     /**
      * Show list of manunuzi and form data (company specific).
      */
-    public function index()
-    {
-    
+public function index()
+{
     $companyId = Auth::user()->company_id;
 
-        // Only show manunuzi for this company
-        $manunuzi = Manunuzi::with('bidhaa')
-            ->where('company_id', $companyId)
-            ->latest()
-            ->get();
+    $perPage = request()->get('per_page', 10);
 
-        // Show only products belonging to this company
-        $bidhaa = Bidhaa::where('company_id', $companyId)->get();
+    // Only show manunuzi for this company
+    $manunuzi = Manunuzi::with('bidhaa')
+        ->where('company_id', $companyId)
+        ->orderBy('created_at', 'desc')
+        ->paginate($perPage);
 
-        return view('manunuzi.index', compact('manunuzi', 'bidhaa'));
-    }
+    // Show only products belonging to this company
+    $bidhaa = Bidhaa::where('company_id', $companyId)->get();
+
+    return view('manunuzi.index', compact('manunuzi', 'bidhaa'));
+}
 
     /**
      * Store a new manunuzi and update stock and purchase price (company specific).

@@ -54,14 +54,14 @@
       position: fixed;
       inset: 0;
       background: 
-        radial-gradient(circle at 20% 80%, rgba(217, 119, 6, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(6, 95, 70, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        radial-gradient(circle at 20% 80%, rgba(217, 119, 6, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(6, 95, 70, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
       z-index: -1;
     }
 
     .hero-gradient {
-      background: linear-gradient(135deg, rgba(217, 119, 6, 0.446) 0%, rgba(6, 95, 70, 0.413) 100%);
+      background: linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(6, 95, 70, 0.1) 100%);
     }
 
     .text-gradient {
@@ -75,39 +75,47 @@
       background: linear-gradient(90deg, var(--amber), var(--amber-dark));
       color: white;
       transition: all 0.3s ease;
+      border: none;
+      font-weight: 600;
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(217, 119, 6, 0.3);
+      box-shadow: 0 8px 16px rgba(217, 119, 6, 0.25);
     }
 
     .btn-secondary {
       background: linear-gradient(90deg, var(--dark-green), var(--dark-green-light));
       color: white;
       transition: all 0.3s ease;
+      border: none;
+      font-weight: 600;
     }
 
     .btn-secondary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(6, 95, 70, 0.3);
+      box-shadow: 0 8px 16px rgba(6, 95, 70, 0.25);
     }
 
     .feature-card {
       background: white;
       border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
       transition: all 0.3s ease;
       border: 1px solid rgba(0, 0, 0, 0.05);
+      height: 100%;
     }
 
     .feature-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
     }
 
     .nav-link {
       position: relative;
+      color: #374151;
+      font-weight: 500;
+      padding: 4px 0;
     }
 
     .nav-link::after {
@@ -115,9 +123,9 @@
       position: absolute;
       width: 0;
       height: 2px;
-      bottom: -4px;
+      bottom: 0;
       left: 0;
-      background-color: var(--amber);
+      background: linear-gradient(90deg, var(--amber), var(--dark-green));
       transition: width 0.3s ease;
     }
 
@@ -125,13 +133,13 @@
       width: 100%;
     }
 
-    .section-divider {
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.3), transparent);
+    .nav-link:hover {
+      color: var(--amber);
     }
 
-    .angled-section {
-      clip-path: polygon(0 0, 100% 5%, 100% 100%, 0 95%);
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.2), transparent);
     }
 
     .floating {
@@ -147,14 +155,15 @@
     .pricing-card {
       background: white;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
       transition: all 0.3s ease;
       overflow: hidden;
+      height: 100%;
     }
     
     .pricing-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      transform: translateY(-8px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
     }
     
     .pricing-card.popular {
@@ -168,454 +177,760 @@
       right: 20px;
       background: var(--amber);
       color: white;
-      padding: 4px 16px;
+      padding: 6px 20px;
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 600;
+      z-index: 10;
+    }
+    
+    .section-header {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 2rem;
+    }
+    
+    .section-header::after {
+      content: '';
+      position: absolute;
+      width: 60%;
+      height: 4px;
+      bottom: -8px;
+      left: 20%;
+      background: linear-gradient(90deg, var(--amber), var(--dark-green));
+      border-radius: 2px;
+    }
+    
+    /* Image container for responsive sizing */
+    .responsive-img {
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      border-radius: 12px;
+    }
+    
+    .hero-img-container {
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    
+    @media (min-width: 768px) {
+      .hero-img-container {
+        max-width: 600px;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .hero-img-container {
+        max-width: 700px;
+      }
+    }
+    
+    /* Mobile optimization */
+    .mobile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .mobile-stats-item {
+      text-align: center;
+      padding: 0.5rem;
+    }
+    
+    /* Pricing grid improvements */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    @media (min-width: 768px) {
+      .pricing-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .pricing-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    /* FIXED: Mobile menu dropdown */
+    #mobile-nav {
+      transition: all 0.3s ease;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+    }
+    
+    #mobile-nav.active {
+      max-height: 500px;
+      opacity: 1;
+      padding: 1rem 0;
+    }
+    
+    /* UPDATED: Hero buttons layout - Pakua & Ingia on first line, Jisajili on second line on mobile */
+    .hero-buttons {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    /* On mobile: First line - Pakua Programu & Ingia */
+    /* On mobile: Second line - Jisajili (full width) */
+    @media (max-width: 767px) {
+      .hero-buttons {
+        flex-direction: column;
+        align-items: stretch;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      
+      .hero-buttons .button-row {
+        display: flex;
+        flex-direction: row;
+        gap: 0.75rem;
+        width: 100%;
+      }
+      
+      .hero-buttons .button-row a {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .hero-buttons .jisajili-btn {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+    }
+    
+    @media (min-width: 768px) {
+      .hero-buttons {
+        flex-direction: row;
+        flex-wrap: nowrap;
+      }
+      
+      .hero-buttons .button-row {
+        display: flex;
+        flex-direction: row;
+        gap: 0.75rem;
+      }
+      
+      .hero-buttons .jisajili-btn {
+        margin-left: 0.75rem;
+      }
+    }
+    
+    /* Section background colors */
+    .section-about {
+      background: linear-gradient(135deg, rgba(217, 119, 6, 0.05) 0%, rgba(6, 95, 70, 0.05) 100%);
+    }
+    
+    .section-features {
+      background: linear-gradient(135deg, rgba(217, 119, 6, 0.03) 0%, rgba(6, 95, 70, 0.03) 100%);
+    }
+    
+    .section-pricing {
+      background: linear-gradient(135deg, rgba(217, 119, 6, 0.05) 0%, rgba(6, 95, 70, 0.05) 100%);
+    }
+    
+    .section-contact {
+      background: linear-gradient(135deg, rgba(217, 119, 6, 0.03) 0%, rgba(6, 95, 70, 0.03) 100%);
+    }
+    
+    .section-cta {
+      background: linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(6, 95, 70, 0.08) 100%);
+    }
+    
+    /* Better touch targets for mobile */
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Portrait phone specific styles */
+    @media (max-width: 480px) and (orientation: portrait) {
+      .hero-buttons {
+        max-width: 280px;
+      }
+      
+      .hero-buttons .button-row {
+        gap: 0.5rem;
+      }
+      
+      .hero-buttons .button-row a,
+      .hero-buttons .jisajili-btn {
+        font-size: 0.85rem;
+        padding: 0.75rem 0.5rem;
+      }
+      
+      /* Mobile menu fix for portrait */
+      #mobile-nav.active {
+        padding: 1rem;
+      }
+      
+      #mobile-nav a {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+      }
     }
   </style>
 </head>
 
 <body class="relative min-h-screen">
 
-  <!-- Header -->
-<header class="sticky top-0 z-50 bg-gradient-to-r from-amber-200 via-white to-green-200 shadow-sm">
-  <div class="max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
-    
-    <!-- Logo: aligned left and slightly compact -->
-    <a href="#home" class="flex items-center space-x-2 shrink-0" aria-label="MauzoSheet Nyumbani">
-      <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" 
-           alt="MauzoSheet logo" 
-           class="h-8 w-8 md:h-10 md:w-10 object-contain" />
-      <span class="font-bold text-lg md:text-xl text-gradient whitespace-nowrap">
-        MauzoSheet
-      </span>
-    </a>
+  <!-- Header - Fixed -->
+  <header class="sticky top-0 z-50 bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto flex justify-between items-center py-3 px-4 sm:py-4 sm:px-6">
+      
+      <!-- Logo -->
+      <a href="#home" class="flex items-center space-x-2 shrink-0" aria-label="MauzoSheet Nyumbani">
+        <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" 
+             alt="MauzoSheet logo" 
+             class="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 object-contain" />
+        <span class="font-bold text-lg sm:text-xl md:text-2xl text-gradient whitespace-nowrap">
+          MauzoSheet
+        </span>
+      </a>
 
-    <!-- Desktop Navigation: aligned right -->
-    <nav class="hidden md:flex items-center space-x-8 text-black font-medium">
-      <a class="nav-link hover:text-amber-600 transition" href="#home">Nyumbani</a>
-      <a class="nav-link hover:text-amber-600 transition" href="#about">Tufahamu</a>
-      <a class="nav-link hover:text-amber-600 transition" href="#feature">Huduma Zetu</a>
-      <a class="nav-link hover:text-amber-600 transition" href="#pricing">Vifurushi</a>
-      <a class="nav-link hover:text-amber-600 transition" href="#testimonials">Shuhuda</a>
-      <a class="nav-link hover:text-amber-600 transition" href="#contact">Mawasiliano</a>
-    </nav>
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex items-center space-x-6 lg:space-x-8 text-gray-700">
+        <a class="nav-link hover:text-amber-600 transition" href="#home">Nyumbani</a>
+        <a class="nav-link hover:text-amber-600 transition" href="#about">Tufahamu</a>
+        <a class="nav-link hover:text-amber-600 transition" href="#feature">Huduma</a>
+        <a class="nav-link hover:text-amber-600 transition" href="#pricing">Vifurushi</a>
+        <a class="nav-link hover:text-amber-600 transition" href="#testimonials">Shuhuda</a>
+        <a class="nav-link hover:text-amber-600 transition" href="#contact">Mawasiliano</a>
+      </nav>
 
-    <!-- Mobile Menu Button -->
-    <button id="mobile-menu-btn" 
-            class="md:hidden text-black focus:outline-none" 
-            aria-label="Fungua menyu ya simu">
-      <svg xmlns="http://www.w3.org/2000/svg" 
-           class="h-6 w-6" 
-           fill="none"
-           viewBox="0 0 24 24" 
-           stroke="currentColor">
-        <path stroke-linecap="round" 
-              stroke-linejoin="round" 
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    </button>
+      <!-- Mobile Menu Button -->
+      <button id="mobile-menu-btn" 
+              class="md:hidden text-gray-700 focus:outline-none touch-target p-2" 
+              aria-label="Fungua menyu ya simu"
+              aria-expanded="false">
+        <svg id="menu-icon" xmlns="http://www.w3.org/2000/svg" 
+             class="h-6 w-6" 
+             fill="none"
+             viewBox="0 0 24 24" 
+             stroke="currentColor">
+          <path stroke-linecap="round" 
+                stroke-linejoin="round" 
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <svg id="close-icon" xmlns="http://www.w3.org/2000/svg" 
+             class="h-6 w-6 hidden" 
+             fill="none"
+             viewBox="0 0 24 24" 
+             stroke="currentColor">
+          <path stroke-linecap="round" 
+                stroke-linejoin="round" 
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
 
-  </div>
-</header>
-
-
-    <!-- Mobile Nav -->
-    <nav id="mobile-nav" class="hidden flex-col space-y-4 p-6 bg-white border-t md:hidden">
-      <a href="#home" class="py-2 font-medium text-black hover:text-amber-600 transition">Nyumbani</a>
-      <a href="#about" class="py-2 font-medium text-black hover:text-amber-600 transition">Tufahamu</a>
-      <a href="#feature" class="py-2 font-medium text-black hover:text-amber-600 transition">Huduma Zetu</a>
-      <a href="#pricing" class="py-2 font-medium text-black hover:text-amber-600 transition">Vifurushi</a>
-      <a href="#testimonials" class="py-2 font-medium text-black hover:text-amber-600 transition">Shuhuda</a>
-      <a href="#contact" class="py-2 font-medium text-black-700 hover:text-amber-600 transition">Mawasiliano</a>
-
+    <!-- Mobile Navigation - FIXED: Now shows properly on tap -->
+    <nav id="mobile-nav" class="md:hidden bg-white border-t shadow-lg">
+      <div class="flex flex-col space-y-1 px-4">
+        <a href="#home" class="nav-link py-3 px-4 rounded-lg hover:bg-amber-50 transition touch-target">Nyumbani</a>
+        <a href="#about" class="nav-link py-3 px-4 rounded-lg hover:bg-amber-50 transition touch-target">Tufahamu</a>
+        <a href="#feature" class="nav-link py-3 px-4 rounded-lg hover:bg-amber-50 transition touch-target">Huduma Zetu</a>
+        <a href="#pricing" class="nav-link py-3 px-4 rounded-lg hover:bg-amber-50 transition touch-target">Vifurushi</a>
+        <a href="#testimonials" class="nav-link py-3 px-4 rounded-lg hover:bg-amber-50 transition touch-target">Shuhuda</a>
+        <a href="#contact" class="nav-link py-3 px-4 rounded-lg hover:bg-amber-50 transition touch-target">Mawasiliano</a>
+      </div>
     </nav>
   </header>
 
-<!-- Hero Section -->
-<section id="home" class="hero-gradient relative py-20 lg:py-28 overflow-hidden">
-  <div class="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-12 relative">
-
-    <!-- Left Side: Text -->
-    <div class="lg:w-1/2 space-y-6 text-left z-10">
-      <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-        <span class="text-gradient">Biashara Yako,</span><br>
-        <span class="text-gray-800">Imerahisishwa</span>
-      </h1>
-      <p class="text-lg md:text-xl text-black max-w-lg">
-        MauzoSheet hukusaidia kusimamia, kuchambua, na kuendesha biashara zako kwa urahisi, usalama, na ufanisi.
-      </p>
-      <div class="flex flex-wrap gap-4 mt-8">
-        <a href="https://play.google.com/store/apps/details?id=io.android.MauzoSheet" 
-           target="_blank" rel="noopener noreferrer"
-           class="btn-primary py-3 px-6 rounded-lg font-semibold text-center">
-          Pakua Programu
-        </a>
-        <a href="{{ route('login') }}" 
-           class="btn-secondary py-3 px-6 rounded-lg font-semibold text-center">
-          Ingia
-        </a>
-        <a href="{{ route('register') }}" 
-           class="btn-primary py-3 px-6 rounded-lg font-semibold text-center">
-          Jisajili
-        </a>
+  <!-- Hero Section -->
+  <section id="home" class="hero-gradient pt-10 pb-16 md:pt-16 md:pb-24 lg:pt-20 lg:pb-32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+      
+      <!-- Text Content -->
+      <div class="lg:w-1/2 space-y-4 md:space-y-6 text-center lg:text-left">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+          <span class="text-gradient">Biashara Yako,</span><br>
+          <span class="text-gray-800">Imerahisishwa</span>
+        </h1>
+        <p class="text-base sm:text-lg md:text-xl text-gray-700 max-w-lg mx-auto lg:mx-0">
+          MauzoSheet hukusaidia kusimamia, kuchambua, na kuendesha biashara zako kwa urahisi, usalama, na ufanisi.
+        </p>
+        
+        <!-- UPDATED: CTA Buttons - Pakua & Ingia on first line, Jisajili on second line on mobile -->
+        <div class="hero-buttons mt-6 md:mt-8 justify-center lg:justify-start">
+          <!-- First line: Pakua Programu & Ingia -->
+          <div class="button-row">
+            <a href="https://play.google.com/store/apps/details?id=io.android.MauzoSheet" 
+               target="_blank" rel="noopener noreferrer"
+               class="btn-primary py-3 px-4 sm:px-5 rounded-lg font-semibold text-center touch-target whitespace-nowrap">
+              Pakua Programu
+            </a>
+            <a href="{{ route('login') }}" 
+               class="btn-secondary py-3 px-4 sm:px-5 rounded-lg font-semibold text-center touch-target whitespace-nowrap">
+              Ingia
+            </a>
+          </div>
+          
+          <!-- Second line: Jisajili (full width on mobile) -->
+          <a href="{{ route('register') }}" 
+             class="jisajili-btn btn-primary py-3 px-4 sm:px-5 rounded-lg font-semibold text-center touch-target whitespace-nowrap">
+            Jisajili
+          </a>
+        </div>
+        
+        <!-- Stats -->
+        <div class="pt-6 md:pt-8">
+          <div class="mobile-stats mx-auto lg:mx-0">
+            <div class="mobile-stats-item">
+              <p class="text-xl sm:text-2xl md:text-3xl font-bold text-amber-600">500+</p>
+              <p class="text-xs sm:text-sm text-gray-600">Wafanyabiashara</p>
+            </div>
+            <div class="mobile-stats-item">
+              <p class="text-xl sm:text-2xl md:text-3xl font-bold text-dark-green">10K+</p>
+              <p class="text-xs sm:text-sm text-gray-600">Mauzo Kila Mwezi</p>
+            </div>
+            <div class="mobile-stats-item">
+              <p class="text-xl sm:text-2xl md:text-3xl font-bold text-amber-600">98%</p>
+              <p class="text-xs sm:text-sm text-gray-600">Wateja Wameridhika</p>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="pt-6 flex items-center gap-6">
-        <div class="text-center">
-          <p class="text-2xl font-bold text-amber-600">500+</p>
-          <p class="text-sm text-black">Wafanyabiashara</p>
-        </div>
-        <div class="h-8 w-px bg-gray-300"></div>
-        <div class="text-center">
-          <p class="text-2xl font-bold text-dark-green">10K+</p>
-          <p class="text-sm text-black">Mauzo Kila Mwezi</p>
-        </div>
-        <div class="h-8 w-px bg-gray-300"></div>
-        <div class="text-center">
-          <p class="text-2xl font-bold text-amber-600">98%</p>
-          <p class="text-sm text-black">Wateja Wameridhika</p>
+      
+      <!-- Hero Image -->
+      <div class="lg:w-1/2 mt-8 lg:mt-0">
+        <div class="hero-img-container">
+          <img src="p1.jpg" 
+               alt="Mfumo wa MauzoSheet" 
+               class="responsive-img shadow-xl floating" />
         </div>
       </div>
     </div>
-
-    <!-- Right Side: Large Image -->
-    <div class="lg:w-1/2 relative flex justify-center items-center z-10">
-      <img src="p1.jpg" 
-           alt="Mfumo wa MauzoSheet" 
-           class="rounded-3xl shadow-2xl w-[100%] md:w-[700px] lg:w-[850px] floating" />
-
-      <!-- Decorative circles -->
-      <div class="absolute -bottom-12 -left-12 w-44 h-44 bg-amber-100 rounded-full opacity-60 z-0"></div>
-      <div class="absolute -top-12 -right-12 w-36 h-36 bg-green-100 rounded-full opacity-60 z-0"></div>
-
-      <!-- Fog/Mvuke effect -->
-      <div class="absolute inset-0 z-0 pointer-events-none">
-        <div class="absolute w-full h-full bg-gradient-to-t from-white/20 via-transparent to-white/0 rounded-3xl animate-fade-slow"></div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<style>
-/* Floating animation */
-@keyframes floating {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
-}
-.floating { animation: floating 4s ease-in-out infinite; }
-
-/* Slow fading fog effect */
-@keyframes fade-slow {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.05; }
-}
-.animate-fade-slow { animation: fade-slow 6s ease-in-out infinite; }
-</style>
-
+  </section>
 
   <!-- About Section -->
-  <section id="about" class="py-20 bg-gradient-to-r from-amber-600 to-green-200">
-
-    <div class="max-w-5xl mx-auto px-6 text-center space-y-8">
-      <div class="space-y-4">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Kuhusu <span class="text-gradient">MauzoSheet</span></h2>
+  <section id="about" class="py-12 md:py-20 section-about">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center space-y-4 mb-8 md:mb-12">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+          <span class="section-header">Kuhusu MauzoSheet</span>
+        </h2>
         <div class="section-divider w-24 mx-auto"></div>
+        <p class="text-base md:text-lg text-gray-600 max-w-3xl mx-auto">
+          MauzoSheet ni mfumo wa kimtandao unaosaidia wafanyabiashara wa rejareja na jumla kusimamia biashara zao kwa njia ya kisasa, salama, na yenye ufanisi.
+        </p>
+        <p class="text-base md:text-lg font-medium text-dark-green max-w-3xl mx-auto">
+          Uza au kopesha bidhaa zako kwa urahisi kupitia MauzoSheet. Jiunge leo!
+        </p>
       </div>
-      <p class="text-lg text-black max-w-3xl mx-auto">
-        MauzoSheet ni mfumo wa kimtandao unaosaidia wafanyabiashara wa rejareja na jumla kusimamia biashara zao kwa njia ya kisasa, salama, na yenye ufanisi.
-      </p>
-      <p class="text-lg font-medium text-dark-green max-w-3xl mx-auto">
-        Uza au kopesha bidhaa zako kwa urahisi kupitia MauzoSheet. Jiunge leo!
-      </p>
       
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
-        <div class="feature-card p-6 text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-50 flex items-center justify-center">
-            <i class="icofont-target text-2xl text-amber-600"></i>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div class="feature-card p-5 md:p-6 text-center">
+          <div class="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-full bg-amber-50 flex items-center justify-center">
+            <i class="icofont-target text-xl md:text-2xl text-amber-600"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-800 mb-2">Lengo Letu</h3>
-          <p class="text-black">Kurahisisha uendeshaji wa biashara kwa wajasiriamali wote Tanzania.</p>
+          <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Lengo Letu</h3>
+          <p class="text-gray-600 text-sm md:text-base">Kurahisisha uendeshaji wa biashara kwa wajasiriamali wote Tanzania.</p>
         </div>
         
-        <div class="feature-card p-6 text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
-            <i class="icofont-eye text-2xl text-dark-green"></i>
+        <div class="feature-card p-5 md:p-6 text-center">
+          <div class="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
+            <i class="icofont-eye text-xl md:text-2xl text-dark-green"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-800 mb-2">Mtazamo Wetu</h3>
-          <p class="text-black">Kuwa chombo kikuu cha uongozi wa kidijitali kwa wafanyabiashara Tanzania.</p>
+          <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Mtazamo Wetu</h3>
+          <p class="text-gray-600 text-sm md:text-base">Kuwa chombo kikuu cha uongozi wa kidijitali kwa wafanyabiashara Tanzania.</p>
         </div>
         
-        <div class="feature-card p-6 text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-50 flex items-center justify-center">
-            <i class="icofont-check-circled text-2xl text-amber-600"></i>
+        <div class="feature-card p-5 md:p-6 text-center">
+          <div class="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-full bg-amber-50 flex items-center justify-center">
+            <i class="icofont-check-circled text-xl md:text-2xl text-amber-600"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-800 mb-2">Thamani Zetu</h3>
-          <p class="text-black">Kuwapa wateja wetu urahisi, usalama na ufanisi katika shughuli zao za kila siku.</p>
+          <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Thamani Zetu</h3>
+          <p class="text-gray-600 text-sm md:text-base">Kuwapa wateja wetu urahisi, usalama na ufanisi katika shughuli zao za kila siku.</p>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Features Section -->
-  <section id="feature" class="py-20 bg-gradient-to-r from-amber-600 to-green-200 text-black">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="text-center space-y-4 mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Huduma <span class="text-gradient">Zetu</span></h2>
+  <section id="feature" class="py-12 md:py-20 section-features">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center space-y-4 mb-8 md:mb-16">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+          <span class="section-header">Huduma Zetu</span>
+        </h2>
         <div class="section-divider w-24 mx-auto"></div>
-        <p class="text-lg text-black max-w-2xl mx-auto">Vipengele vyetu vya kipekee vinavyowafanya wafanyabiashara kukua na kufanikiwa</p>
+        <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">Vipengele vyetu vya kipekee vinavyowafanya wafanyabiashara kukua na kufanikiwa</p>
       </div>
       
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        <div class="space-y-8">
-          <div class="feature-card p-6 flex items-start gap-4">
-            <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <i class="icofont-company text-xl text-amber-600"></i>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
+        <div class="space-y-6 md:space-y-8">
+          <div class="feature-card p-4 sm:p-5 md:p-6 flex items-start gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <i class="icofont-company text-lg sm:text-xl text-amber-600"></i>
             </div>
             <div>
-              <h4 class="font-bold text-lg text-gray-800 mb-2">Uendeshaji wa Biashara</h4>
-              <p class="text-gray-600">Simamia biashara zako zote kwa akaunti moja, popote ulipo. Fuatilia mauzo, gharama na faida kwa urahisi.</p>
+              <h4 class="font-bold text-base sm:text-lg text-gray-800 mb-1 sm:mb-2">Uendeshaji wa Biashara</h4>
+              <p class="text-gray-600 text-sm sm:text-base">Simamia biashara zako zote kwa akaunti moja, popote ulipo. Fuatilia mauzo, gharama na faida kwa urahisi.</p>
             </div>
           </div>
           
-          <div class="feature-card p-6 flex items-start gap-4">
-            <div class="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-              <i class="icofont-computer text-xl text-dark-green"></i>
+          <div class="feature-card p-4 sm:p-5 md:p-6 flex items-start gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+              <i class="icofont-computer text-lg sm:text-xl text-dark-green"></i>
             </div>
             <div>
-              <h4 class="font-bold text-lg text-gray-800 mb-2">Taarifa za Stoku</h4>
-              <p class="text-gray-600">Fuatilia ukuaji na matumizi ya stoku zako kwa urahisi. Pata taarifa za wakati halisi kuhusu bidhaa zako.</p>
+              <h4 class="font-bold text-base sm:text-lg text-gray-800 mb-1 sm:mb-2">Taarifa za Stoku</h4>
+              <p class="text-gray-600 text-sm sm:text-base">Fuatilia ukuaji na matumizi ya stoku zako kwa urahisi. Pata taarifa za wakati halisi kuhusu bidhaa zako.</p>
             </div>
           </div>
           
-          <div class="feature-card p-6 flex items-start gap-4">
-            <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-              <i class="icofont-pie-chart text-xl text-amber-600"></i>
+          <div class="feature-card p-4 sm:p-5 md:p-6 flex items-start gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+              <i class="icofont-pie-chart text-lg sm:text-xl text-amber-600"></i>
             </div>
             <div>
-              <h4 class="font-bold text-lg text-gray-800 mb-2">Takwimu na Ripoti</h4>
-              <p class="text-gray-600">Pata takwimu na ripoti za mauzo kwa grafu na chati. Chambua mienendo ya biashara yako kwa urahisi.</p>
+              <h4 class="font-bold text-base sm:text-lg text-gray-800 mb-1 sm:mb-2">Takwimu na Ripoti</h4>
+              <p class="text-gray-600 text-sm sm:text-base">Pata takwimu na ripoti za mauzo kwa grafu na chati. Chambua mienendo ya biashara yako kwa urahisi.</p>
             </div>
           </div>
           
-          <div class="feature-card p-6 flex items-start gap-4">
-            <div class="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-              <i class="icofont-ssl-security text-xl text-dark-green"></i>
+          <div class="feature-card p-4 sm:p-5 md:p-6 flex items-start gap-3 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+              <i class="icofont-ssl-security text-lg sm:text-xl text-dark-green"></i>
             </div>
             <div>
-              <h4 class="font-bold text-lg text-gray-800 mb-2">Usalama wa Juu</h4>
-              <p class="text-gray-600">Taarifa zako zinalindwa dhidi ya vitisho vya kimtandao. Tunaweka usalama wako wa kifedha na biashara mbele.</p>
+              <h4 class="font-bold text-base sm:text-lg text-gray-800 mb-1 sm:mb-2">Usalama wa Juu</h4>
+              <p class="text-gray-600 text-sm sm:text-base">Taarifa zako zinalindwa dhidi ya vitisho vya kimtandao. Tunaweka usalama wako wa kifedha na biashara mbele.</p>
             </div>
           </div>
         </div>
         
-        <div class="relative">
-          <img src="https://test.mauzosheet.com/assets11092021/img/feature.png" alt="Vipengele vya MauzoSheet" class="rounded-2xl shadow-xl mx-auto" />
-          <div class="absolute -bottom-6 -left-6 w-20 h-20 bg-amber-100 rounded-full opacity-70 z-0"></div>
-          <div class="absolute -top-6 -right-6 w-16 h-16 bg-green-100 rounded-full opacity-70 z-0"></div>
+        <div class="max-w-sm mx-auto lg:max-w-lg">
+          <img src="https://test.mauzosheet.com/assets11092021/img/feature.png"
+               alt="Vipengele vya MauzoSheet"
+               class="w-full h-auto shadow-lg" />
         </div>
       </div>
     </div>
   </section>
 
   <!-- Pricing Section -->
-  <section id="pricing" class="py-20 bg-gradient-to-r from-amber-600 to-green-200">
-    <div class="max-w-5xl mx-auto px-6 text-center space-y-8">
-      <div class="space-y-4">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Vifurushi <span class="text-gradient">Vya Bei</span></h2>
+  <section id="pricing" class="py-12 md:py-20 section-pricing">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center space-y-4 mb-8 md:mb-12">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+          <span class="section-header">Vifurushi Vya Bei</span>
+        </h2>
         <div class="section-divider w-24 mx-auto"></div>
-        <p class="text-lg text-gray-900 max-w-2xl mx-auto">Chagua kifurushi kinachokufaa zaidi kwa mahitaji ya biashara yako</p>
+        <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">Chagua kifurushi kinachokufaa zaidi kwa mahitaji ya biashara yako</p>
       </div>
       
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8">
-        <!-- Basic Plan -->
-        <div class="pricing-card p-8 text-center">
-          <h3 class="text-2xl font-bold text-gray-800 mb-2">Kifurushi cha Msingi</h3>
-          <div class="my-6">
-            <span class="text-4xl font-bold text-amber-600">TZS 60,000</span>
-            <span class="text-gray-600">/ miezi 6</span>
+      <!-- CORRECTED PRICING: 15,000/month, 75,000/5 months, 150,000/year -->
+      <div class="pricing-grid">
+        <!-- Monthly Plan -->
+        <div class="pricing-card p-5 md:p-6 lg:p-8 text-center flex flex-col">
+          <h3 class="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2">Mwezi Mmoja</h3>
+          <div class="my-4 md:my-6">
+            <span class="text-2xl sm:text-3xl md:text-4xl font-bold text-amber-600">TZS 15,000</span>
+            <span class="text-gray-600 block mt-1 md:mt-2 text-sm md:text-base">/ mwezi</span>
           </div>
-          <ul class="space-y-4 mb-8 text-left">
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Uendeshaji wa biashara</span>
+          <ul class="space-y-2 md:space-y-3 mb-6 md:mb-8 text-left flex-grow">
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Uendeshaji wa biashara</span>
             </li>
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Usimamizi wa stoku</span>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Usimamizi wa stoku</span>
             </li>
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Ripoti za msingi</span>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Ripoti za msingi</span>
             </li>
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Msaada wa kiufundi</span>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Msaada wa kiufundi</span>
             </li>
           </ul>
-          <a href="{{ route('register') }}" class="btn-secondary py-3 px-8 rounded-lg font-semibold w-full block">Chagua Kifurushi</a>
+          <a href="{{ route('register') }}" class="btn-secondary py-3 px-4 md:px-6 rounded-lg font-semibold w-full block text-sm md:text-base touch-target">
+            Chagua Kifurushi
+          </a>
         </div>
         
-        <!-- Premium Plan -->
-        <div class="pricing-card popular p-8 text-center">
+        <!-- 5-Month Plan -->
+        <div class="pricing-card popular p-5 md:p-6 lg:p-8 text-center flex flex-col">
           <div class="popular-badge">Inayopendwa</div>
-          <h3 class="text-2xl font-bold text-gray-800 mb-2">Kifurushi cha Premium</h3>
-          <div class="my-6">
-            <span class="text-4xl font-bold text-amber-600">TZS 150,000</span>
-            <span class="text-gray-600">/ mwaka 1</span>
+          <h3 class="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2">Miezi 5</h3>
+          <div class="my-4 md:my-6">
+            <span class="text-2xl sm:text-3xl md:text-4xl font-bold text-amber-600">TZS 75,000</span>
+            <span class="text-gray-600 block mt-1 md:mt-2 text-sm md:text-base">/ miezi 5</span>
+            <p class="text-xs sm:text-sm text-green-600 font-medium mt-1">Akiba ya 25,000</p>
           </div>
-          <ul class="space-y-4 mb-8 text-left">
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Yote yaliyomo kwenye kifurushi cha msingi</span>
+          <ul class="space-y-2 md:space-y-3 mb-6 md:mb-8 text-left flex-grow">
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Yote yaliyomo kwenye mwezi mmoja</span>
             </li>
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Ripoti za kina na uchambuzi</span>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Ripoti za kina zaidi</span>
             </li>
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Usaidizi wa moja kwa moja</span>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Usaidizi wa haraka</span>
             </li>
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Matengenezo ya kipekee</span>
-            </li>
-            <li class="flex items-center">
-              <i class="icofont-check text-green-500 mr-2"></i>
-              <span>Vipengele vya hali ya juu</span>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Matengenezo ya kipekee</span>
             </li>
           </ul>
-          <a href="{{ route('register') }}" class="btn-primary py-3 px-8 rounded-lg font-semibold w-full block">Chagua Kifurushi</a>
+          <a href="{{ route('register') }}" class="btn-primary py-3 px-4 md:px-6 rounded-lg font-semibold w-full block text-sm md:text-base touch-target">
+            Chagua Kifurushi
+          </a>
         </div>
+        
+        <!-- 1-Year Plan -->
+        <div class="pricing-card p-5 md:p-6 lg:p-8 text-center flex flex-col">
+          <h3 class="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2">Mwaka 1</h3>
+          <div class="my-4 md:my-6">
+            <span class="text-2xl sm:text-3xl md:text-4xl font-bold text-amber-600">TZS 150,000</span>
+            <span class="text-gray-600 block mt-1 md:mt-2 text-sm md:text-base">/ mwaka 1</span>
+            <p class="text-xs sm:text-sm text-green-600 font-medium mt-1">Akiba ya 30,000</p>
+          </div>
+          <ul class="space-y-2 md:space-y-3 mb-6 md:mb-8 text-left flex-grow">
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Yote yaliyomo kwenye miezi 5</span>
+            </li>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Ripoti za kina na uchambuzi</span>
+            </li>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Usaidizi wa moja kwa moja 24/7</span>
+            </li>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Vipengele vya hali ya juu</span>
+            </li>
+            <li class="flex items-start">
+              <i class="icofont-check text-green-500 mr-2 mt-1 flex-shrink-0"></i>
+              <span class="text-sm md:text-base">Masomo ya biashara</span>
+            </li>
+          </ul>
+          <a href="{{ route('register') }}" class="btn-secondary py-3 px-4 md:px-6 rounded-lg font-semibold w-full block text-sm md:text-base touch-target">
+            Chagua Kifurushi
+          </a>
+        </div>
+      </div>
+      
+      <div class="text-center mt-6 md:mt-8">
+        <p class="text-gray-600 text-sm md:text-base">Bei zote zimejumlisha kodi. Unaweza kubadilisha kifurushi wakati wowote.</p>
       </div>
     </div>
   </section>
 
   <!-- Contact Section -->
-  <section id="contact" class=" py-20 bg-gradient-to-r from-amber-600 to-green-200 text-black">
-    <div class="max-w-5xl mx-auto px-6 text-center space-y-8">
-      <div class="space-y-4">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-800">Wasiliana <span class="text-gradient">Nasi</span></h2>
+  <section id="contact" class="py-12 md:py-20 section-contact">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="text-center space-y-4 mb-8 md:mb-12">
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+          <span class="section-header">Wasiliana Nasi</span>
+        </h2>
         <div class="section-divider w-24 mx-auto"></div>
-        <p class="text-lg text-black max-w-2xl mx-auto">Tupigie simu, tutumie barua pepe au tuwasiliane kupitia WhatsApp</p>
+        <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">Tupigie simu, tutumie barua pepe au tuwasiliane kupitia WhatsApp</p>
       </div>
       
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8">
-        <div class="feature-card p-6 text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-300 flex items-center justify-center">
-            <i class="icofont-phone text-2xl text-amber-600"></i>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div class="feature-card p-5 md:p-6 text-center">
+          <div class="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-full bg-amber-50 flex items-center justify-center">
+            <i class="icofont-phone text-xl md:text-2xl text-amber-600"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-800 mb-2">Piga Simu</h3>
-          <p class="text-gray-600">+255 (0) 685 496 334</p>
-          <p class="text-gray-600">+255 (0) 714 019 466</p>
-          <a href="tel:+255713169114" class="inline-block mt-3 px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition">Piga Sasa</a>
+          <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Piga Simu</h3>
+          <p class="text-gray-600 text-sm md:text-base">+255 (0) 685 496 334</p>
+          <p class="text-gray-600 text-sm md:text-base">+255 (0) 714 019 466</p>
+          <a href="tel:+255685496334" class="inline-block mt-3 px-4 py-2 btn-primary rounded-lg font-medium w-full text-sm md:text-base touch-target">
+            Piga Sasa
+          </a>
         </div>
         
-<div class="feature-card p-6 text-center">
-  <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-300 flex items-center justify-center">
-    <i class="icofont-email text-2xl text-dark-green"></i>
-  </div>
-
-  <h3 class="text-xl font-bold text-gray-800 mb-2">Tuma Barua Pepe</h3>
-  <p class="text-gray-600">mauzosheet9@gmail.com</p>
-
-  <a href="mailto:mauzosheet9@gmail.com" 
-     class="inline-block mt-3 px-4 py-2 bg-black text-white rounded-lg font-medium hover:bg-green-800 transition">
-     Tuma Barua
-  </a>
-</div>
-
-        
-        <div class="feature-card p-6 text-center">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-200 flex items-center justify-center">
-            <i class="icofont-brand-whatsapp text-2xl text-amber-600"></i>
+        <div class="feature-card p-5 md:p-6 text-center">
+          <div class="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
+            <i class="icofont-email text-xl md:text-2xl text-dark-green"></i>
           </div>
-          <h3 class="text-xl font-bold text-gray-800 mb-2">WhatsApp</h3>
-          <p class="text-gray-600">+255 (0) 685 496 334</p>
-          <p class="text-gray-600">+255 (0) 714 019 466</p>
-          <a href="https://wa.me/255685496334" target="_blank" class="inline-block mt-3 px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition">Tuma Ujumbe</a>
+          <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Tuma Barua Pepe</h3>
+          <p class="text-gray-600 text-sm md:text-base">mauzosheet9@gmail.com</p>
+          <a href="mailto:mauzosheet9@gmail.com" 
+             class="inline-block mt-3 px-4 py-2 btn-secondary rounded-lg font-medium w-full text-sm md:text-base touch-target">
+             Tuma Barua
+          </a>
         </div>
-      </div>
-      
-      <div class="pt-8">
-        <div class="feature-card p-6 text-center">
-          <h3 class="text-xl font-bold text-gray-800 mb-4">Ofisi Zetu</h3>
-          <p class="text-gray-600">Dar es Salaam, Tanzania</p>
+        
+        <div class="feature-card p-5 md:p-6 text-center">
+          <div class="w-14 h-14 md:w-16 md:h-16 mx-auto mb-4 rounded-full bg-amber-50 flex items-center justify-center">
+            <i class="icofont-brand-whatsapp text-xl md:text-2xl text-amber-600"></i>
+          </div>
+          <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">WhatsApp</h3>
+          <p class="text-gray-600 text-sm md:text-base">+255 (0) 685 496 334</p>
+          <p class="text-gray-600 text-sm md:text-base">+255 (0) 714 019 466</p>
+          <a href="https://wa.me/255685496334" target="_blank" 
+             class="inline-block mt-3 px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition w-full text-sm md:text-base touch-target">
+             Tuma Ujumbe
+          </a>
         </div>
       </div>
     </div>
   </section>
 
   <!-- CTA Section -->
-  <section class="py-16 bg-gradient-to-r from-amber-600 to-green-200 text-black">
-    <div class="max-w-4xl mx-auto px-6 text-center space-y-6">
-      <h2 class="text-3xl md:text-4xl font-bold">Jiunge na Wafanyabiashara 500+ Leo</h2>
-      <p class="text-lg max-w-2xl mx-auto">Anza kutumia MauzoSheet leo na ujionee jinsi biashara yako inavyoweza kukua kwa kasi na ufanisi zaidi.</p>
-      <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
-        <a href="{{ route('register') }}" class="bg-white text-amber-600 py-3 px-8 rounded-lg font-semibold hover:bg-gray-100 transition">Anza Kujaribu</a>
-        <a href="#contact" class="bg-transparent border-2 border-white py-3 px-8 rounded-lg font-semibold hover:bg-white/10 transition">Wasiliana Nasi</a>
+  <section class="py-12 md:py-20 section-cta bg-gray-50">
+    <!-- Feature Card -->
+    <div class="max-w-2xl mx-auto mb-12">
+      <div class="feature-card p-6 md:p-8 text-center bg-white shadow-md rounded-xl">
+        <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-2">Ofisi Zetu</h3>
+        <p class="text-gray-600 text-sm md:text-base">Dar es Salaam, Tanzania</p>
+      </div>
+    </div>
+
+    <!-- Main CTA Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-6 md:space-y-8">
+      <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800">
+        Jiunge na Wafanyabiashara 500+ Leo
+      </h2>
+      <p class="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+        Anza kutumia MauzoSheet leo na ujionee jinsi biashara yako inavyoweza kukua kwa kasi na ufanisi zaidi.
+      </p>
+
+      <!-- Buttons -->
+      <div class="flex flex-col sm:flex-row justify-center gap-4 md:gap-6 pt-4">
+        <a href="{{ route('register') }}" 
+           class="bg-amber-600 text-white py-3 px-6 md:px-8 rounded-lg font-semibold hover:bg-amber-700 transition shadow-md touch-target">
+          Anza Kujaribu
+        </a>
+        <a href="#contact" 
+           class="bg-white border-2 border-amber-600 text-amber-600 py-3 px-6 md:px-8 rounded-lg font-semibold hover:bg-amber-50 transition shadow-md touch-target">
+          Wasiliana Nasi
+        </a>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer class="bg-gray-900 text-gray-300 py-12">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+  <footer class="bg-gray-900 text-gray-300 py-8 md:py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
         <div class="md:col-span-2">
-          <a href="#home" class="flex items-center mb-4" aria-label="MauzoSheet Nyumbani">
-            <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" alt="MauzoSheet logo" class="h-10 w-10 mr-2" />
-            <span class="font-bold text-xl text-white">MauzoSheet</span>
+          <a href="#home" class="flex items-center mb-3 md:mb-4" aria-label="MauzoSheet Nyumbani">
+            <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" alt="MauzoSheet logo" class="h-8 w-8 md:h-10 md:w-10 mr-2" />
+            <span class="font-bold text-lg md:text-xl text-white">Mauzo<span class="text-gradient">Sheet</span></span>
           </a>
-          <p class="mb-4 max-w-md">Mfumo wa kisasa wa kusimamia biashara zako kwa urahisi, usalama, na ufanisi.</p>
-          <div class="flex space-x-4">
-            <a href="#" class="text-gray-400 hover:text-white transition">
-              <i class="icofont-facebook text-xl"></i>
+          <p class="mb-3 md:mb-4 max-w-md text-sm md:text-base">
+            Mfumo wa kisasa wa kusimamia biashara zako kwa urahisi, usalama, na ufanisi.
+          </p>
+          <div class="flex space-x-3 md:space-x-4">
+            <a href="#" class="text-gray-400 hover:text-white transition touch-target p-1">
+              <i class="icofont-facebook text-lg md:text-xl"></i>
             </a>
-            <a href="#" class="text-gray-400 hover:text-white transition">
-              <i class="icofont-twitter text-xl"></i>
+            <a href="#" class="text-gray-400 hover:text-white transition touch-target p-1">
+              <i class="icofont-twitter text-lg md:text-xl"></i>
             </a>
-            <a href="#" class="text-gray-400 hover:text-white transition">
-              <i class="icofont-instagram text-xl"></i>
+            <a href="#" class="text-gray-400 hover:text-white transition touch-target p-1">
+              <i class="icofont-instagram text-lg md:text-xl"></i>
             </a>
           </div>
         </div>
         
         <div>
-          <h3 class="text-white font-semibold mb-4">Menyu</h3>
+          <h3 class="text-white font-semibold mb-3 md:mb-4 text-base md:text-lg">Menyu</h3>
           <ul class="space-y-2">
-            <li><a href="#home" class="hover:text-white transition">Nyumbani</a></li>
-            <li><a href="#about" class="hover:text-white transition">Tufahamu</a></li>
-            <li><a href="#feature" class="hover:text-white transition">Huduma Zetu</a></li>
-            <li><a href="#pricing" class="hover:text-white transition">Vifurushi</a></li>
+            <li><a href="#home" class="hover:text-white transition text-sm md:text-base touch-target py-1 block">Nyumbani</a></li>
+            <li><a href="#about" class="hover:text-white transition text-sm md:text-base touch-target py-1 block">Tufahamu</a></li>
+            <li><a href="#feature" class="hover:text-white transition text-sm md:text-base touch-target py-1 block">Huduma Zetu</a></li>
+            <li><a href="#pricing" class="hover:text-white transition text-sm md:text-base touch-target py-1 block">Vifurushi</a></li>
           </ul>
         </div>
         
         <div>
-          <h3 class="text-white font-semibold mb-4">Msaada</h3>
+          <h3 class="text-white font-semibold mb-3 md:mb-4 text-base md:text-lg">Msaada</h3>
           <ul class="space-y-2">
-            <li><a href="#contact" class="hover:text-white transition">Mawasiliano</a></li>
-            <li><a href="#" class="hover:text-white transition">Maswali Yanayoulizwa Mara Kwa Mara</a></li>
-            <li><a href="#" class="hover:text-white transition">Maelekezo ya Matumizi</a></li>
-            <li><a href="#" class="hover:text-white transition">Masharti ya Matumizi</a></li>
+            <li><a href="#contact" class="hover:text-white transition text-sm md:text-base touch-target py-1 block">Mawasiliano</a></li>
+            <li><a href="#" class="hover:text-white transition text-sm md:text-base touch-target py-1 block">Maswali Yanayoulizwa</a></li>
+            <li><a href="#" class="hover:text-white transition text-sm md:text-base touch-target py-1 block">Maelekezo ya Matumizi</a></li>
+            <li><a href="#" class="hover:text-white transition text-sm md:text-base touch-target py-1 block">Masharti ya Matumizi</a></li>
           </ul>
         </div>
       </div>
       
-      <div class="border-t border-gray-800 mt-8 pt-8 text-center">
-        <p>&copy; <span id="year"></span> MauzoSheet. Haki zote zimehifadhiwa.</p>
+      <div class="border-t border-gray-800 mt-6 md:mt-8 pt-6 md:pt-8 text-center">
+        <p class="text-sm md:text-base">&copy; <span id="year"></span> MauzoSheet. Haki zote zimehifadhiwa.</p>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
   <script>
-    document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-      document.getElementById('mobile-nav').classList.toggle('hidden');
+    // Mobile menu toggle with animation - FIXED
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileNav = document.getElementById('mobile-nav');
+    const menuIcon = document.getElementById('menu-icon');
+    const closeIcon = document.getElementById('close-icon');
+    
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+      
+      if (isExpanded) {
+        // Close menu
+        mobileNav.classList.remove('active');
+        setTimeout(() => {
+          mobileNav.classList.add('hidden');
+        }, 300);
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      } else {
+        // Open menu
+        mobileNav.classList.remove('hidden');
+        setTimeout(() => {
+          mobileNav.classList.add('active');
+        }, 10);
+        menuIcon.classList.add('hidden');
+        closeIcon.classList.remove('hidden');
+        mobileMenuBtn.setAttribute('aria-expanded', 'true');
+      }
     });
+    
+    // Close menu when clicking on mobile nav links
+    document.querySelectorAll('#mobile-nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileNav.classList.remove('active');
+        setTimeout(() => {
+          mobileNav.classList.add('hidden');
+        }, 300);
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+    
+    // Set current year in footer
     document.getElementById('year').textContent = new Date().getFullYear();
     
     // Smooth scrolling for anchor links
@@ -633,9 +948,44 @@
           });
           
           // Close mobile menu if open
-          document.getElementById('mobile-nav').classList.add('hidden');
+          if (mobileNav.classList.contains('active')) {
+            mobileNav.classList.remove('active');
+            setTimeout(() => {
+              mobileNav.classList.add('hidden');
+            }, 300);
+            menuIcon.classList.remove('hidden');
+            closeIcon.classList.add('hidden');
+            mobileMenuBtn.setAttribute('aria-expanded', 'false');
+          }
         }
       });
+    });
+    
+    // Close mobile menu when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth < 768 && 
+          mobileNav.classList.contains('active') && 
+          !mobileNav.contains(e.target) && 
+          !mobileMenuBtn.contains(e.target)) {
+        mobileNav.classList.remove('active');
+        setTimeout(() => {
+          mobileNav.classList.add('hidden');
+        }, 300);
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (window.innerWidth >= 768 && mobileNav.classList.contains('active')) {
+        mobileNav.classList.remove('active');
+        mobileNav.classList.add('hidden');
+        menuIcon.classList.remove('hidden');
+        closeIcon.classList.add('hidden');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      }
     });
   </script>
 </body>

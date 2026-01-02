@@ -70,6 +70,21 @@
                                         <span class="text-sm text-gray-500 text-center mt-1">Takwimu zote za mfumo</span>
                                     </label>
                                 </div>
+
+                                <!-- Purchases Report (Manunuzi) -->
+                                <div class="relative">
+                                    <input type="radio" id="purchases_report" name="report_type" value="purchases" class="hidden peer" required>
+                                    <label for="purchases_report" class="flex flex-col items-center p-5 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:bg-gray-50 transition-all duration-200">
+                                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-3">
+                                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v18H3V3z M3 9h18M9 21V9"></path>
+                                            </svg>
+                                        </div>
+                                        <span class="font-medium text-gray-700">Ripoti ya Manunuzi</span>
+                                        <span class="text-sm text-gray-500 text-center mt-1">Taarifa za manunuzi na gharama</span>
+                                    </label>
+                                </div>
+
                             </div>
                         </div>
 
@@ -199,10 +214,7 @@
             <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                 <h3 class="font-bold text-gray-800 mb-4">Takwimu za Hivi Punde</h3>
                 <div class="space-y-4">
-                    <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
-                        <span class="text-sm text-gray-600">Ripoti Zilizopakuliwa</span>
-                        <span class="font-bold text-emerald-600">12</span>
-                    </div>
+
                     <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
                         <span class="text-sm text-gray-600">Ripoti ya Mwisho</span>
                         <span class="font-bold text-emerald-600">{{ now()->subDays(1)->format('d/m') }}</span>

@@ -20,58 +20,50 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReportController as MainReportController;
 use App\Http\Controllers\UserReportController;
 
+// =========================
+// User report routes
+// =========================
 Route::prefix('user')->group(function () {
-    // Page to select report type & time period
     Route::get('reports/select', [UserReportController::class, 'select'])
         ->name('user.reports.select');
-
-    // Download PDF
     Route::get('reports/download', [UserReportController::class, 'download'])
         ->name('user.reports.download');
 });
 
-// ========================
-// Admin routes (with middleware)
 // =========================
-Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->name('admin.')->group(function () {
+// Admin routes
+// =========================
+Route::middleware([\App\Http\Middleware\AdminMiddleware::class])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-    // Dashboard
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        // Companies
+        Route::get('/makampuni', [AdminController::class, 'makampuni'])->name('makampuni');
 
-    // Companies
-    Route::get('/makampuni', [AdminController::class, 'makampuni'])->name('makampuni');
+        // Reports
+        Route::prefix('reports')->group(function () {
+            Route::get('/', [MainReportController::class, 'index'])->name('reports');
+            Route::get('/generate', [MainReportController::class, 'generate'])->name('reports.generate');
+            Route::get('/export', [MainReportController::class, 'export'])->name('reports.export');
+            Route::get('/download/{format}', [MainReportController::class, 'downloadCompaniesReport'])
+                ->name('reports.download');
+            Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
+                ->name('reports.download-companies');
+        });
 
-    // Reports
-    Route::prefix('reports')->group(function () {
-        Route::get('/', [MainReportController::class, 'index'])->name('reports');
-        Route::get('/generate', [MainReportController::class, 'generate'])->name('reports.generate');
-        Route::get('/export', [MainReportController::class, 'export'])->name('reports.export');
+        // Change Password
+        Route::get('/change-password', [AdminController::class, 'showChangePassword'])->name('password.show');
+        Route::post('/change-password', [AdminController::class, 'updatePassword'])->name('password.update');
 
-        // Download Reports (Excel/PDF)
-        Route::get('/download/{format}', [MainReportController::class, 'downloadCompaniesReport'])
-            ->name('reports.download');
-        Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
-            ->name('reports.download-companies');
+        // User & Company actions
+        Route::post('/approve-user/{id}', [AdminController::class, 'approveUser'])->name('approveUser');
+        Route::post('/company/{id}/verify', [AdminController::class, 'verifyCompany'])->name('verifyCompany');
+        Route::delete('/company/{id}', [AdminController::class, 'destroy'])->name('destroyCompany');
+        Route::post('/companies/{id}/set-package', [AdminController::class, 'setPackageTime'])->name('setPackageTime');
     });
-
-
-
-    // Change Password
-    Route::get('/change-password', [AdminController::class, 'showChangePassword'])->name('password.show');
-    Route::post('/change-password', [AdminController::class, 'updatePassword'])->name('password.update');
-
-    // Approve user
-    Route::post('/approve-user/{id}', [AdminController::class, 'approveUser'])->name('approveUser');
-
-    // Verify company
-    Route::post('/company/{id}/verify', [AdminController::class, 'verifyCompany'])->name('verifyCompany');
-
-    // Delete company
-    Route::delete('/company/{id}', [AdminController::class, 'destroy'])->name('destroyCompany');
-
-    // Set package time
-    Route::post('/companies/{id}/set-package', [AdminController::class, 'setPackageTime'])->name('setPackageTime');
-});
 
 // =========================
 // Public routes
@@ -84,28 +76,23 @@ Route::post('/register', [AuthController::class, 'registerPost'])->name('registe
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
 
-// Email Verification Link
-Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail'])
-    ->name('verify.email');
+Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail'])->name('verify.email');
 
-    
 // =========================
-// Protected routes (auth middleware)
+// Authenticated routes
 // =========================
 Route::middleware('auth')->group(function () {
-    // Common routes for all authenticated users
+    // Common routes
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
     Route::get('/password/change', [PasswordController::class, 'showChangeForm'])->name('password.change');
     Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
     Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
 
-    // =========================
     // Boss routes
-    // =========================
     Route::middleware('role:boss')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
+        
         Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
         Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
         Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
@@ -117,38 +104,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
     });
 
-    // =========================
     // Mfanyakazi routes
-    // =========================
-    Route::middleware('role:mfanyakazi')->group(function () {
-        Route::get('/mfanyakazi/dashboard', [DashboardController::class, 'mfanyakaziDashboard'])->name('mfanyakazi.dashboard');
-
-        // Pages allowed for Mfanyakazi
+    Route::middleware(['auth:mfanyakazi', 'role:mfanyakazi'])->group(function () {
         Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
         Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
         Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
         Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
         Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
+
     });
 });
-
-    // =========================
-    // Mfanyakazi routes
-    // =========================
-    Route::middleware('role:mfanyakazi')->group(function () {
-        Route::get('/mfanyakazi/dashboard', [DashboardController::class, 'index'])->name('mfanyakazi.dashboard');
-
-        // Only the pages allowed for Mfanyakazi
-        Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
-        Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
-        Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
-        Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
-        Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
-
-        
-    });
-
-
 
 
 // Wateja Routes
@@ -195,6 +160,11 @@ Route::post('/mauzo/kopesha', [MauzoController::class, 'storeKikapuLoan'])
     
 // ✅ Hifadhi Mauzo kwa kutumia Barcode
 Route::post('/mauzo/barcode', [MauzoController::class, 'storeBarcode'])->name('mauzo.store.barcode');
+
+// New receipt routes
+Route::get('/mauzo/{id}/receipt', [MauzoController::class, 'showReceipt'])->name('mauzo.receipt');
+Route::get('/mauzo/{id}/receipt/print', [MauzoController::class, 'printReceipt'])->name('mauzo.receipt.print');
+Route::get('/mauzo/{id}/receipt/thermal', [MauzoController::class, 'printReceipt'])->name('mauzo.receipt.thermal');
 
 
 // ================================

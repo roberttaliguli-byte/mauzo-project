@@ -18,19 +18,24 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, $role)
     {
-        // Determine which guard to use based on role
-        $guard = $role === 'mfanyakazi' ? 'mfanyakazi' : 'web';
-
-        $user = Auth::guard($guard)->user();
+        // For mfanyakazi, use the mfanyakazi guard
+        if ($role === 'mfanyakazi') {
+            $user = Auth::guard('mfanyakazi')->user();
+            $guard = 'mfanyakazi';
+        } else {
+            // For boss and admin, use web guard
+            $user = Auth::guard('web')->user();
+            $guard = 'web';
+        }
 
         // Not logged in
         if (!$user) {
             return redirect()->route('login')->with('error', 'Tafadhali ingia kwanza.');
         }
 
-        // Role mismatch
-        if ($user->role !== $role) {
-            Auth::guard($guard)->logout(); // log out user if role mismatch
+        // Role mismatch (case-insensitive)
+        if (strtolower($user->role) !== strtolower($role)) {
+            Auth::guard($guard)->logout();
             return redirect()->route('login')->with('error', 'Huaruhusiwi kuingia hapa.');
         }
 

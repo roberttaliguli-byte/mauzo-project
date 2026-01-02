@@ -4,18 +4,71 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Matumizi;
-use App\Models\AinaYaMatumizi; // Add this model
+use App\Models\AinaYaMatumizi;
 use Illuminate\Support\Facades\Auth;
 use App\Models\History;
 
 class MatumiziController extends Controller
 {
     /**
+     * Get company ID for current user (works for both guards)
+     */
+    private function getCompanyId()
+    {
+        // Check mfanyakazi guard first
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user()->company_id;
+        }
+        
+        // Then check web guard for boss/admin
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user()->company_id;
+        }
+        
+        // If neither guard is authenticated
+        abort(403, 'Unauthorized - Please login first');
+    }
+    
+    /**
+     * Get current authenticated user from any guard
+     */
+    private function getAuthUser()
+    {
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user();
+        }
+        
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get company for current user
+     */
+    private function getCompany()
+    {
+        $user = $this->getAuthUser();
+        
+        if (!$user) {
+            abort(403, 'Unauthorized - Please login first');
+        }
+        
+        return $user->company;
+    }
+
+    /**
      * Onyesha matumizi yote ya kampuni ya mtumiaji
      */
     public function index()
     {
-        $company = Auth::user()->company;
+        $company = $this->getCompany();
+        
+        if (!$company) {
+            abort(403, 'Company not found for this user');
+        }
 
         $matumizi = Matumizi::where('company_id', $company->id)
             ->latest()
@@ -45,7 +98,8 @@ class MatumiziController extends Controller
             'tarehe' => 'nullable|date',
         ]);
 
-        $company = Auth::user()->company;
+        $company = $this->getCompany();
+        $user = $this->getAuthUser();
 
         // Kama mtumiaji ameandika aina mpya, itumie badala ya ile ya kuchagua
         $aina = $request->filled('aina_mpya')
@@ -59,12 +113,7 @@ class MatumiziController extends Controller
             'created_at' => $request->tarehe ?: now(),
         ]);
 
-        // 🧾 Hifadhi historia
-        History::create([
-            'user' => Auth::user()->name,
-            'action' => 'Ameongeza Matumizi',
-            'details' => "Aina: {$aina}, Gharama: {$request->gharama} TZS",
-        ]);
+ 
 
         return redirect()->route('matumizi.index')->with('success', 'Matumizi yamehifadhiwa kwa mafanikio!');
     }
@@ -81,7 +130,8 @@ class MatumiziController extends Controller
             'kategoria' => 'nullable|string'
         ]);
 
-        $company = Auth::user()->company;
+        $company = $this->getCompany();
+        $user = $this->getAuthUser();
 
         // Check if expense type already exists for this company
         $existingAina = AinaYaMatumizi::where('company_id', $company->id)
@@ -101,12 +151,7 @@ class MatumiziController extends Controller
             'company_id' => $company->id,
         ]);
 
-        // 🧾 Hifadhi historia
-        History::create([
-            'user' => Auth::user()->name,
-            'action' => 'Amesajili Aina Mpya ya Matumizi',
-            'details' => "Aina: {$request->jina}, Kategoria: {$request->kategoria}",
-        ]);
+      
 
         return redirect()->route('matumizi.index')->with('success', 'Aina mpya ya matumizi imesajiliwa kikamilifu!');
     }
@@ -116,9 +161,12 @@ class MatumiziController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $companyId = $this->getCompanyId();
+        $user = $this->getAuthUser();
+        
         $matumizi = Matumizi::findOrFail($id);
 
-        if ($matumizi->company_id !== Auth::user()->company_id) {
+        if ($matumizi->company_id !== $companyId) {
             abort(403, 'Huna ruhusa ya kubadilisha matumizi haya.');
         }
 
@@ -132,12 +180,6 @@ class MatumiziController extends Controller
 
         $matumizi->update($request->only('aina', 'maelezo', 'gharama'));
 
-        // 🧾 Rekodi mabadiliko
-        History::create([
-            'user' => Auth::user()->name,
-            'action' => 'Amebadilisha Matumizi',
-            'details' => "Kutoka: Gharama {$old['gharama']} hadi {$matumizi->gharama}",
-        ]);
 
         return redirect()->route('matumizi.index')->with('success', 'Matumizi yamerekebishwa.');
     }
@@ -147,9 +189,12 @@ class MatumiziController extends Controller
      */
     public function destroy($id)
     {
+        $companyId = $this->getCompanyId();
+        $user = $this->getAuthUser();
+        
         $matumizi = Matumizi::findOrFail($id);
 
-        if ($matumizi->company_id !== Auth::user()->company_id) {
+        if ($matumizi->company_id !== $companyId) {
             abort(403, 'Huna ruhusa ya kufuta matumizi haya.');
         }
 
@@ -158,12 +203,7 @@ class MatumiziController extends Controller
 
         $matumizi->delete();
 
-        // 🧾 Rekodi historia
-        History::create([
-            'user' => Auth::user()->name,
-            'action' => 'Amefuta Matumizi',
-            'details' => "Aina: {$aina}, Gharama: {$gharama} TZS",
-        ]);
+
 
         return redirect()->route('matumizi.index')->with('success', 'Matumizi yamefutwa kikamilifu.');
     }
@@ -173,14 +213,17 @@ class MatumiziController extends Controller
      */
     public function destroyAina($id)
     {
+        $companyId = $this->getCompanyId();
+        $user = $this->getAuthUser();
+        
         $aina = AinaYaMatumizi::findOrFail($id);
 
-        if ($aina->company_id !== Auth::user()->company_id) {
+        if ($aina->company_id !== $companyId) {
             abort(403, 'Huna ruhusa ya kufuta aina hii ya matumizi.');
         }
 
         // Check if this expense type is being used
-        $matumiziCount = Matumizi::where('company_id', Auth::user()->company_id)
+        $matumiziCount = Matumizi::where('company_id', $companyId)
             ->where('aina', $aina->jina)
             ->count();
 
@@ -190,12 +233,7 @@ class MatumiziController extends Controller
 
         $aina->delete();
 
-        // 🧾 Rekodi historia
-        History::create([
-            'user' => Auth::user()->name,
-            'action' => 'Amefuta Aina ya Matumizi',
-            'details' => "Aina: {$aina->jina}",
-        ]);
+
 
         return redirect()->route('matumizi.index')->with('success', 'Aina ya matumizi imefutwa kikamilifu.');
     }

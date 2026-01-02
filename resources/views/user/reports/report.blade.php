@@ -213,6 +213,46 @@
                 </div>
             @endif
         </div>
+@elseif($reportType === 'manunuzi')
+    <!-- Purchases Report -->
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Bidhaa</th>
+                <th class="text-right">Idadi</th>
+                <th class="text-right">Bei (TZS)</th>
+                <th class="text-right">Jumla (TZS)</th>
+                <th>Tarehe ya Manunuzi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($manunuzi as $index => $purchase)
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td class="text-bold">{{ $purchase->bidhaa->jina ?? 'N/A' }}</td>
+                    <td class="text-right">{{ number_format($purchase->idadi) }}</td>
+                    <td class="text-right">{{ number_format($purchase->bei, 2) }}</td>
+                    <td class="text-right text-bold">{{ number_format($purchase->idadi * $purchase->bei, 2) }}</td>
+                    <td class="text-center">{{ \Carbon\Carbon::parse($purchase->created_at)->format('d/m/Y') }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <div class="summary-section">
+        <div class="summary-title">Jumla ya Manunuzi:</div>
+        <div class="summary-value">
+            TZS {{ number_format($manunuzi->sum(fn($p) => $p->idadi * $p->bei), 2) }}
+        </div>
+        @if($manunuzi->count() > 0)
+            <div style="margin-top: 10px; color: #7f8c8d; font-size: 13px;">
+                Jumla ya bidhaa: {{ $manunuzi->count() }} | 
+                Jumla ya vitengo: {{ number_format($manunuzi->sum('idadi')) }}
+            </div>
+        @endif
+    </div>
+
 
     @elseif($reportType === 'general')
         <!-- General Report -->

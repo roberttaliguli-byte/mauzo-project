@@ -22,7 +22,7 @@ class AuthController extends Controller
     {
         $regions = [
             "Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi",
-            "Kigoma","Kilimanjaro","Lindi","Manyara","Mara","mwanza","Mbeya","Morogoro",
+            "Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mwanza","Mbeya","Morogoro",
             "Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","Singida",
             "Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"
         ];
@@ -48,7 +48,7 @@ class AuthController extends Controller
             'password'     => 'required|string|min:6|confirmed',
         ]);
 
-        // 1️⃣ Create the company
+        // Create the company
         $company = Company::create([
             'company_name' => $validated['company_name'],
             'owner_name'   => $validated['owner_name'],
@@ -58,28 +58,27 @@ class AuthController extends Controller
             'region'       => $validated['region'],
             'phone'        => $validated['phone'],
             'email'        => $validated['company_email'] ?? null,
-            'is_user_approved' => 0, // admin can override later
+            'is_user_approved' => 0,
         ]);
 
-        // 2️⃣ Generate email verification token
+        // Generate email verification token
         $token = Str::random(40);
 
-        // 3️⃣ Create user
+        // Create user
         $user = User::create([
             'company_id'  => $company->id,
             'username'    => $validated['username'],
             'name'        => $validated['owner_name'],
             'email'       => $validated['company_email'] ?? null,
             'password'    => Hash::make($validated['password']),
-            'is_approved' => 0, // will be approved on email verification
+            'is_approved' => 0,
             'role'        => 'boss',
             'email_verification_token' => $token,
         ]);
 
-        // 4️⃣ Send email verification if email exists
+        // Send email verification
         if ($user->email) {
             Mail::to($user->email)->send(new VerifyEmail($user));
-            
         }
 
         return redirect()->route('login')
@@ -93,15 +92,11 @@ class AuthController extends Controller
     {
         $user = User::where('email_verification_token', $token)->firstOrFail();
 
-        // 1️⃣ Mark email as verified
         $user->email_verified_at = now();
         $user->email_verification_token = null;
-
-        // 2️⃣ Auto-approve user
         $user->is_approved = 1;
         $user->save();
 
-        // 3️⃣ Auto-approve associated company
         if ($user->company) {
             $user->company->is_user_approved = 1;
             $user->company->save();
@@ -122,78 +117,81 @@ class AuthController extends Controller
     /**
      * Handle login for all types
      */
-    public function loginPost(Request $request)
-    {
-        $credentials = $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-        ]);
-       // 1️⃣ Admin login
-if (Auth::attempt([
-    'username' => $credentials['username'],
-    'password' => $credentials['password'],
-    'role' => 'admin',
-    'is_approved' => 1
-], $request->boolean('remember'))) {
+  public function loginPost(Request $request)
+{
+    $credentials = $request->validate([
+        'username' => 'required|string',
+        'password' => 'required|string',
+    ]);
 
-    session(['is_admin' => true]);
+    // 1️⃣ Admin login
+    if (Auth::attempt([
+        'username' => $credentials['username'],
+        'password' => $credentials['password'],
+        'role' => 'admin',
+        'is_approved' => 1
+    ], $request->boolean('remember'))) {
 
-    return redirect()->route('admin.dashboard')
-        ->with('success', 'Logged in as Admin!');
-}
-
- 
-        // 2️⃣ Boss/Owner login
-        if (Auth::attempt([
-            'username' => $credentials['username'],
-            'password' => $credentials['password']
-        ], $request->boolean('remember'))) {
-
-            $user = Auth::user();
-
-            if (!$user->company_id || !$user->company) {
-                Auth::logout();
-                return back()->withErrors(['login' => 'Your account is not linked to any company. Contact admin.'])
-                    ->onlyInput('username');
-            }
-
-            if (!$user->company->is_user_approved) {
-                Auth::logout();
-                return back()->withErrors(['login' => 'Your company is not approved yet.'])
-                    ->onlyInput('username');
-            }
-
-            if (!$user->is_approved) {
-                Auth::logout();
-                return back()->withErrors(['login' => 'Your account is not approved yet.'])
-                    ->onlyInput('username');
-            }
-
-            $request->session()->regenerate();
-            session()->forget('is_admin');
-
-            return redirect()->intended(route('dashboard'))
-                ->with('success', 'Login successful!');
-        }
-
-        // 3️⃣ Employee login
-        $mfanyakazi = Wafanyakazi::where('username', $credentials['username'])->first();
-
-        if ($mfanyakazi && Hash::check($credentials['password'], $mfanyakazi->password)) {
-            if ($mfanyakazi->getini !== 'ingia') {
-                return back()->withErrors(['login' => 'You are currently not allowed to login.'])
-                    ->onlyInput('username');
-            }
-
-            Auth::guard('mfanyakazi')->login($mfanyakazi);
-            return redirect()->route('mfanyakazi.dashboard')
-                ->with('success', 'Logged in as Employee!');
-        }
-
-        // 4️⃣ Login failed
-        return back()->withErrors(['login' => 'Incorrect username or password.'])
-            ->onlyInput('username');
+        session(['is_admin' => true]);
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'Logged in as Admin!');
     }
+
+    // 2️⃣ Boss/Owner login
+    if (Auth::attempt([
+        'username' => $credentials['username'],
+        'password' => $credentials['password']
+    ], $request->boolean('remember'))) {
+
+        $user = Auth::user();
+
+        if (!$user->company_id || !$user->company) {
+            Auth::logout();
+            return back()->withErrors(['login' => 'Your account is not linked to any company. Contact admin.'])
+                ->onlyInput('username');
+        }
+
+        if (!$user->company->is_user_approved) {
+            Auth::logout();
+            return back()->withErrors(['login' => 'Your company is not approved yet.'])
+                ->onlyInput('username');
+        }
+
+        if (!$user->is_approved) {
+            Auth::logout();
+            return back()->withErrors(['login' => 'Your account is not approved yet.'])
+                ->onlyInput('username');
+        }
+
+        $request->session()->regenerate();
+        session()->forget('is_admin');
+
+        // ✅ Role-aware redirect instead of route('dashboard')
+        
+        return redirect()->route('dashboard')
+            ->with('success', 'Logged in as Boss!');
+    }
+
+    // 3️⃣ Employee login
+    $mfanyakazi = Wafanyakazi::where('username', $credentials['username'])->first();
+
+    if ($mfanyakazi && Hash::check($credentials['password'], $mfanyakazi->password)) {
+        if ($mfanyakazi->getini !== 'ingia') {
+            return back()->withErrors(['login' => 'You are currently not allowed to login.'])
+                ->onlyInput('username');
+        }
+
+        Auth::guard('mfanyakazi')->login($mfanyakazi);
+
+        // Redirect directly to Mauzo page
+        return redirect()->route('mauzo.index')
+            ->with('success', 'Logged in as Employee!');
+    }
+
+    // 4️⃣ Login failed
+    return back()->withErrors(['login' => 'Incorrect username or password.'])
+        ->onlyInput('username');
+}
 
     /**
      * Logout
@@ -209,7 +207,3 @@ if (Auth::attempt([
         return redirect('/login')->with('success', 'Logged out successfully.');
     }
 }
-
-
-
-

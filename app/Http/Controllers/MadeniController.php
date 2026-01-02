@@ -14,13 +14,46 @@ use Illuminate\Support\Facades\Auth;
 class MadeniController extends Controller
 {
     /**
+     * Get company ID for current user (works for both guards)
+     */
+    private function getCompanyId()
+    {
+        // Check mfanyakazi guard first
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user()->company_id;
+        }
+        
+        // Then check web guard for boss/admin
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user()->company_id;
+        }
+        
+        // If neither guard is authenticated
+        abort(403, 'Unauthorized - Please login first');
+    }
+    
+    /**
+     * Get current authenticated user from any guard
+     */
+    private function getAuthUser()
+    {
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user();
+        }
+        
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+        
+        return null;
+    }
+
+    /**
      * Show debts and history (company specific).
      */
     public function index()
     {
-        $companyId = Auth::user()->company_id;
-        
-
+        $companyId = $this->getCompanyId();
 
         // Fetch debts for this company only
         $madeni = Madeni::with('bidhaa', 'marejeshos')
@@ -67,7 +100,7 @@ class MadeniController extends Controller
      */
     public function store(Request $request)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         $request->validate([
             'bidhaa_id'     => 'required|exists:bidhaas,id',
@@ -132,7 +165,7 @@ class MadeniController extends Controller
      */
     public function edit($id)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
         $deni = Madeni::where('id', $id)
                       ->where('company_id', $companyId)
                       ->firstOrFail();
@@ -145,7 +178,7 @@ class MadeniController extends Controller
      */
     public function update(Request $request, Madeni $madeni)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         // Check authorization
         abort_unless($madeni->company_id === $companyId, 403, 'Huna ruhusa ya kubadilisha deni hili.');
@@ -229,47 +262,45 @@ class MadeniController extends Controller
     /**
      * Record a repayment for a debt (company specific).
      */
-public function rejesha(Request $request, Madeni $madeni)
-{
-    $companyId = Auth::user()->company_id;
+    public function rejesha(Request $request, Madeni $madeni)
+    {
+        $companyId = $this->getCompanyId();
 
-    abort_unless($madeni->company_id === $companyId, 403, 'Huna ruhusa ya kurejesha deni hili.');
+        abort_unless($madeni->company_id === $companyId, 403, 'Huna ruhusa ya kurejesha deni hili.');
 
-    $request->validate([
-        'kiasi'  => 'required|numeric|min:1',
-        'tarehe' => 'required|date',
-    ]);
-
-    if ($request->kiasi > $madeni->baki) {
-        return back()->withErrors(['kiasi' => "Kiasi kimezidi baki lililopo ({$madeni->baki})."]);
-    }
-
-    return DB::transaction(function () use ($request, $madeni, $companyId) {
-
-        // 1️⃣ Save repayment only in marejeshos table
-        $madeni->marejeshos()->create([
-            'kiasi'       => $request->kiasi,
-            'tarehe'      => $request->tarehe,
-            'company_id'  => $companyId,
+        $request->validate([
+            'kiasi'  => 'required|numeric|min:1',
+            'tarehe' => 'required|date',
         ]);
 
-        // 2️⃣ Update remaining balance
-        $madeni->decrement('baki', $request->kiasi);
+        if ($request->kiasi > $madeni->baki) {
+            return back()->withErrors(['kiasi' => "Kiasi kimezidi baki lililopo ({$madeni->baki})."]);
+        }
 
-        // 3️⃣ ❌ DO NOT create Mauzo (remove duplicate sales record)
+        return DB::transaction(function () use ($request, $madeni, $companyId) {
+            // 1️⃣ Save repayment only in marejeshos table
+            $madeni->marejeshos()->create([
+                'kiasi'       => $request->kiasi,
+                'tarehe'      => $request->tarehe,
+                'company_id'  => $companyId,
+            ]);
 
-        return redirect()->route('madeni.index')
-            ->with('success', 'Rejesho limehifadhiwa kikamilifu kwa kampuni yako!');
-    });
-}
+            // 2️⃣ Update remaining balance
+            $madeni->decrement('baki', $request->kiasi);
 
+            // 3️⃣ ❌ DO NOT create Mauzo (remove duplicate sales record)
+
+            return redirect()->route('madeni.index')
+                ->with('success', 'Rejesho limehifadhiwa kikamilifu kwa kampuni yako!');
+        });
+    }
 
     /**
      * Delete a debt (company specific).
      */
     public function destroy(Madeni $madeni)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         abort_unless($madeni->company_id === $companyId, 403, 'Huna ruhusa ya kufuta deni hili.');
 

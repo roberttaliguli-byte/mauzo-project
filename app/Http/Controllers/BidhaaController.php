@@ -9,18 +9,52 @@ use Illuminate\Support\Facades\Auth;
 class BidhaaController extends Controller
 {
     /**
+     * Get the current user (check both guards)
+     */
+    private function getCurrentUser()
+    {
+        // Try web guard first (for boss/admin)
+        $user = Auth::guard('web')->user();
+        
+        // If not found, try mfanyakazi guard
+        if (!$user) {
+            $user = Auth::guard('mfanyakazi')->user();
+        }
+        
+        return $user;
+    }
+    
+    /**
+     * Get company ID from current user
+     */
+    private function getCompanyId()
+    {
+        $user = $this->getCurrentUser();
+        
+        if (!$user) {
+            abort(403, 'Unauthorized - Please login');
+        }
+        
+        // For mfanyakazi, get company_id from their record
+        // For boss, get company_id from user table
+        if (Auth::guard('mfanyakazi')->check()) {
+            return $user->company_id; // mfanyakazi has company_id directly
+        } else {
+            return $user->company_id; // boss also has company_id
+        }
+    }
+    
+    /**
      * Orodha ya bidhaa
      */
     public function index()
     {
-        
-        $companyId = Auth::user()->company_id;
-
+        $companyId = $this->getCompanyId();
 
         // Show only products belonging to this company
         $bidhaa = Bidhaa::where('company_id', $companyId)
-                        ->latest()
-                        ->get();
+                        ->orderBy('created_at', 'desc')
+                        ->paginate(10);
 
         return view('bidhaa.index', compact('bidhaa'));
     }
@@ -41,7 +75,7 @@ class BidhaaController extends Controller
             'barcode' => 'nullable|string|max:255|unique:bidhaas,barcode',
         ]);
 
-        $validated['company_id'] = Auth::user()->company_id;
+        $validated['company_id'] = $this->getCompanyId();
 
         Bidhaa::create($validated);
 
@@ -64,7 +98,7 @@ class BidhaaController extends Controller
             'expiry' => 'nullable|date',
         ]);
 
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         $existing = Bidhaa::where('barcode', $validated['barcode'])
                           ->where('company_id', $companyId)
@@ -94,7 +128,7 @@ class BidhaaController extends Controller
      */
     public function tafutaBarcode($barcode)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         $bidhaa = Bidhaa::where('barcode', $barcode)
                         ->where('company_id', $companyId)
@@ -112,7 +146,7 @@ class BidhaaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
         $bidhaa = Bidhaa::where('id', $id)
                         ->where('company_id', $companyId)
                         ->firstOrFail();
@@ -138,7 +172,7 @@ class BidhaaController extends Controller
      */
     public function destroy($id)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         $bidhaa = Bidhaa::where('id', $id)
                         ->where('company_id', $companyId)
@@ -185,13 +219,14 @@ class BidhaaController extends Controller
             'csv_file' => 'required|file|mimes:csv,txt',
         ]);
 
+        $companyId = $this->getCompanyId();
+        
         $file = fopen($request->file('csv_file')->getRealPath(), 'r');
         fgetcsv($file); // skip header row
 
         $errors = [];
         $successCount = 0;
         $lineNumber = 1;
-        $companyId = Auth::user()->company_id;
 
         while (($row = fgetcsv($file)) !== false) {
             $lineNumber++;

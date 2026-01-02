@@ -10,11 +10,60 @@ use Illuminate\Support\Facades\Auth;
 class MtejaController extends Controller
 {
     /**
+     * Get company ID for current user (works for both guards)
+     */
+    private function getCompanyId()
+    {
+        // Check mfanyakazi guard first
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user()->company_id;
+        }
+        
+        // Then check web guard for boss/admin
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user()->company_id;
+        }
+        
+        // If neither guard is authenticated
+        abort(403, 'Unauthorized - Please login first');
+    }
+    
+    /**
+     * Get current authenticated user from any guard
+     */
+    private function getAuthUser()
+    {
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user();
+        }
+        
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get company for current user
+     */
+    private function getCompany()
+    {
+        $user = $this->getAuthUser();
+        
+        if (!$user) {
+            abort(403, 'Unauthorized - Please login first');
+        }
+        
+        return $user->company;
+    }
+
+    /**
      * Display all customers belonging to the logged-in user's company.
      */
     public function index()
     {
-        $company = Auth::user()->company;
+        $company = $this->getCompany();
 
         // Fetch only customers for the logged-in user's company
         $wateja = Mteja::where('company_id', $company->id)->get();
@@ -43,7 +92,8 @@ class MtejaController extends Controller
             'maelezo' => 'nullable|string',
         ]);
 
-        $company = Auth::user()->company;
+        $company = $this->getCompany();
+        $user = $this->getAuthUser();
 
         // ✅ Attach company_id automatically
         $mteja = $company->wateja()->create([
@@ -56,7 +106,7 @@ class MtejaController extends Controller
 
         // 🧾 Record history
         History::create([
-            'user'    => Auth::user()->name,
+            'user'    => $user->name,
             'action'  => 'Aliongeza Mteja',
             'details' => "Mteja mpya: {$mteja->jina}, Simu: {$mteja->simu}",
         ]);
@@ -69,8 +119,11 @@ class MtejaController extends Controller
      */
     public function update(Request $request, Mteja $mteja)
     {
+        $companyId = $this->getCompanyId();
+        $user = $this->getAuthUser();
+
         // Ensure this record belongs to the same company
-        if ($mteja->company_id !== Auth::user()->company_id) {
+        if ($mteja->company_id !== $companyId) {
             abort(403, 'Huna ruhusa ya kubadilisha mteja huyu.');
         }
 
@@ -98,7 +151,7 @@ class MtejaController extends Controller
 
         // 🧾 Record history
         History::create([
-            'user'    => Auth::user()->name,
+            'user'    => $user->name,
             'action'  => 'Amebadilisha Mteja',
             'details' => "Mteja: {$mteja->jina} - {$changeDetails}",
         ]);
@@ -111,7 +164,10 @@ class MtejaController extends Controller
      */
     public function destroy(Mteja $mteja)
     {
-        if ($mteja->company_id !== Auth::user()->company_id) {
+        $companyId = $this->getCompanyId();
+        $user = $this->getAuthUser();
+
+        if ($mteja->company_id !== $companyId) {
             abort(403, 'Huna ruhusa ya kufuta mteja huyu.');
         }
 
@@ -122,7 +178,7 @@ class MtejaController extends Controller
 
         // 🧾 Record history
         History::create([
-            'user'    => Auth::user()->name,
+            'user'    => $user->name,
             'action'  => 'Amefuta Mteja',
             'details' => "Mteja: {$name}, Simu: {$simu}",
         ]);
@@ -135,8 +191,8 @@ class MtejaController extends Controller
      */
     public function search(Request $request)
     {
+        $companyId = $this->getCompanyId();
         $query = $request->input('query');
-        $companyId = Auth::user()->company_id;
 
         $wateja = Mteja::where('company_id', $companyId)
             ->where(function($q) use ($query) {

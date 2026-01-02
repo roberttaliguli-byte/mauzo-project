@@ -5,26 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'DEMODAY')</title>
     <style>[x-cloak]{display:none!important}</style>
+    
     <!-- Tailwind CSS -->
-    <script src="//unpkg.com/alpinejs" defer></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-<meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Alpine.js for interactivity -->
+    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
-    <!-- Font Awesome for icons -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     
     <style>
         /* Custom Styles */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
             transition: all 0.3s ease;
+            overflow-x: hidden;
+            width: 100vw;
+            min-height: 100vh;
         }
         
         /* Color Modes */
@@ -52,9 +60,95 @@
             --border-color: #e2e8f0;
         }
         
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            z-index: 40;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar.open {
+            transform: translateX(0);
+        }
+        
+        /* Main Content Container */
+        .main-container {
+            width: 100%;
+            min-height: 100vh;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            left: 0;
+        }
+        
+        /* When sidebar is open, push content to right */
+        .sidebar-open .main-container {
+            transform: translateX(280px);
+            width: calc(100% - 280px);
+        }
+        
+        /* Ensure content fits within viewport */
+        .main-content {
+            width: 100%;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Mobile specific adjustments */
+        @media (max-width: 1023px) {
+            .sidebar {
+                width: 260px;
+                max-width: 85%;
+            }
+            
+            .sidebar-open .main-container {
+                transform: translateX(260px);
+                width: calc(100% - 260px);
+            }
+        }
+        
+        /* Hamburger Menu - Always visible */
+        .hamburger-menu {
+            width: 30px;
+            height: 20px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .hamburger-menu span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background: currentColor;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-menu.active span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+        
+        .hamburger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-menu.active span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+        
+        /* Sidebar items */
         .sidebar-item {
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
         
         .sidebar-item::before {
@@ -76,224 +170,136 @@
             background: linear-gradient(135deg, #065f46 0%, #047857 100%);
         }
         
-        .glass-effect {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        /* Active navigation item */
+        .active-nav-item {
+            background-color: rgba(255, 255, 255, 0.15);
+            position: relative;
         }
         
-        .notification-dot {
-            animation: pulse 2s infinite;
+        .active-nav-item::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: white;
         }
         
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
+        /* Scrollbar */
         .scrollbar-thin::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         
         .scrollbar-thin::-webkit-scrollbar-track {
-            background: #01723d;
-            border-radius: 10px;
+            background: transparent;
         }
         
         .scrollbar-thin::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
         }
         
         .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-            background: #00632d;
+            background: rgba(255, 255, 255, 0.5);
         }
         
-        .active-nav-item {
-            background-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        /* Ensure no horizontal scroll */
+        .no-scroll-x {
+            overflow-x: hidden !important;
         }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
-        
-        [x-cloak] { display: none !important; }
         
         /* Color Mode Toggle */
         .color-mode-toggle {
             position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
+            bottom: 20px;
+            right: 20px;
+            z-index: 50;
         }
         
         .color-mode-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
             border: 2px solid;
-        }
-        
-        .color-mode-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        .color-mode-default .color-mode-btn {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
-            border-color: #e2e8f0;
-        }
-        
-        .color-mode-dark .color-mode-btn {
-            background: #374151;
-            border-color: #4b5563;
-            color: #f9fafb;
-        }
-        
-        .color-mode-light .color-mode-btn {
-            background: #ffffff;
-            border-color: #e2e8f0;
-            color: #1e293b;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: white;
+            color: #065f46;
         }
         
         .color-mode-menu {
             position: absolute;
-            top: 50px;
-            left: 0;
+            bottom: 60px;
+            right: 0;
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            padding: 8px;
-            min-width: 120px;
-            z-index: 1001;
+            padding: 12px;
+            min-width: 160px;
+            z-index: 51;
         }
         
-        .color-mode-option {
+        /* Header adjustments */
+        .header-left {
             display: flex;
             align-items: center;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 4px;
+            gap: 1rem;
         }
         
-        .color-mode-option:hover {
-            background: #f1f5f9;
+        /* Content width adjustment */
+        .content-inner {
+            max-width: 100%;
+            overflow-x: hidden;
         }
         
-        .color-mode-option:last-child {
-            margin-bottom: 0;
-        }
-        
-        .color-mode-indicator {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin-right: 8px;
-            border: 2px solid #e2e8f0;
-        }
-        
-        .color-mode-default .color-mode-indicator.default {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
-        }
-        
-        .color-mode-dark .color-mode-indicator.dark {
-            background: #374151;
-        }
-        
-        .color-mode-light .color-mode-indicator.light {
-            background: #ffffff;
-            border-color: #cbd5e1;
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .color-mode-toggle {
+                bottom: 10px;
+                right: 10px;
+            }
+            
+            .color-mode-btn {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .sidebar-open .main-container {
+                transform: translateX(260px);
+            }
         }
     </style>
     
     @stack('styles')
 </head>
-<body class="color-mode-default" x-data="app()" :class="colorMode">
-<!-- Alpine.js -->
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-<!-- Color Mode Toggle -->
-<div class="color-mode-toggle" x-data="{ colorMenuOpen: false }">
-    <button 
-        @click="colorMenuOpen = !colorMenuOpen"
-        class="color-mode-btn shadow-lg"
-        title="Badili Mwonekano"
-    >
-        <i class="fas fa-palette text-sm"></i>
-    </button>
+<body class="color-mode-default no-scroll-x" x-data="app()" :class="[colorMode, sidebarOpen ? 'sidebar-open' : '']" x-init="init()">
     
-    <div 
-    x-cloak
-        x-show="colorMenuOpen" 
-        @click.away="colorMenuOpen = false"
-        x-transition:enter="transition ease-out duration-100"
-        x-transition:enter-start="transform opacity-0 scale-95"
-        x-transition:enter-end="transform opacity-100 scale-100"
-        x-transition:leave="transition ease-in duration-75"
-        x-transition:leave-start="transform opacity-100 scale-100"
-        x-transition:leave-end="transform opacity-0 scale-95"
-        class="color-mode-menu"
-    >
-        <div 
-            class="color-mode-option"
-            @click="changeColorMode('default'); colorMenuOpen = false"
-        >
-            <div class="color-mode-indicator default"></div>
-            <span class="text-sm">Rangi Za Kawaida</span>
-        </div>
-        <div 
-            class="color-mode-option"
-            @click="changeColorMode('dark'); colorMenuOpen = false"
-        >
-            <div class="color-mode-indicator dark"></div>
-            <span class="text-sm">Giza</span>
-        </div>
-        <div 
-            class="color-mode-option"
-            @click="changeColorMode('light'); colorMenuOpen = false"
-        >
-            <div class="color-mode-indicator light"></div>
-            <span class="text-sm">Mwanga</span>
-        </div>
-    </div>
-</div>
-
-<div class="flex h-screen overflow-hidden">
-    <!-- Enhanced Sidebar -->
-    <aside 
-        :class="sidebarOpen ? 'w-64' : 'w-20'" 
-        class="gradient-bg text-white flex flex-col transition-all duration-300 shadow-xl z-20"
-    >
+    <!-- Sidebar -->
+    <aside class="sidebar gradient-bg text-white flex flex-col shadow-xl"
+           :class="{'open': sidebarOpen}">
         <!-- Logo Section -->
-        <div class="p-5 text-center border-b border-green-700 flex flex-col items-center">
- <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" alt="Mauzo Logo" class="logo">
-          <div x-show="sidebarOpen" class="text-xl font-bold tracking-wide">MAUZO</div>
-            <div x-show="sidebarOpen" x-transition class="text-xs text-green-200">Boss System</div>
-            <button 
-                @click="sidebarOpen = !sidebarOpen" 
-                class="mt-3 p-2 rounded-full bg-green-700 hover:bg-green-600 transition-all duration-200"
-            >
-                <span x-show="sidebarOpen">◀</span>
-                <span x-show="!sidebarOpen">▶</span>
-            </button>
+        <div class="p-6 text-center border-b border-green-700">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" 
+                         alt="Mauzo Logo" 
+                         class="w-12 h-12 rounded-lg">
+                    <div>
+                        <div class="text-xl font-bold text-left">MAUZO</div>
+                        <div class="text-xs text-green-200 text-left">Boss System</div>
+                    </div>
+                </div>
+                <button @click="closeSidebar()" 
+                        class="text-green-200 hover:text-white transition p-2">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Navigation Menu -->
@@ -302,178 +308,270 @@
         </nav>
         
         <!-- Sidebar Footer -->
-        <div class="p-4 border-t border-green-700 text-center">
-            <div x-show="sidebarOpen" x-transition class="text-xs text-green-200">
+        <div class="p-4 border-t border-green-700">
+            <div class="text-xs text-green-200 text-center">
                 {{ now()->format('d/m/Y H:i') }}
+            </div>
+            <div class="mt-2 text-center">
+                <button @click="closeSidebar()" 
+                        class="text-green-200 hover:text-white text-sm transition">
+                    <i class="fas fa-chevron-left mr-1"></i> Funga Menu
+                </button>
             </div>
         </div>
     </aside>
 
-    <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col overflow-hidden" :class="{
-        'bg-gray-50 text-gray-800': colorMode === 'color-mode-default',
-        'bg-gray-900 text-white': colorMode === 'color-mode-dark', 
-        'bg-white text-gray-900': colorMode === 'color-mode-light'
-    }">
-
-        <!-- Enhanced Header -->
-        <header class="shadow-sm border-b px-6 py-4" :class="{
-            'bg-white border-gray-200': colorMode === 'color-mode-default',
-            'bg-gray-800 border-gray-700': colorMode === 'color-mode-dark',
-            'bg-white border-gray-300': colorMode === 'color-mode-light'
+    <!-- Main Content Container -->
+    <div class="main-container">
+        <div class="main-content flex flex-col min-h-screen" :class="{
+            'bg-gray-50 text-gray-800': colorMode === 'color-mode-default',
+            'bg-gray-900 text-white': colorMode === 'color-mode-dark', 
+            'bg-white text-gray-900': colorMode === 'color-mode-light'
         }">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-2xl font-bold">@yield('page-title', 'Dashboard')</h1>
-                    <p class="text-sm mt-1" :class="{
-                        'text-gray-600': colorMode === 'color-mode-default',
-                        'text-gray-300': colorMode === 'color-mode-dark',
-                        'text-gray-500': colorMode === 'color-mode-light'
-                    }">@yield('page-subtitle', 'Karibu tena, Meneja!')</p>
-                </div>
-                
-                <div class="flex items-center space-x-4">
-                    <!-- Search Bar -->
-
-<!-- SINGLE ALERT MESSAGE DROPDOWN -->
-<div x-data="{ openPro: false }" class="relative">
-
-    <!-- Alert Icon -->
-    <button @click="openPro = !openPro"
-        class="relative p-2 text-gray-600 hover:text-green-600 transition">
-        <span class="text-xl">🔔</span>
-    </button>
-
-    <!-- Dropdown -->
-    <div x-show="openPro"
-         @click.away="openPro = false"
-         x-transition
-         class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl p-4 z-40">
-
-        <div class="px-4 py-3 bg-green-600 text-white rounded-lg text-sm shadow">
-            Tumia Mauzo Sheet Pro kwa sasa
-        </div>
-
-    </div>
-</div>
-
-
-                    
-                    <!-- User profile -->
-                    <div class="relative" x-data="{ profileOpen: false }">
-                        <button @click="profileOpen = !profileOpen" 
-                                class="flex items-center space-x-2 focus:outline-none">
-                            <div class="w-10 h-10 bg-gradient-to-r from-green-600 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
-                                B
-                            </div>
-                            <div class="hidden md:block text-left">
-                                <div class="text-sm font-medium" :class="{
-                                    'text-gray-700': colorMode === 'color-mode-default',
-                                    'text-gray-200': colorMode === 'color-mode-dark',
-                                    'text-gray-800': colorMode === 'color-mode-light'
-                                }">Boss</div>
-                                <div class="text-xs" :class="{
-                                    'text-gray-500': colorMode === 'color-mode-default',
-                                    'text-gray-400': colorMode === 'color-mode-dark',
-                                    'text-gray-600': colorMode === 'color-mode-light'
-                                }">Meneja</div>
-                            </div>
-                            <svg class="w-4 h-4" :class="{
-                                'text-gray-500': colorMode === 'color-mode-default',
-                                'text-gray-400': colorMode === 'color-mode-dark',
-                                'text-gray-600': colorMode === 'color-mode-light'
-                            }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
+            <!-- Header with Hamburger Menu -->
+            <header class="sticky top-0 z-30 shadow-sm border-b px-4 sm:px-6 py-4" :class="{
+                'bg-white border-gray-200': colorMode === 'color-mode-default',
+                'bg-gray-800 border-gray-700': colorMode === 'color-mode-dark',
+                'bg-white border-gray-300': colorMode === 'color-mode-light'
+            }">
+                <div class="flex justify-between items-center">
+                    <div class="header-left">
+                        <!-- Hamburger Menu - Always visible -->
+                        <div class="hamburger-menu" 
+                             :class="{'active': sidebarOpen}"
+                             @click="toggleSidebar()">
+                            <span :class="{
+                                'bg-gray-800': colorMode === 'color-mode-default',
+                                'bg-white': colorMode === 'color-mode-dark',
+                                'bg-gray-800': colorMode === 'color-mode-light'
+                            }"></span>
+                            <span :class="{
+                                'bg-gray-800': colorMode === 'color-mode-default',
+                                'bg-white': colorMode === 'color-mode-dark',
+                                'bg-gray-800': colorMode === 'color-mode-light'
+                            }"></span>
+                            <span :class="{
+                                'bg-gray-800': colorMode === 'color-mode-default',
+                                'bg-white': colorMode === 'color-mode-dark',
+                                'bg-gray-800': colorMode === 'color-mode-light'
+                            }"></span>
+                        </div>
                         
-                        <!-- Profile Dropdown -->
-                        <div x-show="profileOpen" @click.away="profileOpen = false" 
-                        x-cloak
-                             x-transition:enter="transition ease-out duration-100" 
-                             x-transition:enter-start="transform opacity-0 scale-95" 
-                             x-transition:enter-end="transform opacity-100 scale-100" 
-                             x-transition:leave="transition ease-in duration-75" 
-                             x-transition:leave-start="transform opacity-100 scale-100" 
-                             x-transition:leave-end="transform opacity-0 scale-95"
-                             class="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-50 py-1" :class="{
-                                'bg-white border border-gray-200': colorMode === 'color-mode-default',
-                                'bg-gray-800 border border-gray-700': colorMode === 'color-mode-dark',
-                                'bg-white border border-gray-300': colorMode === 'color-mode-light'
-                             }">
-                            <a href="{{ route('password.change') }}" 
-                               class="block px-4 py-2 text-sm transition-colors" :class="{
-                                'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
-                                'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
-                                'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
-                               }">
-                                🔐 Badili Neno Siri
-                            </a>
-                            <a href="{{ route('company.info') }}" 
-                               class="block px-4 py-2 text-sm transition-colors" :class="{
-                                'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
-                                'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
-                                'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
-                               }">
-                                🏢 Taarifa ya Kampuni
-                            </a>
-                            <div class="border-t my-1" :class="{
-                                'border-gray-100': colorMode === 'color-mode-default',
-                                'border-gray-700': colorMode === 'color-mode-dark',
-                                'border-gray-200': colorMode === 'color-mode-light'
-                            }"></div>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" 
-                                        class="w-full text-left px-4 py-2 text-sm transition-colors" :class="{
-                                        'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
-                                        'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
-                                        'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
-                                       }">
-                                    🚪 Toka
-                                </button>
-                            </form>
+                        <!-- Page Title -->
+                        <div>
+                            <h1 class="text-xl sm:text-2xl font-bold">@yield('page-title', 'Dashboard')</h1>
+                            <p class="text-xs sm:text-sm mt-1" :class="{
+                                'text-gray-600': colorMode === 'color-mode-default',
+                                'text-gray-300': colorMode === 'color-mode-dark',
+                                'text-gray-500': colorMode === 'color-mode-light'
+                            }">@yield('page-subtitle', 'Karibu tena, Meneja!')</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3 sm:space-x-4">
+                        <!-- Alert Dropdown -->
+                        <div x-data="{ openPro: false }" class="relative">
+                            <button @click="openPro = !openPro"
+                                class="relative p-2 text-gray-600 hover:text-green-600 transition">
+                                <i class="fas fa-bell text-lg"></i>
+                            </button>
+
+                            <div x-show="openPro"
+                                 @click.away="openPro = false"
+                                 x-transition
+                                 class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl p-4 z-40">
+                                <div class="px-4 py-3 bg-green-600 text-white rounded-lg text-sm shadow">
+                                    Tumia Mauzo Sheet Pro kwa sasa
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- User Profile -->
+                        <div class="relative" x-data="{ profileOpen: false }">
+                            <button @click="profileOpen = !profileOpen" 
+                                    class="flex items-center space-x-2 focus:outline-none">
+                                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-600 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+                                    B
+                                </div>
+                                <div class="hidden md:block text-left">
+                                    <div class="text-sm font-medium" :class="{
+                                        'text-gray-700': colorMode === 'color-mode-default',
+                                        'text-gray-200': colorMode === 'color-mode-dark',
+                                        'text-gray-800': colorMode === 'color-mode-light'
+                                    }">Boss</div>
+                                    <div class="text-xs" :class="{
+                                        'text-gray-500': colorMode === 'color-mode-default',
+                                        'text-gray-400': colorMode === 'color-mode-dark',
+                                        'text-gray-600': colorMode === 'color-mode-light'
+                                    }">Meneja</div>
+                                </div>
+                                <i class="fas fa-chevron-down text-sm hidden md:block"></i>
+                            </button>
+                            
+                            <!-- Profile Dropdown -->
+                            <div x-show="profileOpen" 
+                                 @click.away="profileOpen = false" 
+                                 x-cloak
+                                 x-transition
+                                 class="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-50 py-1" :class="{
+                                    'bg-white border border-gray-200': colorMode === 'color-mode-default',
+                                    'bg-gray-800 border border-gray-700': colorMode === 'color-mode-dark',
+                                    'bg-white border border-gray-300': colorMode === 'color-mode-light'
+                                 }">
+                                <a href="{{ route('password.change') }}" 
+                                   class="block px-4 py-2 text-sm transition-colors" :class="{
+                                    'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
+                                    'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
+                                    'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
+                                   }">
+                                    <i class="fas fa-key mr-2"></i>Badili Neno Siri
+                                </a>
+                                <a href="{{ route('company.info') }}" 
+                                   class="block px-4 py-2 text-sm transition-colors" :class="{
+                                    'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
+                                    'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
+                                    'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
+                                   }">
+                                    <i class="fas fa-building mr-2"></i>Taarifa ya Kampuni
+                                </a>
+                                <div class="border-t my-1" :class="{
+                                    'border-gray-100': colorMode === 'color-mode-default',
+                                    'border-gray-700': colorMode === 'color-mode-dark',
+                                    'border-gray-200': colorMode === 'color-mode-light'
+                                }"></div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="w-full text-left px-4 py-2 text-sm transition-colors" :class="{
+                                            'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
+                                            'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
+                                            'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
+                                           }">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Toka
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto p-6 scrollbar-thin" :class="{
-            'bg-gray-50': colorMode === 'color-mode-default',
-            'bg-gray-900': colorMode === 'color-mode-dark',
-            'bg-white': colorMode === 'color-mode-light'
-        }">
-            @yield('content')
-        </main>
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin content-inner" :class="{
+                'bg-gray-50': colorMode === 'color-mode-default',
+                'bg-gray-900': colorMode === 'color-mode-dark',
+                'bg-white': colorMode === 'color-mode-light'
+            }">
+                @yield('content')
+            </main>
+        </div>
     </div>
-</div>
 
-<script>
-function app() {
-    return {
-        sidebarOpen: true,
-        searchQuery: '',
-        colorMode: 'color-mode-default',
+    <!-- Color Mode Toggle -->
+    <div class="color-mode-toggle" x-data="{ colorMenuOpen: false }">
+        <button 
+            @click="colorMenuOpen = !colorMenuOpen"
+            class="color-mode-btn shadow-lg"
+            title="Badili Mwonekano"
+        >
+            <i class="fas fa-palette"></i>
+        </button>
         
-        init() {
-            // Load saved color mode from localStorage
-            const savedMode = localStorage.getItem('colorMode');
-            if (savedMode) {
-                this.colorMode = savedMode;
+        <div 
+            x-show="colorMenuOpen" 
+            @click.away="colorMenuOpen = false"
+            x-transition
+            x-cloak
+            class="color-mode-menu"
+        >
+            <div 
+                class="color-mode-option flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer"
+                @click="changeColorMode('default'); colorMenuOpen = false"
+            >
+                <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                <span class="text-sm font-medium">Rangi Za Kawaida</span>
+            </div>
+            <div 
+                class="color-mode-option flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer"
+                @click="changeColorMode('dark'); colorMenuOpen = false"
+            >
+                <div class="w-6 h-6 rounded-full bg-gray-800"></div>
+                <span class="text-sm font-medium">Giza</span>
+            </div>
+            <div 
+                class="color-mode-option flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg cursor-pointer"
+                @click="changeColorMode('light'); colorMenuOpen = false"
+            >
+                <div class="w-6 h-6 rounded-full bg-white border border-gray-300"></div>
+                <span class="text-sm font-medium">Mwanga</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function app() {
+        return {
+            sidebarOpen: false,
+            colorMode: 'color-mode-default',
+            
+            init() {
+                // Load saved color mode
+                const savedMode = localStorage.getItem('colorMode');
+                if (savedMode) {
+                    this.colorMode = savedMode;
+                }
+                
+                // Load sidebar state if previously opened
+                const savedSidebarState = localStorage.getItem('sidebarOpen');
+                if (savedSidebarState !== null) {
+                    this.sidebarOpen = JSON.parse(savedSidebarState);
+                }
+                
+                // Save sidebar state when changed
+                this.$watch('sidebarOpen', (value) => {
+                    localStorage.setItem('sidebarOpen', value);
+                    
+                    // Ensure no horizontal scroll when sidebar opens
+                    if (value) {
+                        document.body.classList.add('no-scroll-x');
+                    } else {
+                        document.body.classList.remove('no-scroll-x');
+                    }
+                });
+                
+                // Close sidebar when clicking escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.sidebarOpen) {
+                        this.closeSidebar();
+                    }
+                });
+                
+                // Initial scroll prevention if sidebar is open
+                if (this.sidebarOpen) {
+                    document.body.classList.add('no-scroll-x');
+                }
+            },
+            
+            toggleSidebar() {
+                this.sidebarOpen = !this.sidebarOpen;
+            },
+            
+            openSidebar() {
+                this.sidebarOpen = true;
+            },
+            
+            closeSidebar() {
+                this.sidebarOpen = false;
+            },
+            
+            changeColorMode(mode) {
+                this.colorMode = `color-mode-${mode}`;
+                localStorage.setItem('colorMode', this.colorMode);
             }
-        },
-        
-        changeColorMode(mode) {
-            this.colorMode = `color-mode-${mode}`;
-            // Save to localStorage
-            localStorage.setItem('colorMode', this.colorMode);
         }
     }
-}
-</script>
+    </script>
 
-@stack('scripts')
+    @stack('scripts')
 </body>
 </html>

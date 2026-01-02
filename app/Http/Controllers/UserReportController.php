@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -27,23 +26,37 @@ class UserReportController extends Controller
         $timePeriod = $request->get('time_period', 'leo');
         $reportType = $request->get('report_type', 'sales');
 
-        if ($reportType === 'general') {
-            $pdfData = $this->prepareGeneralReport($timePeriod);
-        } else {
-            $pdfData = $this->prepareSalesReport($timePeriod);
+        switch ($reportType) {
+            case 'general':
+                $pdfData = $this->prepareGeneralReport($timePeriod);
+                $fileName = 'Ripoti_Jumla_'.$timePeriod.'_'.now()->format('Y_m_d').'.pdf';
+                break;
+            case 'manunuzi':
+                $pdfData = $this->prepareManunuziReport($timePeriod);
+                $fileName = 'Ripoti_ya_Manunuzi_'.$timePeriod.'_'.now()->format('Y_m_d').'.pdf';
+                break;
+            default:
+                $pdfData = $this->prepareSalesReport($timePeriod);
+                $fileName = 'Ripoti_ya_Mauzo_'.$timePeriod.'_'.now()->format('Y_m_d').'.pdf';
+                break;
         }
 
         return PDF::loadView('user.reports.report', $pdfData)
-                  ->download($reportType === 'sales'
-                        ? 'Ripoti_ya_Mauzo_'.$timePeriod.'_'.now()->format('Y_m_d').'.pdf'
-                        : 'Ripoti_Jumla_'.$timePeriod.'_'.now()->format('Y_m_d').'.pdf');
+                  ->download($fileName);
     }
 
     // Prepare Sales report data
     private function prepareSalesReport($timePeriod)
     {
-        $query = Mauzo::with('bidhaa')->latest();
+        $user = Auth::user();
+        $companyId = $user->company_id;
+
+        $query = Mauzo::with('bidhaa')
+                      ->whereHas('bidhaa', fn($q) => $q->where('company_id', $companyId))
+                      ->latest();
+
         $this->applyTimeFilter($query, $timePeriod);
+
         $sales = $query->get();
 
         return [
@@ -103,6 +116,31 @@ class UserReportController extends Controller
             'date' => now()->format('d/m/Y H:i'),
             'sales' => null,
             'report' => $report
+        ];
+    }
+
+    // Prepare Manunuzi report data
+    private function prepareManunuziReport($timePeriod)
+    {
+        $user = Auth::user();
+        $companyId = $user->company_id;
+
+        $query = Manunuzi::with('bidhaa')
+                          ->where('company_id', $companyId)
+                          ->latest();
+
+        $this->applyTimeFilter($query, $timePeriod);
+
+        $manunuzi = $query->get();
+
+        $jumlaManunuzi = $manunuzi->sum(fn($item) => $item->idadi * $item->bei);
+
+        return [
+            'reportType' => 'manunuzi',
+            'timePeriod' => $timePeriod,
+            'date' => now()->format('d/m/Y H:i'),
+            'manunuzi' => $manunuzi,
+            'jumlaManunuzi' => $jumlaManunuzi,
         ];
     }
 
