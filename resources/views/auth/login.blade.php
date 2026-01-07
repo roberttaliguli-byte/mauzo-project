@@ -18,7 +18,6 @@
       Karibu Tena
     </h1>
     <p class="text-gray-300 text-sm">Ingia kwenye mfumo</p>
-    <p class="text-gray-400 text-xs mt-1">(Mwajiri, Msimamizi au Mfanyakazi)</p>
   </div>
 
   <form method="POST" action="{{ route('login.post') }}" class="space-y-4">
@@ -41,15 +40,15 @@
     </div>
 
     <script>
-        setTimeout(() => {
-            const alert = document.getElementById('success-alert');
-            if (alert) {
-                alert.style.transition = "all 0.5s ease";
-                alert.style.opacity = "0";
-                alert.style.transform = "translateY(-10px)";
-                setTimeout(() => alert.remove(), 500);
-            }
-        }, 3000);
+      setTimeout(() => {
+        const alert = document.getElementById('success-alert');
+        if (alert) {
+          alert.style.transition = "all 0.5s ease";
+          alert.style.opacity = "0";
+          alert.style.transform = "translateY(-10px)";
+          setTimeout(() => alert.remove(), 500);
+        }
+      }, 3000);
     </script>
     @endif
 
@@ -95,10 +94,18 @@
 
         <!-- Password Field -->
         <div class="group">
-          <label for="password" class="block text-xs font-semibold text-gray-200 mb-2 flex items-center gap-2">
-            <i class="fas fa-lock text-yellow-400 text-xs"></i>
-            Neno la Siri
-          </label>
+          <div class="flex items-center justify-between mb-2">
+            <label for="password" class="text-xs font-semibold text-gray-200 flex items-center gap-2">
+              <i class="fas fa-lock text-yellow-400 text-xs"></i>
+              Neno la Siri
+            </label>
+            <!-- Forget Password Link -->
+            <a href="{{ route('password.request') }}" 
+               class="text-xs text-amber-400 hover:text-amber-300 font-medium transition-colors duration-300 flex items-center gap-1 group">
+              <i class="fas fa-key text-xs"></i>
+              Umesahau?
+            </a>
+          </div>
           <div class="relative">
             <input id="password" name="password" type="password" required
                    placeholder="Weka neno la siri"
@@ -144,26 +151,13 @@
         </button>
       </div>
     </div>
-
-<!-- User Type Info -->
-<div class="text-center mt-6">
-  <p class="text-gray-400 text-xs mb-2">Unaweza kuingia kama:</p>
-  <div class="flex justify-center gap-4 text-xs mb-4">
-    <span class="text-yellow-400">• Mwajiri</span>
-    <span class="text-blue-400">• Msimamizi</span>
-    <span class="text-green-400">• Mfanyakazi</span>
-  </div>
+  </form>
 
   <!-- Additional Links -->
-  <div class="flex justify-center gap-6 text-xs">
+  <div class="flex justify-center gap-6 text-xs mt-6">
     <a href="{{ route('landing') }}" class="text-white/90 hover:text-yellow-400 font-semibold transition-colors duration-300 flex items-center gap-1 group">
       <i class="fas fa-home group-hover:scale-110 transition-transform text-xs"></i> Rudi Home
     </a>
-<a href="{{ route('login') }}?type=admin" class="text-white/90 hover:text-yellow-400 font-semibold transition-colors duration-300 flex items-center gap-1 group">
-    <i class="fas fa-user-shield text-xs"></i> Admin Login
-</a>
-
-
   </div>
 </div>
 

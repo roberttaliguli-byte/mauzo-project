@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MtejaController;
 use App\Http\Controllers\MatumiziController;
@@ -10,7 +10,6 @@ use App\Http\Controllers\BidhaaController;
 use App\Http\Controllers\ManunuziController;
 use App\Http\Controllers\MadeniController;
 use App\Http\Controllers\UchambuziController;
-use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\PasswordController;
@@ -19,6 +18,76 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReportController as MainReportController;
 use App\Http\Controllers\UserReportController;
+
+
+// =========================
+// Public routes
+// =========================
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'registerPost'])->name('register.post');
+
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
+Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
+
+Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail'])->name('verify.email');
+
+// Forgot password – email input
+Route::get('/forgot-password', [AuthController::class, 'showEmailForm'])
+    ->middleware('guest')
+    ->name('password.request');
+
+// Send reset link to email
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
+    ->middleware('guest')
+    ->name('password.email');
+
+// Show reset password form (from email link)
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm'])
+    ->middleware('guest')
+    ->name('password.reset');
+
+// Update password
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+    ->middleware('guest')
+    ->name('password.update');
+
+// =========================
+// Authenticated routes
+// =========================
+Route::middleware('auth')->group(function () {
+    // Common routes
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
+    Route::get('/password/change', [PasswordController::class, 'showChangeForm'])->name('password.change');
+    Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
+    Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
+
+    // Boss routes
+    Route::middleware('role:boss')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        
+        Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
+        Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
+        Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
+        Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
+        Route::get('/manunuzi', [ManunuziController::class, 'index'])->name('manunuzi.index');
+        Route::get('/wafanyakazi', [WafanyakaziController::class, 'index'])->name('wafanyakazi.index');
+        Route::get('/masaplaya', [MasaplayaController::class, 'index'])->name('masaplaya.index');
+        Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
+        Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
+    });
+
+    // Mfanyakazi routes
+    Route::middleware(['auth:mfanyakazi', 'role:mfanyakazi'])->group(function () {
+        Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
+        Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
+        Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
+        Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
+        Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
+    });
+});
 
 // =========================
 // User report routes
@@ -65,57 +134,7 @@ Route::middleware([\App\Http\Middleware\AdminMiddleware::class])
         Route::post('/companies/{id}/set-package', [AdminController::class, 'setPackageTime'])->name('setPackageTime');
     });
 
-// =========================
-// Public routes
-// =========================
-Route::get('/', [LandingController::class, 'index'])->name('landing');
-
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'registerPost'])->name('register.post');
-
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
-Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');
-
-Route::get('/verify-email/{token}', [AuthController::class, 'verifyEmail'])->name('verify.email');
-
-// =========================
-// Authenticated routes
-// =========================
-Route::middleware('auth')->group(function () {
-    // Common routes
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
-    Route::get('/password/change', [PasswordController::class, 'showChangeForm'])->name('password.change');
-    Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
-    Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
-
-    // Boss routes
-    Route::middleware('role:boss')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        
-        Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
-        Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
-        Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
-        Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
-        Route::get('/manunuzi', [ManunuziController::class, 'index'])->name('manunuzi.index');
-        Route::get('/wafanyakazi', [WafanyakaziController::class, 'index'])->name('wafanyakazi.index');
-        Route::get('/masaplaya', [MasaplayaController::class, 'index'])->name('masaplaya.index');
-        Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
-        Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
-    });
-
-    // Mfanyakazi routes
-    Route::middleware(['auth:mfanyakazi', 'role:mfanyakazi'])->group(function () {
-        Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
-        Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
-        Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
-        Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
-        Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
-
-    });
-});
-
-
+// ================================
 // Wateja Routes
 // ================================
 Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
@@ -160,11 +179,6 @@ Route::post('/mauzo/kopesha', [MauzoController::class, 'storeKikapuLoan'])
     
 // ✅ Hifadhi Mauzo kwa kutumia Barcode
 Route::post('/mauzo/barcode', [MauzoController::class, 'storeBarcode'])->name('mauzo.store.barcode');
-
-// New receipt routes
-Route::get('/mauzo/{id}/receipt', [MauzoController::class, 'showReceipt'])->name('mauzo.receipt');
-Route::get('/mauzo/{id}/receipt/print', [MauzoController::class, 'printReceipt'])->name('mauzo.receipt.print');
-Route::get('/mauzo/{id}/receipt/thermal', [MauzoController::class, 'printReceipt'])->name('mauzo.receipt.thermal');
 
 
 // ================================

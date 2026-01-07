@@ -1,21 +1,16 @@
 @component('mail::message')
-# Hello {{ $name }}
+# Verify Your Email Address
 
-Thank you for registering at {{ config('app.name') }}.
+Hello {{ $name }},
 
 Please click the button below to verify your email address:
 
 @component('mail::button', ['url' => $verifyUrl])
-Verify Email
+Verify Email Address
 @endcomponent
 
-If the button does not work, simply open this link:
-
-{{ $verifyUrl }}
+If you did not create an account, no further action is required.
 
 Thanks,<br>
 {{ config('app.name') }}
 @endcomponent
-
-
-

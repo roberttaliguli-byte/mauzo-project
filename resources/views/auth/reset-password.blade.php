@@ -15,18 +15,15 @@
       </div>
     </div>
     <h1 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
-      Badilisha Neno la Siri
+      Weka Neno la Siri Jipya
     </h1>
-    <p class="text-gray-300 text-sm mt-1">Jaza fomu hapo chini kubadilisha neno la siri lako</p>
   </div>
 
-  @if(session('success'))
-  <div id="success-alert" class="relative p-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-800 text-white shadow-lg animate-fade-in mb-4">
+  @if(session('status'))
+  <div id="status-alert" class="relative p-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-800 text-white shadow-lg animate-fade-in mb-4">
     <div class="flex items-center gap-2">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-      </svg>
-      <p class="text-sm font-medium">{{ session('success') }}</p>
+      <i class="fas fa-info-circle text-white text-sm"></i>
+      <p class="text-sm font-medium">{{ session('status') }}</p>
     </div>
   </div>
   @endif
@@ -46,27 +43,24 @@
 
   <form method="POST" action="{{ route('password.update') }}" class="space-y-4">
     @csrf
-    @method('PUT')
+    <input type="hidden" name="token" value="{{ $token }}">
     
     <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
       <div class="text-center mb-4">
-        <h2 class="text-lg font-bold text-amber-400">Badilisha Neno la Siri</h2>
+        <h2 class="text-lg font-bold text-amber-400">Neno la Siri Jipya</h2>
         <p class="text-gray-300 text-sm">Weka neno la siri jipya la akaunti yako</p>
       </div>
 
       <div class="space-y-4">
-        <!-- Current Password -->
+        <!-- Email -->
         <div class="group">
           <label class="block text-sm font-semibold text-gray-200 mb-2">
-            <i class="fas fa-lock text-amber-400 mr-2"></i>
-            Neno la Siri la Sasa
+            <i class="fas fa-envelope text-amber-400 mr-2"></i>
+            Barua Pepe
           </label>
-          <input name="current_password" type="password" required
-                 placeholder="Weka neno la siri la sasa"
+          <input name="email" type="email" value="{{ $email ?? old('email') }}" required
+                 placeholder="example@kampuni.com"
                  class="w-full rounded-lg py-3 px-4 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 text-sm">
-          @error('current_password') 
-            <div class="text-red-400 text-sm mt-1">{{ $message }}</div> 
-          @enderror
         </div>
 
         <!-- New Password -->
@@ -78,12 +72,9 @@
           <input name="password" type="password" required
                  placeholder="Weka neno la siri jipya"
                  class="w-full rounded-lg py-3 px-4 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 text-sm">
-          @error('password') 
-            <div class="text-red-400 text-sm mt-1">{{ $message }}</div> 
-          @enderror
         </div>
 
-        <!-- Confirm New Password -->
+        <!-- Confirm Password -->
         <div class="group">
           <label class="block text-sm font-semibold text-gray-200 mb-2">
             <i class="fas fa-lock text-amber-400 mr-2"></i>
@@ -115,13 +106,13 @@
 <script>
   // Auto-hide alerts after 3 seconds
   setTimeout(() => {
-    const successAlert = document.getElementById('success-alert');
+    const statusAlert = document.getElementById('status-alert');
     const errorAlert = document.getElementById('error-alert');
     
-    if (successAlert) {
-      successAlert.style.opacity = '0';
-      successAlert.style.transition = 'opacity 0.5s ease';
-      setTimeout(() => successAlert.remove(), 500);
+    if (statusAlert) {
+      statusAlert.style.opacity = '0';
+      statusAlert.style.transition = 'opacity 0.5s ease';
+      setTimeout(() => statusAlert.remove(), 500);
     }
     
     if (errorAlert) {

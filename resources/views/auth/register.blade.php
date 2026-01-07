@@ -130,10 +130,12 @@
 
             <div>
               <label class="block text-xs font-semibold text-gray-200 mb-1">Barua Pepe</label>
-              <input name="company_email" value="{{ old('company_email') }}"
-                     placeholder="example@kampuni.com"
-                     class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
-            </div>
+ <input name="company_email" type="email" required
+       value="{{ old('company_email') }}"
+       placeholder="example@kampuni.com"
+       class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+
+                    </div>
           </div>
         </div>
 

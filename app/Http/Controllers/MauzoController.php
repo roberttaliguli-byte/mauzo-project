@@ -21,9 +21,9 @@ class MauzoController extends Controller
     // -----------------------------
     public function index()
     {
-    $user = Auth::user() ?? Auth::guard('mfanyakazi')->user();
-    $companyId = $user->company_id;
-    
+        $user = Auth::user() ?? Auth::guard('mfanyakazi')->user();
+        $companyId = $user->company_id;
+        
         $bidhaa = Bidhaa::where('company_id', $companyId)
             ->select('id', 'jina', 'bei_kuuza', 'idadi', 'barcode', 'aina', 'kipimo')
             ->orderBy('jina')
@@ -76,7 +76,6 @@ class MauzoController extends Controller
 
         return DB::transaction(function () use ($items, $companyId, $request) {
             $results = [];
-            $saleItems = [];
 
             foreach ($items as $item) {
                 $validated = Validator::make($item, [
@@ -90,11 +89,19 @@ class MauzoController extends Controller
                     ->firstOrFail();
 
                 if ($bidhaa->expiry < now()->toDateString()) {
-                    return response()->json(['message' => "Bidhaa {$bidhaa->jina} ime-expire."], 422);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Bidhaa {$bidhaa->jina} ime-expire.",
+                        'notification' => 'Bidhaa ime-expire!'
+                    ], 422);
                 }
 
                 if ($validated['idadi'] > $bidhaa->idadi) {
-                    return response()->json(['message' => "Stock haijatosha kwa {$bidhaa->jina}, baki ni {$bidhaa->idadi}."], 422);
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Stock haitoshi kwa {$bidhaa->jina}, baki ni {$bidhaa->idadi}.",
+                        'notification' => 'Stock haitoshi!'
+                    ], 422);
                 }
 
                 $jumla = ($bidhaa->bei_kuuza * $validated['idadi']) - ($validated['punguzo'] ?? 0);
@@ -109,39 +116,15 @@ class MauzoController extends Controller
                     'jumla'      => $jumla,
                 ]);
 
-                // Add item for receipt
-                $saleItems[] = [
-                    'jina' => $bidhaa->jina,
-                    'idadi' => $validated['idadi'],
-                    'bei' => $bidhaa->bei_kuuza,
-                    'punguzo' => $validated['punguzo'] ?? 0,
-                    'jumla' => $jumla
-                ];
-
                 $results[] = $mauzo;
             }
 
-            // Prepare response with receipt data if needed
-            $response = [
+            return response()->json([
+                'success' => true,
                 'message' => 'Mauzo yamerekodiwa kikamilifu!',
-                'mauzo' => $results,
-                'success' => true
-            ];
-
-            // Add receipt data if print_receipt is requested
-            if ($request->has('print_receipt') && $request->print_receipt == '1') {
-                $totalAmount = array_sum(array_column($saleItems, 'jumla'));
-                $response['receipt_data'] = [
-                    'receipt_number' => 'RC' . str_pad($results[0]->id, 5, '0', STR_PAD_LEFT),
-                    'items' => $saleItems,
-                    'total_amount' => $totalAmount,
-                    'date' => Carbon::now()->format('Y-m-d H:i:s'),
-                    'user_name' => Auth::user()->name,
-                    'company_name' => Auth::user()->company->name ?? 'DEMODAY STORE'
-                ];
-            }
-
-            return response()->json($response);
+                'notification' => 'Mauzo yamefanikiwa!',
+                'mauzo' => $results
+            ]);
 
         });
     }
@@ -165,7 +148,10 @@ class MauzoController extends Controller
             $mauzo->delete();
         });
 
-        return redirect()->back()->with('success', 'Rekodi ya mauzo imefutwa kikamilifu!');
+        return redirect()->back()->with([
+            'success' => 'Rekodi ya mauzo imefutwa kikamilifu!',
+            'notification' => 'Rekodi imefutwa!'
+        ]);
     }
 
     // -----------------------------
@@ -176,7 +162,8 @@ class MauzoController extends Controller
         $companyId = Auth::user()->company_id;
 
         return DB::transaction(function () use ($request, $companyId) {
-            $request->validate([
+            // Validate the request
+            $validator = Validator::make($request->all(), [
                 'bidhaa_id'      => 'required|exists:bidhaas,id',
                 'idadi'          => 'required|integer|min:1',
                 'bei'            => 'required|numeric',
@@ -186,20 +173,49 @@ class MauzoController extends Controller
                 'tarehe_malipo'  => 'required|date',
             ]);
 
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tafadhali jaza taarifa zote kikamilifu.',
+                    'notification' => 'Kosa katika taarifa!',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             $bidhaa = Bidhaa::where('id', $request->bidhaa_id)
                 ->where('company_id', $companyId)
-                ->firstOrFail();
+                ->first();
 
+            if (!$bidhaa) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bidhaa haipatikani.',
+                    'notification' => 'Bidhaa haipo!'
+                ], 404);
+            }
+
+            // Check expiry
             if ($bidhaa->expiry < now()->toDateString()) {
-                return redirect()->back()->withErrors(['bidhaa_id' => "Bidhaa hii ime-expire."]);
+                return response()->json([
+                    'success' => false,
+                    'message' => "Bidhaa {$bidhaa->jina} ime-expire.",
+                    'notification' => 'Bidhaa ime-expire!'
+                ], 422);
             }
 
+            // Check stock
             if ($request->idadi > $bidhaa->idadi) {
-                return redirect()->back()->withErrors(['idadi' => "Stock haijatosha, baki ni {$bidhaa->idadi}."]);
+                return response()->json([
+                    'success' => false,
+                    'message' => "Stock haitoshi kwa {$bidhaa->jina}, baki ni {$bidhaa->idadi}.",
+                    'notification' => 'Stock haitoshi!'
+                ], 422);
             }
 
+            // Reduce stock
             $bidhaa->decrement('idadi', $request->idadi);
 
+            // Create loan record
             $deni = Madeni::create([
                 'company_id'    => $companyId,
                 'bidhaa_id'     => $request->bidhaa_id,
@@ -212,32 +228,14 @@ class MauzoController extends Controller
                 'baki'          => $request->jumla,
             ]);
 
-            // Return JSON for AJAX if requested
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Deni limerekodiwa kikamilifu!',
-                    'receipt_data' => $request->has('print_receipt') ? [
-                        'receipt_number' => 'DL' . str_pad($deni->id, 5, '0', STR_PAD_LEFT),
-                        'items' => [[
-                            'jina' => $bidhaa->jina,
-                            'idadi' => $request->idadi,
-                            'bei' => $request->bei,
-                            'jumla' => $request->jumla
-                        ]],
-                        'total_amount' => $request->jumla,
-                        'date' => Carbon::now()->format('Y-m-d H:i:s'),
-                        'user_name' => Auth::user()->name,
-                        'company_name' => Auth::user()->company->name ?? 'DEMODAY STORE',
-                        'customer_name' => $request->jina_mkopaji,
-                        'customer_phone' => $request->simu,
-                        'payment_date' => $request->tarehe_malipo,
-                        'is_loan' => true
-                    ] : null
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Deni limerekodiwa kikamilifu!');
+            return response()->json([
+                'success' => true,
+                'message' => 'Bidhaa zimekopeshwa kwa mafanikio kwa ' . $request->jina_mkopaji . '!',
+                'notification' => 'Mikopo imefanikiwa!',
+                'loan_id' => $deni->id,
+                'customer_name' => $request->jina_mkopaji,
+                'amount' => $request->jumla
+            ]);
         });
     }
 
@@ -249,7 +247,6 @@ class MauzoController extends Controller
         $companyId = Auth::user()->company_id;
 
         return DB::transaction(function () use ($request, $companyId) {
-
             $validator = Validator::make($request->all(), [
                 'bidhaa_id' => 'required|exists:bidhaas,id',
                 'idadi'     => 'required|integer|min:1',
@@ -261,7 +258,9 @@ class MauzoController extends Controller
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $validator->errors()->first()
+                    'message' => 'Tafadhali jaza taarifa zote kikamilifu.',
+                    'notification' => 'Kosa katika taarifa!',
+                    'errors' => $validator->errors()
                 ], 422);
             }
 
@@ -272,21 +271,24 @@ class MauzoController extends Controller
             if (!$bidhaa) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bidhaa haipatikani'
+                    'message' => 'Bidhaa haipatikani',
+                    'notification' => 'Bidhaa haipo!'
                 ], 404);
             }
 
             if ($bidhaa->expiry < now()->toDateString()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Bidhaa hii ime-expire'
+                    'message' => 'Bidhaa hii ime-expire',
+                    'notification' => 'Bidhaa ime-expire!'
                 ], 422);
             }
 
             if ($request->idadi > $bidhaa->idadi) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Stock haijatosha, baki ni {$bidhaa->idadi}"
+                    'message' => "Stock haitoshi, baki ni {$bidhaa->idadi}",
+                    'notification' => 'Stock haitoshi!'
                 ], 422);
             }
 
@@ -301,31 +303,13 @@ class MauzoController extends Controller
                 'jumla'      => $request->jumla,
             ]);
 
-            $response = [
+            return response()->json([
                 'success' => true,
                 'message' => 'Mauzo yamerekodiwa kikamilifu!',
+                'notification' => 'Mauzo yamefanikiwa!',
                 'sale_id' => $mauzo->id
-            ];
+            ]);
 
-            // Add receipt data if print_receipt is requested
-            if ($request->has('print_receipt') && $request->print_receipt == '1') {
-                $response['receipt_data'] = [
-                    'receipt_number' => 'RC' . str_pad($mauzo->id, 5, '0', STR_PAD_LEFT),
-                    'items' => [[
-                        'jina' => $bidhaa->jina,
-                        'idadi' => $request->idadi,
-                        'bei' => $request->bei,
-                        'punguzo' => $request->punguzo ?? 0,
-                        'jumla' => $request->jumla
-                    ]],
-                    'total_amount' => $request->jumla,
-                    'date' => Carbon::now()->format('Y-m-d H:i:s'),
-                    'user_name' => Auth::user()->name,
-                    'company_name' => Auth::user()->company->name ?? 'DEMODAY STORE'
-                ];
-            }
-
-            return response()->json($response);
         });
     }
 
@@ -342,12 +326,10 @@ class MauzoController extends Controller
             'items.*.bei' => 'required|numeric',
             'items.*.idadi' => 'required|integer|min:1',
             'items.*.punguzo' => 'nullable|numeric',
-            'items.*.faida' => 'nullable|numeric',
         ]);
 
-        $saleItems = [];
-        $totalAmount = 0;
         $saleIds = [];
+        $totalItems = 0;
 
         foreach ($validated['items'] as $item) {
             $bidhaa = Bidhaa::where('jina', $item['jina'])
@@ -355,6 +337,24 @@ class MauzoController extends Controller
                 ->first();
 
             if ($bidhaa) {
+                // Check expiry
+                if ($bidhaa->expiry < now()->toDateString()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Bidhaa {$bidhaa->jina} ime-expire.",
+                        'notification' => 'Bidhaa ime-expire!'
+                    ], 422);
+                }
+
+                // Check stock
+                if ($item['idadi'] > $bidhaa->idadi) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Stock haitoshi kwa {$bidhaa->jina}, baki ni {$bidhaa->idadi}.",
+                        'notification' => 'Stock haitoshi!'
+                    ], 422);
+                }
+
                 $jumla = ($item['bei'] * $item['idadi']) - ($item['punguzo'] ?? 0);
 
                 $mauzo = Mauzo::create([
@@ -366,42 +366,19 @@ class MauzoController extends Controller
                     'jumla'      => $jumla,
                 ]);
 
-                $bidhaa->update([
-                    'idadi' => max(0, $bidhaa->idadi - $item['idadi']),
-                ]);
+                $bidhaa->decrement('idadi', $item['idadi']);
 
-                // Collect items for receipt
-                $saleItems[] = [
-                    'jina' => $bidhaa->jina,
-                    'idadi' => $item['idadi'],
-                    'bei' => $item['bei'],
-                    'punguzo' => $item['punguzo'] ?? 0,
-                    'jumla' => $jumla
-                ];
-
-                $totalAmount += $jumla;
                 $saleIds[] = $mauzo->id;
+                $totalItems++;
             }
         }
 
-        $response = [
-            'status' => 'success',
-            'message' => 'Mauzo ya kikapu yamehifadhiwa kikamilifu!',
-        ];
-
-        // Add receipt data if print_receipt is requested
-        if ($request->has('print_receipt') && $request->print_receipt == '1') {
-            $response['receipt_data'] = [
-                'receipt_number' => 'RC' . str_pad($saleIds[0], 5, '0', STR_PAD_LEFT),
-                'items' => $saleItems,
-                'total_amount' => $totalAmount,
-                'date' => Carbon::now()->format('Y-m-d H:i:s'),
-                'user_name' => Auth::user()->name,
-                'company_name' => Auth::user()->company->name ?? 'DEMODAY STORE'
-            ];
-        }
-
-        return response()->json($response);
+        return response()->json([
+            'success' => true,
+            'message' => 'Mauzo ya kikapu ya bidhaa ' . $totalItems . ' zimehifadhiwa kikamilifu!',
+            'notification' => 'Kikapu kimefanikiwa!',
+            'total_items' => $totalItems
+        ]);
     }
 
     // -----------------------------
@@ -420,14 +397,14 @@ class MauzoController extends Controller
             'items.*.punguzo' => 'nullable|numeric',
         ]);
 
+        // Create or find customer
         $mteja = Mteja::firstOrCreate([
             'jina' => $validated['jina'],
             'company_id' => $companyId,
         ]);
 
-        $loanItems = [];
-        $totalAmount = 0;
         $loanIds = [];
+        $totalItems = 0;
 
         foreach ($validated['items'] as $item) {
             $bidhaa = Bidhaa::where('jina', $item['jina'])
@@ -435,12 +412,30 @@ class MauzoController extends Controller
                 ->first();
 
             if ($bidhaa) {
+                // Check expiry
+                if ($bidhaa->expiry < now()->toDateString()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Bidhaa {$bidhaa->jina} ime-expire.",
+                        'notification' => 'Bidhaa ime-expire!'
+                    ], 422);
+                }
+
+                // Check stock
+                if ($item['idadi'] > $bidhaa->idadi) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Stock haitoshi kwa {$bidhaa->jina}, baki ni {$bidhaa->idadi}.",
+                        'notification' => 'Stock haitoshi!'
+                    ], 422);
+                }
+
                 $jumla = ($item['bei'] * $item['idadi']) - ($item['punguzo'] ?? 0);
 
-                $bidhaa->update([
-                    'idadi' => max(0, $bidhaa->idadi - $item['idadi']),
-                ]);
+                // Reduce stock
+                $bidhaa->decrement('idadi', $item['idadi']);
 
+                // Create loan record
                 $deni = Madeni::create([
                     'company_id'    => $companyId,
                     'bidhaa_id'     => $bidhaa->id,
@@ -448,111 +443,22 @@ class MauzoController extends Controller
                     'bei'           => $item['bei'],
                     'jumla'         => $jumla,
                     'jina_mkopaji'  => $validated['jina'],
-                    'simu'          => '',
+                    'simu'          => $mteja->simu ?? '',
                     'tarehe_malipo' => now()->addDays(7),
                     'baki'          => $jumla,
                 ]);
 
-                // Collect items for receipt
-                $loanItems[] = [
-                    'jina' => $bidhaa->jina,
-                    'idadi' => $item['idadi'],
-                    'bei' => $item['bei'],
-                    'punguzo' => $item['punguzo'] ?? 0,
-                    'jumla' => $jumla
-                ];
-
-                $totalAmount += $jumla;
                 $loanIds[] = $deni->id;
+                $totalItems++;
             }
         }
 
-        $response = [
-            'status' => 'success',
-            'message' => 'Bidhaa zimekopeshwa kwa mafanikio!',
-        ];
-
-        // Add receipt data if print_receipt is requested
-        if ($request->has('print_receipt') && $request->print_receipt == '1') {
-            $response['receipt_data'] = [
-                'receipt_number' => 'DL' . str_pad($loanIds[0], 5, '0', STR_PAD_LEFT),
-                'items' => $loanItems,
-                'total_amount' => $totalAmount,
-                'date' => Carbon::now()->format('Y-m-d H:i:s'),
-                'user_name' => Auth::user()->name,
-                'company_name' => Auth::user()->company->name ?? 'DEMODAY STORE',
-                'customer_name' => $validated['jina'],
-                'is_loan' => true
-            ];
-        }
-
-        return response()->json($response);
-    }
-
-    // -----------------------------
-    //  Display receipt for printing
-    // -----------------------------
-    public function showReceipt($id)
-    {
-        $companyId = Auth::user()->company_id;
-        
-        $mauzo = Mauzo::with('bidhaa')
-            ->where('id', $id)
-            ->where('company_id', $companyId)
-            ->firstOrFail();
-
-        $receiptNumber = 'RC' . str_pad($mauzo->id, 5, '0', STR_PAD_LEFT);
-
-        return view('mauzo.receipt-print', [
-            'mauzo' => $mauzo,
-            'receipt_number' => $receiptNumber,
-            'date' => Carbon::parse($mauzo->created_at)->format('Y-m-d H:i:s'),
-            'user_name' => Auth::user()->name,
-            'company_name' => Auth::user()->company->name ?? 'DEMODAY STORE'
-        ]);
-    }
-
-    // -----------------------------
-    //  Print receipt (thermal printer)
-    // -----------------------------
-    public function printReceipt($id)
-    {
-        $companyId = Auth::user()->company_id;
-        
-        $mauzo = Mauzo::with('bidhaa')
-            ->where('id', $id)
-            ->where('company_id', $companyId)
-            ->firstOrFail();
-
-        $receiptNumber = 'RC' . str_pad($mauzo->id, 5, '0', STR_PAD_LEFT);
-
-        // For thermal printer, return minimal HTML
-        if (request()->expectsJson() || request()->has('thermal')) {
-            return response()->json([
-                'success' => true,
-                'receipt_data' => [
-                    'receipt_number' => $receiptNumber,
-                    'items' => [[
-                        'jina' => $mauzo->bidhaa->jina,
-                        'idadi' => $mauzo->idadi,
-                        'bei' => $mauzo->bei,
-                        'punguzo' => $mauzo->punguzo,
-                        'jumla' => $mauzo->jumla
-                    ]],
-                    'total_amount' => $mauzo->jumla,
-                    'date' => Carbon::parse($mauzo->created_at)->format('Y-m-d H:i:s'),
-                    'user_name' => Auth::user()->name,
-                    'company_name' => Auth::user()->company->name ?? 'DEMODAY STORE'
-                ]
-            ]);
-        }
-
-        return view('mauzo.receipt-thermal', [
-            'mauzo' => $mauzo,
-            'receipt_number' => $receiptNumber,
-            'date' => Carbon::parse($mauzo->created_at)->format('Y-m-d H:i:s'),
-            'user_name' => Auth::user()->name,
-            'company_name' => Auth::user()->company->name ?? 'DEMODAY STORE'
+        return response()->json([
+            'success' => true,
+            'message' => 'Bidhaa ' . $totalItems . ' zimekopeshwa kwa mafanikio kwa ' . $validated['jina'] . '!',
+            'notification' => 'Mikopo ya kikapu imefanikiwa!',
+            'total_items' => $totalItems,
+            'customer_name' => $validated['jina']
         ]);
     }
 }

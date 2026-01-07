@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Mail\VerifyEmail;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\Wafanyakazi;
-use Illuminate\Support\Facades\Hash;
+use DateTime;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use App\Mail\VerifyEmail;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -23,7 +26,7 @@ class AuthController extends Controller
         $regions = [
             "Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi",
             "Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mwanza","Mbeya","Morogoro",
-            "Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","Singida",
+            "Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","simiyu","Singida",
             "Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"
         ];
 
@@ -43,7 +46,8 @@ class AuthController extends Controller
             'location'     => 'required|string|max:255',
             'region'       => 'required|string|max:255',
             'phone'        => 'required|string|max:50',
-            'company_email'=> 'nullable|email|max:255',
+            'company_email' => 'required|email|max:255|unique:users,email',
+
             'username'     => 'required|string|max:50|unique:users,username',
             'password'     => 'required|string|min:6|confirmed',
         ]);
@@ -117,85 +121,153 @@ class AuthController extends Controller
     /**
      * Handle login for all types
      */
-  public function loginPost(Request $request)
-{
-    $credentials = $request->validate([
-        'username' => 'required|string',
-        'password' => 'required|string',
-    ]);
+    public function loginPost(Request $request)
+    {
+        $credentials = $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
-    // 1️⃣ Admin login
-    if (Auth::attempt([
-        'username' => $credentials['username'],
-        'password' => $credentials['password'],
-        'role' => 'admin',
-        'is_approved' => 1
-    ], $request->boolean('remember'))) {
+        // 1️⃣ Admin login
+        if (Auth::attempt([
+            'username' => $credentials['username'],
+            'password' => $credentials['password'],
+            'role' => 'admin',
+            'is_approved' => 1
+        ], $request->boolean('remember'))) {
 
-        session(['is_admin' => true]);
-        return redirect()->route('admin.dashboard')
-            ->with('success', 'Logged in as Admin!');
+            session(['is_admin' => true]);
+            return redirect()->route('admin.dashboard')
+                ->with('success', 'Logged in as Admin!');
+        }
+
+        // 2️⃣ Boss/Owner login
+        if (Auth::attempt([
+            'username' => $credentials['username'],
+            'password' => $credentials['password']
+        ], $request->boolean('remember'))) {
+
+            $user = Auth::user();
+
+            if (!$user->company_id || !$user->company) {
+                Auth::logout();
+                return back()->withErrors(['login' => 'Your account is not linked to any company. Contact admin.'])
+                    ->onlyInput('username');
+            }
+
+            if (!$user->company->is_user_approved) {
+                Auth::logout();
+                return back()->withErrors(['login' => 'Your company is not approved yet.'])
+                    ->onlyInput('username');
+            }
+
+            if (!$user->is_approved) {
+                Auth::logout();
+                return back()->withErrors(['login' => 'Your account is not approved yet.'])
+                    ->onlyInput('username');
+            }
+
+            $request->session()->regenerate();
+            session()->forget('is_admin');
+
+            return redirect()->route('dashboard')
+                ->with('success', 'Logged in as Boss!');
+        }
+
+        // 3️⃣ Employee login
+        $mfanyakazi = Wafanyakazi::where('username', $credentials['username'])->first();
+
+        if ($mfanyakazi && Hash::check($credentials['password'], $mfanyakazi->password)) {
+            if ($mfanyakazi->getini !== 'ingia') {
+                return back()->withErrors(['login' => 'You are currently not allowed to login.'])
+                    ->onlyInput('username');
+            }
+
+            Auth::guard('mfanyakazi')->login($mfanyakazi);
+
+            // Redirect directly to Mauzo page
+            return redirect()->route('mauzo.index')
+                ->with('success', 'Logged in as Employee!');
+        }
+
+        // 4️⃣ Login failed
+        return back()->withErrors(['login' => 'Incorrect username or password.'])
+            ->onlyInput('username');
     }
-
-    // 2️⃣ Boss/Owner login
-    if (Auth::attempt([
-        'username' => $credentials['username'],
-        'password' => $credentials['password']
-    ], $request->boolean('remember'))) {
-
-        $user = Auth::user();
-
-        if (!$user->company_id || !$user->company) {
-            Auth::logout();
-            return back()->withErrors(['login' => 'Your account is not linked to any company. Contact admin.'])
-                ->onlyInput('username');
-        }
-
-        if (!$user->company->is_user_approved) {
-            Auth::logout();
-            return back()->withErrors(['login' => 'Your company is not approved yet.'])
-                ->onlyInput('username');
-        }
-
-        if (!$user->is_approved) {
-            Auth::logout();
-            return back()->withErrors(['login' => 'Your account is not approved yet.'])
-                ->onlyInput('username');
-        }
-
-        $request->session()->regenerate();
-        session()->forget('is_admin');
-
-        // ✅ Role-aware redirect instead of route('dashboard')
-        
-        return redirect()->route('dashboard')
-            ->with('success', 'Logged in as Boss!');
-    }
-
-    // 3️⃣ Employee login
-    $mfanyakazi = Wafanyakazi::where('username', $credentials['username'])->first();
-
-    if ($mfanyakazi && Hash::check($credentials['password'], $mfanyakazi->password)) {
-        if ($mfanyakazi->getini !== 'ingia') {
-            return back()->withErrors(['login' => 'You are currently not allowed to login.'])
-                ->onlyInput('username');
-        }
-
-        Auth::guard('mfanyakazi')->login($mfanyakazi);
-
-        // Redirect directly to Mauzo page
-        return redirect()->route('mauzo.index')
-            ->with('success', 'Logged in as Employee!');
-    }
-
-    // 4️⃣ Login failed
-    return back()->withErrors(['login' => 'Incorrect username or password.'])
-        ->onlyInput('username');
-}
 
     /**
-     * Logout
+     * Show forgot password form
      */
+    public function showEmailForm()
+    {
+        return view('auth.forgot-password');
+    }
+
+    /**
+     * Send reset link to email
+     */
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email'
+        ], [
+            'email.exists' => 'Barua pepe haipo kwenye mfumo.'
+        ]);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('success', 'Link ya kubadilisha neno la siri imetumwa kwenye barua pepe yako.')
+            : back()->withErrors(['email' => 'Imeshindikana kutuma link. Tafadhali jaribu tena baadaye.']);
+    }
+
+    /**
+     * Show reset password form
+     */
+    public function showResetForm(string $token)
+    {
+        return view('auth.reset-password', [
+            'token' => $token
+        ]);
+    }
+
+    /**
+     * Reset the password
+     */
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email|exists:users,email',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
+
+    $status = Password::reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function (User $user, string $password) {
+            $user->password = Hash::make($password);
+            $user->setRememberToken(Str::random(60));
+            $user->save();
+
+            event(new PasswordReset($user));
+
+            // Optional: auto-login after reset
+            Auth::login($user);
+        }
+    );
+
+    if ($status === Password::PASSWORD_RESET) {
+        return redirect()->route('dashboard') // redirect to dashboard directly
+                         ->with('success', 'Neno la siri limebadilishwa kwa mafanikio! Unaingia sasa.');
+    }
+
+    return back()->withErrors(['email' => 'Link ya kubadilisha neno la siri si sahihi au imeisha muda wake.']);
+}
+
+
+// logout
     public function logout(Request $request)
     {
         Auth::logout();
