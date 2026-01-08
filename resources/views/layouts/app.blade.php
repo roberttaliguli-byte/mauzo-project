@@ -60,14 +60,14 @@
             --border-color: #e2e8f0;
         }
         
-        /* Sidebar Styles */
+        /* Sidebar Styles - Improved for mobile */
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
             height: 100vh;
             width: 280px;
-            z-index: 40;
+            z-index: 1000;
             transform: translateX(-100%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
@@ -81,14 +81,13 @@
         .main-container {
             width: 100%;
             min-height: 100vh;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
-            left: 0;
+            transition: margin-left 0.3s ease;
         }
         
-        /* When sidebar is open, push content to right */
+        /* When sidebar is open on desktop */
         .sidebar-open .main-container {
-            transform: translateX(280px);
+            margin-left: 280px;
             width: calc(100% - 280px);
         }
         
@@ -99,20 +98,104 @@
             overflow-x: hidden;
         }
         
+        /* Responsive Grid Container */
+        .responsive-container {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
         /* Mobile specific adjustments */
         @media (max-width: 1023px) {
             .sidebar {
-                width: 260px;
+                width: 280px;
                 max-width: 85%;
             }
             
             .sidebar-open .main-container {
-                transform: translateX(260px);
-                width: calc(100% - 260px);
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+            
+            /* On mobile, overlay content when sidebar is open */
+            .sidebar-open .main-container::after {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                pointer-events: auto;
+            }
+            
+            /* Prevent body scroll when sidebar is open on mobile */
+            body.sidebar-open {
+                overflow: hidden;
             }
         }
         
-        /* Hamburger Menu - Always visible */
+        /* Desktop specific adjustments */
+        @media (min-width: 1024px) {
+            .sidebar {
+                transform: translateX(0);
+            }
+            
+            .main-container {
+                margin-left: 280px;
+                width: calc(100% - 280px);
+            }
+            
+            .hamburger-menu {
+                display: none !important;
+            }
+            
+            /* Hide close button on desktop */
+            .sidebar .fa-times {
+                display: none;
+            }
+        }
+        
+        /* Table responsive styles */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Card responsive styles */
+        .responsive-card {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        
+        @media (min-width: 640px) {
+            .responsive-card {
+                margin-bottom: 1.5rem;
+            }
+        }
+        
+        /* Form responsive styles */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .form-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        /* Hamburger Menu - Always visible on mobile */
         .hamburger-menu {
             width: 30px;
             height: 20px;
@@ -121,6 +204,12 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+        }
+        
+        @media (min-width: 1024px) {
+            .hamburger-menu {
+                display: none;
+            }
         }
         
         .hamburger-menu span {
@@ -253,8 +342,25 @@
         
         /* Content width adjustment */
         .content-inner {
+            width: 100%;
             max-width: 100%;
             overflow-x: hidden;
+        }
+        
+        /* Responsive typography */
+        .responsive-text {
+            font-size: clamp(0.875rem, 2vw, 1rem);
+        }
+        
+        /* Alert notification - fixed to not show on every refresh */
+        .alert-dot {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
         }
         
         /* Responsive adjustments */
@@ -269,8 +375,20 @@
                 height: 45px;
             }
             
-            .sidebar-open .main-container {
-                transform: translateX(260px);
+            /* Smaller padding on mobile */
+            .main-content {
+                padding: 0.75rem;
+            }
+        }
+        
+        /* Extra small devices */
+        @media (max-width: 400px) {
+            .sidebar {
+                width: 100%;
+            }
+            
+            .header-left {
+                gap: 0.5rem;
             }
         }
     </style>
@@ -284,26 +402,26 @@
     <aside class="sidebar gradient-bg text-white flex flex-col shadow-xl"
            :class="{'open': sidebarOpen}">
         <!-- Logo Section -->
-        <div class="p-6 text-center border-b border-green-700">
+        <div class="p-4 sm:p-6 text-center border-b border-green-700">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center gap-3">
                     <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" 
                          alt="Mauzo Logo" 
-                         class="w-12 h-12 rounded-lg">
+                         class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg">
                     <div>
-                        <div class="text-xl font-bold text-left">MAUZO</div>
+                        <div class="text-lg sm:text-xl font-bold text-left">MAUZO</div>
                         <div class="text-xs text-green-200 text-left">Boss System</div>
                     </div>
                 </div>
                 <button @click="closeSidebar()" 
-                        class="text-green-200 hover:text-white transition p-2">
+                        class="text-green-200 hover:text-white transition p-2 lg:hidden">
                     <i class="fas fa-times text-lg"></i>
                 </button>
             </div>
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-thin">
+        <nav class="flex-1 p-3 sm:p-4 space-y-2 overflow-y-auto scrollbar-thin">
             @include('partials.navigation')
         </nav>
         
@@ -312,7 +430,7 @@
             <div class="text-xs text-green-200 text-center">
                 {{ now()->format('d/m/Y H:i') }}
             </div>
-            <div class="mt-2 text-center">
+            <div class="mt-2 text-center lg:hidden">
                 <button @click="closeSidebar()" 
                         class="text-green-200 hover:text-white text-sm transition">
                     <i class="fas fa-chevron-left mr-1"></i> Funga Menu
@@ -329,15 +447,15 @@
             'bg-white text-gray-900': colorMode === 'color-mode-light'
         }">
             <!-- Header with Hamburger Menu -->
-            <header class="sticky top-0 z-30 shadow-sm border-b px-4 sm:px-6 py-4" :class="{
+            <header class="sticky top-0 z-30 shadow-sm border-b px-4 sm:px-6 py-3 sm:py-4" :class="{
                 'bg-white border-gray-200': colorMode === 'color-mode-default',
                 'bg-gray-800 border-gray-700': colorMode === 'color-mode-dark',
                 'bg-white border-gray-300': colorMode === 'color-mode-light'
             }">
                 <div class="flex justify-between items-center">
                     <div class="header-left">
-                        <!-- Hamburger Menu - Always visible -->
-                        <div class="hamburger-menu" 
+                        <!-- Hamburger Menu - Visible only on mobile/tablet -->
+                        <div class="hamburger-menu lg:hidden" 
                              :class="{'active': sidebarOpen}"
                              @click="toggleSidebar()">
                             <span :class="{
@@ -359,7 +477,7 @@
                         
                         <!-- Page Title -->
                         <div>
-                            <h1 class="text-xl sm:text-2xl font-bold">@yield('page-title', 'Dashboard')</h1>
+                            <h1 class="text-lg sm:text-xl md:text-2xl font-bold">@yield('page-title', 'Dashboard')</h1>
                             <p class="text-xs sm:text-sm mt-1" :class="{
                                 'text-gray-600': colorMode === 'color-mode-default',
                                 'text-gray-300': colorMode === 'color-mode-dark',
@@ -368,21 +486,32 @@
                         </div>
                     </div>
                     
-                    <div class="flex items-center space-x-3 sm:space-x-4">
-                        <!-- Alert Dropdown -->
-                        <div x-data="{ openPro: false }" class="relative">
-                            <button @click="openPro = !openPro"
+                    <div class="flex items-center space-x-2 sm:space-x-4">
+                        <!-- Alert Dropdown - FIXED: Won't show on every refresh -->
+                        <div x-data="alertDropdown()" class="relative">
+                            <button @click="toggleAlert()"
                                 class="relative p-2 text-gray-600 hover:text-green-600 transition">
                                 <i class="fas fa-bell text-lg"></i>
+                                <!-- Show dot only if there are unread alerts -->
+                                <template x-if="hasUnreadAlerts">
+                                    <span class="alert-dot"></span>
+                                </template>
                             </button>
 
                             <div x-show="openPro"
                                  @click.away="openPro = false"
+                                 x-cloak
                                  x-transition
-                                 class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-xl p-4 z-40">
-                                <div class="px-4 py-3 bg-green-600 text-white rounded-lg text-sm shadow">
-                                    Tumia Mauzo Sheet Pro kwa sasa
+                                 class="absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-xl shadow-xl p-4 z-40">
+                                <!-- Alert message - only shows once per session -->
+                                <div class="px-4 py-3 bg-green-600 text-white rounded-lg text-sm shadow mb-2">
+                                    TumiaMauzoSheetai sasa
                                 </div>
+                                <!-- Mark as read button -->
+                                <button @click="markAsRead()"
+                                        class="w-full text-center px-4 py-2 text-xs text-gray-600 hover:text-green-600 transition">
+                                    <i class="fas fa-check mr-1"></i> Weka kama imesomwa
+                                </button>
                             </div>
                         </div>
                         
@@ -457,12 +586,15 @@
             </header>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin content-inner" :class="{
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin content-inner responsive-container" :class="{
                 'bg-gray-50': colorMode === 'color-mode-default',
                 'bg-gray-900': colorMode === 'color-mode-dark',
                 'bg-white': colorMode === 'color-mode-light'
             }">
-                @yield('content')
+                <!-- Responsive wrapper for content -->
+                <div class="max-w-full overflow-x-hidden">
+                    @yield('content')
+                </div>
             </main>
         </div>
     </div>
@@ -521,21 +653,34 @@
                     this.colorMode = savedMode;
                 }
                 
-                // Load sidebar state if previously opened
-                const savedSidebarState = localStorage.getItem('sidebarOpen');
-                if (savedSidebarState !== null) {
-                    this.sidebarOpen = JSON.parse(savedSidebarState);
+                // Auto-detect if mobile/desktop and set sidebar state
+                const isMobile = window.innerWidth < 1024;
+                if (isMobile) {
+                    this.sidebarOpen = false;
+                } else {
+                    // On desktop, sidebar is open by default
+                    this.sidebarOpen = true;
+                    
+                    // Load saved sidebar state only on desktop
+                    const savedSidebarState = localStorage.getItem('sidebarOpen');
+                    if (savedSidebarState !== null) {
+                        this.sidebarOpen = JSON.parse(savedSidebarState);
+                    }
                 }
                 
-                // Save sidebar state when changed
+                // Save sidebar state when changed (desktop only)
                 this.$watch('sidebarOpen', (value) => {
-                    localStorage.setItem('sidebarOpen', value);
+                    if (!isMobile) {
+                        localStorage.setItem('sidebarOpen', value);
+                    }
                     
                     // Ensure no horizontal scroll when sidebar opens
-                    if (value) {
+                    if (value && isMobile) {
                         document.body.classList.add('no-scroll-x');
+                        document.body.style.overflow = 'hidden';
                     } else {
                         document.body.classList.remove('no-scroll-x');
+                        document.body.style.overflow = '';
                     }
                 });
                 
@@ -546,9 +691,22 @@
                     }
                 });
                 
-                // Initial scroll prevention if sidebar is open
-                if (this.sidebarOpen) {
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    const newIsMobile = window.innerWidth < 1024;
+                    if (!newIsMobile && !this.sidebarOpen) {
+                        // On desktop resize, ensure sidebar is open
+                        this.sidebarOpen = true;
+                    } else if (newIsMobile && this.sidebarOpen) {
+                        // On mobile resize, close sidebar
+                        this.sidebarOpen = false;
+                    }
+                });
+                
+                // Initial scroll prevention if sidebar is open on mobile
+                if (this.sidebarOpen && isMobile) {
                     document.body.classList.add('no-scroll-x');
+                    document.body.style.overflow = 'hidden';
                 }
             },
             
@@ -567,6 +725,36 @@
             changeColorMode(mode) {
                 this.colorMode = `color-mode-${mode}`;
                 localStorage.setItem('colorMode', this.colorMode);
+            }
+        }
+    }
+    
+    // Separate function for alert dropdown to prevent showing on every refresh
+    function alertDropdown() {
+        return {
+            openPro: false,
+            hasUnreadAlerts: false,
+            
+            init() {
+                // Check if alert has been read in this session
+                // Using sessionStorage so it resets when browser is closed
+                const alertRead = sessionStorage.getItem('mauzoAlertRead');
+                
+                if (!alertRead) {
+                    // First time in this session - show alert
+                    this.hasUnreadAlerts = true;
+                }
+            },
+            
+            toggleAlert() {
+                this.openPro = !this.openPro;
+            },
+            
+            markAsRead() {
+                this.hasUnreadAlerts = false;
+                this.openPro = false;
+                // Mark as read for this session
+                sessionStorage.setItem('mauzoAlertRead', 'true');
             }
         }
     }

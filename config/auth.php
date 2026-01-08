@@ -19,7 +19,13 @@ return [
             'provider' => 'users',
         ],
 
-        // Extra guard for wafanyakazi
+        // ✅ ADMIN GUARD (uses users table)
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        // Existing mfanyakazi guard
         'mfanyakazi' => [
             'driver' => 'session',
             'provider' => 'wafanyakazi',
@@ -38,7 +44,6 @@ return [
             'model' => App\Models\User::class,
         ],
 
-        // Provider for wafanyakazi guard
         'wafanyakazi' => [
             'driver' => 'eloquent',
             'model' => App\Models\Wafanyakazi::class,
@@ -51,21 +56,14 @@ return [
     |--------------------------------------------------------------------------
     */
 
-'passwords' => [
-    'users' => [
-        'provider' => 'users',
-        'table' => 'password_resets', // <-- FIXED
-        'expire' => 60,
-        'throttle' => 60,
+    'passwords' => [
+        'users' => [
+            'provider' => 'users',
+            'table' => 'password_resets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
     ],
-],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Password Confirmation Timeout
-    |--------------------------------------------------------------------------
-    */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
-
 ];

@@ -44,10 +44,9 @@
   </div>
   @endif
 
-  <form method="POST" action="{{ route('password.update') }}" class="space-y-4">
+<form method="POST" action="{{ route('password.update.auth') }}" class="space-y-4">
     @csrf
-    @method('PUT')
-    
+
     <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
       <div class="text-center mb-4">
         <h2 class="text-lg font-bold text-amber-400">Badilisha Neno la Siri</h2>

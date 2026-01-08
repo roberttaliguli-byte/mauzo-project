@@ -61,7 +61,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
     Route::get('/password/change', [PasswordController::class, 'showChangeForm'])->name('password.change');
-    Route::post('/password/update', [PasswordController::class, 'update'])->name('password.update');
+   Route::post('/password/update', [PasswordController::class, 'update'])
+    ->name('password.update.auth');
     Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
 
     // Boss routes
@@ -102,11 +103,11 @@ Route::prefix('user')->group(function () {
 // =========================
 // Admin routes
 // =========================
-Route::middleware([\App\Http\Middleware\AdminMiddleware::class])
+Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        // Dashboard
+
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
         // Companies
@@ -125,12 +126,14 @@ Route::middleware([\App\Http\Middleware\AdminMiddleware::class])
 
         // Change Password
         Route::get('/change-password', [AdminController::class, 'showChangePassword'])->name('password.show');
-        Route::post('/change-password', [AdminController::class, 'updatePassword'])->name('password.update');
-
+       Route::post('/change-password', [AdminController::class, 'updatePassword'])
+    ->name('admin.password.update');
         // User & Company actions
         Route::post('/approve-user/{id}', [AdminController::class, 'approveUser'])->name('approveUser');
         Route::post('/company/{id}/verify', [AdminController::class, 'verifyCompany'])->name('verifyCompany');
-        Route::delete('/company/{id}', [AdminController::class, 'destroy'])->name('destroyCompany');
+    
+        Route::delete('/company/{id}', [AdminController::class, 'destroyCompany'])->name('destroyCompany');
+
         Route::post('/companies/{id}/set-package', [AdminController::class, 'setPackageTime'])->name('setPackageTime');
     });
 
