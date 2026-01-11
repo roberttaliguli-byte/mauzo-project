@@ -178,7 +178,10 @@ Route::post('/mauzo/kikapu/store', [MauzoController::class, 'storeKikapu']) ->na
 Route::post('/mauzo/kikapu/kopesha', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kikapu.loan');
 Route::post('/mauzo/kopesha', [MauzoController::class, 'storeKikapuLoan'])
     ->name('mauzo.store.kopesha');
-
+        Route::get('/receipt/{receiptNo}', [MauzoController::class, 'getReceiptData'])->name('mauzo.receipt');
+    Route::get('/search-receipts', [MauzoController::class, 'searchReceipts'])->name('mauzo.search.receipts');
+Route::get('/mauzo/receipt-print/{receiptNo}', [MauzoController::class, 'getReceiptForPrint'])->name('mauzo.receipt.print');
+Route::get('/mauzo/thermal-receipt/{receiptNo}', [MauzoController::class, 'printThermalReceipt'])->name('mauzo.thermal.receipt');
     
 // ✅ Hifadhi Mauzo kwa kutumia Barcode
 Route::post('/mauzo/barcode', [MauzoController::class, 'storeBarcode'])->name('mauzo.store.barcode');
@@ -218,14 +221,11 @@ Route::post('/manunuzi', [ManunuziController::class, 'store'])->name('manunuzi.s
 Route::put('/manunuzi/{manunuzi}', [ManunuziController::class, 'update'])->name('manunuzi.update');
 Route::delete('/manunuzi/{manunuzi}', [ManunuziController::class, 'destroy'])->name('manunuzi.destroy');
 
-// ================================
 // Madeni Routes
-// ================================
 Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
+Route::get('/madeni/{madeni}/data', [MadeniController::class, 'getDebtData'])->name('madeni.data');
 Route::post('/madeni', [MadeniController::class, 'store'])->name('madeni.store');
-
-Route::resource('madeni', MadeniController::class);
-
+Route::get('/madeni/{madeni}/edit', [MadeniController::class, 'edit'])->name('madeni.edit');
 Route::put('/madeni/{madeni}', [MadeniController::class, 'update'])->name('madeni.update');
 Route::post('/madeni/{madeni}/rejesha', [MadeniController::class, 'rejesha'])->name('madeni.rejesha');
 Route::delete('/madeni/{madeni}', [MadeniController::class, 'destroy'])->name('madeni.destroy');

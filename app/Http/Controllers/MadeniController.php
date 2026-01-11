@@ -51,50 +51,72 @@ class MadeniController extends Controller
     /**
      * Show debts and history (company specific).
      */
-    public function index()
-    {
-        $companyId = $this->getCompanyId();
+public function index()
+{
+    $companyId = $this->getCompanyId();
 
-        // Fetch debts for this company only
-        $madeni = Madeni::with('bidhaa', 'marejeshos')
-            ->where('company_id', $companyId)
-            ->latest()
-            ->get();
+    // Fetch debts for this company only - WITH PAGINATION
+    $madeni = Madeni::with('bidhaa', 'marejeshos')
+        ->where('company_id', $companyId)
+        ->latest()
+        ->paginate(10); // Changed from get() to paginate(15)
 
-        // Fetch repayment history summary
-        $historia = Marejesho::selectRaw("
-                MAX(marejeshos.tarehe) as tarehe,
-                madeni.bidhaa_id,
-                madeni.jina_mkopaji,
-                madeni.simu,
-                SUM(marejeshos.kiasi) as jumla_rejeshwa,
-                MAX(madeni.jumla) as deni_lote,
-                MAX(madeni.idadi) as idadi,
-                MAX(marejeshos.id) as last_rejesho_id
-            ")
-            ->join('madenis as madeni', 'marejeshos.madeni_id', '=', 'madeni.id')
-            ->where('madeni.company_id', $companyId)
-            ->groupBy('madeni.bidhaa_id', 'madeni.jina_mkopaji', 'madeni.simu')
-            ->get()
-            ->map(function ($item) {
-                $lastRejesho = Marejesho::find($item->last_rejesho_id);
-                return [
-                    'tarehe'         => $item->tarehe,
-                    'bidhaa'         => Bidhaa::find($item->bidhaa_id)->jina ?? '-',
-                    'idadi'          => $item->idadi,
-                    'deni_lote'      => $item->deni_lote,
-                    'jumla_rejeshwa' => $item->jumla_rejeshwa,
-                    'rejesho_leo'    => $lastRejesho ? $lastRejesho->kiasi : 0,
-                    'baki'           => max($item->deni_lote - $item->jumla_rejeshwa, 0),
-                    'mkopaji'        => $item->jina_mkopaji,
-                    'simu'           => $item->simu,
-                    'status'         => $item->deni_lote - $item->jumla_rejeshwa <= 0 ? 'Amemaliza' : 'Anaendelea',
-                ];
-            });
+    // For historia, since it's a complex query with transformation,
+    // we'll use a simpler approach. First, let's paginate the raw query:
+    
+    $historiaQuery = Marejesho::selectRaw("
+            MAX(marejeshos.tarehe) as tarehe,
+            madeni.bidhaa_id,
+            madeni.jina_mkopaji,
+            madeni.simu,
+            SUM(marejeshos.kiasi) as jumla_rejeshwa,
+            MAX(madeni.jumla) as deni_lote,
+            MAX(madeni.idadi) as idadi,
+            MAX(marejeshos.id) as last_rejesho_id
+        ")
+        ->join('madenis as madeni', 'marejeshos.madeni_id', '=', 'madeni.id')
+        ->where('madeni.company_id', $companyId)
+        ->groupBy('madeni.bidhaa_id', 'madeni.jina_mkopaji', 'madeni.simu')
+        ->orderBy('tarehe', 'desc');
 
-        return view('madeni.index', compact('madeni', 'historia'));
-    }
+    // Get total count
+    $total = $historiaQuery->get()->count();
+    $perPage = 10;
+    $currentPage = request()->get('history_page', 1);
+    $offset = ($currentPage - 1) * $perPage;
+    
+    // Get paginated items
+    $historiaItems = $historiaQuery->skip($offset)->take($perPage)->get()
+        ->map(function ($item) {
+            $lastRejesho = Marejesho::find($item->last_rejesho_id);
+            return [
+                'tarehe'         => $item->tarehe,
+                'bidhaa'         => Bidhaa::find($item->bidhaa_id)->jina ?? '-',
+                'idadi'          => $item->idadi,
+                'deni_lote'      => $item->deni_lote,
+                'jumla_rejeshwa' => $item->jumla_rejeshwa,
+                'rejesho_leo'    => $lastRejesho ? $lastRejesho->kiasi : 0,
+                'baki'           => max($item->deni_lote - $item->jumla_rejeshwa, 0),
+                'mkopaji'        => $item->jina_mkopaji,
+                'simu'           => $item->simu,
+                'status'         => $item->deni_lote - $item->jumla_rejeshwa <= 0 ? 'Amemaliza' : 'Anaendelea',
+            ];
+        });
 
+    // Create paginator manually
+    $historia = new \Illuminate\Pagination\LengthAwarePaginator(
+        $historiaItems,
+        $total,
+        $perPage,
+        $currentPage,
+        [
+            'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
+            'pageName' => 'history_page'
+        ]
+    );
+
+    return view('madeni.index', compact('madeni', 'historia'));
+}
     /**
      * Store a new debt (loan sale) (company specific).
      */

@@ -13,11 +13,18 @@ class Mauzo extends Model
         'company_id',
         'bidhaa_id',
         'madeni_id',          // ✅ ADD THIS
+        'receipt_no',
         'idadi',
         'bei',
         'punguzo',
         'jumla',
         'is_debt_repayment',  // ✅ ADD THIS
+    ];
+        protected $casts = [
+        'bei' => 'decimal:2',
+        'punguzo' => 'decimal:2',
+        'jumla' => 'decimal:2',
+        'reprint_count' => 'integer'
     ];
 
     /**

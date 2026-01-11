@@ -7,6 +7,42 @@
 
 @section('content')
 <div class="space-y-6">
+    <!-- Auto-dismissing Centered Notification -->
+    @if(session('success'))
+        <div class="flex justify-center">
+            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-xl p-3 md:p-4 max-w-md mx-auto notification-auto-dismiss" data-dismiss-time="2000">
+                <div class="flex items-start md:items-center">
+                    <div class="p-1 md:p-2 rounded-lg bg-green-100 text-green-600 mr-2 md:mr-3 flex-shrink-0">
+                        <i class="fas fa-check-circle text-sm md:text-base"></i>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <p class="text-green-800 font-medium text-xs md:text-sm">{{ session('success') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="flex justify-center">
+            <div class="bg-gradient-to-r from-red-50 to-pink-50 border border-red-300 rounded-xl p-3 md:p-4 max-w-md mx-auto notification-auto-dismiss" data-dismiss-time="4000">
+                <div class="flex items-start md:items-center">
+                    <div class="p-1 md:p-2 rounded-lg bg-red-100 text-red-600 mr-2 md:mr-3 flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-sm md:text-base"></i>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <h4 class="text-red-800 font-medium text-xs md:text-sm">Hitilafu katika Uwasilishaji</h4>
+                        <ul class="text-red-700 mt-1 space-y-1">
+                            @foreach($errors->all() as $error)
+                                <li class="text-xs md:text-sm">• {{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Statistics Cards - Responsive Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-green-200 p-4 md:p-6 card-hover">
@@ -63,7 +99,7 @@
         <div class="flex space-x-2 md:space-x-6 overflow-x-auto scrollbar-hide">
             <button 
                 id="madeni-tab" 
-                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center border-b-2 border-green-500 text-green-600 font-medium md:font-semibold whitespace-nowrap"
+                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center whitespace-nowrap"
                 data-tab="madeni"
             >
                 <i class="fas fa-list mr-1 md:mr-2 text-sm md:text-base"></i>
@@ -71,7 +107,7 @@
             </button>
             <button 
                 id="marejesho-tab" 
-                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center text-gray-500 hover:text-gray-700 whitespace-nowrap"
+                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center whitespace-nowrap"
                 data-tab="marejesho"
             >
                 <i class="fas fa-history mr-1 md:mr-2 text-sm md:text-base"></i>
@@ -79,38 +115,6 @@
             </button>
         </div>
     </div>
-
-    <!-- Flash Messages -->
-    @if(session('success'))
-        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-xl p-3 md:p-4">
-            <div class="flex items-start md:items-center">
-                <div class="p-1 md:p-2 rounded-lg bg-green-100 text-green-600 mr-2 md:mr-3 flex-shrink-0">
-                    <i class="fas fa-check-circle text-sm md:text-base"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-green-800 font-medium text-xs md:text-sm">{{ session('success') }}</p>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="bg-gradient-to-r from-red-50 to-pink-50 border border-red-300 rounded-xl p-3 md:p-4">
-            <div class="flex items-start md:items-center">
-                <div class="p-1 md:p-2 rounded-lg bg-red-100 text-red-600 mr-2 md:mr-3 flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-sm md:text-base"></i>
-                </div>
-                <div class="flex-1">
-                    <h4 class="text-red-800 font-medium text-xs md:text-sm">Hitilafu katika Uwasilishaji</h4>
-                    <ul class="text-red-700 mt-1 space-y-1">
-                        @foreach($errors->all() as $error)
-                            <li class="text-xs md:text-sm">• {{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-    @endif
 
     <!-- TAB 1: Orodha ya Madeni -->
     <div id="madeni-tab-content" class="space-y-6 tab-content">
@@ -272,6 +276,20 @@
                     @endif
                 </table>
             </div>
+
+            <!-- Pagination for Debts -->
+            @if($madeni instanceof \Illuminate\Pagination\LengthAwarePaginator && $madeni->hasPages())
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Onyesha {{ $madeni->firstItem() }} - {{ $madeni->lastItem() }} ya {{ $madeni->total() }} rekodi
+                    </div>
+                    <div class="flex space-x-1">
+                        {{ $madeni->links('vendor.pagination.simple-tailwind') }}
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -382,6 +400,20 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination for History -->
+            @if(isset($historia) && $historia instanceof \Illuminate\Pagination\LengthAwarePaginator && $historia->hasPages())
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Onyesha {{ $historia->firstItem() }} - {{ $historia->lastItem() }} ya {{ $historia->total() }} rekodi
+                    </div>
+                    <div class="flex space-x-1">
+                        {{ $historia->links('vendor.pagination.simple-tailwind') }}
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </div>
@@ -599,6 +631,68 @@
 .debt-row.hidden, .history-row.hidden {
     display: none;
 }
+
+/* Auto-dismiss notification animation */
+.notification-auto-dismiss {
+    animation: fadeIn 0.3s ease-in;
+    transition: opacity 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pagination li {
+    margin: 0 2px;
+}
+
+.pagination li a,
+.pagination li span {
+    display: block;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: #4b5563;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.pagination li a:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.pagination li.active span {
+    background-color: #10b981;
+    color: white;
+    border-color: #10b981;
+}
+
+.pagination li.disabled span {
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Tab active state */
+.tab-button.active {
+    border-bottom: 2px solid #10b981 !important;
+    color: #059669 !important;
+    font-weight: 600 !important;
+}
+
+.tab-button:not(.active) {
+    color: #6b7280 !important;
+}
 </style>
 @endpush
 
@@ -606,24 +700,37 @@
 <script>
 class MadeniManager {
     constructor() {
-        this.currentTab = 'madeni';
+        // Get initial tab from URL hash or default to 'madeni'
+        const hash = window.location.hash.substring(1);
+        this.currentTab = hash === 'madeni' || hash === 'marejesho' ? hash : 'madeni';
         this.searchQuery = '';
         this.init();
     }
 
     init() {
         this.bindEvents();
-        this.showTab('madeni');
+        this.showTab(this.currentTab);  // Use the stored tab
         this.setTodayDate();
+        this.autoDismissNotifications();
+        this.preventFormResubmission();
     }
 
     bindEvents() {
         // Tab navigation
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', (e) => {
+                e.preventDefault();
                 const tab = e.target.closest('.tab-button').dataset.tab;
                 this.showTab(tab);
             });
+        });
+
+        // Listen for hash changes (back/forward buttons)
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash === 'madeni' || hash === 'marejesho') {
+                this.showTab(hash);
+            }
         });
 
         // Search functionality for debts
@@ -652,12 +759,19 @@ class MadeniManager {
     }
 
     showTab(tabName) {
+        this.currentTab = tabName;
+        
+        // Update URL hash without causing page jump
+        history.replaceState(null, null, '#' + tabName);
+        
         // Update tabs
         document.querySelectorAll('.tab-button').forEach(button => {
             if (button.dataset.tab === tabName) {
+                button.classList.add('active');
                 button.classList.add('border-b-2', 'border-green-500', 'text-green-600', 'font-semibold');
                 button.classList.remove('text-gray-500');
             } else {
+                button.classList.remove('active');
                 button.classList.remove('border-b-2', 'border-green-500', 'text-green-600', 'font-semibold');
                 button.classList.add('text-gray-500');
             }
@@ -672,8 +786,6 @@ class MadeniManager {
         if (activeContent) {
             activeContent.classList.remove('hidden');
         }
-
-        this.currentTab = tabName;
     }
 
     bindDebtActions() {
@@ -840,6 +952,27 @@ class MadeniManager {
     setTodayDate() {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('pay-date').value = today;
+    }
+
+    autoDismissNotifications() {
+        // Auto-dismiss notifications after specified time
+        document.querySelectorAll('.notification-auto-dismiss').forEach(notification => {
+            const dismissTime = notification.getAttribute('data-dismiss-time') || 2000;
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                }, 500);
+            }, parseInt(dismissTime));
+        });
+    }
+
+    preventFormResubmission() {
+        // Prevent form resubmission on page refresh
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
     }
 }
 

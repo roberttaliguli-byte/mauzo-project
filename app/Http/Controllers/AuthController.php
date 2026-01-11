@@ -61,7 +61,7 @@ class AuthController extends Controller
             'location'     => $validated['location'],
             'region'       => $validated['region'],
             'phone'        => $validated['phone'],
-            'email'        => $validated['company_email'] ?? null,
+            'email'        => $validated['company_email'],
             'is_user_approved' => 0,
         ]);
 
@@ -73,7 +73,7 @@ class AuthController extends Controller
             'company_id'  => $company->id,
             'username'    => $validated['username'],
             'name'        => $validated['owner_name'],
-            'email'       => $validated['company_email'] ?? null,
+            'email'       => $validated['company_email'],
             'password'    => Hash::make($validated['password']),
             'is_approved' => 0,
             'role'        => 'boss',
@@ -92,23 +92,34 @@ class AuthController extends Controller
     /**
      * Handle email verification & auto-approval
      */
-    public function verifyEmail($token)
-    {
-        $user = User::where('email_verification_token', $token)->firstOrFail();
-
-        $user->email_verified_at = now();
-        $user->email_verification_token = null;
-        $user->is_approved = 1;
-        $user->save();
-
-        if ($user->company) {
-            $user->company->is_user_approved = 1;
-            $user->company->save();
-        }
-
+public function verifyEmail($token)
+{
+    \Log::info('Verification token received:', ['token' => $token]);
+    
+    // Find user with this token
+    $user = User::where('email_verification_token', $token)->first();
+    
+    if (!$user) {
+        \Log::error('User not found for token:', ['token' => $token]);
         return redirect()->route('login')
-            ->with('success', 'Email verified! Your account and company have been automatically approved.');
+            ->with('error', 'Invalid verification token.');
     }
+    
+    \Log::info('User found:', ['user_id' => $user->id, 'email' => $user->email]);
+    
+    $user->email_verified_at = now();
+    $user->email_verification_token = null;
+    $user->is_approved = 1;
+    $user->save();
+
+    if ($user->company) {
+        $user->company->is_user_approved = 1;
+        $user->company->save();
+    }
+
+    return redirect()->route('login')
+        ->with('success', 'Email verified! Your account and company have been automatically approved.');
+}
 
     /**
      * Show login form

@@ -22,7 +22,11 @@ class Madeni extends Model
         'jina_mkopaji',
         'simu',
         'tarehe_malipo',
+        
     ];
+protected $casts = [
+    'tarehe_malipo' => 'date',
+];
 
     /**
      * Mahusiano (Relationships)
