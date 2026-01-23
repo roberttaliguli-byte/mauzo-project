@@ -11,19 +11,20 @@ class Madeni extends Model
 
     protected $table = 'madenis';
 
-    protected $fillable = [
-        'company_id',       // Kampuni inayomiliki deni hili
-        'bidhaa_id',        // Bidhaa husika
-        'mteja_id',         // Mkopaji (mteja)
-        'idadi',
-        'bei',
-        'jumla',
-        'baki',
-        'jina_mkopaji',
-        'simu',
-        'tarehe_malipo',
-        
-    ];
+protected $fillable = [
+    'company_id',
+    'bidhaa_id',
+    'mteja_id',
+    'idadi',
+    'bei',
+    'jumla',
+    'punguzo',        // Add this
+    'punguzo_aina',   // Add this
+    'baki',
+    'jina_mkopaji',
+    'simu',
+    'tarehe_malipo',
+];
 protected $casts = [
     'tarehe_malipo' => 'date',
 ];

@@ -4,33 +4,30 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Matumizi;
-use App\Models\AinaYaMatumizi;
+use App\Models\AinaZaMatumizi;
 use Illuminate\Support\Facades\Auth;
-use App\Models\History;
+use Illuminate\Validation\Rule;
 
 class MatumiziController extends Controller
 {
     /**
-     * Get company ID for current user (works for both guards)
+     * Get company ID for current user
      */
     private function getCompanyId()
     {
-        // Check mfanyakazi guard first
         if (Auth::guard('mfanyakazi')->check()) {
             return Auth::guard('mfanyakazi')->user()->company_id;
         }
         
-        // Then check web guard for boss/admin
         if (Auth::guard('web')->check()) {
             return Auth::guard('web')->user()->company_id;
         }
         
-        // If neither guard is authenticated
         abort(403, 'Unauthorized - Please login first');
     }
     
     /**
-     * Get current authenticated user from any guard
+     * Get current authenticated user
      */
     private function getAuthUser()
     {
@@ -60,7 +57,7 @@ class MatumiziController extends Controller
     }
 
     /**
-     * Onyesha matumizi yote ya kampuni ya mtumiaji
+     * Display all expenses
      */
     public function index()
     {
@@ -70,41 +67,75 @@ class MatumiziController extends Controller
             abort(403, 'Company not found for this user');
         }
 
+        // Get expenses with pagination
         $matumizi = Matumizi::where('company_id', $company->id)
             ->latest()
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         // Get all registered expense types for this company
-        $aina_za_matumizi = AinaYaMatumizi::where('company_id', $company->id)
+        $aina_za_matumizi = AinaZaMatumizi::where('company_id', $company->id)
             ->withCount(['matumizi' => function($query) use ($company) {
                 $query->where('company_id', $company->id);
             }])
             ->latest()
             ->get();
 
-        return view('matumizi.index', compact('matumizi', 'aina_za_matumizi'));
+        // Calculate statistics
+        $totalExpenses = Matumizi::where('company_id', $company->id)->sum('gharama');
+        $todayExpenses = Matumizi::where('company_id', $company->id)
+            ->whereDate('created_at', today())
+            ->sum('gharama');
+        $expensesCount = Matumizi::where('company_id', $company->id)->count();
+        $averageExpense = $expensesCount > 0 ? $totalExpenses / $expensesCount : 0;
+
+        return view('matumizi.index', compact(
+            'matumizi', 
+            'aina_za_matumizi',
+            'totalExpenses',
+            'todayExpenses',
+            'expensesCount',
+            'averageExpense'
+        ));
     }
 
     /**
-     * Hifadhi matumizi mapya
+     * Store new expense
      */
     public function store(Request $request)
     {
         $request->validate([
             'gharama' => 'required|numeric|min:0',
-            'maelezo' => 'nullable|string',
+            'maelezo' => 'nullable|string|max:500',
             'aina' => 'nullable|string|max:255',
             'aina_mpya' => 'nullable|string|max:255',
             'tarehe' => 'nullable|date',
         ]);
 
         $company = $this->getCompany();
-        $user = $this->getAuthUser();
 
-        // Kama mtumiaji ameandika aina mpya, itumie badala ya ile ya kuchagua
+        // Use custom type if provided
         $aina = $request->filled('aina_mpya')
             ? $request->input('aina_mpya')
             : $request->input('aina');
+
+        // If using a custom type, check if it exists in aina_za_matumizi
+        if ($request->filled('aina_mpya')) {
+            $existingAina = AinaZaMatumizi::where('company_id', $company->id)
+                ->where('jina', $request->aina_mpya)
+                ->first();
+
+            if (!$existingAina) {
+                // Auto-register the new expense type
+                AinaZaMatumizi::create([
+                    'jina' => $request->aina_mpya,
+                    'maelezo' => 'Auto-generated from expense entry',
+                    'rangi' => 'bg-gray-100 text-gray-800 border border-gray-200',
+                    'kategoria' => 'mengineyo',
+                    'company_id' => $company->id,
+                ]);
+            }
+        }
 
         $matumizi = $company->matumizi()->create([
             'aina' => $aina,
@@ -113,56 +144,65 @@ class MatumiziController extends Controller
             'created_at' => $request->tarehe ?: now(),
         ]);
 
- 
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Matumizi yamehifadhiwa kwa mafanikio!',
+                'data' => $matumizi
+            ]);
+        }
 
         return redirect()->route('matumizi.index')->with('success', 'Matumizi yamehifadhiwa kwa mafanikio!');
     }
 
     /**
-     * Sajili aina mpya ya matumizi
+     * Register new expense type
      */
     public function sajiliAina(Request $request)
     {
+        $companyId = $this->getCompanyId();
+        
         $request->validate([
-            'jina' => 'required|string|max:255',
+            'jina' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('aina_za_matumizi')->where(function ($query) use ($companyId) {
+                    return $query->where('company_id', $companyId);
+                })
+            ],
             'maelezo' => 'nullable|string',
             'rangi' => 'nullable|string',
             'kategoria' => 'nullable|string'
         ]);
 
         $company = $this->getCompany();
-        $user = $this->getAuthUser();
 
-        // Check if expense type already exists for this company
-        $existingAina = AinaYaMatumizi::where('company_id', $company->id)
-            ->where('jina', $request->jina)
-            ->first();
-
-        if ($existingAina) {
-            return redirect()->back()->with('error', 'Aina ya matumizi tayari imesajiliwa!');
-        }
-
-        // Create new expense type
-        AinaYaMatumizi::create([
+        $aina = AinaZaMatumizi::create([
             'jina' => $request->jina,
             'maelezo' => $request->maelezo,
-            'rangi' => $request->rangi,
-            'kategoria' => $request->kategoria,
+            'rangi' => $request->rangi ?: 'bg-green-100 text-green-800 border border-green-200',
+            'kategoria' => $request->kategoria ?: 'mengineyo',
             'company_id' => $company->id,
         ]);
 
-      
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Aina mpya ya matumizi imesajiliwa kikamilifu!',
+                'data' => $aina
+            ]);
+        }
 
         return redirect()->route('matumizi.index')->with('success', 'Aina mpya ya matumizi imesajiliwa kikamilifu!');
     }
 
     /**
-     * Badilisha matumizi
+     * Update expense
      */
     public function update(Request $request, $id)
     {
         $companyId = $this->getCompanyId();
-        $user = $this->getAuthUser();
         
         $matumizi = Matumizi::findOrFail($id);
 
@@ -172,25 +212,29 @@ class MatumiziController extends Controller
 
         $request->validate([
             'aina' => 'required|string|max:255',
-            'maelezo' => 'nullable|string',
+            'maelezo' => 'nullable|string|max:500',
             'gharama' => 'required|numeric|min:0',
         ]);
 
-        $old = $matumizi->getOriginal();
-
         $matumizi->update($request->only('aina', 'maelezo', 'gharama'));
 
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Matumizi yamerekebishwa!',
+                'data' => $matumizi
+            ]);
+        }
 
-        return redirect()->route('matumizi.index')->with('success', 'Matumizi yamerekebishwa.');
+        return redirect()->route('matumizi.index')->with('success', 'Matumizi yamerekebishwa!');
     }
 
     /**
-     * Futa matumizi
+     * Delete expense
      */
     public function destroy($id)
     {
         $companyId = $this->getCompanyId();
-        $user = $this->getAuthUser();
         
         $matumizi = Matumizi::findOrFail($id);
 
@@ -198,25 +242,26 @@ class MatumiziController extends Controller
             abort(403, 'Huna ruhusa ya kufuta matumizi haya.');
         }
 
-        $aina = $matumizi->aina;
-        $gharama = $matumizi->gharama;
-
         $matumizi->delete();
 
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Matumizi yamefutwa kikamilifu!'
+            ]);
+        }
 
-
-        return redirect()->route('matumizi.index')->with('success', 'Matumizi yamefutwa kikamilifu.');
+        return redirect()->route('matumizi.index')->with('success', 'Matumizi yamefutwa kikamilifu!');
     }
 
     /**
-     * Futa aina ya matumizi
+     * Delete expense type
      */
     public function destroyAina($id)
     {
         $companyId = $this->getCompanyId();
-        $user = $this->getAuthUser();
         
-        $aina = AinaYaMatumizi::findOrFail($id);
+        $aina = AinaZaMatumizi::findOrFail($id);
 
         if ($aina->company_id !== $companyId) {
             abort(403, 'Huna ruhusa ya kufuta aina hii ya matumizi.');
@@ -228,13 +273,44 @@ class MatumiziController extends Controller
             ->count();
 
         if ($matumiziCount > 0) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Huwezi kufuta aina hii ya matumizi kwa sababu inatumika kwenye matumizi ' . $matumiziCount . '.'
+                ], 422);
+            }
             return redirect()->back()->with('error', 'Huwezi kufuta aina hii ya matumizi kwa sababu inatumika kwenye matumizi ' . $matumiziCount . '.');
         }
 
         $aina->delete();
 
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Aina ya matumizi imefutwa kikamilifu!'
+            ]);
+        }
 
+        return redirect()->route('matumizi.index')->with('success', 'Aina ya matumizi imefutwa kikamilifu!');
+    }
 
-        return redirect()->route('matumizi.index')->with('success', 'Aina ya matumizi imefutwa kikamilifu.');
+    /**
+     * Export expenses as PDF
+     */
+    public function exportPDF(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        
+        $matumizi = Matumizi::where('company_id', $companyId)
+            ->latest()
+            ->get();
+
+        // Generate PDF using your preferred method
+        // This is a placeholder - implement with DomPDF, TCPDF, etc.
+        return response()->json([
+            'success' => true,
+            'data' => $matumizi,
+            'total' => $matumizi->sum('gharama')
+        ]);
     }
 }

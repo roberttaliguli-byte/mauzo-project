@@ -1,419 +1,343 @@
 @extends('layouts.app')
 
-@section('title', 'Madeni - DEMODAY')
+@section('title', 'Madeni')
 
 @section('page-title', 'Madeni')
-@section('page-subtitle', 'Usimamizi wa mikopo na malipo - ' . now()->format('d/m/Y'))
+@section('page-subtitle', now()->format('d/m/Y'))
 
 @section('content')
-<div class="space-y-6">
-    <!-- Auto-dismissing Centered Notification -->
-    @if(session('success'))
-        <div class="flex justify-center">
-            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-xl p-3 md:p-4 max-w-md mx-auto notification-auto-dismiss" data-dismiss-time="2000">
-                <div class="flex items-start md:items-center">
-                    <div class="p-1 md:p-2 rounded-lg bg-green-100 text-green-600 mr-2 md:mr-3 flex-shrink-0">
-                        <i class="fas fa-check-circle text-sm md:text-base"></i>
-                    </div>
-                    <div class="flex-1 text-center">
-                        <p class="text-green-800 font-medium text-xs md:text-sm">{{ session('success') }}</p>
-                    </div>
-                </div>
-            </div>
+<div class="space-y-4">
+    <!-- Top Centered Notifications -->
+    <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none">
+        @if(session('success'))
+        <div class="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 mb-2 shadow-sm">
+            {{ session('success') }}
         </div>
-    @endif
-
-    @if($errors->any())
-        <div class="flex justify-center">
-            <div class="bg-gradient-to-r from-red-50 to-pink-50 border border-red-300 rounded-xl p-3 md:p-4 max-w-md mx-auto notification-auto-dismiss" data-dismiss-time="4000">
-                <div class="flex items-start md:items-center">
-                    <div class="p-1 md:p-2 rounded-lg bg-red-100 text-red-600 mr-2 md:mr-3 flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-sm md:text-base"></i>
-                    </div>
-                    <div class="flex-1 text-center">
-                        <h4 class="text-red-800 font-medium text-xs md:text-sm">Hitilafu katika Uwasilishaji</h4>
-                        <ul class="text-red-700 mt-1 space-y-1">
-                            @foreach($errors->all() as $error)
-                                <li class="text-xs md:text-sm">• {{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-            </div>
+        @endif
+        @if(session('error'))
+        <div class="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 mb-2 shadow-sm">
+            {{ session('error') }}
         </div>
-    @endif
-
-    <!-- Statistics Cards - Responsive Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-green-200 p-4 md:p-6 card-hover">
-            <div class="flex items-center">
-                <div class="p-2 md:p-3 rounded-lg bg-green-100 text-green-600 mr-3 md:mr-4">
-                    <i class="fas fa-money-bill-wave text-lg md:text-xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs md:text-sm text-black font-medium truncate">Jumla ya Madeni</p>
-                    <h3 class="text-lg md:text-2xl font-bold text-gray-800 truncate">TZS {{ number_format($madeni->sum('baki'), 2) }}</h3>
-                </div>
+        @endif
+        @if($errors->any())
+            @foreach($errors->all() as $error)
+            <div class="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 mb-2 shadow-sm">
+                {{ $error }}
             </div>
-        </div>
-        
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-red-100 p-4 md:p-6 card-hover">
-            <div class="flex items-center">
-                <div class="p-2 md:p-3 rounded-lg bg-red-100 text-red-600 mr-3 md:mr-4">
-                    <i class="fas fa-hand-holding-usd text-lg md:text-xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs md:text-sm text-black font-medium truncate">Mikopo yote</p>
-                    <h3 class="text-lg md:text-2xl font-bold text-black">{{ $madeni->count() }}</h3>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-green-100 p-4 md:p-6 card-hover">
-            <div class="flex items-center">
-                <div class="p-2 md:p-3 rounded-lg bg-blue-100 text-blue-600 mr-3 md:mr-4">
-                    <i class="fas fa-users text-lg md:text-xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs md:text-sm text-black font-medium truncate">Wakopaji</p>
-                    <h3 class="text-lg md:text-2xl font-bold text-gray-800">{{ $madeni->pluck('jina_mkopaji')->unique()->count() }}</h3>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-yellow-400 p-4 md:p-6 card-hover">
-            <div class="flex items-center">
-                <div class="p-2 md:p-3 rounded-lg bg-amber-100 text-amber-600 mr-3 md:mr-4">
-                    <i class="fas fa-boxes text-lg md:text-xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs md:text-sm text-black-500 font-medium truncate">Bidhaa Zilizokopwa</p>
-                    <h3 class="text-lg md:text-2xl font-bold text-gray-800">{{ $madeni->sum('idadi') }}</h3>
-                </div>
-            </div>
-        </div>
+            @endforeach
+        @endif
     </div>
 
-    <!-- Page Navigation Tabs - Mobile Friendly -->
-    <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 p-2 md:p-4 card-hover">
-        <div class="flex space-x-2 md:space-x-6 overflow-x-auto scrollbar-hide">
-            <button 
-                id="madeni-tab" 
-                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center whitespace-nowrap"
-                data-tab="madeni"
-            >
-                <i class="fas fa-list mr-1 md:mr-2 text-sm md:text-base"></i>
-                <span class="text-xs md:text-sm">Orodha ya Madeni</span>
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <a href="{{ route('madeni.index') }}" class="block bg-white p-3 rounded-lg border border-emerald-200 shadow-sm hover:bg-emerald-50 transition-colors">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Jumla ya Madeni</p>
+                    <p class="text-xl font-bold text-emerald-700">TZS {{ number_format($totalDebts, 2) }}</p>
+                </div>
+                <i class="fas fa-money-bill-wave text-emerald-500 text-lg"></i>
+            </div>
+        </a>
+        
+        <a href="{{ route('madeni.index') }}?filter=active" class="block bg-white p-3 rounded-lg border border-red-200 shadow-sm hover:bg-red-50 transition-colors">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Madeni Yanayongoza</p>
+                    <p class="text-xl font-bold text-red-700">{{ $activeDebts }}</p>
+                </div>
+                <i class="fas fa-hand-holding-usd text-red-500 text-lg"></i>
+            </div>
+        </a>
+        
+        <a href="{{ route('madeni.index') }}?filter=paid" class="block bg-white p-3 rounded-lg border border-green-200 shadow-sm hover:bg-green-50 transition-colors">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Yaliyolipwa</p>
+                    <p class="text-xl font-bold text-green-700">{{ $paidDebts }}</p>
+                </div>
+                <i class="fas fa-check-circle text-green-500 text-lg"></i>
+            </div>
+        </a>
+        
+        <a href="{{ route('madeni.index') }}" class="block bg-white p-3 rounded-lg border border-blue-200 shadow-sm hover:bg-blue-50 transition-colors">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Wakopaji</p>
+                    <p class="text-xl font-bold text-blue-700">{{ $totalBorrowers }}</p>
+                </div>
+                <i class="fas fa-users text-blue-500 text-lg"></i>
+            </div>
+        </a>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+        <div class="flex">
+            <button data-tab="madeni" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 bg-emerald-50 text-emerald-700">
+                <i class="fas fa-list mr-2"></i> Orodha
             </button>
-            <button 
-                id="marejesho-tab" 
-                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center whitespace-nowrap"
-                data-tab="marejesho"
-            >
-                <i class="fas fa-history mr-1 md:mr-2 text-sm md:text-base"></i>
-                <span class="text-xs md:text-sm">Historia ya Marejesho</span>
+            <button data-tab="marejesho" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-history mr-2"></i> Marejesho
+            </button>
+            <button data-tab="ingiza" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-plus mr-2"></i> Ingiza
             </button>
         </div>
     </div>
 
     <!-- TAB 1: Orodha ya Madeni -->
-    <div id="madeni-tab-content" class="space-y-6 tab-content">
-        <!-- Search and Actions - Mobile Optimized -->
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 p-4 md:p-6 card-hover">
-            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6 space-y-4 md:space-y-0">
-                <h2 class="text-lg md:text-xl font-bold text-gray-800">Orodha ya Madeni Yanayongoza</h2>
-                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="search-input"
-                            placeholder="Tafuta deni..." 
-                            class="w-full pl-10 pr-4 py-2 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        >
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-gray-400 text-sm md:text-base"></i>
-                        </div>
-                    </div>
-                    <button 
-                        onclick="window.print()" 
-                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm md:text-base"
+    <div id="madeni-tab-content" class="tab-content space-y-3">
+        <!-- Search Bar -->
+        <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <div class="flex-1 relative">
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="Tafuta mkopaji, bidhaa, simu..." 
+                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                        value="{{ request()->search }}"
                     >
-                        <i class="fas fa-print mr-1 md:mr-2 text-sm md:text-base"></i>
-                        <span>Print</span>
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="printDebts()" class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                        <i class="fas fa-print mr-1"></i> Print
                     </button>
+                    <a href="{{ route('madeni.export') }}" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">
+                        <i class="fas fa-file-excel mr-1"></i> Excel
+                    </a>
                 </div>
             </div>
+        </div>
 
-            <!-- Data Table - Responsive -->
-            <div class="overflow-x-auto -mx-4 md:mx-0">
-                <table class="w-full min-w-full table-auto">
+        <!-- Debts Table -->
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
                     <thead>
-                        <tr class="bg-gradient-to-r from-green-600 to-green-700">
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold text-white">Tarehe</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold text-white">Bidhaa</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-center text-xs md:text-sm font-semibold text-white">Idadi</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-semibold text-white">Baki</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold text-white">Mkopaji</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-center text-xs md:text-sm font-semibold text-white print:hidden">Vitendo</th>
+                        <tr class="bg-emerald-50">
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Bidhaa</th>
+                            <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
+                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
+                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
+                            <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
                         </tr>
                     </thead>
                     <tbody id="debts-tbody" class="divide-y divide-gray-100">
                         @forelse($madeni as $deni)
-                            <tr class="debt-row hover:bg-green-50 transition-all duration-200 
-                                @if($deni->baki <= 0) bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400 @endif"
-                                data-debt='@json($deni)'>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                                    <div class="text-xs md:text-sm font-semibold text-gray-900">
-                                        {{ \Carbon\Carbon::parse($deni->tarehe_malipo)->format('d/m/Y') }}
-                                    </div>
-                                    <div class="text-xs text-green-600 font-medium">
-                                        {{ \Carbon\Carbon::parse($deni->tarehe_malipo)->diffForHumans() }}
-                                    </div>
+                            <tr class="debt-row hover:bg-gray-50" data-debt='@json($deni)'>
+                                <td class="px-4 py-2">
+                                    <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($deni->created_at)->format('d/m/Y') }}</div>
+                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($deni->tarehe_malipo)->format('d/m/Y') }}</div>
                                 </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-8 w-8 md:h-10 md:w-10 bg-green-100 rounded-lg flex items-center justify-center text-green-800 font-semibold text-sm md:text-base">
-                                            {{ substr($deni->bidhaa->jina, 0, 1) }}
-                                        </div>
-                                        <div class="ml-2 md:ml-4">
-                                            <div class="text-xs md:text-sm font-semibold text-gray-900 debt-product truncate max-w-[100px] md:max-w-none">{{ $deni->bidhaa->jina }}</div>
-                                            <div class="text-xs text-green-600 truncate max-w-[100px] md:max-w-none">{{ $deni->bidhaa->aina }}</div>
-                                            <div class="text-xs text-gray-500 md:hidden">Bei: {{ number_format($deni->bei, 2) }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-center">
-                                    <div class="text-xs md:text-sm font-bold text-green-700">{{ $deni->idadi }}</div>
-                                </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-right">
-                                    <div class="text-xs md:text-sm font-bold 
-                                        @if($deni->baki <= 0) text-green-700
-                                        @elseif($deni->baki > 0) text-red-700 @endif">
-                                        {{ number_format($deni->baki, 2) }}
-                                    </div>
-                                    @if($deni->baki > 0)
-                                    <div class="text-xs text-red-600 font-medium">Inayongoza</div>
-                                    @else
-                                    <div class="text-xs text-green-600 font-medium">Imelipwa</div>
-                                    @endif
-                                </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                                    <div class="text-xs md:text-sm font-semibold text-gray-900 debt-borrower truncate max-w-[100px] md:max-w-none">{{ $deni->jina_mkopaji }}</div>
+                                <td class="px-4 py-2">
+                                    <div class="font-medium text-gray-900 text-sm">{{ $deni->jina_mkopaji }}</div>
                                     @if($deni->simu)
-                                    <div class="text-xs text-gray-700 flex items-center md:hidden">
-                                        <i class="fas fa-phone text-green-500 mr-1 text-xs"></i>
-                                        <span class="debt-phone truncate max-w-[80px]">{{ $deni->simu }}</span>
-                                    </div>
+                                    <div class="text-xs text-emerald-600">{{ $deni->simu }}</div>
                                     @endif
                                 </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm font-medium print:hidden">
-                                    <div class="flex justify-center space-x-1 md:space-x-2">
+                                <td class="px-4 py-2 hidden md:table-cell">
+                                    <span class="text-sm text-gray-700">{{ $deni->bidhaa->jina ?? 'N/A' }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ $deni->idadi }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    <div class="text-sm font-bold text-gray-900">{{ number_format($deni->jumla, 2) }}</div>
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold 
+                                        @if($deni->baki <= 0) bg-green-100 text-green-800
+                                        @else bg-red-100 text-red-800 @endif">
+                                        {{ number_format($deni->baki, 2) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-center print:hidden">
+                                    <div class="flex justify-center space-x-2">
                                         @if($deni->baki > 0)
-                                        <button 
-                                            class="pay-debt-btn text-green-600 hover:text-green-800 transition-colors transform hover:scale-110 p-1 md:p-0"
-                                            title="Lipa Deni"
-                                            data-id="{{ $deni->id }}"
-                                        >
-                                            <i class="fas fa-money-bill-wave text-sm md:text-base"></i>
+                                        <button class="pay-debt-btn text-green-600 hover:text-green-800"
+                                                data-id="{{ $deni->id }}" title="Lipa">
+                                            <i class="fas fa-money-bill-wave"></i>
                                         </button>
                                         @endif
-                                        <button 
-                                            class="edit-debt-btn text-amber-600 hover:text-amber-800 transition-colors transform hover:scale-110 p-1 md:p-0"
-                                            title="Badili Deni"
-                                            data-id="{{ $deni->id }}"
-                                        >
-                                            <i class="fas fa-edit text-sm md:text-base"></i>
+                                        <button class="edit-debt-btn text-amber-600 hover:text-amber-800"
+                                                data-id="{{ $deni->id }}" title="Badili">
+                                            <i class="fas fa-edit"></i>
                                         </button>
-                                        <button 
-                                            class="delete-debt-btn text-red-500 hover:text-red-700 transition-colors transform hover:scale-110 p-1 md:p-0"
-                                            title="Futa Deni"
-                                            data-id="{{ $deni->id }}"
-                                            data-name="{{ $deni->jina_mkopaji }}"
-                                        >
-                                            <i class="fas fa-trash text-sm md:text-base"></i>
+                                        <button class="delete-debt-btn text-red-600 hover:text-red-800"
+                                                data-id="{{ $deni->id }}" data-name="{{ $deni->jina_mkopaji }}" title="Futa">
+                                            <i class="fas fa-trash"></i>
                                         </button>
-                                        @if($deni->simu)
-                                        <a 
-                                            href="tel:{{ $deni->simu }}" 
-                                            class="text-blue-600 hover:text-blue-800 transition-colors transform hover:scale-110 p-1 md:p-0"
-                                            title="Piga Simu"
-                                        >
-                                            <i class="fas fa-phone text-sm md:text-base"></i>
-                                        </a>
-                                        @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-3 md:px-6 py-8 md:py-12 text-center">
-                                    <div class="flex flex-col items-center justify-center">
-                                        <i class="fas fa-hand-holding-usd text-4xl md:text-5xl text-green-300 mb-3 md:mb-4"></i>
-                                        <p class="text-base md:text-lg font-semibold text-gray-600 mb-1 md:mb-2">Hakuna madeni yaliyorekodiwa bado.</p>
-                                        <p class="text-xs md:text-sm text-gray-500">Hakuna mikopo inayongoza kwa sasa</p>
-                                    </div>
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                    <i class="fas fa-hand-holding-usd text-3xl mb-2 text-gray-300"></i>
+                                    <p>Hakuna madeni bado</p>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
-                    @if($madeni->count() > 0)
-                    <tfoot>
-                        <tr class="bg-gradient-to-r from-green-800 to-green-900">
-                            <td colspan="2" class="px-3 md:px-6 py-3 md:py-4 text-xs md:text-sm font-bold text-white text-right">Jumla:</td>
-                            <td class="px-3 md:px-6 py-3 md:py-4 text-center text-xs md:text-sm font-bold text-white">{{ $madeni->sum('idadi') }}</td>
-                            <td class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-bold text-white">
-                                TZS {{ number_format($madeni->sum('baki'), 2) }}
-                            </td>
-                            <td colspan="2" class="print:hidden"></td>
-                        </tr>
-                    </tfoot>
-                    @endif
                 </table>
             </div>
-
-            <!-- Pagination for Debts -->
-            @if($madeni instanceof \Illuminate\Pagination\LengthAwarePaginator && $madeni->hasPages())
-            <div class="mt-6 pt-4 border-t border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="text-sm text-gray-700">
-                        Onyesha {{ $madeni->firstItem() }} - {{ $madeni->lastItem() }} ya {{ $madeni->total() }} rekodi
-                    </div>
-                    <div class="flex space-x-1">
-                        {{ $madeni->links('vendor.pagination.simple-tailwind') }}
-                    </div>
-                </div>
+            
+            <!-- Pagination -->
+            @if($madeni->hasPages())
+            <div class="px-4 py-3 border-t border-gray-200">
+                {{ $madeni->links() }}
             </div>
             @endif
         </div>
+
+        <!-- Clear Filter Button -->
+        @if(request('filter'))
+        <div class="text-center">
+            <a href="{{ route('madeni.index') }}" class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">
+                <i class="fas fa-times mr-1"></i> Ondoa Filter
+            </a>
+        </div>
+        @endif
     </div>
 
     <!-- TAB 2: Historia ya Marejesho -->
     <div id="marejesho-tab-content" class="tab-content hidden">
-        <!-- Search and Actions -->
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 p-4 md:p-6 card-hover">
-            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 md:mb-6 space-y-4 md:space-y-0">
-                <h2 class="text-lg md:text-xl font-bold text-gray-800">Historia ya Marejesho ya Madeni</h2>
-                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-                    <div class="relative">
-                        <input 
-                            type="text" 
-                            id="history-search-input"
-                            placeholder="Tafuta marejesho..." 
-                            class="w-full pl-10 pr-4 py-2 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        >
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-gray-400 text-sm md:text-base"></i>
-                        </div>
-                    </div>
-                    <button 
-                        onclick="window.print()" 
-                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm md:text-base"
-                    >
-                        <i class="fas fa-print mr-1 md:mr-2 text-sm md:text-base"></i>
-                        <span>Print</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Data Table - Responsive -->
-            <div class="overflow-x-auto -mx-4 md:mx-0">
-                <table class="w-full min-w-full table-auto">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
                     <thead>
-                        <tr class="bg-gradient-to-r from-green-600 to-green-700">
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold text-white">Tarehe</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold text-white">Bidhaa</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-center text-xs md:text-sm font-semibold text-white">Idadi</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-semibold text-white">Rejesho</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-right text-xs md:text-sm font-semibold text-white">Baki</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-left text-xs md:text-sm font-semibold text-white">Mkopaji</th>
-                            <th class="px-3 md:px-6 py-3 md:py-4 text-center text-xs md:text-sm font-semibold text-white">Hali</th>
+                        <tr class="bg-emerald-50">
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Bidhaa</th>
+                            <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
+                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Rejesho</th>
+                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
                         </tr>
                     </thead>
-                    <tbody id="history-tbody" class="divide-y divide-gray-100">
-                        @forelse($historia as $h)
-                            <tr class="history-row hover:bg-green-50 transition-all duration-200">
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                                    <div class="text-xs md:text-sm font-semibold text-gray-900">{{ $h['tarehe'] }}</div>
+                    <tbody>
+                        @forelse($marejesho as $rejesho)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-2">
+                                    <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($rejesho->tarehe)->format('d/m/Y') }}</div>
                                 </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                                    <div class="text-xs md:text-sm font-semibold text-gray-900 history-product truncate max-w-[100px] md:max-w-none">{{ $h['bidhaa'] }}</div>
-                                </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-center">
-                                    <div class="text-xs md:text-sm font-bold text-green-700">{{ $h['idadi'] }}</div>
-                                </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-right">
-                                    <div class="text-xs md:text-sm font-bold text-green-700">{{ number_format($h['rejesho_leo'], 2) }}</div>
-                                    <div class="text-xs text-gray-600">Jumla: {{ number_format($h['jumla_rejeshwa'], 2) }}</div>
-                                </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-right">
-                                    <div class="text-xs md:text-sm font-bold 
-                                        @if($h['baki'] == 0) text-green-700
-                                        @else text-red-700 @endif">
-                                        {{ number_format($h['baki'], 2) }}
-                                    </div>
-                                </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap">
-                                    <div class="text-xs md:text-sm font-semibold text-gray-900 history-borrower truncate max-w-[100px] md:max-w-none">{{ $h['mkopaji'] }}</div>
-                                    @if($h['simu'])
-                                    <div class="text-xs text-gray-700 md:hidden">{{ $h['simu'] }}</div>
+                                <td class="px-4 py-2">
+                                    <div class="font-medium text-gray-900 text-sm">{{ $rejesho->madeni->jina_mkopaji }}</div>
+                                    @if($rejesho->madeni->simu)
+                                    <div class="text-xs text-emerald-600">{{ $rejesho->madeni->simu }}</div>
                                     @endif
                                 </td>
-                                
-                                <td class="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-center">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold 
-                                        @if($h['baki'] == 0) bg-green-100 text-green-800 border border-green-200
-                                        @elseif($h['status'] === 'Imelipwa') bg-blue-100 text-blue-800 border border-blue-200
-                                        @else bg-amber-100 text-amber-800 border border-amber-200 @endif">
-                                        <i class="fas 
-                                            @if($h['baki'] == 0) fa-check-circle
-                                            @elseif($h['status'] === 'Imelipwa') fa-money-bill-wave
-                                            @else fa-clock @endif mr-1 text-xs">
-                                        </i>
-                                        <span class="hidden sm:inline">{{ $h['status'] }}</span>
-                                        <span class="sm:hidden">{{ $h['baki'] == 0 ? '✓' : '●' }}</span>
+                                <td class="px-4 py-2">
+                                    <span class="text-sm text-gray-700">{{ $rejesho->madeni->bidhaa->jina ?? 'N/A' }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="text-sm">{{ $rejesho->madeni->idadi }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                        {{ number_format($rejesho->kiasi, 2) }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    <span class="text-sm font-bold 
+                                        @if($rejesho->madeni->baki <= 0) text-green-700
+                                        @else text-red-700 @endif">
+                                        {{ number_format($rejesho->madeni->baki, 2) }}
                                     </span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-3 md:px-6 py-8 md:py-12 text-center">
-                                    <div class="flex flex-col items-center justify-center">
-                                        <i class="fas fa-history text-4xl md:text-5xl text-green-300 mb-3 md:mb-4"></i>
-                                        <p class="text-base md:text-lg font-semibold text-gray-600 mb-1 md:mb-2">Hakuna marejesho yaliyorekodiwa bado.</p>
-                                        <p class="text-xs md:text-sm text-gray-500">Hakuna historia ya malipo ya mikopo</p>
-                                    </div>
+                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                    <i class="fas fa-history text-3xl mb-2 text-gray-300"></i>
+                                    <p>Hakuna historia ya marejesho bado</p>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination for History -->
-            @if(isset($historia) && $historia instanceof \Illuminate\Pagination\LengthAwarePaginator && $historia->hasPages())
-            <div class="mt-6 pt-4 border-t border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="text-sm text-gray-700">
-                        Onyesha {{ $historia->firstItem() }} - {{ $historia->lastItem() }} ya {{ $historia->total() }} rekodi
-                    </div>
-                    <div class="flex space-x-1">
-                        {{ $historia->links('vendor.pagination.simple-tailwind') }}
-                    </div>
-                </div>
+            
+            @if($marejesho->hasPages())
+            <div class="px-4 py-3 border-t border-gray-200">
+                {{ $marejesho->links() }}
             </div>
             @endif
+        </div>
+    </div>
+
+    <!-- TAB 3: Ingiza Deni -->
+    <div id="ingiza-tab-content" class="tab-content hidden">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <form method="POST" action="{{ route('madeni.store') }}" id="debt-form" class="space-y-4">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Jina la Mkopaji *</label>
+                        <input type="text" name="jina_mkopaji" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="Ingiza jina la mkopaji" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Namba ya Simu *</label>
+                        <input type="text" name="simu" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="+255 xxx xxx xxx" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Bidhaa *</label>
+                        <select name="bidhaa_id" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                required>
+                            <option value="">Chagua bidhaa...</option>
+                            @foreach($bidhaa as $product)
+                                <option value="{{ $product->id }}">{{ $product->jina }} (Stock: {{ $product->idadi }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
+                        <input type="number" name="idadi" min="1"
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="Idadi" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Bei (TZS) *</label>
+                        <input type="number" step="0.01" name="bei"
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="0.00" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Jumla (TZS) *</label>
+                        <input type="number" step="0.01" name="jumla"
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="0.00" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Tarehe ya Malipo *</label>
+                        <input type="date" name="tarehe_malipo" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               required>
+                    </div>
+                </div>
+                <div class="flex gap-2 pt-4 border-t border-gray-200">
+                    <button type="submit" 
+                            class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium">
+                        <i class="fas fa-save mr-1"></i> Hifadhi
+                    </button>
+                    <button type="reset" 
+                            class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 text-sm">
+                        <i class="fas fa-redo mr-1"></i> Safisha
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -421,61 +345,46 @@
 <!-- Pay Modal -->
 <div id="pay-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl md:rounded-2xl shadow-xl w-full max-w-md mx-auto z-50 max-h-[90vh] overflow-y-auto">
-        <div class="p-4 md:p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Lipa Deni</h3>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-50">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">Lipa Deni</h3>
         </div>
-        <form id="pay-form" method="POST" class="p-4 md:p-6 space-y-4">
+        <form id="pay-form" method="POST" class="p-4">
             @csrf
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Mkopaji</label>
-                <p id="pay-borrower-name" class="text-base md:text-lg font-semibold text-gray-900 truncate"></p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Bidhaa</label>
-                <p id="pay-product-name" class="text-sm md:text-base text-gray-700 truncate"></p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Baki Lililobaki</label>
-                    <p id="pay-remaining-balance" class="text-base md:text-lg font-bold text-red-600 truncate"></p>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Mkopaji</label>
+                    <p id="pay-borrower-name" class="text-sm font-medium text-gray-900"></p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Kiasi cha Kulipa</label>
-                    <input 
-                        type="number" 
-                        name="kiasi" 
-                        id="pay-amount"
-                        step="0.01"
-                        min="0.01"
-                        class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-right text-sm md:text-base" 
-                        required
-                    >
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Bidhaa</label>
+                    <p id="pay-product-name" class="text-sm text-gray-700"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Baki Lililobaki</label>
+                    <p id="pay-remaining-balance" class="text-sm font-bold text-red-600"></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Kiasi cha Kulipa *</label>
+                    <input type="number" step="0.01" name="kiasi" id="pay-amount"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Tarehe ya Malipo *</label>
+                    <input type="date" name="tarehe" id="pay-date"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
                 </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Tarehe ya Malipo</label>
-                <input 
-                    type="date" 
-                    name="tarehe" 
-                    id="pay-date"
-                    class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base" 
-                    required
-                >
-            </div>
-            <div class="flex justify-end space-x-2 md:space-x-3 pt-4">
-                <button 
-                    type="button" 
-                    id="close-pay-modal"
-                    class="px-4 md:px-6 py-2 md:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm md:text-base"
-                >
+            <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
+                <button type="button" id="close-pay-modal"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
                     Ghairi
                 </button>
-                <button 
-                    type="submit" 
-                    class="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm md:text-base"
-                >
-                    <i class="fas fa-money-bill-wave mr-1 md:mr-2"></i>Thibitisha
+                <button type="submit"
+                        class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                    <i class="fas fa-money-bill-wave mr-1"></i> Thibitisha
                 </button>
             </div>
         </form>
@@ -485,77 +394,55 @@
 <!-- Edit Modal -->
 <div id="edit-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl md:rounded-2xl shadow-xl w-full max-w-md mx-auto z-50 max-h-[90vh] overflow-y-auto">
-        <div class="p-4 md:p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Badilisha Taarifa za Deni</h3>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-50 max-h-[90vh] overflow-y-auto">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">Badilisha Deni</h3>
         </div>
-        <form id="edit-form" method="POST" class="p-4 md:p-6 space-y-3 md:space-y-4">
+        <form id="edit-form" method="POST" class="p-4">
             @csrf
             @method('PUT')
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Bidhaa ID</label>
-                <input 
-                    type="number" 
-                    name="bidhaa_id" 
-                    id="edit-bidhaa-id"
-                    class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base" 
-                    required
-                >
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Jina la Mkopaji *</label>
+                    <input type="text" name="jina_mkopaji" id="edit-jina-mkopaji"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Namba ya Simu</label>
+                    <input type="text" name="simu" id="edit-simu"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Bidhaa *</label>
+                    <select name="bidhaa_id" id="edit-bidhaa-id"
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                            required>
+                        @foreach($bidhaa as $product)
+                            <option value="{{ $product->id }}">{{ $product->jina }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
+                    <input type="number" name="idadi" id="edit-idadi" min="1"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Bei (TZS) *</label>
+                    <input type="number" step="0.01" name="bei" id="edit-bei"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Idadi</label>
-                <input 
-                    type="number" 
-                    name="idadi" 
-                    id="edit-quantity"
-                    min="1"
-                    class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base" 
-                    required
-                >
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Bei (TZS)</label>
-                <input 
-                    type="number" 
-                    name="bei" 
-                    id="edit-price"
-                    step="0.01"
-                    min="0.01"
-                    class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base" 
-                    required
-                >
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Mkopaji</label>
-                <input 
-                    type="text" 
-                    name="jina_mkopaji" 
-                    id="edit-borrower-name"
-                    class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base" 
-                    required
-                >
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1 md:mb-2">Simu</label>
-                <input 
-                    type="text" 
-                    name="simu" 
-                    id="edit-phone"
-                    class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base"
-                >
-            </div>
-            <div class="flex justify-end space-x-2 md:space-x-3 pt-4">
-                <button 
-                    type="button" 
-                    id="close-edit-modal"
-                    class="px-4 md:px-6 py-2 md:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm md:text-base"
-                >
+            <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
+                <button type="button" id="close-edit-modal"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
                     Ghairi
                 </button>
-                <button 
-                    type="submit" 
-                    class="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm md:text-base"
-                >
+                <button type="submit"
+                        class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
                     Hifadhi
                 </button>
             </div>
@@ -566,31 +453,28 @@
 <!-- Delete Modal -->
 <div id="delete-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl md:rounded-2xl shadow-xl w-full max-w-md mx-auto z-50">
-        <div class="p-4 md:p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Thibitisha Kufuta Deni</h3>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-auto z-50">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">Thibitisha Kufuta</h3>
         </div>
-        <div class="p-4 md:p-6">
-            <p class="text-gray-700 mb-4 md:mb-6 text-center text-sm md:text-base">
-                Una uhakika unataka kufuta deni la 
-                "<span id="delete-debt-name" class="font-semibold"></span>"?
-                <br class="hidden sm:block">Hatua hii haiwezi kutenduliwa.
-            </p>
-            <div class="flex justify-center space-x-2 md:space-x-3">
-                <button 
-                    id="cancel-delete"
-                    class="px-4 md:px-6 py-2 md:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm md:text-base"
-                >
+        <div class="p-4">
+            <div class="text-center mb-4">
+                <i class="fas fa-exclamation-triangle text-amber-500 text-2xl mb-2"></i>
+                <p class="text-gray-700 text-sm mb-1">Una uhakika unataka kufuta deni?</p>
+                <p class="text-gray-900 font-medium" id="delete-debt-name"></p>
+                <p class="text-gray-500 text-xs mt-2">Hatua hii haiwezi kutenduliwa</p>
+            </div>
+            <div class="flex gap-2">
+                <button id="cancel-delete"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
                     Ghairi
                 </button>
-                <form id="delete-form" method="POST">
+                <form id="delete-form" method="POST" class="flex-1">
                     @csrf
                     @method('DELETE')
-                    <button 
-                        type="submit" 
-                        class="px-4 md:px-6 py-2 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm md:text-base"
-                    >
-                        Ndio, Futa
+                    <button type="submit"
+                            class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                        Futa
                     </button>
                 </form>
             </div>
@@ -601,38 +485,19 @@
 
 @push('styles')
 <style>
-@media (max-width: 640px) {
-    .modal-content {
-        margin: 0;
-        border-radius: 0.75rem;
-    }
+/* Tab active state */
+.tab-button.active {
+    background-color: #f0fdf4;
+    color: #059669;
+    font-weight: 600;
 }
 
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
+.tab-button:not(.active) {
+    background-color: transparent;
+    color: #6b7280;
 }
 
-.modal {
-    transition: opacity 0.3s ease;
-}
-
-.tab-content {
-    transition: opacity 0.3s ease;
-}
-
-.hidden {
-    display: none !important;
-}
-
-.debt-row.hidden, .history-row.hidden {
-    display: none;
-}
-
-/* Auto-dismiss notification animation */
+/* Notification auto-dismiss animation */
 .notification-auto-dismiss {
     animation: fadeIn 0.3s ease-in;
     transition: opacity 0.5s ease-out;
@@ -643,55 +508,16 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Pagination Styles */
-.pagination {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+/* Modal animations */
+.modal {
+    transition: opacity 0.3s ease;
 }
 
-.pagination li {
-    margin: 0 2px;
-}
-
-.pagination li a,
-.pagination li span {
-    display: block;
-    padding: 8px 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    color: #4b5563;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-.pagination li a:hover {
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
-}
-
-.pagination li.active span {
-    background-color: #10b981;
-    color: white;
-    border-color: #10b981;
-}
-
-.pagination li.disabled span {
-    color: #9ca3af;
-    cursor: not-allowed;
-}
-
-/* Tab active state */
-.tab-button.active {
-    border-bottom: 2px solid #10b981 !important;
-    color: #059669 !important;
-    font-weight: 600 !important;
-}
-
-.tab-button:not(.active) {
-    color: #6b7280 !important;
+/* Hide elements when printing */
+@media print {
+    .print\:hidden {
+        display: none !important;
+    }
 }
 </style>
 @endpush
@@ -700,54 +526,45 @@
 <script>
 class MadeniManager {
     constructor() {
-        // Get initial tab from URL hash or default to 'madeni'
-        const hash = window.location.hash.substring(1);
-        this.currentTab = hash === 'madeni' || hash === 'marejesho' ? hash : 'madeni';
-        this.searchQuery = '';
+        this.currentTab = this.getSavedTab() || 'madeni';
+        this.searchTimeout = null;
         this.init();
     }
 
     init() {
         this.bindEvents();
-        this.showTab(this.currentTab);  // Use the stored tab
+        this.showTab(this.currentTab);
+        this.setupAjaxForms();
         this.setTodayDate();
         this.autoDismissNotifications();
-        this.preventFormResubmission();
+    }
+
+    getSavedTab() {
+        return sessionStorage.getItem('madeni_tab') || 'madeni';
+    }
+
+    saveTab(tab) {
+        sessionStorage.setItem('madeni_tab', tab);
     }
 
     bindEvents() {
         // Tab navigation
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', (e) => {
-                e.preventDefault();
                 const tab = e.target.closest('.tab-button').dataset.tab;
                 this.showTab(tab);
+                this.saveTab(tab);
             });
         });
 
-        // Listen for hash changes (back/forward buttons)
-        window.addEventListener('hashchange', () => {
-            const hash = window.location.hash.substring(1);
-            if (hash === 'madeni' || hash === 'marejesho') {
-                this.showTab(hash);
-            }
-        });
-
-        // Search functionality for debts
+        // Search with debounce
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
-                this.searchQuery = e.target.value.toLowerCase();
-                this.filterDebts();
-            });
-        }
-
-        // Search functionality for history
-        const historySearchInput = document.getElementById('history-search-input');
-        if (historySearchInput) {
-            historySearchInput.addEventListener('input', (e) => {
-                this.searchQuery = e.target.value.toLowerCase();
-                this.filterHistory();
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.filterDebts(e.target.value.toLowerCase().trim());
+                }, 300);
             });
         }
 
@@ -759,21 +576,14 @@ class MadeniManager {
     }
 
     showTab(tabName) {
-        this.currentTab = tabName;
-        
-        // Update URL hash without causing page jump
-        history.replaceState(null, null, '#' + tabName);
-        
         // Update tabs
         document.querySelectorAll('.tab-button').forEach(button => {
             if (button.dataset.tab === tabName) {
-                button.classList.add('active');
-                button.classList.add('border-b-2', 'border-green-500', 'text-green-600', 'font-semibold');
-                button.classList.remove('text-gray-500');
+                button.classList.add('bg-emerald-50', 'text-emerald-700');
+                button.classList.remove('text-gray-600', 'hover:bg-gray-50');
             } else {
-                button.classList.remove('active');
-                button.classList.remove('border-b-2', 'border-green-500', 'text-green-600', 'font-semibold');
-                button.classList.add('text-gray-500');
+                button.classList.remove('bg-emerald-50', 'text-emerald-700');
+                button.classList.add('text-gray-600', 'hover:bg-gray-50');
             }
         });
 
@@ -782,30 +592,26 @@ class MadeniManager {
             content.classList.add('hidden');
         });
         
-        const activeContent = document.getElementById(`${tabName}-tab-content`);
-        if (activeContent) {
-            activeContent.classList.remove('hidden');
-        }
+        document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
+        this.currentTab = tabName;
     }
 
     bindDebtActions() {
         // Pay buttons
         document.querySelectorAll('.pay-debt-btn').forEach(button => {
             button.addEventListener('click', (e) => {
-                const debtId = e.target.closest('.pay-debt-btn').dataset.id;
                 const row = e.target.closest('.debt-row');
-                const debtData = JSON.parse(row.dataset.debt);
-                this.openPayModal(debtData);
+                const debt = JSON.parse(row.dataset.debt);
+                this.openPayModal(debt);
             });
         });
 
         // Edit buttons
         document.querySelectorAll('.edit-debt-btn').forEach(button => {
             button.addEventListener('click', (e) => {
-                const debtId = e.target.closest('.edit-debt-btn').dataset.id;
                 const row = e.target.closest('.debt-row');
-                const debtData = JSON.parse(row.dataset.debt);
-                this.openEditModal(debtData);
+                const debt = JSON.parse(row.dataset.debt);
+                this.openEditModal(debt);
             });
         });
 
@@ -824,161 +630,350 @@ class MadeniManager {
         const payModal = document.getElementById('pay-modal');
         const closePayBtn = document.getElementById('close-pay-modal');
 
-        closePayBtn.addEventListener('click', () => {
-            payModal.classList.add('hidden');
-        });
-
-        payModal.addEventListener('click', (e) => {
-            if (e.target === payModal || e.target.classList.contains('modal-overlay')) {
-                payModal.classList.add('hidden');
-            }
-        });
+        if (closePayBtn) {
+            closePayBtn.addEventListener('click', () => payModal.classList.add('hidden'));
+        }
+        
+        if (payModal) {
+            payModal.addEventListener('click', (e) => {
+                if (e.target === payModal || e.target.classList.contains('modal-overlay')) {
+                    payModal.classList.add('hidden');
+                }
+            });
+        }
 
         // Edit modal
         const editModal = document.getElementById('edit-modal');
         const closeEditBtn = document.getElementById('close-edit-modal');
 
-        closeEditBtn.addEventListener('click', () => {
-            editModal.classList.add('hidden');
-        });
-
-        editModal.addEventListener('click', (e) => {
-            if (e.target === editModal || e.target.classList.contains('modal-overlay')) {
-                editModal.classList.add('hidden');
-            }
-        });
+        if (closeEditBtn) {
+            closeEditBtn.addEventListener('click', () => editModal.classList.add('hidden'));
+        }
+        
+        if (editModal) {
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal || e.target.classList.contains('modal-overlay')) {
+                    editModal.classList.add('hidden');
+                }
+            });
+        }
 
         // Delete modal
         const deleteModal = document.getElementById('delete-modal');
         const cancelDeleteBtn = document.getElementById('cancel-delete');
 
-        cancelDeleteBtn.addEventListener('click', () => {
-            deleteModal.classList.add('hidden');
-        });
+        if (cancelDeleteBtn) {
+            cancelDeleteBtn.addEventListener('click', () => deleteModal.classList.add('hidden'));
+        }
+        
+        if (deleteModal) {
+            deleteModal.addEventListener('click', (e) => {
+                if (e.target === deleteModal || e.target.classList.contains('modal-overlay')) {
+                    deleteModal.classList.add('hidden');
+                }
+            });
+        }
 
-        deleteModal.addEventListener('click', (e) => {
-            if (e.target === deleteModal || e.target.classList.contains('modal-overlay')) {
-                deleteModal.classList.add('hidden');
-            }
-        });
-
-        // Close modals on Escape key
+        // Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                payModal.classList.add('hidden');
-                editModal.classList.add('hidden');
-                deleteModal.classList.add('hidden');
+                if (payModal) payModal.classList.add('hidden');
+                if (editModal) editModal.classList.add('hidden');
+                if (deleteModal) deleteModal.classList.add('hidden');
             }
         });
     }
 
-    filterDebts() {
+    filterDebts(searchTerm) {
         const rows = document.querySelectorAll('.debt-row');
+        let found = false;
         
         rows.forEach(row => {
-            const borrower = row.querySelector('.debt-borrower').textContent.toLowerCase();
-            const product = row.querySelector('.debt-product').textContent.toLowerCase();
-            const phone = row.querySelector('.debt-phone')?.textContent.toLowerCase() || '';
+            const debt = JSON.parse(row.dataset.debt);
+            const searchText = `
+                ${debt.jina_mkopaji || ''}
+                ${debt.simu || ''}
+                ${debt.bidhaa?.jina || ''}
+            `.toLowerCase();
             
-            const matches = borrower.includes(this.searchQuery) || 
-                           product.includes(this.searchQuery) || 
-                           phone.includes(this.searchQuery);
-            
-            if (matches || this.searchQuery === '') {
+            if (searchText.includes(searchTerm) || !searchTerm) {
                 row.classList.remove('hidden');
+                found = true;
             } else {
                 row.classList.add('hidden');
             }
         });
-    }
 
-    filterHistory() {
-        const rows = document.querySelectorAll('.history-row');
-        
-        rows.forEach(row => {
-            const borrower = row.querySelector('.history-borrower').textContent.toLowerCase();
-            const product = row.querySelector('.history-product').textContent.toLowerCase();
-            
-            const matches = borrower.includes(this.searchQuery) || 
-                           product.includes(this.searchQuery);
-            
-            if (matches || this.searchQuery === '') {
-                row.classList.remove('hidden');
-            } else {
-                row.classList.add('hidden');
-            }
-        });
+        if (!found && searchTerm) {
+            this.showNotification('Hakuna madeni yanayolingana', 'info');
+        }
     }
 
     openPayModal(debt) {
         // Populate pay modal
         document.getElementById('pay-borrower-name').textContent = debt.jina_mkopaji;
-        document.getElementById('pay-product-name').textContent = debt.bidhaa.jina;
+        document.getElementById('pay-product-name').textContent = debt.bidhaa?.jina || 'N/A';
         document.getElementById('pay-remaining-balance').textContent = `TZS ${parseFloat(debt.baki).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
         // Set form action and max amount
         document.getElementById('pay-form').action = `/madeni/${debt.id}/rejesha`;
         document.getElementById('pay-amount').value = parseFloat(debt.baki);
         document.getElementById('pay-amount').max = parseFloat(debt.baki);
-
-        // Show modal
-        document.getElementById('pay-modal').classList.remove('hidden');
+        document.getElementById('pay-amount').min = 0.01;
+        
+        const payModal = document.getElementById('pay-modal');
+        if (payModal) payModal.classList.remove('hidden');
     }
 
     openEditModal(debt) {
-        // Populate edit form
+        const editForm = document.getElementById('edit-form');
+        if (!editForm) return;
+
+        document.getElementById('edit-jina-mkopaji').value = debt.jina_mkopaji;
+        document.getElementById('edit-simu').value = debt.simu || '';
         document.getElementById('edit-bidhaa-id').value = debt.bidhaa_id;
-        document.getElementById('edit-quantity').value = debt.idadi;
-        document.getElementById('edit-price').value = debt.bei;
-        document.getElementById('edit-borrower-name').value = debt.jina_mkopaji;
-        document.getElementById('edit-phone').value = debt.simu || '';
-
-        // Set form action
-        document.getElementById('edit-form').action = `/madeni/${debt.id}`;
-
-        // Show modal
-        document.getElementById('edit-modal').classList.remove('hidden');
+        document.getElementById('edit-idadi').value = debt.idadi;
+        document.getElementById('edit-bei').value = debt.bei;
+        editForm.action = `/madeni/${debt.id}`;
+        
+        const editModal = document.getElementById('edit-modal');
+        if (editModal) editModal.classList.remove('hidden');
     }
 
     openDeleteModal(debtId, debtName) {
-        // Populate delete modal
-        document.getElementById('delete-debt-name').textContent = debtName;
-        document.getElementById('delete-form').action = `/madeni/${debtId}`;
+        const deleteForm = document.getElementById('delete-form');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteDebtName = document.getElementById('delete-debt-name');
+        
+        if (!deleteForm || !deleteModal || !deleteDebtName) return;
+        
+        deleteDebtName.textContent = debtName;
+        deleteForm.action = `/madeni/${debtId}`;
+        deleteModal.classList.remove('hidden');
+    }
 
-        // Show modal
-        document.getElementById('delete-modal').classList.remove('hidden');
+    setupAjaxForms() {
+        // Debt form
+        const debtForm = document.getElementById('debt-form');
+        if (debtForm) {
+            debtForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.submitForm(debtForm, 'Deni limehifadhiwa!');
+            });
+        }
+
+        // Pay form
+        const payForm = document.getElementById('pay-form');
+        if (payForm) {
+            payForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const amountInput = document.getElementById('pay-amount');
+                const maxAmount = parseFloat(amountInput.max);
+                const amount = parseFloat(amountInput.value);
+                
+                if (amount > maxAmount) {
+                    this.showNotification(`Kiasi kimezidi baki (max: ${maxAmount.toLocaleString()})`, 'error');
+                    return;
+                }
+                
+                await this.submitForm(payForm, 'Rejesho limehifadhiwa!');
+                document.getElementById('pay-modal').classList.add('hidden');
+            });
+        }
+
+        // Edit form
+        const editForm = document.getElementById('edit-form');
+        if (editForm) {
+            editForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.submitForm(editForm, 'Deni limebadilishwa!');
+                document.getElementById('edit-modal').classList.add('hidden');
+            });
+        }
+
+        // Delete form
+        const deleteForm = document.getElementById('delete-form');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.submitForm(deleteForm, 'Deni limefutwa!');
+                document.getElementById('delete-modal').classList.add('hidden');
+            });
+        }
+    }
+
+    async submitForm(form, successMessage = 'Operesheni imekamilika!') {
+        const formData = new FormData(form);
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        
+        try {
+            // Disable submit button
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Inatumwa...';
+            
+            const response = await fetch(form.action, {
+                method: form.method,
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const message = data.message || successMessage;
+                this.showNotification(message, 'success');
+                
+                // Don't reload for specific operations
+                if (!form.id.includes('pay-form') && !form.id.includes('edit-form') && !form.id.includes('delete-form')) {
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    setTimeout(() => window.location.reload(), 500);
+                }
+            } else {
+                const error = data.errors ? Object.values(data.errors)[0][0] : data.message;
+                this.showNotification(error || 'Hitilafu imetokea', 'error');
+            }
+        } catch (error) {
+            this.showNotification('Hitilafu ya mtandao', 'error');
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        }
     }
 
     setTodayDate() {
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('pay-date').value = today;
+        const payDate = document.getElementById('pay-date');
+        if (payDate) {
+            payDate.value = today;
+        }
+        
+        // Set default payment date to today
+        const tareheMalipo = document.querySelector('input[name="tarehe_malipo"]');
+        if (tareheMalipo && !tareheMalipo.value) {
+            tareheMalipo.value = today;
+        }
     }
 
     autoDismissNotifications() {
-        // Auto-dismiss notifications after specified time
         document.querySelectorAll('.notification-auto-dismiss').forEach(notification => {
-            const dismissTime = notification.getAttribute('data-dismiss-time') || 2000;
+            const dismissTime = 3000; // 3 seconds
             
             setTimeout(() => {
                 notification.style.opacity = '0';
                 setTimeout(() => {
                     notification.remove();
                 }, 500);
-            }, parseInt(dismissTime));
+            }, dismissTime);
         });
     }
 
-    preventFormResubmission() {
-        // Prevent form resubmission on page refresh
-        if (window.history.replaceState) {
-            window.history.replaceState(null, null, window.location.href);
-        }
+    showNotification(message, type = 'info') {
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+        
+        const colors = {
+            success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+            error: 'bg-red-50 border-red-200 text-red-800',
+            warning: 'bg-amber-50 border-amber-200 text-amber-800',
+            info: 'bg-blue-50 border-blue-200 text-blue-800'
+        };
+
+        const notification = document.createElement('div');
+        notification.className = `rounded border px-4 py-3 text-sm font-medium mb-2 ${colors[type]} shadow-sm animate-fade-in notification-auto-dismiss`;
+        notification.textContent = message;
+
+        container.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-10px) translateX(-50%)';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 }
 
-// Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    new MadeniManager();
+// Print function
+function printDebts() {
+    const printWindow = window.open('', '_blank');
+    const rows = document.querySelectorAll('.debt-row');
+    
+    let tableRows = '';
+    rows.forEach(row => {
+        const debt = JSON.parse(row.dataset.debt);
+        tableRows += `
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${new Date(debt.created_at).toLocaleDateString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${debt.jina_mkopaji}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${debt.bidhaa?.jina || 'N/A'}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${debt.idadi}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(debt.jumla).toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(debt.baki).toLocaleString()}</td>
+            </tr>`;
+    });
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Orodha ya Madeni - ${new Date().toLocaleDateString()}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; }
+                th { background-color: #f3f4f6; font-weight: bold; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .header h2 { margin: 0; color: #047857; }
+                .header p { margin: 5px 0 0 0; color: #6b7280; }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2>Orodha ya Madeni</h2>
+                <p>${new Date().toLocaleDateString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tarehe</th>
+                        <th>Mkopaji</th>
+                        <th>Bidhaa</th>
+                        <th>Idadi</th>
+                        <th>Deni</th>
+                        <th>Baki</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    window.madeniManager = new MadeniManager();
+    
+    // Save tab state
+    window.addEventListener('beforeunload', () => {
+        if (window.madeniManager) {
+            window.madeniManager.saveTab(window.madeniManager.currentTab);
+        }
+    });
 });
 </script>
 @endpush

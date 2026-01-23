@@ -83,10 +83,6 @@
             background-color: #f9fafb;
         }
         
-        .text-center {
-            text-align: center;
-        }
-        
         .footer {
             margin-top: 20px;
             padding-top: 10px;
@@ -102,89 +98,55 @@
             color: #9ca3af;
             font-style: italic;
         }
-        
-        .status-active {
-            color: #047857;
-            font-weight: bold;
-        }
-        
-        .status-inactive {
-            color: #6b7280;
-        }
-        
-        .gender-male {
-            color: #3b82f6;
-        }
-        
-        .gender-female {
-            color: #ec4899;
-        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>{{ $title }}</h1>
-        <p>Tarehe: {{ $date }} | Kampuni: {{ $company }}</p>
+        <p>Tarehe: {{ $date }}</p>
     </div>
     
     <div class="summary">
         <div class="summary-item">
-            <div class="summary-label">Jumla ya Wafanyakazi</div>
-            <div class="summary-value">{{ $total_employees }}</div>
+            <div class="summary-label">Jumla ya Wateja</div>
+            <div class="summary-value">{{ $total_wateja }}</div>
         </div>
         <div class="summary-item">
-            <div class="summary-label">Wanaoweza Kuingia</div>
-            <div class="summary-value">{{ $active_employees }}</div>
+            <div class="summary-label">Wateja wa Mwezi</div>
+            <div class="summary-value">{{ $new_this_month }}</div>
         </div>
         <div class="summary-item">
-            <div class="summary-label">Wanaume</div>
-            <div class="summary-value">{{ $wafanyakazi->where('jinsia', 'Mwanaume')->count() }}</div>
-        </div>
-        <div class="summary-item">
-            <div class="summary-label">Wanawake</div>
-            <div class="summary-value">{{ $wafanyakazi->where('jinsia', 'Mwanamke')->count() }}</div>
+            <div class="summary-label">Wateja wa Leo</div>
+            <div class="summary-value">{{ $new_today }}</div>
         </div>
     </div>
     
-    @if(count($wafanyakazi) > 0)
+    @if(count($wateja) > 0)
         <table>
             <thead>
                 <tr>
                     <th style="width: 25%;">Jina</th>
                     <th style="width: 15%;">Simu</th>
-                    <th style="width: 10%;" class="text-center">Jinsia</th>
-                    <th style="width: 10%;" class="text-center">Umri</th>
-                    <th style="width: 15%;" class="text-center">Username</th>
-                    <th style="width: 15%;" class="text-center">Hali</th>
-                    <th style="width: 10%;" class="text-center">Tarehe</th>
+                    <th style="width: 20%;">Barua Pepe</th>
+                    <th style="width: 25%;">Anuani</th>
+                    <th style="width: 15%;">Tarehe</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($wafanyakazi as $item)
-                    @php
-                        $age = $item->tarehe_kuzaliwa ? 
-                            \Carbon\Carbon::parse($item->tarehe_kuzaliwa)->age . ' yrs' : 
-                            '--';
-                    @endphp
+                @foreach($wateja as $item)
                     <tr>
                         <td>{{ $item->jina }}</td>
-                        <td>{{ $item->simu ?? '--' }}</td>
-                        <td class="text-center gender-{{ strtolower($item->jinsia === 'Mwanaume' ? 'male' : 'female') }}">
-                            {{ $item->jinsia === 'Mwanaume' ? 'M' : 'F' }}
-                        </td>
-                        <td class="text-center">{{ $age }}</td>
-                        <td class="text-center">{{ $item->username ?? '--' }}</td>
-                        <td class="text-center status-{{ $item->getini === 'ingia' ? 'active' : 'inactive' }}">
-                            {{ $item->getini === 'ingia' ? 'Ingia' : 'Simama' }}
-                        </td>
-                        <td class="text-center">{{ \Carbon\Carbon::parse($item->created_at)->format('d/m/Y') }}</td>
+                        <td>{{ $item->simu }}</td>
+                        <td>{{ $item->barua_pepe ?: '--' }}</td>
+                        <td>{{ $item->anapoishi ?: '--' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d/m/Y') }}</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
     @else
         <div class="no-data">
-            <p>Hakuna taarifa za wafanyakazi zilizopatikana.</p>
+            <p>Hakuna taarifa za wateja zilizopatikana.</p>
         </div>
     @endif
     

@@ -13,137 +13,132 @@
         <div class="bg-white rounded-xl lg:rounded-2xl shadow-xl lg:shadow-2xl p-4 lg:p-6 max-w-sm mx-4 border transform transition-all duration-300 scale-95">
             <div class="flex flex-col items-center text-center">
                 <div id="notification-icon" class="text-3xl lg:text-4xl mb-3 lg:mb-4"></div>
-                <p id="notification-message" class="text-base lg:text-lg font-semibold"></p>
+                <p id="notification-message" class="text-base lg:text-lg font-semibold text-black"></p>
+                <div id="notification-buttons" class="mt-4 space-x-2 hidden">
+                    <button id="notification-confirm" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm">Ndio, Futa</button>
+                    <button id="notification-cancel" class="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm">Ghairi</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Page Navigation Tabs -->
-    <div class="bg-white rounded-xl lg:rounded-2xl shadow-lg border border-gray-100 p-3 lg:p-4 card-hover">
-        <div class="flex overflow-x-auto pb-2 lg:pb-0" id="tab-nav">
-            <div class="flex space-x-2 lg:space-x-6">
-                <button id="sehemu-tab" class="tab-button active pb-3 px-3 lg:px-4 transition-colors flex items-center border-b-2 border-green-500 text-green-600 font-semibold whitespace-nowrap text-sm lg:text-base" data-tab="sehemu">
-                    <i class="fas fa-cash-register mr-2 text-xs lg:text-sm"></i>Sehemu
+    <!-- Main Container with All Tabs -->
+    <div class="bg-white rounded-xl lg:rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 card-hover">
+        <!-- Tab Navigation -->
+        <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl p-1 lg:p-2 mb-4 lg:mb-6 shadow-md">
+            <div class="flex flex-wrap gap-1 lg:gap-2" id="tab-nav">
+                <button id="sehemu-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center border-b-2 border-white text-white font-semibold whitespace-nowrap text-xs lg:text-sm" data-tab="sehemu">
+                    <i class="fas fa-cash-register mr-1 lg:mr-2 text-xs"></i>Sehemu ya Mauzo
                 </button>
-                <button id="barcode-tab" class="tab-button pb-3 px-3 lg:px-4 transition-colors flex items-center text-gray-500 hover:text-gray-700 whitespace-nowrap text-sm lg:text-base" data-tab="barcode">
-                    <i class="fas fa-barcode mr-2 text-xs lg:text-sm"></i>Barcode
+                <button id="barcode-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white whitespace-nowrap text-xs lg:text-sm" data-tab="barcode">
+                    <i class="fas fa-barcode mr-1 lg:mr-2 text-xs"></i>Barcode
                 </button>
-                <button id="taarifa-tab" class="tab-button pb-3 px-3 lg:px-4 transition-colors flex items-center text-gray-500 hover:text-gray-700 whitespace-nowrap text-sm lg:text-base" data-tab="taarifa">
-                    <i class="fas fa-file-alt mr-2 text-xs lg:text-sm"></i>Taarifa
+                <button id="taarifa-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white whitespace-nowrap text-xs lg:text-sm" data-tab="taarifa">
+                    <i class="fas fa-file-alt mr-1 lg:mr-2 text-xs"></i>Taarifa
                 </button>
-                <button id="jumla-tab" class="tab-button pb-3 px-3 lg:px-4 transition-colors flex items-center text-gray-500 hover:text-gray-700 whitespace-nowrap text-sm lg:text-base" data-tab="jumla">
-                    <i class="fas fa-chart-bar mr-2 text-xs lg:text-sm"></i>Jumla
+                <button id="jumla-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white whitespace-nowrap text-xs lg:text-sm" data-tab="jumla">
+                    <i class="fas fa-chart-bar mr-1 lg:mr-2 text-xs"></i>Jumla
                 </button>
-                <button id="kikapu-btn" class="pb-3 px-3 lg:px-4 transition-colors flex items-center text-gray-500 hover:text-gray-700 relative whitespace-nowrap text-sm lg:text-base">
-                    <i class="fas fa-shopping-cart mr-2 text-xs lg:text-sm"></i>Kikapu
+                <button id="kikapu-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white relative whitespace-nowrap text-xs lg:text-sm" data-tab="kikapu">
+                    <i class="fas fa-shopping-cart mr-1 lg:mr-2 text-xs"></i>Kikapu
                     <span id="cart-count" class="absolute -top-1 -right-1 lg:-top-2 lg:-right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center hidden">0</span>
                 </button>
-                <button id="risiti-tab" class="tab-button pb-3 px-3 lg:px-4 transition-colors flex items-center text-gray-500 hover:text-gray-700 whitespace-nowrap text-sm lg:text-base" data-tab="risiti">
-                    <i class="fas fa-receipt mr-2 text-xs lg:text-sm"></i>Risiti
+                <button id="risiti-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white whitespace-nowrap text-xs lg:text-sm" data-tab="risiti">
+                    <i class="fas fa-receipt mr-1 lg:mr-2 text-xs"></i>Risiti
                 </button>
             </div>
         </div>
-    </div>
 
-    <!-- TAB 1: Sehemu ya Mauzo -->
-    <div id="sehemu-tab-content" class="space-y-4 lg:space-y-6 tab-content active">
-        <!-- Sales Form -->
-        <div class="bg-white rounded-xl lg:rounded-2xl shadow-lg border border-green-200 p-4 lg:p-6">
-            <h2 class="text-lg lg:text-xl font-bold text-emerald-800 mb-3 lg:mb-4 flex items-center">
-                <i class="fas fa-cash-register mr-2 text-emerald-600 text-sm lg:text-base"></i>
-                Rekodi Mauzo Mapya
-            </h2>
+        <!-- TAB 1: Sehemu ya Mauzo -->
+        <div id="sehemu-tab-content" class="space-y-4 tab-content active">
+            <!-- Sales Form - Compact Version -->
+            <div class="bg-white rounded-xl shadow border border-emerald-100 p-4 card-hover">
+                <h2 class="text-base lg:text-lg font-bold text-emerald-800 mb-3 flex items-center">
+                    <i class="fas fa-cash-register mr-2 text-emerald-600 text-sm"></i>
+                    Rekodi Mauzo
+                </h2>
 
-            <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-4" id="sales-form">
-                @csrf
+                <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-3" id="sales-form">
+                    @csrf
 
-                <!-- Product and Basic Info -->
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 lg:gap-4">
-                    <!-- Bidhaa with Search -->
-                    <div class="lg:col-span-2">
-                        <label class="block text-sm font-semibold text-emerald-800 mb-1">Bidhaa</label>
-                        <div class="relative">
-                            <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-emerald-200 rounded-lg p-2 lg:p-3 text-sm focus:ring-2 focus:ring-emerald-200">
-                            <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
-                                <option value="">Chagua Bidhaa...</option>
-                                @foreach($bidhaa as $item)
-                                <option
-                                    value="{{ $item->id }}"
-                                    data-bei="{{ $item->bei_kuuza }}"
-                                    data-stock="{{ $item->idadi }}"
-                                    data-jina="{{ e($item->jina) }}"
-                                    data-aina="{{ e($item->aina) }}"
-                                    data-kipimo="{{ e($item->kipimo) }}"
-                                >
-                                    {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Idadi -->
-                    <div>
-                        <label class="block text-sm font-semibold text-emerald-800 mb-1">Idadi</label>
-                        <input type="number" name="idadi" id="quantity-input" min="1" value="1" class="w-full border border-emerald-200 rounded-lg p-2 lg:p-3 text-sm focus:ring-2 focus:ring-emerald-200">
-                    </div>
-
-                    <!-- Bei -->
-                    <div>
-                        <label class="block text-sm font-semibold text-emerald-800 mb-1">Bei (Tsh)</label>
-                        <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 lg:p-3 text-sm">
-                    </div>
-                </div>
-
-                <!-- Stock and Discount -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
-                    <!-- Stock -->
-                    <div>
-                        <label class="block text-sm font-semibold text-emerald-800 mb-1">Stock Ipo</label>
-                        <input type="number" id="stock-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 lg:p-3 text-sm">
-                    </div>
-
-                    <!-- Discount -->
-                    <div class="space-y-2 lg:col-span-2">
-                        <div class="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="punguzo-bidhaa-check" class="h-4 w-4 text-amber-600">
-                                <label class="text-sm font-semibold text-amber-800">Punguzo kwa Bidhaa</label>
-                            </div>
-                            <div class="flex gap-2 flex-1">
-                                <input type="number" name="punguzo_bidhaa" id="discount-bidhaa-input" min="0" placeholder="Kiasi" disabled class="flex-1 border border-amber-200 rounded-lg p-2 lg:p-3 text-sm disabled:bg-gray-100">
-                                <select id="discount-bidhaa-type" disabled class="w-20 lg:w-24 border border-amber-200 rounded-lg p-2 lg:p-3 text-sm disabled:bg-gray-100">
-                                    <option value="fixed">Tsh</option>
-                                    <option value="percent">%</option>
+                    <!-- Compact Product and Basic Info -->
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-3">
+                        <!-- Bidhaa with Search -->
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Bidhaa</label>
+                            <div class="relative">
+                                <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                                <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
+                                    <option value="">Chagua Bidhaa...</option>
+                                    @foreach($bidhaa as $item)
+                                    <option
+                                        value="{{ $item->id }}"
+                                        data-bei="{{ $item->bei_kuuza }}"
+                                        data-stock="{{ $item->idadi }}"
+                                        data-jina="{{ e($item->jina) }}"
+                                        data-aina="{{ e($item->aina) }}"
+                                        data-kipimo="{{ e($item->kipimo) }}"
+                                        data-bei-nunua="{{ $item->bei_nunua }}"
+                                        data-barcode="{{ $item->barcode }}"
+                                    >
+                                        {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }} - Stock: {{ $item->idadi }}
+                                    </option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
-                        <div class="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="punguzo-jumla-check" class="h-4 w-4 text-green-600">
-                                <label class="text-sm font-semibold text-green-800">Punguzo kwa Jumla</label>
-                            </div>
-                            <div class="flex gap-2 flex-1">
-                                <input type="number" name="punguzo_jumla" id="discount-jumla-input" min="0" placeholder="Kiasi" disabled class="flex-1 border border-green-200 rounded-lg p-2 lg:p-3 text-sm disabled:bg-gray-100">
-                                <select id="discount-jumla-type" disabled class="w-20 lg:w-24 border border-green-200 rounded-lg p-2 lg:p-3 text-sm disabled:bg-gray-100">
-                                    <option value="fixed">Tsh</option>
-                                    <option value="percent">%</option>
+
+                        <!-- Idadi -->
+                        <div>
+                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Idadi</label>
+                            <input type="number" name="idadi" id="quantity-input" placeholder="0" min="1" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                        </div>
+
+                        <!-- Bei -->
+                        <div>
+                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Bei (Tsh)</label>
+                            <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
+                        </div>
+
+                        <!-- Stock -->
+                        <div>
+                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Stock</label>
+                            <input type="number" id="stock-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Punguzo Type and Total -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <!-- Punguzo Type -->
+                        <div>
+                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Aina ya Punguzo</label>
+                            <div class="flex gap-2">
+                                <select id="punguzo-type" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                                    <option value="bidhaa">kwa bidhaa</option>
+                                    <option value="jumla">Jumla</option>
                                 </select>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Total and Actions -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-4">
-                    <!-- Jumla -->
-                    <div class="space-y-2">
-                        <label class="block text-sm font-semibold text-emerald-800">Jumla (Tsh)</label>
-                        <input type="number" name="jumla" id="total-input" readonly class="w-full bg-green-50 border border-green-300 rounded-lg p-2 lg:p-3 text-sm font-bold text-green-800">
+                        <!-- Punguzo Amount -->
+                        <div>
+                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Punguzo (Tsh)</label>
+                            <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                        </div>
+
+                        <!-- Jumla -->
+                        <div>
+                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Jumla (Tsh)</label>
+                            <input type="number" name="jumla" id="total-input" readonly class="w-full bg-emerald-50 border border-emerald-300 rounded-lg p-2 text-sm font-bold text-emerald-800">
+                        </div>
                     </div>
 
+                    <!-- Hidden fields for kopesha -->
+                    <input type="hidden" name="baki" id="baki-input" value="0">
+                    <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
+                    
                     <!-- Action Buttons -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 lg:gap-3 pt-2 lg:pt-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
                         <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
                             <i class="fas fa-cash-register"></i>
                             Uza
@@ -154,683 +149,761 @@
                             Kopesha
                         </button>
 
-                        <button type="button" id="add-to-cart-btn" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                        <button type="button" id="add-to-cart-btn" class="bg-emerald-600 hover:bg-emerald-400 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
                             <i class="fas fa-cart-plus"></i>
                             Kikapu
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
+
+<!-- Financial Overview -->
+<div class="mt-4 lg:mt-6">
+    <h2 class="text-sm lg:text-base font-bold text-gray-800 flex items-center mb-2 lg:mb-3">
+        <div class="relative mr-1.5">
+            <div class="w-1.5 h-4 lg:w-2 lg:h-5 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
+            <div class="absolute top-0.5 -right-1 w-1 h-2.5 lg:w-1.5 lg:h-3 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full"></div>
         </div>
+        <span>Taarifa Fupi ya Mapato na Matumizi</span>
+    </h2>
 
-        <!-- Financial Overview -->
-        <div class="mt-6 lg:mt-8">
-            <h2 class="text-lg lg:text-2xl font-bold text-gray-800 flex items-center mb-4 lg:mb-6">
-                <div class="relative mr-2 lg:mr-3">
-                    <div class="w-2 h-6 lg:w-3 lg:h-8 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
-                    <div class="absolute top-1 -right-1 w-1.5 h-4 lg:w-2 lg:h-6 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full"></div>
-                </div>
-                <span>Taarifa Fupi ya Mapato na Matumizi</span>
-            </h2>
-
-            <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 lg:gap-4">
-                <!-- Mapato -->
-                <div class="col-span-2 lg:col-span-1 group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl lg:rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                    <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-3 lg:p-4 rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl border border-blue-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-xl lg:group-hover:shadow-2xl cursor-pointer">
-                        <div class="flex justify-between items-start mb-2 lg:mb-3">
-                            <div class="p-1.5 lg:p-2 bg-white/20 rounded-lg lg:rounded-xl backdrop-blur-sm">
-                                <i class="fas fa-money-bill-wave text-white text-base lg:text-lg"></i>
-                            </div>
-                            <i class="fas fa-arrow-right text-white/60 text-xs lg:text-sm group-hover:translate-x-1 transition-transform"></i>
-                        </div>
-                        <div class="text-xs font-semibold text-blue-100 uppercase tracking-wide mb-1 lg:mb-2">
-                            Mapato ya leo
-                        </div>
-                        @php
-                            $mapatoMauzo = $mauzos->where('created_at', '>=', today())->sum('jumla');
-                            $mapatoMadeni = $marejeshos->where('tarehe', today()->toDateString())->sum('kiasi');
-                            $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
-                        @endphp
-                        <div class="space-y-1 lg:space-y-2 text-white text-xs lg:text-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-blue-100">Mauzo:</span>
-                                <span class="font-semibold">{{ number_format($mapatoMauzo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-blue-100">Madeni:</span>
-                                <span class="font-semibold">{{ number_format($mapatoMadeni) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 lg:pt-2 mt-1.5 lg:mt-2">
-                                <span class="text-blue-50 font-semibold">Jumla:</span>
-                                <span class="font-bold text-sm lg:text-lg">{{ number_format($jumlaMapato) }}</span>
-                            </div>
-                        </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="financial-overview">
+        <!-- Mapato -->
+        <div class="sm:col-span-1 group relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+            <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-blue-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                        <i class="fas fa-money-bill-wave text-white text-sm"></i>
                     </div>
+                    <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
                 </div>
-
-                <!-- Faida -->
-                <div class="col-span-2 lg:col-span-1 group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-xl lg:rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                    <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 p-3 lg:p-4 rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl border border-green-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-xl lg:group-hover:shadow-2xl cursor-pointer">
-                        <div class="flex justify-between items-start mb-2 lg:mb-3">
-                            <div class="p-1.5 lg:p-2 bg-white/20 rounded-lg lg:rounded-xl backdrop-blur-sm">
-                                <i class="fas fa-chart-line text-white text-base lg:text-lg"></i>
-                            </div>
-                            <i class="fas fa-arrow-right text-white/60 text-xs lg:text-sm group-hover:translate-x-1 transition-transform"></i>
-                        </div>
-                        <div class="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1 lg:mb-2">
-                            Faida ya leo
-                        </div>
-                        @php
-                            $faidaMauzo = $mauzos->where('created_at', '>=', today())
-                                ->sum(fn($m) => ($m->bei - ($m->bidhaa->bei_nunua ?? 0)) * $m->idadi);
-                            $faidaMarejesho = 0;
-                            $todayMarejeshos = $marejeshos->where('tarehe', today()->toDateString());
-                            foreach($todayMarejeshos as $marejesho) {
-                                if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
-                                    $profitMargin = $marejesho->madeni->bidhaa->bei_kuuza - $marejesho->madeni->bidhaa->bei_nunua;
-                                    $paymentRatio = $marejesho->kiasi / $marejesho->madeni->jumla;
-                                    $faidaMarejesho += $profitMargin * $marejesho->madeni->idadi * $paymentRatio;
-                                }
-                            }
-                            $jumlaFaida = $faidaMauzo + $faidaMarejesho;
-                        @endphp
-                        <div class="space-y-1 lg:space-y-2 text-white text-xs lg:text-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-green-100">Mauzo:</span>
-                                <span class="font-semibold">{{ number_format($faidaMauzo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-green-100">Marejesho:</span>
-                                <span class="font-semibold">{{ number_format($faidaMarejesho) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 lg:pt-2 mt-1.5 lg:mt-2">
-                                <span class="text-green-50 font-semibold">Jumla:</span>
-                                <span class="font-bold text-sm lg:text-lg">{{ number_format($jumlaFaida) }}</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="text-xs font-semibold text-blue-100 uppercase tracking-wide mb-1">
+                    Mapato ya leo
                 </div>
-
-                <!-- Matumizi -->
-                <div class="col-span-2 lg:col-span-1 group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl lg:rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                    <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-3 lg:p-4 rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-xl lg:group-hover:shadow-2xl cursor-pointer">
-                        <div class="flex justify-between items-start mb-2 lg:mb-3">
-                            <div class="p-1.5 lg:p-2 bg-white/20 rounded-lg lg:rounded-xl backdrop-blur-sm">
-                                <i class="fas fa-receipt text-white text-base lg:text-lg"></i>
-                            </div>
-                            <i class="fas fa-arrow-right text-white/60 text-xs lg:text-sm group-hover:translate-x-1 transition-transform"></i>
-                        </div>
-                        <div class="text-xs font-semibold text-amber-100 uppercase tracking-wide mb-1 lg:mb-2">Matumizi</div>
-                        @php
-                            $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
-                            $matumiziWiki = $matumizi->where('created_at', '>=', now()->startOfWeek())->sum('gharama');
-                            $matumiziJumla = $matumizi->sum('gharama');
-                        @endphp
-                        <div class="space-y-1 lg:space-y-2 text-white text-xs lg:text-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-amber-100">Leo:</span>
-                                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-amber-100">Wiki hii:</span>
-                                <span class="font-semibold">{{ number_format($matumiziWiki) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 lg:pt-2 mt-1.5 lg:mt-2">
-                                <span class="text-amber-50 font-semibold">Jumla:</span>
-                                <span class="font-bold text-sm lg:text-lg">{{ number_format($matumiziJumla) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Fedha Leo -->
-                <div class="col-span-2 lg:col-span-1 group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-cyan-700 rounded-xl lg:rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                    <div class="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-3 lg:p-4 rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl border border-cyan-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-xl lg:group-hover:shadow-2xl cursor-pointer">
-                        <div class="flex justify-between items-start mb-2 lg:mb-3">
-                            <div class="p-1.5 lg:p-2 bg-white/20 rounded-lg lg:rounded-xl backdrop-blur-sm">
-                                <i class="fas fa-wallet text-white text-base lg:text-lg"></i>
-                            </div>
-                            <i class="fas fa-arrow-right text-white/60 text-xs lg:text-sm group-hover:translate-x-1 transition-transform"></i>
-                        </div>
-                        <div class="text-xs font-semibold text-cyan-100 uppercase tracking-wide mb-1 lg:mb-2">Fedha Leo</div>
-                        @php
-                            $mauzoLeo = $mauzos->where('created_at', '>=', today())->sum('jumla');
-                            $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
-                            $fedhaLeo = $mauzoLeo - $matumiziLeo;
-                        @endphp
-                        <div class="space-y-1 lg:space-y-2 text-white text-xs lg:text-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-cyan-100">Mapato:</span>
-                                <span class="font-semibold">{{ number_format($mauzoLeo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-cyan-100">Matumizi:</span>
-                                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 lg:pt-2 mt-1.5 lg:mt-2">
-                                <span class="text-cyan-50 font-semibold">Jumla:</span>
-                                <span class="font-bold text-sm lg:text-lg">{{ number_format($fedhaLeo) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Faida Halisi -->
-                <div class="col-span-2 lg:col-span-1 group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl lg:rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                    <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-3 lg:p-4 rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-xl lg:group-hover:shadow-2xl cursor-pointer">
-                        <div class="flex justify-between items-start mb-2 lg:mb-3">
-                            <div class="p-1.5 lg:p-2 bg-white/20 rounded-lg lg:rounded-xl backdrop-blur-sm">
-                                <i class="fas fa-chart-pie text-white text-base lg:text-lg"></i>
-                            </div>
-                            <i class="fas fa-arrow-right text-white/60 text-xs lg:text-sm group-hover:translate-x-1 transition-transform"></i>
-                        </div>
-                        <div class="text-xs font-semibold text-teal-100 uppercase tracking-wide mb-1 lg:mb-2">Faida Halisi</div>
-                        @php
-                            $faidaMauzo = $mauzos->where('created_at', '>=', today())
-                                ->sum(fn($m) => ($m->bei - ($m->bidhaa->bei_nunua ?? 0)) * $m->idadi);
-                            $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
-                            $faidaHalisi = $faidaMauzo - $matumiziLeo;
-                        @endphp
-                        <div class="space-y-1 lg:space-y-2 text-white text-xs lg:text-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-teal-100">Faida:</span>
-                                <span class="font-semibold">{{ number_format($faidaMauzo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-teal-100">Matumizi:</span>
-                                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 lg:pt-2 mt-1.5 lg:mt-2">
-                                <span class="text-teal-50 font-semibold">Halisi:</span>
-                                <span class="font-bold text-sm lg:text-lg">{{ number_format($faidaHalisi) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Jumla Kuu -->
-                <div class="col-span-2 lg:col-span-1 group relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-rose-500 to-rose-600 rounded-xl lg:rounded-2xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-                    <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-3 lg:p-4 rounded-xl lg:rounded-2xl shadow-lg lg:shadow-xl border border-rose-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-xl lg:group-hover:shadow-2xl cursor-pointer">
-                        <div class="flex justify-between items-start mb-2 lg:mb-3">
-                            <div class="p-1.5 lg:p-2 bg-white/20 rounded-lg lg:rounded-xl backdrop-blur-sm">
-                                <i class="fas fa-chart-bar text-white text-base lg:text-lg"></i>
-                            </div>
-                            <i class="fas fa-arrow-right text-white/60 text-xs lg:text-sm group-hover:translate-x-1 transition-transform"></i>
-                        </div>
-                        <div class="text-xs font-semibold text-rose-100 uppercase tracking-wide mb-1 lg:mb-2">Jumla Kuu</div>
-                        @php
-                            $jumlaMauzo = $mauzos->sum('jumla');
-                            $jumlaMatumizi = $matumizi->sum('gharama');
-                            $jumlaFaida = $jumlaMauzo - $jumlaMatumizi;
-                        @endphp
-                        <div class="space-y-1 lg:space-y-2 text-white text-xs lg:text-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="text-rose-100">Mapato:</span>
-                                <span class="font-semibold">{{ number_format($jumlaMauzo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-rose-100">Matumizi:</span>
-                                <span class="font-semibold">{{ number_format($jumlaMatumizi) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 lg:pt-2 mt-1.5 lg:mt-2">
-                                <span class="text-rose-50 font-semibold">Jumla:</span>
-                                <span class="font-bold text-sm lg:text-lg">{{ number_format($jumlaFaida) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 2: Barcode Sales -->
-    <div id="barcode-tab-content" class="tab-content hidden">
-        <div class="rounded-2xl shadow-md border border-green-100 bg-white p-4 lg:p-8 card-hover">
-            <!-- Header -->
-            <div class="flex items-center mb-6">
-                <div class="bg-green-600 text-white p-3 rounded-full shadow-md">
-                    <i class="fas fa-barcode"></i>
-                </div>
-                <h2 class="ml-3 text-lg lg:text-xl font-bold text-black tracking-wide">
-                    Mauzo kwa Barcode
-                </h2>
-            </div>
-
-            <!-- Barcode Form -->
-            <form id="barcode-form" class="space-y-4 lg:space-y-6">
-                @csrf
-                
-                <!-- Table -->
-                <div class="overflow-x-auto rounded-xl shadow-sm border border-green-200 bg-white/80">
-                    <table class="w-full table-auto border-collapse">
-                        <thead class="bg-green-400/70 text-black-800 text-xs lg:text-sm uppercase">
-                            <tr>
-                                <th class="border px-3 lg:px-4 py-2 lg:py-3 text-left">Barcode</th>
-                                <th class="border px-3 lg:px-4 py-2 lg:py-3 text-left">Bidhaa</th>
-                                <th class="border px-3 lg:px-4 py-2 lg:py-3 text-left">Bei</th>
-                                <th class="border px-3 lg:px-4 py-2 lg:py-3 text-left">Idadi</th>
-                                <th class="border px-3 lg:px-4 py-2 lg:py-3 text-left">Baki</th>
-                                <th class="border px-3 lg:px-4 py-2 lg:py-3 text-left">Jumla</th>
-                                <th class="border px-3 lg:px-4 py-2 lg:py-3 text-center">Futa</th>
-                            </tr>
-                        </thead>
-                        <tbody id="barcode-tbody">
-                            <tr class="barcode-row">
-                                <td class="px-3 lg:px-4 py-2 lg:py-3">
-                                    <input type="text" name="barcode[]" placeholder="Scan barcode" 
-                                           class="barcode-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 lg:p-3 w-full text-sm transition-all" 
-                                           autofocus />
-                                </td>
-                                <td class="px-3 lg:px-4 py-2 lg:py-3">
-                                    <input type="text" name="jina[]" readonly placeholder="Jina la Bidhaa" 
-                                           class="product-name border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 lg:p-3 w-full text-sm" />
-                                </td>
-                                <td class="px-3 lg:px-4 py-2 lg:py-3">
-                                    <input type="number" name="bei[]" readonly placeholder="Bei" 
-                                           class="product-price border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 lg:p-3 w-full text-sm" />
-                                </td>
-                                <td class="px-3 lg:px-4 py-2 lg:py-3">
-                                    <input type="number" name="idadi[]" min="1" value="1" placeholder="Idadi" 
-                                           class="quantity-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 lg:p-3 w-full text-sm transition-all" />
-                                </td>
-                                <td class="px-3 lg:px-4 py-2 lg:py-3">
-                                    <input type="number" name="stock[]" readonly placeholder="Baki" 
-                                           class="stock-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 lg:p-3 w-full text-sm" />
-                                </td>
-                                <td class="px-3 lg:px-4 py-2 lg:py-3">
-                                    <input type="number" name="jumla[]" readonly placeholder="Jumla" 
-                                           class="total-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 lg:p-3 w-full text-sm" />
-                                </td>
-                                <td class="px-3 lg:px-4 py-2 lg:py-3 text-center">
-                                    <button type="button" class="remove-barcode-row text-red-500 hover:text-red-700 p-2 rounded-full transition transform hover:scale-110" title="Futa bidhaa">
-                                        <i class="fas fa-trash text-sm"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Receipt Info -->
-                <div class="bg-green-50 p-3 lg:p-4 rounded-lg border border-green-200">
-                    <div class="flex items-center text-green-700">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        <span class="text-xs lg:text-sm font-semibold">Risiti inatolewa moja kwa moja!</span>
-                    </div>
-                </div>
-
-                <!-- Add Row Button -->
-                <div class="flex justify-center">
-                    <button type="button" id="add-barcode-row" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 lg:px-4 lg:py-3 rounded-lg flex items-center transition">
-                        <i class="fas fa-plus mr-2"></i>
-                        <span class="text-xs lg:text-sm">Ongeza Safu Mpya</span>
-                    </button>
-                </div>
-
-                <!-- Total & Action -->
-                <div class="flex flex-col lg:flex-row justify-between items-center gap-4 mt-4 lg:mt-6">
-                    <div class="text-base lg:text-lg font-semibold text-gray-800">
-                        Jumla ya Mauzo: 
-                        <span class="text-green-700 font-bold text-lg lg:text-xl" id="barcode-total">0</span>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <button type="button" id="clear-barcode-form" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 lg:px-4 lg:py-3 rounded-lg font-semibold shadow-md flex items-center transition-all duration-300 text-xs lg:text-sm">
-                            <i class="fas fa-times mr-2"></i>
-                            Futa Yote
-                        </button>
-                        
-                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 lg:px-6 lg:py-3 rounded-lg font-semibold shadow-md flex items-center transition-all duration-300 hover:scale-[1.02] text-xs lg:text-sm">
-                            <i class="fas fa-check mr-2"></i>
-                            Uza Bidhaa
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- TAB 3: Taarifa Fupi -->
-    <div id="taarifa-tab-content" class="tab-content hidden">
-        <div class="bg-green-50 rounded-lg lg:rounded-xl shadow-sm border p-4 lg:p-6 card-hover">
-            <h2 class="text-base lg:text-lg font-semibold mb-3 lg:mb-4 flex items-center text-gray-800">
-                <i class="fas fa-file-alt mr-2 text-blue-600 text-sm lg:text-base"></i>
-                Taarifa Fupi ya Mauzo
-            </h2>
-
-            <!-- Search -->
-            <div class="mb-3 lg:mb-4">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
-                    <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 lg:p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                </div>
-            </div>
-
-            <!-- Sales Table -->
-            <div class="overflow-x-auto rounded-lg shadow-sm border">
-                <table class="w-full table-auto border-collapse">
-                    <thead>
-                        <tr class="bg-amber-600">
-                            <th class="border px-3 py-2 lg:px-4 lg:py-3 text-left text-white text-xs lg:text-sm">Tarehe</th>
-                            <th class="border px-3 py-2 lg:px-4 lg:py-3 text-left text-white text-xs lg:text-sm">Risiti No</th>
-                            <th class="border px-3 py-2 lg:px-4 lg:py-3 text-left text-white text-xs lg:text-sm">Bidhaa</th>
-                            <th class="border px-3 py-2 lg:px-4 lg:py-3 text-left text-white text-xs lg:text-sm">Idadi</th>
-                            <th class="border px-3 py-2 lg:px-4 lg:py-3 text-left text-white text-xs lg:text-sm">Bei</th>
-                            <th class="border px-3 py-2 lg:px-4 lg:py-3 text-left text-white text-xs lg:text-sm">Jumla</th>
-                            <th class="border px-3 py-2 lg:px-4 lg:py-3 text-left text-white text-xs lg:text-sm">Vitendo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sales-tbody">
-                        @php $today = \Carbon\Carbon::today()->format('Y-m-d'); @endphp
-                        @forelse($mauzos as $item)
-                            @php $itemDate = $item->created_at->format('Y-m-d'); @endphp
-                            <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}">
-                                <td class="border px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm">
-                                    @if($itemDate === $today)
-                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
-                                    @else
-                                        {{ $itemDate }}
-                                    @endif
-                                </td>
-                                <td class="border px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm font-mono">
-                                    @if($item->receipt_no)
-                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
-                                    @else
-                                        <span class="text-gray-400 text-xs">-</span>
-                                    @endif
-                                </td>
-                                <td class="border px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm">{{ $item->bidhaa->jina }}</td>
-                                <td class="border px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm text-center">{{ $item->idadi }}</td>
-                                <td class="border px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm">{{ number_format($item->bei) }}</td>
-                                <td class="border px-3 py-2 lg:px-4 lg:py-3 text-xs lg:text-sm">{{ number_format($item->jumla) }}</td>
-                                <td class="border px-3 py-2 lg:px-4 lg:py-3 text-center">
-                                    <div class="flex flex-col lg:flex-row gap-1 justify-center">
-                                        @if($item->receipt_no)
-                                        <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 lg:px-3 lg:py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
-                                            <i class="fas fa-print mr-1 text-xs"></i>
-                                            Print
-                                        </button>
-                                        @endif
-                                        <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 lg:px-3 lg:py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}">
-                                            <i class="fas fa-trash mr-1 text-xs"></i>
-                                            Futa
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center py-4 text-gray-500 text-xs lg:text-sm">Hakuna mauzo yaliyorekodiwa bado.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            @if($mauzos->hasPages())
-            <div class="mt-4 lg:mt-6">
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <!-- Pagination Info -->
-                    <div class="text-xs lg:text-sm text-gray-600">
-                        @php
-                            $start = ($mauzos->currentPage() - 1) * $mauzos->perPage() + 1;
-                            $end = min($mauzos->currentPage() * $mauzos->perPage(), $mauzos->total());
-                        @endphp
-                        Onyesha {{ $start }} - {{ $end }} ya {{ $mauzos->total() }} mauzo
-                    </div>
-
-                    <!-- Pagination Links -->
-                    <nav class="flex items-center space-x-1">
-                        <!-- Previous Button -->
-                        @if($mauzos->onFirstPage())
-                            <span class="px-3 py-1 lg:px-4 lg:py-2 rounded-lg border text-gray-400 text-xs lg:text-sm cursor-not-allowed">
-                                <i class="fas fa-chevron-left mr-1"></i> Nyuma
-                            </span>
-                        @else
-                            <a href="{{ $mauzos->previousPageUrl() }}" class="px-3 py-1 lg:px-4 lg:py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs lg:text-sm transition flex items-center">
-                                <i class="fas fa-chevron-left mr-1"></i> Nyuma
-                            </a>
-                        @endif
-
-                        <!-- Page Numbers -->
-                        <div class="flex items-center space-x-1">
-                            @foreach($mauzos->getUrlRange(1, $mauzos->lastPage()) as $page => $url)
-                                @if($page == $mauzos->currentPage())
-                                    <span class="px-3 py-1 lg:px-4 lg:py-2 rounded-lg bg-amber-600 text-white font-semibold text-xs lg:text-sm">
-                                        {{ $page }}
-                                    </span>
-                                @else
-                                    <a href="{{ $url }}" class="px-3 py-1 lg:px-4 lg:py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs lg:text-sm transition">
-                                        {{ $page }}
-                                    </a>
-                                @endif
-                            @endforeach
-                        </div>
-
-                        <!-- Next Button -->
-                        @if($mauzos->hasMorePages())
-                            <a href="{{ $mauzos->nextPageUrl() }}" class="px-3 py-1 lg:px-4 lg:py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs lg:text-sm transition flex items-center">
-                                Mbele <i class="fas fa-chevron-right ml-1"></i>
-                            </a>
-                        @else
-                            <span class="px-3 py-1 lg:px-4 lg:py-2 rounded-lg border text-gray-400 text-xs lg:text-sm cursor-not-allowed">
-                                Mbele <i class="fas fa-chevron-right ml-1"></i>
-                            </span>
-                        @endif
-                    </nav>
-                </div>
-            </div>
-            @endif
-        </div>
-    </div>
-
-    <!-- TAB 4: Mauzo ya Jumla -->
-    <div id="jumla-tab-content" class="tab-content hidden">
-        <div class="bg-green-100 rounded-lg shadow-sm border p-4 lg:p-6 card-hover">
-            <h2 class="text-lg font-bold mb-4 flex items-center text-black-800">
-                <i class="fas fa-chart-bar mr-2 text-blue-600"></i>
-                Mauzo ya Jumla
-            </h2>
-
-            <!-- Search Area -->
-            <div class="mb-4">
-                <input type="text" id="search-product" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-green-600 focus:border-green-600 transition">
-            </div>
-
-            <!-- Sales Summary Table -->
-            <div class="overflow-x-auto rounded-lg shadow-sm border">
-                <table class="w-full border-collapse" id="grouped-sales-table">
-                    <thead class="bg-green-600">
-                        <tr>
-                            <th class="border px-4 py-3 text-left text-white text-sm">Tarehe</th>
-                            <th class="border px-4 py-3 text-left text-white text-sm">Bidhaa</th>
-                            <th class="border px-4 py-3 text-left text-white text-sm">Idadi</th>
-                            <th class="border px-4 py-3 text-left text-white text-sm">Jumla</th>
-                            <th class="border px-4 py-3 text-left text-white text-sm">Faida</th>
-                        </tr>
-                    </thead>
-                    <tbody id="grouped-sales-tbody">
-                        @php
-                            $groupedSales = [];
-                            foreach($mauzos as $sale) {
-                                $date = $sale->created_at->format('Y-m-d');
-                                $product = $sale->bidhaa->jina;
-                                $key = $date . '|' . $product;
-                                
-                                if (!isset($groupedSales[$key])) {
-                                    $groupedSales[$key] = [
-                                        'tarehe' => $date,
-                                        'jina' => $product,
-                                        'idadi' => 0,
-                                        'jumla' => 0,
-                                        'faida' => 0
-                                    ];
-                                }
-                                
-                                $groupedSales[$key]['idadi'] += $sale->idadi;
-                                $groupedSales[$key]['jumla'] += $sale->jumla;
-                                $groupedSales[$key]['faida'] += ($sale->bei - ($sale->bidhaa->bei_nunua ?? 0)) * $sale->idadi;
-                            }
-                        @endphp
-                        
-                        @foreach($groupedSales as $sale)
-                        <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
-                            <td class="border px-4 py-3 text-sm">{{ $sale['tarehe'] }}</td>
-                            <td class="border px-4 py-3 text-sm">{{ $sale['jina'] }}</td>
-                            <td class="border px-4 py-3 text-center text-sm">{{ $sale['idadi'] }}</td>
-                            <td class="border px-4 py-3 text-right text-sm">{{ number_format($sale['jumla']) }}</td>
-                            <td class="border px-4 py-3 text-right text-sm">{{ number_format($sale['faida']) }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- TAB 5: Risiti (NEW TAB) -->
-    <div id="risiti-tab-content" class="tab-content hidden">
-        <div class="bg-white rounded-xl shadow-lg border p-4 lg:p-6 card-hover">
-            <h2 class="text-lg font-bold mb-4 flex items-center text-gray-800">
-                <i class="fas fa-receipt mr-2 text-green-600"></i>
-                Chapisha Risiti
-            </h2>
-
-            <!-- Search Receipt -->
-            <div class="mb-6">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text" id="search-receipt-input" placeholder="Weka namba ya risiti (MS-20260110-0001)..." class="pl-10 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-500 focus:border-green-500">
-                </div>
-                <div class="mt-2 text-sm text-gray-500 flex items-center">
-                    <i class="fas fa-info-circle mr-2 text-blue-500"></i>
-                    Namba ya risiti inapatikana kwenye tab ya "Taarifa"
-                </div>
-            </div>
-
-            <!-- Receipt Details -->
-            <div id="receipt-details" class="hidden">
-                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 mb-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-semibold text-gray-700">Risiti No:</span>
-                        <span id="receipt-no-display" class="font-mono font-bold text-green-700"></span>
-                    </div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-semibold text-gray-700">Tarehe:</span>
-                        <span id="receipt-date-display"></span>
-                    </div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-semibold text-gray-700">Idadi ya Bidhaa:</span>
-                        <span id="receipt-items-count"></span>
+                @php
+                    // Sales income (cash sales)
+                    $mapatoMauzo = $mauzos->where('created_at', '>=', today())
+                        ->sum(fn($m) => $m->jumla);
+                    
+                    // Debt repayment income
+                    $mapatoMadeni = $marejeshos->where('tarehe', today()->toDateString())->sum('kiasi');
+                    
+                    // Total income = cash sales + debt repayments
+                    $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
+                @endphp
+                <div class="space-y-1 text-white text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-blue-100">Mauzo:</span>
+                        <span class="font-semibold" id="mapato-mauzo">{{ number_format($mapatoMauzo) }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-semibold text-gray-700">Jumla:</span>
-                        <span id="receipt-total-display" class="font-bold text-lg"></span>
+                        <span class="text-blue-100">Madeni:</span>
+                        <span class="font-semibold" id="mapato-madeni">{{ number_format($mapatoMadeni) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                        <span class="text-blue-50 font-semibold">Jumla:</span>
+                        <span class="font-bold text-sm" id="mapato-jumla">{{ number_format($jumlaMapato) }}</span>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Items List -->
-                <div class="mb-4">
-                    <h3 class="font-semibold text-gray-800 mb-2">Bidhaa:</h3>
-                    <div id="receipt-items-list" class="space-y-2 max-h-60 overflow-y-auto">
-                        <!-- Items will be populated here -->
+<!-- Faida -->
+<div class="sm:col-span-1 group relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+    <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-green-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
+        <div class="flex justify-between items-start mb-2">
+            <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                <i class="fas fa-chart-line text-white text-sm"></i>
+            </div>
+            <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
+        </div>
+        <div class="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">
+            Faida ya leo
+        </div>
+@php
+    // Profit from cash sales
+    $faidaMauzo = 0;
+    $todayMauzos = $mauzos->where('created_at', '>=', today());
+    foreach($todayMauzos as $mauzo) {
+        $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+        $sellingPrice = $mauzo->bei;
+        $quantity = $mauzo->idadi;
+        
+        $actualDiscount = $mauzo->punguzo;
+        if ($mauzo->punguzo_aina === 'bidhaa') {
+            $actualDiscount = $mauzo->punguzo * $quantity;
+        }
+        
+        $faidaMauzo += ($sellingPrice - $buyingPrice) * $quantity - $actualDiscount;
+    }
+    
+    // Profit from debt repayments - SIMPLE CALCULATION
+    $faidaMarejesho = 0;
+    $todayMarejeshos = $marejeshos->where('tarehe', today()->toDateString());
+    
+    foreach($todayMarejeshos as $marejesho) {
+        if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+            $debt = $marejesho->madeni;
+            
+            // SIMPLE: Profit = (Actual selling price - Buying price) per item
+            // jumla should already be the discounted total price
+            
+            $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+            $quantity = $debt->idadi;
+            
+            // Total buying cost
+            $totalBuyingCost = $buyingPrice * $quantity;
+            
+            // jumla is the actual selling price (after any discount)
+            $actualSellingPrice = $debt->jumla;
+            
+            // Profit = Actual selling price - Total buying cost
+            $profit = $actualSellingPrice - $totalBuyingCost;
+            
+            $faidaMarejesho += $profit;
+        }
+    }
+    
+    // Total profit = cash sales profit + debt repayment profit
+    $jumlaFaida = $faidaMauzo + $faidaMarejesho;
+@endphp
+        <div class="space-y-1 text-white text-xs">
+            <div class="flex justify-between items-center">
+                <span class="text-green-100">Mauzo:</span>
+                <span class="font-semibold" id="faida-mauzo">{{ number_format($faidaMauzo) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-green-100">Marejesho:</span>
+                <span class="font-semibold" id="faida-marejesho">{{ number_format($faidaMarejesho) }}</span>
+            </div>
+            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                <span class="text-green-50 font-semibold">Jumla:</span>
+                <span class="font-bold text-sm" id="faida-jumla">{{ number_format($jumlaFaida) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+        <!-- Matumizi -->
+        <div class="sm:col-span-1 group relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+            <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                        <i class="fas fa-receipt text-white text-sm"></i>
+                    </div>
+                    <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <div class="text-xs font-semibold text-amber-100 uppercase tracking-wide mb-1">Matumizi</div>
+                @php
+                    $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
+                    $matumiziWiki = $matumizi->where('created_at', '>=', now()->startOfWeek())->sum('gharama');
+                    $matumiziJumla = $matumizi->sum('gharama');
+                @endphp
+                <div class="space-y-1 text-white text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-amber-100">Leo:</span>
+                        <span class="font-semibold" id="matumizi-leo">{{ number_format($matumiziLeo) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-amber-100">Wiki hii:</span>
+                        <span class="font-semibold" id="matumizi-wiki">{{ number_format($matumiziWiki) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                        <span class="text-amber-50 font-semibold">Jumla:</span>
+                        <span class="font-bold text-sm" id="matumizi-jumla">{{ number_format($matumiziJumla) }}</span>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Print Button -->
-                <div class="flex justify-center">
-                    <button id="print-thermal-receipt" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-md">
-                        <i class="fas fa-print"></i>
-                        Chapisha Risiti
-                    </button>
+        <!-- Fedha Leo -->
+        <div class="sm:col-span-1 group relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-cyan-700 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+            <div class="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-cyan-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                        <i class="fas fa-wallet text-white text-sm"></i>
+                    </div>
+                    <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <div class="text-xs font-semibold text-cyan-100 uppercase tracking-wide mb-1">Fedha Leo</div>
+                @php
+                    // Cash in hand today = Cash sales + Debt repayments - Expenses
+                    $mauzoLeo = $mauzos->where('created_at', '>=', today())->sum('jumla');
+                    $mapatoMadeni = $marejeshos->where('tarehe', today()->toDateString())->sum('kiasi');
+                    $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
+                    
+                    $fedhaLeo = ($mauzoLeo + $mapatoMadeni) - $matumiziLeo;
+                @endphp
+                <div class="space-y-1 text-white text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-cyan-100">Mapato:</span>
+                        <span class="font-semibold" id="fedha-mapato">{{ number_format($mauzoLeo + $mapatoMadeni) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-cyan-100">Matumizi:</span>
+                        <span class="font-semibold" id="fedha-matumizi">{{ number_format($matumiziLeo) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                        <span class="text-cyan-50 font-semibold">Jumla:</span>
+                        <span class="font-bold text-sm" id="fedha-jumla">{{ number_format($fedhaLeo) }}</span>
+                    </div>
                 </div>
             </div>
-
-            <!-- No Results Message -->
-            <div id="no-receipt-found" class="hidden text-center py-8">
-                <i class="fas fa-receipt text-4xl text-gray-400 mb-4"></i>
-                <p class="text-gray-600">Hakuna risiti iliyopatikana.</p>
-                <p class="text-sm text-gray-500 mt-2">Ingiza namba ya risiti ili kuona taarifa</p>
+        </div>
+<!-- Faida Halisi -->
+<div class="sm:col-span-1 group relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+    <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
+        <div class="flex justify-between items-start mb-2">
+            <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                <i class="fas fa-chart-pie text-white text-sm"></i>
             </div>
-
-            <!-- Loading -->
-            <div id="receipt-loading" class="hidden text-center py-8">
-                <i class="fas fa-spinner fa-spin text-2xl text-green-600 mb-4"></i>
-                <p class="text-gray-600">Inatafuta taarifa...</p>
+            <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
+        </div>
+        <div class="text-xs font-semibold text-teal-100 uppercase tracking-wide mb-1">Faida Halisi</div>
+        @php
+            // Use the SAME $jumlaFaida from "Faida ya leo" section
+            $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
+            $faidaHalisi = $jumlaFaida - $matumiziLeo;
+        @endphp
+        <div class="space-y-1 text-white text-xs">
+            <div class="flex justify-between items-center">
+                <span class="text-teal-100">Faida:</span>
+                <span class="font-semibold" id="faida-halisi-faida">{{ number_format($jumlaFaida) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-teal-100">Matumizi:</span>
+                <span class="font-semibold" id="faida-halisi-matumizi">{{ number_format($matumiziLeo) }}</span>
+            </div>
+            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                <span class="text-teal-50 font-semibold">Halisi:</span>
+                <span class="font-bold text-sm" id="faida-halisi-jumla">{{ number_format($faidaHalisi) }}</span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Kikapu Modal -->
-<div id="kikapu-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
-    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-4xl mx-4 z-50 max-h-[85vh] overflow-auto">
-        <div class="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white">
-            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class="fas fa-shopping-cart mr-2"></i>
-                Bidhaa Zilizo Kwenye Kikapu
-            </h3>
-            <button type="button" id="close-kikapu-modal" class="text-gray-500 hover:text-gray-700 text-xl">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        
-        <div class="p-6">
-            <div id="empty-cart-message" class="text-center text-gray-600 py-10">
-                <i class="fas fa-shopping-cart text-4xl text-gray-400 mb-4"></i>
-                <p class="text-base">Hakuna bidhaa kwenye kikapu kwa sasa.</p>
+        <!-- Jumla Kuu -->
+        <div class="sm:col-span-1 group relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-r from-rose-500 to-rose-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
+            <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-rose-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
+                <div class="flex justify-between items-start mb-2">
+                    <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                        <i class="fas fa-chart-bar text-white text-sm"></i>
+                    </div>
+                    <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <div class="text-xs font-semibold text-rose-100 uppercase tracking-wide mb-1">Jumla Kuu</div>
+                @php
+                    // All-time calculations: INCOME - EXPENSES
+                    $allMauzos = $mauzos;
+                    $allMarejeshos = $marejeshos;
+                    
+                    // Total income all time = Cash sales + All debt repayments
+                    $totalCashSales = $allMauzos->sum('jumla');
+                    $totalDebtRepayments = $allMarejeshos->sum('kiasi');
+                    $totalMapato = $totalCashSales + $totalDebtRepayments;
+                    
+                    // Total expenses all time
+                    $totalMatumizi = $matumizi->sum('gharama');
+                    
+                    // Net income all time = Total income - Total expenses
+                    $jumlaKuu = $totalMapato - $totalMatumizi;
+                @endphp
+                <div class="space-y-1 text-white text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-rose-100">Mapato:</span>
+                        <span class="font-semibold" id="jumla-kuu-mapato">{{ number_format($totalMapato) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-rose-100">Matumizi:</span>
+                        <span class="font-semibold" id="jumla-kuu-matumizi">{{ number_format($totalMatumizi) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                        <span class="text-rose-50 font-semibold">Jumla:</span>
+                        <span class="font-bold text-sm" id="jumla-kuu-jumla">{{ number_format($jumlaKuu) }}</span>
+                    </div>
+                </div>
             </div>
-            
-            <div id="cart-content" class="hidden">
-                <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-100 text-gray-700">
-                            <tr>
-                                <th class="border px-4 py-3 text-left">S/N</th>
-                                <th class="border px-4 py-3 text-left">Bidhaa</th>
-                                <th class="border px-4 py-3 text-left">Idadi</th>
-                                <th class="border px-4 py-3 text-left">Bei</th>
-                                <th class="border px-4 py-3 text-left">Punguzo</th>
-                                <th class="border px-4 py-3 text-left">Jumla</th>
-                                <th class="border px-4 py-3 text-left">Ondoa</th>
+        </div>
+    </div>
+</div>
+        </div>
+
+        <!-- TAB 2: Barcode Sales -->
+        <div id="barcode-tab-content" class="tab-content hidden">
+            <div class="rounded-xl shadow border border-green-100 bg-white p-4 card-hover">
+                <!-- Header -->
+                <div class="flex items-center mb-4">
+                    <div class="bg-green-600 text-white p-3 rounded-full shadow">
+                        <i class="fas fa-barcode"></i>
+                    </div>
+                    <h2 class="ml-3 text-base lg:text-lg font-bold text-black tracking-wide">
+                        Mauzo kwa Barcode
+                    </h2>
+                </div>
+
+                <!-- Barcode Form -->
+                <form id="barcode-form" class="space-y-3">
+                    @csrf
+                    
+                    <!-- Table -->
+                    <div class="overflow-x-auto rounded-lg shadow-sm border border-green-200 bg-white/80">
+                        <table class="w-full table-auto border-collapse text-sm">
+                            <thead class="bg-green-400/70 text-black text-xs uppercase">
+                                <tr>
+                                    <th class="border px-3 py-2 text-left">Barcode</th>
+                                    <th class="border px-3 py-2 text-left">Bidhaa</th>
+                                    <th class="border px-3 py-2 text-left">Bei</th>
+                                    <th class="border px-3 py-2 text-left">Idadi</th>
+                                    <th class="border px-3 py-2 text-left">Baki</th>
+                                    <th class="border px-3 py-2 text-left">Punguzo</th>
+                                    <th class="border px-3 py-2 text-left">Jumla</th>
+                                    <th class="border px-3 py-2 text-center">Futa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="barcode-tbody">
+                                <tr class="barcode-row">
+                                    <td class="px-3 py-2">
+                                        <input type="text" name="barcode[]" placeholder="Scan barcode" 
+                                               class="barcode-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 w-full text-xs transition-all" 
+                                               autofocus />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="text" name="jina[]" readonly placeholder="Jina la Bidhaa" 
+                                               class="product-name border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" name="bei[]" readonly placeholder="Bei" 
+                                               class="product-price border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" name="idadi[]" min="1" value="1" placeholder="Idadi" 
+                                               class="quantity-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 w-full text-xs transition-all" />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" name="stock[]" readonly placeholder="Baki" 
+                                               class="stock-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" name="punguzo[]" min="0" value="0" placeholder="Punguzo" 
+                                               class="punguzo-input border border-green-200 rounded-lg p-2 w-full text-xs" />
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <input type="number" name="jumla[]" readonly placeholder="Jumla" 
+                                               class="total-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
+                                    </td>
+                                    <td class="px-3 py-2 text-center">
+                                        <button type="button" class="remove-barcode-row text-red-500 hover:text-red-700 p-2 rounded-full transition transform hover:scale-110" title="Futa bidhaa">
+                                            <i class="fas fa-trash text-xs"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Barcode Action Buttons -->
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="add-barcode-row" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg flex items-center transition text-xs">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span>Ongeza Safu Mpya</span>
+                        </button>
+                        
+                        <button type="button" id="kopesha-barcode-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg flex items-center transition text-xs">
+                            <i class="fas fa-hand-holding-usd mr-2"></i>
+                            <span>Kopesha Bidhaa</span>
+                        </button>
+                        
+                        <button type="button" id="clear-barcode-form" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center transition text-xs">
+                            <i class="fas fa-times mr-2"></i>
+                            <span>Futa Yote</span>
+                        </button>
+                    </div>
+
+                    <!-- Total & Action -->
+                    <div class="flex flex-col lg:flex-row justify-between items-center gap-3 pt-2 border-t border-gray-200">
+                        <div class="text-sm font-semibold text-black">
+                            Jumla ya Mauzo: 
+                            <span class="text-green-700 font-bold" id="barcode-total">0</span>
+                        </div>
+
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow flex items-center transition-all duration-300 hover:scale-[1.02] text-sm">
+                            <i class="fas fa-check mr-2"></i>
+                            Uza Bidhaa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 3: Taarifa Fupi -->
+        <div id="taarifa-tab-content" class="tab-content hidden">
+            <div class="bg-emerald-50 rounded-lg shadow border p-4 card-hover">
+                <h2 class="text-base font-semibold mb-3 flex items-center text-black">
+                    <i class="fas fa-file-alt mr-2 text-emerald-600 text-sm"></i>
+                    Taarifa Fupi ya Mauzo
+                </h2>
+
+                <!-- Search and Filter -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
+                        <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                    </div>
+                    
+                    <div class="relative">
+                        <i class="fas fa-calendar absolute left-3 top-3 text-gray-400 text-xs"></i>
+                        <input type="date" id="filter-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                    </div>
+                    
+                    <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs">
+                        <i class="fas fa-redo mr-1"></i> Safisha Filter
+                    </button>
+                </div>
+
+                <!-- Sales Table -->
+                <div class="overflow-x-auto rounded-lg shadow-sm border">
+                    <table class="w-full table-auto border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-emerald-600">
+                                <th class="border px-3 py-2 text-left text-white">Tarehe</th>
+                                <th class="border px-3 py-2 text-left text-white">Risiti</th>
+                                <th class="border px-3 py-2 text-left text-white">Bidhaa</th>
+                                <th class="border px-3 py-2 text-left text-white">Idadi</th>
+                                <th class="border px-3 py-2 text-left text-white">Bei</th>
+                                <th class="border px-3 py-2 text-left text-white">Punguzo</th>
+                                <th class="border px-3 py-2 text-left text-white">Faida</th>
+                                <th class="border px-3 py-2 text-left text-white">Jumla</th>
+                                <th class="border px-3 py-2 text-left text-white">Vitendo</th>
                             </tr>
                         </thead>
-                        <tbody id="cart-tbody">
-                            <!-- Cart items will be populated here -->
+                        <tbody id="sales-tbody">
+                            @php $today = \Carbon\Carbon::today()->format('Y-m-d'); @endphp
+                            @forelse($mauzos as $item)
+                                @php 
+                                    $itemDate = $item->created_at->format('Y-m-d');
+                                    $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
+                                    $faida = ($item->bei - $buyingPrice) * $item->idadi - $item->punguzo;
+                                    $total = $item->jumla + $item->punguzo;
+                                @endphp
+                                <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}">
+                                    <td class="border px-3 py-2">
+                                        @if($itemDate === $today)
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
+                                        @else
+                                            {{ $item->created_at->format('d/m/Y') }}
+                                        @endif
+                                    </td>
+                                    <td class="border px-3 py-2 font-mono">
+                                        @if($item->receipt_no)
+                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
+                                        @else
+                                            <span class="text-gray-400 text-xs">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="border px-3 py-2">{{ $item->bidhaa->jina }}</td>
+                                    <td class="border px-3 py-2 text-center">{{ $item->idadi }}</td>
+                                    <td class="border px-3 py-2 text-right">{{ number_format($item->bei) }}</td>
+                                    <td class="border px-3 py-2 text-right">{{ number_format($item->punguzo) }}</td>
+                                    <td class="border px-3 py-2 text-right">{{ number_format($faida) }}</td>
+                                    <td class="border px-3 py-2 text-right">{{ number_format($total) }}</td>
+                                    <td class="border px-3 py-2 text-center">
+                                        <div class="flex gap-1 justify-center">
+                                            @if($item->receipt_no)
+                                            <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
+                                                <i class="fas fa-print mr-1 text-xs"></i>
+                                            </button>
+                                            @endif
+                                            <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}">
+                                                <i class="fas fa-trash mr-1 text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-gray-500 text-xs">Hakuna mauzo yaliyorekodiwa bado.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Total -->
-                <div class="flex justify-between items-center my-4">
-                    <div class="text-left font-semibold text-gray-800 text-lg">
-                        Jumla ya gharama: 
-                        <span class="text-green-600 text-xl" id="cart-total">0</span>
+                <!-- Pagination -->
+                @if($mauzos->hasPages())
+                <div class="mt-4">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <!-- Pagination Info -->
+                        <div class="text-xs text-gray-600">
+                            @php
+                                $start = ($mauzos->currentPage() - 1) * $mauzos->perPage() + 1;
+                                $end = min($mauzos->currentPage() * $mauzos->perPage(), $mauzos->total());
+                            @endphp
+                            Onyesha {{ $start }} - {{ $end }} ya {{ $mauzos->total() }} mauzo
+                        </div>
+
+                        <!-- Pagination Links -->
+                        <nav class="flex items-center space-x-1">
+                            <!-- Previous Button -->
+                            @if($mauzos->onFirstPage())
+                                <span class="px-3 py-1 rounded-lg border text-gray-400 text-xs cursor-not-allowed">
+                                    <i class="fas fa-chevron-left mr-1"></i> Nyuma
+                                </span>
+                            @else
+                                <a href="{{ $mauzos->previousPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
+                                    <i class="fas fa-chevron-left mr-1"></i> Nyuma
+                                </a>
+                            @endif
+
+                            <!-- Page Numbers -->
+                            <div class="flex items-center space-x-1">
+                                @foreach($mauzos->getUrlRange(1, $mauzos->lastPage()) as $page => $url)
+                                    @if($page == $mauzos->currentPage())
+                                        <span class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-semibold text-xs">
+                                            {{ $page }}
+                                        </span>
+                                    @else
+                                        <a href="{{ $url }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition">
+                                            {{ $page }}
+                                        </a>
+                                    @endif
+                                @endforeach
+                            </div>
+
+                            <!-- Next Button -->
+                            @if($mauzos->hasMorePages())
+                                <a href="{{ $mauzos->nextPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
+                                    Mbele <i class="fas fa-chevron-right ml-1"></i>
+                                </a>
+                            @else
+                                <span class="px-3 py-1 rounded-lg border text-gray-400 text-xs cursor-not-allowed">
+                                    Mbele <i class="fas fa-chevron-right ml-1"></i>
+                                </span>
+                            @endif
+                        </nav>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- TAB 4: Mauzo ya Jumla -->
+        <div id="jumla-tab-content" class="tab-content hidden">
+            <div class="bg-emerald-50 rounded-lg shadow border p-4 card-hover">
+                <h2 class="text-base font-bold mb-3 flex items-center text-black">
+                    <i class="fas fa-chart-bar mr-2 text-emerald-600"></i>
+                    Mauzo ya Jumla
+                </h2>
+
+                <!-- Search Area -->
+                <div class="mb-3">
+                    <input type="text" id="search-product" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition">
+                </div>
+
+                <!-- Sales Summary Table -->
+                <div class="overflow-x-auto rounded-lg shadow-sm border">
+                    <table class="w-full border-collapse text-sm" id="grouped-sales-table">
+                        <thead class="bg-emerald-600">
+                            <tr>
+                                <th class="border px-3 py-2 text-left text-white text-xs">Tarehe</th>
+                                <th class="border px-3 py-2 text-left text-white text-xs">Bidhaa</th>
+                                <th class="border px-3 py-2 text-left text-white text-xs">Idadi</th>
+                                <th class="border px-3 py-2 text-left text-white text-xs">Punguzo</th>
+                                <th class="border px-3 py-2 text-left text-white text-xs">Jumla</th>
+                                <th class="border px-3 py-2 text-left text-white text-xs">Faida</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grouped-sales-tbody">
+                            @php
+                                $groupedSales = [];
+                                foreach($mauzos as $sale) {
+                                    $date = $sale->created_at->format('Y-m-d');
+                                    $product = $sale->bidhaa->jina;
+                                    $key = $date . '|' . $product;
+                                    
+                                    if (!isset($groupedSales[$key])) {
+                                        $groupedSales[$key] = [
+                                            'tarehe' => $date,
+                                            'jina' => $product,
+                                            'idadi' => 0,
+                                            'punguzo' => 0,
+                                            'jumla' => 0,
+                                            'faida' => 0
+                                        ];
+                                    }
+                                    
+                                    $groupedSales[$key]['idadi'] += $sale->idadi;
+                                    $groupedSales[$key]['punguzo'] += $sale->punguzo;
+                                    $groupedSales[$key]['jumla'] += $sale->jumla + $sale->punguzo;
+                                    $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
+                                    $profitPerUnit = $sale->bei - $buyingPrice;
+                                    $groupedSales[$key]['faida'] += $profitPerUnit * $sale->idadi - $sale->punguzo;
+                                }
+                            @endphp
+                            
+                            @foreach($groupedSales as $sale)
+                            <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
+                                <td class="border px-3 py-2 text-xs">{{ $sale['tarehe'] }}</td>
+                                <td class="border px-3 py-2 text-xs">{{ $sale['jina'] }}</td>
+                                <td class="border px-3 py-2 text-center text-xs">{{ $sale['idadi'] }}</td>
+                                <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['punguzo']) }}</td>
+                                <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['jumla']) }}</td>
+                                <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['faida']) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+<!-- TAB 5: Kikapu -->
+<div id="kikapu-tab-content" class="tab-content hidden">
+    <div class="bg-white rounded-xl shadow border border-gray-100 p-4 card-hover">
+        <h2 class="text-base font-bold mb-3 flex items-center text-black">
+            <i class="fas fa-shopping-cart mr-2 text-blue-600"></i>
+            Bidhaa Zilizo Kwenye Kikapu
+        </h2>
+
+        <!-- Company Cart Warning (hidden by default) -->
+        <div id="company-cart-warning" class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3 hidden">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        Bidhaa zilizokuwa kwenye kikapu zimeondolewa kwa sababu hazikuwa za kampuni yako.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="empty-cart-message" class="text-center text-gray-600 py-8">
+            <i class="fas fa-shopping-cart text-3xl text-gray-400 mb-3"></i>
+            <p class="text-sm">Hakuna bidhaa kwenye kikapu kwa sasa.</p>
+        </div>
+        
+        <div id="cart-content" class="hidden">
+            <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+                <table class="w-full text-xs">
+                    <thead class="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th class="border px-3 py-2 text-left">S/N</th>
+                            <th class="border px-3 py-2 text-left">Bidhaa</th>
+                            <th class="border px-3 py-2 text-left">Idadi</th>
+                            <th class="border px-3 py-2 text-left">Bei</th>
+                            <th class="border px-3 py-2 text-left">Punguzo</th>
+                            <th class="border px-3 py-2 text-left">Jumla</th>
+                            <th class="border px-3 py-2 text-left">Ondoa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-tbody">
+                        <!-- Cart items will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Total -->
+            <div class="flex justify-between items-center my-3">
+                <div class="text-left font-semibold text-black text-base">
+                    Jumla ya gharama: 
+                    <span class="text-emerald-600" id="cart-total">0</span>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-wrap gap-2">
+                <button id="clear-cart" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center transition shadow-sm text-xs">
+                    <i class="fas fa-trash mr-2"></i>
+                    Futa Kikapu
+                </button>
+                <button id="kikapu-kopesha-btn" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg flex items-center transition shadow-sm text-xs">
+                    <i class="fas fa-hand-holding-usd mr-2"></i>
+                    Kopesha
+                </button>
+                <button id="checkout-cart" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg flex items-center transition shadow-sm text-xs">
+                    <i class="fas fa-check mr-2"></i>
+                    Funga Kapu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <!-- TAB 6: Risiti -->
+        <div id="risiti-tab-content" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow border p-4 card-hover">
+                <h2 class="text-base font-bold mb-3 flex items-center text-black">
+                    <i class="fas fa-receipt mr-2 text-emerald-600"></i>
+                    Chapisha Risiti
+                </h2>
+
+                <!-- Search Receipt -->
+                <div class="mb-4">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        <input type="text" id="search-receipt-input" placeholder="Weka namba ya risiti (MS-20260110-0001)..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    </div>
+                    <div class="mt-1 text-xs text-gray-500 flex items-center">
+                        <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                        Namba ya risiti inapatikana kwenye tab ya "Taarifa"
                     </div>
                 </div>
 
-                <!-- Actions -->
-                <div class="flex justify-end gap-3">
-                    <button id="clear-cart" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-3 rounded-lg flex items-center transition shadow-sm text-base">
-                        <i class="fas fa-trash mr-2"></i>
-                        Futa Kikapu
-                    </button>
-                    <button id="kopesha-kikapu-btn" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-lg flex items-center transition shadow-sm text-base">
-                        <i class="fas fa-hand-holding-usd mr-2"></i>
-                        Kopesha
-                    </button>
-                    <button id="checkout-cart" class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg flex items-center transition shadow-sm text-base">
-                        <i class="fas fa-check mr-2"></i>
-                        Funga Kapu
-                    </button>
+                <!-- Receipt Details -->
+                <div id="receipt-details" class="hidden">
+                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-3 mb-3">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-semibold text-black text-xs">Risiti No:</span>
+                            <span id="receipt-no-display" class="font-mono font-bold text-emerald-700 text-xs"></span>
+                        </div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-semibold text-black text-xs">Tarehe:</span>
+                            <span id="receipt-date-display" class="text-xs"></span>
+                        </div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-semibold text-black text-xs">Idadi ya Bidhaa:</span>
+                            <span id="receipt-items-count" class="text-xs"></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-black text-xs">Jumla:</span>
+                            <span id="receipt-total-display" class="font-bold text-sm"></span>
+                        </div>
+                    </div>
+
+                    <!-- Items List -->
+                    <div class="mb-3">
+                        <h3 class="font-semibold text-black text-xs mb-2">Bidhaa:</h3>
+                        <div id="receipt-items-list" class="space-y-2 max-h-40 overflow-y-auto">
+                            <!-- Items will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Print Button -->
+                    <div class="flex justify-center">
+                        <button id="print-thermal-receipt" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow text-sm">
+                            <i class="fas fa-print"></i>
+                            Chapisha Risiti
+                        </button>
+                    </div>
+                </div>
+
+                <!-- No Results Message -->
+                <div id="no-receipt-found" class="hidden text-center py-6">
+                    <i class="fas fa-receipt text-3xl text-gray-400 mb-3"></i>
+                    <p class="text-gray-600 text-sm">Hakuna risiti iliyopatikana.</p>
+                    <p class="text-xs text-gray-500 mt-1">Ingiza namba ya risiti ili kuona taarifa</p>
+                </div>
+
+                <!-- Loading -->
+                <div id="receipt-loading" class="hidden text-center py-6">
+                    <i class="fas fa-spinner fa-spin text-xl text-emerald-600 mb-3"></i>
+                    <p class="text-gray-600 text-sm">Inatafuta taarifa...</p>
                 </div>
             </div>
         </div>
@@ -838,15 +911,18 @@
 </div>
 
 <!-- Kopesha Modal -->
-<div id="kopesha-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+<div id="kopesha-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 z-50 max-h-[90vh] overflow-y-auto">
-        <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-5 text-white flex items-center sticky top-0">
+    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50 max-h-[85vh] overflow-y-auto">
+        <div class="sticky top-0 bg-gradient-to-r from-amber-500 to-amber-600 p-3 text-white flex items-center">
             <i class="fas fa-hand-holding-usd mr-2"></i>
-            <h2 class="text-lg font-semibold">Kopesha Bidhaa</h2>
+            <h2 class="text-base font-semibold">Kopesha Bidhaa</h2>
+            <button type="button" id="close-kopesha-modal" class="ml-auto text-white hover:text-gray-200 text-lg">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
 
-        <form method="POST" action="{{ route('madeni.store') }}" class="p-6 space-y-4" id="kopesha-form">
+        <form method="POST" action="{{ route('mauzo.store') }}" class="p-4 space-y-3" id="kopesha-form">
             @csrf
 
             <input type="hidden" name="bidhaa_id" id="kopesha-bidhaa-id">
@@ -854,12 +930,14 @@
             <input type="hidden" name="jumla" id="kopesha-jumla">
             <input type="hidden" name="baki" id="kopesha-baki">
             <input type="hidden" name="bei" id="kopesha-bei">
+            <input type="hidden" name="punguzo" id="kopesha-punguzo">
+            <input type="hidden" name="punguzo_aina" id="kopesha-punguzo-aina">
             <input type="hidden" name="kopesha" value="1">
 
             <!-- Mteja Select -->
             <div>
-                <label class="block font-semibold mb-1 text-gray-700">Mteja Aliyesajiliwa</label>
-                <select id="mteja-select" class="w-full border border-amber-300 rounded-xl p-3 focus:ring-4 focus:ring-amber-300 focus:border-amber-400 hover:border-amber-400 transition text-base">
+                <label class="block text-xs font-semibold mb-1 text-black">Mteja Aliyesajiliwa</label>
+                <select id="mteja-select" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 hover:border-amber-400 transition">
                     <option value="">-- Mteja Mpya --</option>
                     @foreach($wateja as $m)
                         <option value="{{ $m->id }}" data-jina="{{ $m->jina }}" data-simu="{{ $m->simu }}" data-barua_pepe="{{ $m->barua_pepe }}" data-anapoishi="{{ $m->anapoishi }}">
@@ -871,36 +949,36 @@
 
             <!-- New Customer Info -->
             <div>
-                <label class="block text-gray-700 mb-1 font-medium">Jina la Mkopaji</label>
-                <input type="text" name="jina_mkopaji" id="kopesha-jina" class="w-full border border-amber-300 rounded-xl p-3 focus:ring-4 focus:ring-amber-300 focus:border-amber-400 transition text-base" required>
+                <label class="block text-black text-xs font-semibold mb-1">Jina la Mkopaji *</label>
+                <input type="text" name="jina_mkopaji" id="kopesha-jina" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
             </div>
 
             <div>
-                <label class="block text-gray-700 mb-1 font-medium">Namba ya Simu</label>
-                <input type="text" name="simu" id="kopesha-simu" class="w-full border border-amber-300 rounded-xl p-3 focus:ring-4 focus:ring-amber-300 focus:border-amber-400 transition text-base" required>
+                <label class="block text-black text-xs font-semibold mb-1">Namba ya Simu *</label>
+                <input type="text" name="simu" id="kopesha-simu" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
             </div>
 
             <div>
-                <label class="block text-gray-700 mb-1 font-medium">Barua Pepe</label>
-                <input type="email" name="barua_pepe" id="kopesha-barua-pepe" class="w-full border border-amber-300 rounded-xl p-3 focus:ring-4 focus:ring-amber-300 focus:border-amber-400 transition text-base">
+                <label class="block text-black text-xs font-semibold mb-1">Barua Pepe</label>
+                <input type="email" name="barua_pepe" id="kopesha-barua-pepe" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
             </div>
 
             <div>
-                <label class="block text-gray-700 mb-1 font-medium">Anapoishi</label>
-                <input type="text" name="anapoishi" id="kopesha-anapoishi" class="w-full border border-amber-300 rounded-xl p-3 focus:ring-4 focus:ring-amber-300 focus:border-amber-400 transition text-base">
+                <label class="block text-black text-xs font-semibold mb-1">Anapoishi</label>
+                <input type="text" name="anapoishi" id="kopesha-anapoishi" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
             </div>
 
             <div>
-                <label class="block text-gray-700 mb-1 font-medium">Tarehe ya Malipo</label>
-                <input type="date" name="tarehe_malipo" class="w-full border border-amber-300 rounded-xl p-3 focus:ring-4 focus:ring-amber-300 focus:border-amber-400 transition text-base" required>
+                <label class="block text-black text-xs font-semibold mb-1">Tarehe ya Malipo *</label>
+                <input type="date" name="tarehe_malipo" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
             </div>
 
             <!-- Buttons -->
-            <div class="flex justify-end gap-3 pt-4">
-                <button type="button" id="close-kopesha-modal" class="bg-gray-400 hover:bg-gray-500 px-5 py-3 rounded-xl text-white font-semibold transition text-base">
+            <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                <button type="button" id="cancel-kopesha" class="bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg text-white font-semibold transition text-sm">
                     Funga
                 </button>
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-5 py-3 rounded-xl text-white font-semibold flex items-center gap-1 transition shadow-md text-base">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition shadow text-sm">
                     <i class="fas fa-check mr-1"></i>
                     Hifadhi
                 </button>
@@ -909,23 +987,28 @@
     </div>
 </div>
 
-<!-- Kopesha Kikapu Modal -->
-<div id="kopesha-kikapu-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+<!-- Kopesha Barcode Modal -->
+<div id="kopesha-barcode-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 z-50">
-        <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-5 text-white flex items-center">
+    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
+        <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-3 text-white flex items-center">
             <i class="fas fa-hand-holding-usd mr-2"></i>
-            <h2 class="text-lg font-semibold">Kopesha Bidhaa za Kikapu</h2>
+            <h2 class="text-base font-semibold">Kopesha Bidhaa za Barcode</h2>
+            <button type="button" id="close-kopesha-barcode-modal" class="ml-auto text-white hover:text-gray-200 text-lg">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
 
-        <form id="kopesha-kikapu-form" class="p-6 space-y-4">
+        <form id="kopesha-barcode-form" action="{{ route('mauzo.store.kopesha') }}" method="POST" class="p-4 space-y-3">
             @csrf
+            
             <div>
-                <label class="block font-semibold mb-1 text-gray-700 text-base">Chagua Mteja</label>
-                <select id="kikapu-mteja-select" class="w-full border border-amber-300 rounded-xl p-3 focus:ring-4 focus:ring-amber-300 focus:border-amber-400 transition text-base" required>
-                    <option value="">-- Chagua Mteja --</option>
+                <label class="block text-xs font-semibold mb-1 text-black">Chagua Mteja</label>
+                <select id="barcode-mteja-select" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                    <option value="">-- Mteja Mpya --</option>
                     @foreach($wateja as $mteja)
-                        <option value="{{ $mteja->jina }}">{{ $mteja->jina }} 
+                        <option value="{{ $mteja->id }}" data-jina="{{ $mteja->jina }}" data-simu="{{ $mteja->simu }}" data-barua_pepe="{{ $mteja->barua_pepe }}" data-anapoishi="{{ $mteja->anapoishi }}">
+                            {{ $mteja->jina }} 
                             @if($mteja->simu)
                                 - {{ $mteja->simu }}
                             @endif
@@ -934,11 +1017,39 @@
                 </select>
             </div>
 
-            <div class="flex justify-end gap-3 pt-4">
-                <button type="button" id="close-kopesha-kikapu-modal" class="bg-gray-400 hover:bg-gray-500 px-5 py-3 rounded-xl text-white font-semibold transition text-base">
+            <!-- New Customer Info -->
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Jina la Mkopaji *</label>
+                <input type="text" name="jina_mkopaji" id="barcode-kopesha-jina" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+            </div>
+
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Namba ya Simu *</label>
+                <input type="text" name="simu" id="barcode-kopesha-simu" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+            </div>
+
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Barua Pepe</label>
+                <input type="email" name="barua_pepe" id="barcode-kopesha-barua-pepe" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+            </div>
+
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Anapoishi</label>
+                <input type="text" name="anapoishi" id="barcode-kopesha-anapoishi" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+            </div>
+
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Tarehe ya Malipo *</label>
+                <input type="date" name="tarehe_malipo" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+            </div>
+
+            <input type="hidden" name="items" id="barcode-items-data">
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                <button type="button" id="cancel-kopesha-barcode" class="bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg text-white font-semibold transition text-sm">
                     Funga
                 </button>
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-5 py-3 rounded-xl text-white font-semibold flex items-center gap-1 transition shadow-md text-base">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition shadow text-sm">
                     <i class="fas fa-check mr-1"></i>
                     Thibitisha Kopesha
                 </button>
@@ -947,29 +1058,128 @@
     </div>
 </div>
 
-<!-- Delete Sale Modal -->
-<div id="delete-sale-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden">
+<!-- Kopesha Kikapu Modal -->
+<div id="kikapu-kopesha-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 z-50">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Futa Mauzo</h3>
+    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
+        <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-3 text-white flex items-center">
+            <i class="fas fa-hand-holding-usd mr-2"></i>
+            <h2 class="text-base font-semibold">Kopesha Bidhaa za Kikapu</h2>
+            <button type="button" id="close-kikapu-kopesha-modal" class="ml-auto text-white hover:text-gray-200 text-lg">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <div class="p-6">
-            <p class="text-gray-700 mb-6 text-center text-base">
-                Una uhakika unataka kufuta mauzo haya?
-                <br>Hatua hii haiwezi kutenduliwa.
+
+        <form id="kikapu-kopesha-form" action="{{ route('mauzo.store.kikapu.loan') }}" method="POST" class="p-4 space-y-3">
+            @csrf
+            
+            <div>
+                <label class="block text-xs font-semibold mb-1 text-black">Chagua Mteja</label>
+                <select id="kikapu-mteja-select" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                    <option value="">-- Mteja Mpya --</option>
+                    @foreach($wateja as $mteja)
+                        <option value="{{ $mteja->id }}" data-jina="{{ $mteja->jina }}" data-simu="{{ $mteja->simu }}" data-barua_pepe="{{ $mteja->barua_pepe }}" data-anapoishi="{{ $mteja->anapoishi }}">
+                            {{ $mteja->jina }} 
+                            @if($mteja->simu)
+                                - {{ $mteja->simu }}
+                            @endif
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- New Customer Info -->
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Jina la Mkopaji *</label>
+                <input type="text" name="jina_mkopaji" id="kikapu-kopesha-jina" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+            </div>
+
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Namba ya Simu *</label>
+                <input type="text" name="simu" id="kikapu-kopesha-simu" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+            </div>
+
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Barua Pepe</label>
+                <input type="email" name="barua_pepe" id="kikapu-kopesha-barua-pepe" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+            </div>
+
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Anapoishi</label>
+                <input type="text" name="anapoishi" id="kikapu-kopesha-anapoishi" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+            </div>
+
+            <div>
+                <label class="block text-black text-xs font-semibold mb-1">Tarehe ya Malipo *</label>
+                <input type="date" name="tarehe_malipo" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+            </div>
+
+            <input type="hidden" name="items" id="kikapu-items-data">
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
+                <button type="button" id="cancel-kikapu-kopesha" class="bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg text-white font-semibold transition text-sm">
+                    Funga
+                </button>
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition shadow text-sm">
+                    <i class="fas fa-check mr-1"></i>
+                    Thibitisha Kopesha
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Simple Double Sale Warning Modal -->
+<div id="double-sale-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-3 text-white flex items-center">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <h2 class="text-base font-semibold">Onana tena</h2>
+            <button type="button" id="close-double-sale-modal" class="ml-auto text-white hover:text-gray-200 text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-4 space-y-3 text-center">
+            <div class="flex items-center justify-center text-orange-600 mb-2">
+                <i class="fas fa-exclamation-circle text-2xl mr-2"></i>
+            </div>
+            
+            <p class="text-sm text-black mb-3">
+                Unataka kuuza tena "<span id="double-sale-product-name" class="font-semibold"></span>"?
             </p>
-            <div class="flex justify-center space-x-3">
-                <button id="cancel-delete-sale" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-base">
+            
+            <div class="flex justify-center gap-3 pt-3">
+                <button type="button" id="cancel-double-sale" class="bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg text-white font-semibold transition text-sm">
                     Ghairi
                 </button>
-                <form id="delete-sale-form" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 text-base">
-                        Ndio, Futa
-                    </button>
-                </form>
+                <button type="button" id="confirm-double-sale" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition shadow text-sm">
+                    <i class="fas fa-check mr-1"></i>
+                    Uza
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirmation-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-base font-semibold text-black text-center">Thibitisha Ufutaji</h3>
+        </div>
+        <div class="p-4">
+            <p class="text-black text-sm mb-4 text-center" id="delete-message">
+                Una uhakika unataka kufuta mauzo haya?
+            </p>
+            <div class="flex justify-center space-x-2">
+                <button id="cancel-delete" class="px-4 py-2 border border-gray-300 rounded-lg text-black hover:bg-gray-50 text-sm">
+                    Ghairi
+                </button>
+                <button id="confirm-delete" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                    Ndio, Futa
+                </button>
             </div>
         </div>
     </div>
@@ -978,126 +1188,185 @@
 
 @push('styles')
 <style>
-/* Desktop optimization */
+/* Responsive Design */
+@media (max-width: 640px) {
+    .text-xs {
+        font-size: 0.75rem;
+    }
+    .text-sm {
+        font-size: 0.8rem;
+    }
+    .p-2 {
+        padding: 0.4rem;
+    }
+    .p-3 {
+        padding: 0.6rem;
+    }
+    .grid-cols-1 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+}
+
 @media (min-width: 1024px) {
     .container {
         max-width: 100%;
         padding: 0 1rem;
     }
     
-    .space-y-6 > div {
-        margin-bottom: 1.5rem;
-    }
-    
-    .grid-cols-6 {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-    
-    .overflow-x-auto {
-        overflow-x: visible;
+    #sehemu-tab-content {
+        max-height: calc(100vh - 250px);
+        overflow-y: auto;
     }
 }
 
-.modal {
-    transition: opacity 0.3s ease;
+/* Modal Responsive */
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95% !important;
+        margin: 0.5rem !important;
+    }
 }
 
+/* Tab styles */
 .tab-content {
     transition: opacity 0.3s ease;
-}
-
-.hidden {
-    display: none !important;
 }
 
 .tab-content.active {
     display: block;
 }
 
-.tab-button.active {
-    border-bottom: 2px solid #10B981;
-    color: #059669;
-    font-weight: 600;
-}
-
-.sales-row.hidden, .barcode-row.hidden, .grouped-sales-row.hidden {
+.tab-content.hidden {
     display: none;
 }
 
+.tab-button.active {
+    border-bottom-color: white !important;
+    color: white !important;
+}
+
+/* Card hover effect */
 .card-hover {
     transition: all 0.3s ease;
 }
 
 .card-hover:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.notification-success {
-    border-left-color: #10B981;
-}
-
-.notification-error {
-    border-left-color: #EF4444;
-}
-
-.notification-warning {
-    border-left-color: #F59E0B;
-}
-
-/* Barcode row highlight */
-.barcode-row.highlight {
-    animation: highlight-row 0.5s ease;
-    background-color: rgba(34, 197, 94, 0.1);
-}
-
-@keyframes highlight-row {
-    0% { background-color: rgba(34, 197, 94, 0.3); }
-    100% { background-color: rgba(34, 197, 94, 0.1); }
-}
-
-/* Tab persistence styling */
-.tab-persist {
-    background-color: #f0f9ff;
-}
-
-/* Copy receipt cursor */
-.copy-receipt:hover {
-    background-color: #dbeafe !important;
-    cursor: copy;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
     background: #f1f1f1;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
     background: #888;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+
+/* Modal animations */
+.modal {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Hide elements */
+.hidden {
+    display: none !important;
+}
+
+/* Text colors */
+.text-black {
+    color: #000000;
+}
+
+.text-emerald-800 {
+    color: #065f46;
+}
+
+.text-emerald-600 {
+    color: #059669;
+}
+
+/* Input focus styles */
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    ring: 2px;
+}
+
+/* Button transitions */
+button {
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+/* Table responsive */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Highlight animation */
+@keyframes highlight {
+    0% { background-color: rgba(34, 197, 94, 0.1); }
+    100% { background-color: transparent; }
+}
+
+.highlight {
+    animation: highlight 1s ease;
+}
+
+/* Barcode row highlight */
+.barcode-row.highlight {
+    background-color: rgba(34, 197, 94, 0.1);
+    transition: background-color 0.5s ease;
+}
 </style>
 @endpush
-
 @push('scripts')
 <script>
+
 class MauzoManager {
     constructor() {
-        this.currentTab = localStorage.getItem('currentMauzoTab') || 'sehemu';
-        this.cart = JSON.parse(localStorage.getItem('mauzo_cart')) || [];
+        // Get company ID from meta tag or data attribute
+        this.companyId = document.querySelector('meta[name="company-id"]')?.getAttribute('content') 
+                       || document.body.dataset.companyId
+                       || 'default';
+        
+        // Create unique cart key for this company
+        this.cartKey = `mauzo_cart_${this.companyId}`;
+        this.cart = JSON.parse(localStorage.getItem(this.cartKey)) || [];
         this.bidhaaList = @json($bidhaa);
         this.barcodeScanTimeout = null;
         this.currentReceiptNo = null;
+        this.deleteCallback = null;
+        this.pendingSaleData = null;
+        this.currentKopeshaType = null;
         this.init();
     }
 
@@ -1109,12 +1378,493 @@ class MauzoManager {
         this.initBarcodeRows();
         this.restoreTabState();
         this.initReceiptLookup();
+        this.initCartDisplay();
+        this.initCustomerSelection();
+        this.clearOtherCompanyCarts(); // Clear carts from other companies
     }
 
+    // Add method to clear other company carts
+    clearOtherCompanyCarts() {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('mauzo_cart_') && key !== this.cartKey) {
+                keysToRemove.push(key);
+            }
+        }
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
+
+    // Update: CORRECT DISCOUNT TYPE CALCULATIONS
+    updateTotals() {
+        const quantityInput = document.getElementById('quantity-input');
+        const priceInput = document.getElementById('price-input');
+        const discountInput = document.getElementById('punguzo-input');
+        const totalInput = document.getElementById('total-input');
+        const punguzoAinaInput = document.getElementById('punguzo-aina-input');
+        const punguzoType = document.getElementById('punguzo-type');
+        
+        if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
+
+        const quantity = parseInt(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const discount = parseFloat(discountInput.value) || 0;
+        const discountType = punguzoType.value;
+        
+        const baseTotal = quantity * price;
+        let finalTotal = 0;
+        
+        if (discountType === 'bidhaa') {
+            // "k/bidhaa" = discount PER ITEM (multiply by quantity)
+            const totalDiscount = discount * quantity;
+            finalTotal = baseTotal - totalDiscount;
+        } else {
+            // "jumla" = discount ON TOTAL (apply once)
+            finalTotal = baseTotal - discount;
+        }
+        
+        finalTotal = Math.max(0, finalTotal);
+        
+        totalInput.value = finalTotal.toFixed(2);
+        punguzoAinaInput.value = discountType;
+        
+        // Update kopesha form values
+        const kopeshaIdadi = document.getElementById('kopesha-idadi');
+        const kopeshaJumla = document.getElementById('kopesha-jumla');
+        const kopeshaBaki = document.getElementById('kopesha-baki');
+        const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
+        const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
+        
+        if (kopeshaIdadi) kopeshaIdadi.value = quantity;
+        if (kopeshaJumla) kopeshaJumla.value = finalTotal;
+        if (kopeshaBaki) kopeshaBaki.value = finalTotal;
+        if (kopeshaPunguzo) kopeshaPunguzo.value = discount;
+        if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
+    }
+
+    // Update: CORRECT CART ADDITION with company_id
+    addToCart() {
+        const bidhaaSelect = document.getElementById('bidhaaSelect');
+        const quantityInput = document.getElementById('quantity-input');
+        const priceInput = document.getElementById('price-input');
+        const discountInput = document.getElementById('punguzo-input');
+        const punguzoType = document.getElementById('punguzo-type');
+        const totalInput = document.getElementById('total-input');
+        
+        if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
+
+        const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
+        const quantity = parseInt(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const discount = parseFloat(discountInput.value) || 0;
+        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+        const total = parseFloat(totalInput.value) || 0;
+        
+        if (!selectedOption.value || quantity < 1) {
+            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+            return;
+        }
+
+        // Get buying price for profit calculation
+        const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
+        
+        // Calculate base total and actual discount
+        const baseTotal = price * quantity;
+        let actualDiscount = discount;
+        let profit = 0;
+        
+        if (discountType === 'bidhaa') {
+            actualDiscount = discount * quantity;
+            profit = ((price - buyingPrice) * quantity) - actualDiscount;
+        } else {
+            actualDiscount = discount;
+            profit = ((price - buyingPrice) * quantity) - discount;
+        }
+        
+        // Verify calculation matches displayed total
+        const calculatedTotal = baseTotal - actualDiscount;
+        if (Math.abs(calculatedTotal - total) > 0.01) {
+            this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal}, Ilioingizwa: ${total}`, 'error');
+            return;
+        }
+
+        const productName = selectedOption.dataset.jina;
+        const barcode = selectedOption.dataset.barcode || '';
+
+        // Get company name from meta tag
+        const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
+
+        const cartItem = {
+            jina: productName,
+            bei: price,
+            idadi: quantity,
+            punguzo: discount,
+            punguzo_aina: discountType,
+            jumla: total,
+            profit: profit,
+            bidhaa_id: selectedOption.value,
+            barcode: barcode,
+            timestamp: new Date().toISOString(),
+            company_id: this.companyId, // Add company identifier
+            company_name: companyName // Add company name for display
+        };
+
+        this.cart.push(cartItem);
+        this.saveCart();
+        this.updateCartCount();
+        this.updateCartDisplay();
+        
+        this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
+        this.resetForm();
+    }
+
+    // Update: CORRECT CART DISPLAY with company filtering
+    updateCartDisplay() {
+        const emptyMessage = document.getElementById('empty-cart-message');
+        const cartContent = document.getElementById('cart-content');
+        const cartTbody = document.getElementById('cart-tbody');
+        const cartTotal = document.getElementById('cart-total');
+        const companyWarning = document.getElementById('company-cart-warning');
+
+        if (!emptyMessage || !cartContent || !cartTbody || !cartTotal) return;
+
+        // Filter cart items by current company
+        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+        
+        // Show warning if cart contains items from other companies
+        if (companyCart.length !== this.cart.length && companyWarning) {
+            companyWarning.classList.remove('hidden');
+            
+            // Optionally remove non-company items from cart
+            if (companyCart.length === 0) {
+                this.cart = [];
+                this.saveCart();
+            }
+        } else if (companyWarning) {
+            companyWarning.classList.add('hidden');
+        }
+
+        if (companyCart.length === 0) {
+            emptyMessage.classList.remove('hidden');
+            cartContent.classList.add('hidden');
+        } else {
+            emptyMessage.classList.add('hidden');
+            cartContent.classList.remove('hidden');
+
+            cartTbody.innerHTML = '';
+            let total = 0;
+
+            companyCart.forEach((item, index) => {
+                total += item.jumla;
+                
+                // Calculate displayed discount
+                let displayedDiscount = item.punguzo;
+                let discountLabel = item.punguzo_aina === 'bidhaa' ? 'k/bidhaa' : 'jumla';
+                
+                // If it's "kwa bidhaa", calculate total discount
+                if (item.punguzo_aina === 'bidhaa') {
+                    displayedDiscount = item.punguzo * item.idadi;
+                }
+                
+                // Calculate base total for verification
+                const baseTotal = item.bei * item.idadi;
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50 transition';
+                row.innerHTML = `
+                    <td class="border px-3 py-2 text-center text-xs">${index + 1}</td>
+                    <td class="border px-3 py-2 text-xs">
+                        ${item.jina}
+                        ${item.company_name ? `<br><span class="text-xs text-blue-600">${item.company_name}</span>` : ''}
+                    </td>
+                    <td class="border px-3 py-2 text-center text-xs">${item.idadi}</td>
+                    <td class="border px-3 py-2 text-right text-xs">${item.bei.toLocaleString()}</td>
+                    <td class="border px-3 py-2 text-right text-xs">
+                        ${displayedDiscount.toLocaleString()} (${discountLabel})
+                    </td>
+                    <td class="border px-3 py-2 text-right text-xs">${item.jumla.toLocaleString()}</td>
+                    <td class="border px-3 py-2 text-center">
+                        <button type="button" class="remove-cart-item text-red-500 hover:text-red-700 transition text-xs" data-index="${this.cart.findIndex(cartItem => 
+                            cartItem.timestamp === item.timestamp && cartItem.bidhaa_id === item.bidhaa_id
+                        )}" title="Ondoa Bidhaa">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                cartTbody.appendChild(row);
+            });
+
+            cartTotal.textContent = total.toLocaleString() + '/=';
+
+            document.querySelectorAll('.remove-cart-item').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.closest('.remove-cart-item').dataset.index);
+                    this.showConfirmation(
+                        'Unahakika unataka kuondoa bidhaa hii kwenye kikapu?',
+                        () => {
+                            this.removeFromCart(index);
+                        }
+                    );
+                });
+            });
+        }
+    }
+
+    // Update: CORRECT BARCODE CALCULATION
+    updateBarcodeRowTotal(row) {
+        const productPrice = row.querySelector('.product-price');
+        const quantityInput = row.querySelector('.quantity-input');
+        const punguzoInput = row.querySelector('.punguzo-input');
+        const stockInput = row.querySelector('.stock-input');
+        const totalInput = row.querySelector('.total-input');
+        const punguzoType = document.getElementById('punguzo-type');
+
+        if (!productPrice || !quantityInput || !totalInput || !punguzoType) return;
+
+        const price = parseFloat(productPrice.value) || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const punguzo = parseFloat(punguzoInput.value) || 0;
+        const stock = stockInput ? parseInt(stockInput.value) || 0 : 0;
+        const discountType = punguzoType.value;
+        
+        if (stock > 0 && quantity > stock) {
+            this.showNotification('Idadi uliyoiingiza inazidi idadi iliyopo!', 'error');
+            quantityInput.value = stock;
+            return;
+        }
+        
+        // Calculate total based on discount type
+        let total = price * quantity;
+        
+        if (discountType === 'bidhaa') {
+            // Discount per product (k/bidhaa)
+            total = total - (punguzo * quantity);
+        } else {
+            // Discount on total (jumla)
+            total = total - punguzo;
+        }
+        
+        totalInput.value = Math.max(0, total);
+        
+        this.updateBarcodeTotal();
+    }
+
+    // Update: CORRECT BARCODE SALE SUBMISSION
+    async submitBarcodeSales() {
+        const items = [];
+        let hasValidItems = false;
+        const punguzoType = document.getElementById('punguzo-type');
+
+        if (!punguzoType) return;
+
+        const discountType = punguzoType.value;
+
+        document.querySelectorAll('.barcode-row').forEach(row => {
+            const barcodeInput = row.querySelector('.barcode-input');
+            const quantityInput = row.querySelector('.quantity-input');
+            const productName = row.querySelector('.product-name');
+            const productPrice = row.querySelector('.product-price');
+            const punguzoInput = row.querySelector('.punguzo-input');
+            const totalInput = row.querySelector('.total-input');
+            
+            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
+                const barcode = barcodeInput.value.trim();
+                const quantity = parseInt(quantityInput.value) || 0;
+                const product = productName.value.trim();
+                const price = parseFloat(productPrice.value) || 0;
+                const punguzo = parseFloat(punguzoInput.value) || 0;
+                const jumla = parseFloat(totalInput.value) || 0;
+                
+                if (barcode && quantity > 0 && product && price > 0) {
+                    // Find bidhaa_id from barcode
+                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
+                    
+                    // Calculate actual discount based on type
+                    let actualDiscount = punguzo;
+                    if (discountType === 'bidhaa') {
+                        actualDiscount = punguzo * quantity;
+                    }
+                    
+                    items.push({
+                        barcode: barcode,
+                        bidhaa_id: bidhaa ? bidhaa.id : null,
+                        idadi: quantity,
+                        bei: price,
+                        punguzo: punguzo,
+                        punguzo_aina: discountType,
+                        jumla: jumla,
+                        total_before_discount: (price * quantity)
+                    });
+                    hasValidItems = true;
+                }
+            }
+        });
+
+        if (!hasValidItems) {
+            this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch("{{ route('mauzo.store.barcode') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ items: items, punguzo_aina: discountType })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+                
+                this.clearBarcodeRows();
+                this.updateFinancialData();
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
+        }
+    }
+
+    // Update: CORRECT CART CHECKOUT with company validation
+    async checkoutCart() {
+        // Filter cart to current company only
+        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+        
+        if (companyCart.length === 0) {
+            this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Company-ID': this.companyId // Add company header
+                },
+                body: JSON.stringify({ 
+                    items: companyCart,
+                    company_id: this.companyId 
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+                
+                this.clearCart();
+                this.updateFinancialData();
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+        }
+    }
+
+    // Update: CORRECT KOPESHA DATA PREPARATION
+    prepareBarcodeKopeshaData() {
+        const items = [];
+        const punguzoType = document.getElementById('punguzo-type');
+        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+        
+        document.querySelectorAll('.barcode-row').forEach(row => {
+            const barcodeInput = row.querySelector('.barcode-input');
+            const quantityInput = row.querySelector('.quantity-input');
+            const productName = row.querySelector('.product-name');
+            const productPrice = row.querySelector('.product-price');
+            const punguzoInput = row.querySelector('.punguzo-input');
+            const totalInput = row.querySelector('.total-input');
+            
+            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
+                const barcode = barcodeInput.value.trim();
+                const quantity = parseInt(quantityInput.value) || 0;
+                const product = productName.value.trim();
+                const price = parseFloat(productPrice.value) || 0;
+                const punguzo = parseFloat(punguzoInput.value) || 0;
+                const jumla = parseFloat(totalInput.value) || 0;
+                
+                if (barcode && quantity > 0 && product && price > 0) {
+                    // Find bidhaa_id from barcode
+                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
+                    
+                    // Calculate actual discount
+                    let actualDiscount = punguzo;
+                    if (discountType === 'bidhaa') {
+                        actualDiscount = punguzo * quantity;
+                    }
+                    
+                    items.push({
+                        barcode: barcode,
+                        bidhaa_id: bidhaa ? bidhaa.id : null,
+                        idadi: quantity,
+                        jina: product,
+                        bei: price,
+                        punguzo: punguzo,
+                        punguzo_aina: discountType,
+                        jumla: jumla,
+                        total_before_discount: (price * quantity),
+                        company_id: this.companyId // Add company ID
+                    });
+                }
+            }
+        });
+        
+        if (items.length > 0) {
+            document.getElementById('barcode-items-data').value = JSON.stringify(items);
+        }
+    }
+
+    // Update: CORRECT KIKAPU KOPESHA DATA PREPARATION with company filter
+    prepareKikapuKopeshaData() {
+        // Filter cart to current company only
+        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+        
+        if (companyCart.length > 0) {
+            const items = companyCart.map(item => ({
+                bidhaa_id: item.bidhaa_id,
+                barcode: item.barcode,
+                idadi: item.idadi,
+                jina: item.jina,
+                bei: item.bei,
+                punguzo: item.punguzo,
+                punguzo_aina: item.punguzo_aina,
+                jumla: item.jumla,
+                profit: item.profit || 0,
+                company_id: this.companyId // Add company ID
+            }));
+            
+            document.getElementById('kikapu-items-data').value = JSON.stringify(items);
+        }
+    }
+
+    // Original methods from your script
     restoreTabState() {
         if (this.currentTab && this.currentTab !== 'sehemu') {
             this.showTab(this.currentTab);
         }
+    }
+
+    initCartDisplay() {
+        this.updateCartDisplay();
     }
 
     initReceiptLookup() {
@@ -1122,19 +1872,10 @@ class MauzoManager {
         const printButton = document.getElementById('print-thermal-receipt');
         
         if (searchInput) {
-            // Handle Enter key press
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     this.lookupReceipt(searchInput.value.trim());
-                }
-            });
-            
-            // Handle input for real-time search (optional)
-            searchInput.addEventListener('input', (e) => {
-                const value = e.target.value.trim();
-                if (value.length >= 10) {
-                    this.lookupReceipt(value);
                 }
             });
         }
@@ -1145,7 +1886,6 @@ class MauzoManager {
             });
         }
         
-        // Add copy functionality to receipt numbers in Taarifa tab
         document.querySelectorAll('.copy-receipt').forEach(element => {
             element.addEventListener('click', (e) => {
                 const receiptNo = e.target.dataset.receipt;
@@ -1155,7 +1895,6 @@ class MauzoManager {
             });
         });
         
-        // Add print functionality to individual receipt buttons
         document.querySelectorAll('.print-single-receipt').forEach(button => {
             button.addEventListener('click', (e) => {
                 const receiptNo = e.target.closest('.print-single-receipt').dataset.receiptNo;
@@ -1164,6 +1903,75 @@ class MauzoManager {
                 }
             });
         });
+    }
+
+    initCustomerSelection() {
+        const customerSelectors = ['mteja-select', 'barcode-mteja-select', 'kikapu-mteja-select'];
+        
+        customerSelectors.forEach(selectorId => {
+            const selectElement = document.getElementById(selectorId);
+            if (selectElement) {
+                selectElement.addEventListener('change', (e) => {
+                    this.handleCustomerSelection(e.target, selectorId);
+                });
+            }
+        });
+    }
+
+    handleCustomerSelection(selectElement, modalType) {
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        
+        if (selectedOption.value === "") {
+            this.clearCustomerFields(modalType);
+        } else {
+            const jina = selectedOption.dataset.jina || '';
+            const simu = selectedOption.dataset.simu || '';
+            const baruaPepe = selectedOption.dataset.barua_pepe || '';
+            const anapoishi = selectedOption.dataset.anapoishi || '';
+            
+            this.populateCustomerFields(modalType, jina, simu, baruaPepe, anapoishi);
+        }
+    }
+
+    clearCustomerFields(modalType) {
+        let prefix = '';
+        if (modalType === 'mteja-select') prefix = 'kopesha-';
+        else if (modalType === 'barcode-mteja-select') prefix = 'barcode-kopesha-';
+        else if (modalType === 'kikapu-mteja-select') prefix = 'kikapu-kopesha-';
+        
+        const fields = ['jina', 'simu', 'barua-pepe', 'anapoishi'];
+        fields.forEach(field => {
+            const element = document.getElementById(`${prefix}${field}`);
+            if (element) {
+                element.value = '';
+                if (field === 'jina' || field === 'simu') {
+                    element.required = true;
+                }
+            }
+        });
+    }
+
+    populateCustomerFields(modalType, jina, simu, baruaPepe, anapoishi) {
+        let prefix = '';
+        if (modalType === 'mteja-select') prefix = 'kopesha-';
+        else if (modalType === 'barcode-mteja-select') prefix = 'barcode-kopesha-';
+        else if (modalType === 'kikapu-mteja-select') prefix = 'kikapu-kopesha-';
+        
+        const jinaField = document.getElementById(`${prefix}jina`);
+        const simuField = document.getElementById(`${prefix}simu`);
+        const baruaPepeField = document.getElementById(`${prefix}barua-pepe`);
+        const anapoishiField = document.getElementById(`${prefix}anapoishi`);
+        
+        if (jinaField) {
+            jinaField.value = jina;
+            jinaField.required = false;
+        }
+        if (simuField) {
+            simuField.value = simu;
+            simuField.required = false;
+        }
+        if (baruaPepeField) baruaPepeField.value = baruaPepe;
+        if (anapoishiField) anapoishiField.value = anapoishi;
     }
 
     bindEvents() {
@@ -1178,33 +1986,12 @@ class MauzoManager {
             });
         });
 
-        // Kikapu button
-        document.getElementById('kikapu-btn').addEventListener('click', () => {
-            this.showKikapuModal();
-        });
-
-        // Sales form events
         this.bindSalesFormEvents();
-        
-        // Barcode events
         this.bindBarcodeEvents();
-        
-        // Search events
         this.bindSearchEvents();
-        
-        // Modal events
         this.bindModalEvents();
-        
-        // Cart events
         this.bindCartEvents();
-
-        // Delete sale events
         this.bindDeleteEvents();
-
-        // Handle page refresh
-        window.addEventListener('beforeunload', () => {
-            localStorage.setItem('currentMauzoTab', this.currentTab);
-        });
     }
 
     initBidhaaSearch() {
@@ -1314,12 +2101,8 @@ class MauzoManager {
     bindSalesFormEvents() {
         const bidhaaSelect = document.getElementById('bidhaaSelect');
         const quantityInput = document.getElementById('quantity-input');
-        const discountBidhaaCheck = document.getElementById('punguzo-bidhaa-check');
-        const discountJumlaCheck = document.getElementById('punguzo-jumla-check');
-        const discountBidhaaInput = document.getElementById('discount-bidhaa-input');
-        const discountJumlaInput = document.getElementById('discount-jumla-input');
-        const discountBidhaaType = document.getElementById('discount-bidhaa-type');
-        const discountJumlaType = document.getElementById('discount-jumla-type');
+        const discountInput = document.getElementById('punguzo-input');
+        const punguzoType = document.getElementById('punguzo-type');
         const kopeshaBtn = document.getElementById('kopesha-btn');
         const addToCartBtn = document.getElementById('add-to-cart-btn');
         const salesForm = document.getElementById('sales-form');
@@ -1338,38 +2121,21 @@ class MauzoManager {
             });
         }
 
-        if (discountBidhaaCheck) {
-            discountBidhaaCheck.addEventListener('change', () => {
-                discountBidhaaInput.disabled = !discountBidhaaCheck.checked;
-                if (discountBidhaaType) discountBidhaaType.disabled = !discountBidhaaCheck.checked;
+        if (discountInput) {
+            discountInput.addEventListener('input', () => {
                 this.updateTotals();
             });
         }
 
-        if (discountJumlaCheck) {
-            discountJumlaCheck.addEventListener('change', () => {
-                discountJumlaInput.disabled = !discountJumlaCheck.checked;
-                if (discountJumlaType) discountJumlaType.disabled = !discountJumlaCheck.checked;
+        if (punguzoType) {
+            punguzoType.addEventListener('change', () => {
                 this.updateTotals();
             });
-        }
-
-        if (discountBidhaaInput) {
-            discountBidhaaInput.addEventListener('input', () => this.updateTotals());
-        }
-        if (discountJumlaInput) {
-            discountJumlaInput.addEventListener('input', () => this.updateTotals());
-        }
-        if (discountBidhaaType) {
-            discountBidhaaType.addEventListener('change', () => this.updateTotals());
-        }
-        if (discountJumlaType) {
-            discountJumlaType.addEventListener('change', () => this.updateTotals());
         }
 
         if (kopeshaBtn) {
             kopeshaBtn.addEventListener('click', () => {
-                this.openKopeshaModal();
+                this.openKopeshaModal('regular');
             });
         }
 
@@ -1379,9 +2145,21 @@ class MauzoManager {
             });
         }
 
-        salesForm.addEventListener('submit', (e) => {
+        salesForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            this.submitForm(e.target);
+            
+            const hasDoubleSale = await this.checkDoubleSale();
+            
+            if (hasDoubleSale) {
+                this.pendingSaleData = { 
+                    form: salesForm, 
+                    type: 'regular'
+                };
+                this.showDoubleSaleModal();
+                return;
+            }
+            
+            await this.processSale(salesForm, 'regular');
         });
     }
 
@@ -1398,6 +2176,7 @@ class MauzoManager {
         if (selectedOption.value) {
             const price = parseFloat(selectedOption.dataset.bei) || 0;
             const stock = parseInt(selectedOption.dataset.stock) || 0;
+            const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
             
             priceInput.value = price;
             stockInput.value = stock;
@@ -1413,81 +2192,77 @@ class MauzoManager {
         } else {
             priceInput.value = '';
             stockInput.value = '';
+            quantityInput.value = '';
         }
         
         this.updateTotals();
     }
 
-    updateTotals() {
-        const quantityInput = document.getElementById('quantity-input');
-        const priceInput = document.getElementById('price-input');
-        const totalInput = document.getElementById('total-input');
+    async checkDoubleSale() {
+        const bidhaaId = document.getElementById('bidhaaSelect').value;
         
-        if (!quantityInput || !priceInput || !totalInput) return;
-
-        const quantity = parseInt(quantityInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        
-        let baseTotal = quantity * price;
-        let finalTotal = baseTotal;
-
-        const discountBidhaaCheck = document.getElementById('punguzo-bidhaa-check');
-        if (discountBidhaaCheck && discountBidhaaCheck.checked) {
-            const discountBidhaaInput = document.getElementById('discount-bidhaa-input');
-            const discountBidhaaType = document.getElementById('discount-bidhaa-type');
-            
-            if (discountBidhaaInput && discountBidhaaType) {
-                const discountValue = parseFloat(discountBidhaaInput.value) || 0;
-                const discountType = discountBidhaaType.value;
-                
-                if (discountType === 'percent') {
-                    const discountPerItem = (price * discountValue) / 100;
-                    finalTotal = (price - discountPerItem) * quantity;
-                } else {
-                    finalTotal = (price - discountValue) * quantity;
-                }
-            }
+        if (!bidhaaId) {
+            return false;
         }
-        
-        const discountJumlaCheck = document.getElementById('punguzo-jumla-check');
-        if (discountJumlaCheck && discountJumlaCheck.checked) {
-            const discountJumlaInput = document.getElementById('discount-jumla-input');
-            const discountJumlaType = document.getElementById('discount-jumla-type');
+
+        try {
+            const response = await fetch(`/mauzo/check-double-sale/${bidhaaId}`);
+            const data = await response.json();
             
-            if (discountJumlaInput && discountJumlaType) {
-                const discountValue = parseFloat(discountJumlaInput.value) || 0;
-                const discountType = discountJumlaType.value;
-                
-                if (discountType === 'percent') {
-                    finalTotal -= (finalTotal * discountValue) / 100;
-                } else {
-                    finalTotal -= discountValue;
-                }
+            if (data.success && data.recent_sale) {
+                return true;
             }
+            return false;
+        } catch (error) {
+            console.error('Error checking double sale:', error);
+            return false;
         }
-        
-        finalTotal = Math.max(0, finalTotal);
-        totalInput.value = finalTotal.toFixed(2);
-        
-        const kopeshaIdadi = document.getElementById('kopesha-idadi');
-        const kopeshaJumla = document.getElementById('kopesha-jumla');
-        const kopeshaBaki = document.getElementById('kopesha-baki');
-        
-        if (kopeshaIdadi) kopeshaIdadi.value = quantity;
-        if (kopeshaJumla) kopeshaJumla.value = finalTotal;
-        if (kopeshaBaki) kopeshaBaki.value = finalTotal;
     }
 
-    async submitForm(form) {
-        const bidhaaId = document.getElementById('bidhaaSelect').value;
-        const quantity = document.getElementById('quantity-input').value;
+    showDoubleSaleModal() {
+        const modal = document.getElementById('double-sale-modal');
+        const productName = document.getElementById('bidhaaSearch').value.split(' - ')[0];
+        const productNameSpan = document.getElementById('double-sale-product-name');
+        const ghairiBtn = document.getElementById('cancel-double-sale');
+        const uzaBtn = document.getElementById('confirm-double-sale');
+        const closeBtn = document.getElementById('close-double-sale-modal');
+        
+        if (!modal) return;
+        
+        productNameSpan.textContent = productName || 'bidhaa hii';
+        modal.classList.remove('hidden');
+        
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            this.pendingSaleData = null;
+        };
+        
+        ghairiBtn.onclick = closeModal;
+        closeBtn.onclick = closeModal;
+        
+        uzaBtn.onclick = async () => {
+            modal.classList.add('hidden');
+            
+            if (this.pendingSaleData) {
+                await this.processSale(this.pendingSaleData.form, this.pendingSaleData.type);
+                this.pendingSaleData = null;
+            }
+        };
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal || e.target.classList.contains('modal-overlay')) {
+                closeModal();
+            }
+        });
+    }
 
-        if (!bidhaaId || !quantity || quantity < 1) {
-            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-            return;
-        }
-
+    async processSale(form, type) {
         const formData = new FormData(form);
+        
+        const punguzoType = document.getElementById('punguzo-type');
+        if (punguzoType) {
+            formData.append('punguzo_aina', punguzoType.value);
+        }
 
         try {
             const response = await fetch(form.action, {
@@ -1509,9 +2284,12 @@ class MauzoManager {
                 this.showNotification('Mauzo yamehifadhiwa kikamilifu! Namba ya risiti: ' + data.receipt_no, 'success');
                 
                 this.resetForm();
+                this.updateStockDisplay(formData.get('bidhaa_id'));
+                this.updateFinancialData();
+                
                 setTimeout(() => {
                     window.location.reload();
-                }, 1500);
+                }, 1000);
             } else {
                 this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
             }
@@ -1519,6 +2297,58 @@ class MauzoManager {
         } catch (error) {
             console.error('Error:', error);
             this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
+        }
+    }
+
+    updateStockDisplay(bidhaaId) {
+        const quantity = parseInt(document.getElementById('quantity-input').value) || 0;
+        const stockInput = document.getElementById('stock-input');
+        const currentStock = parseInt(stockInput.value) || 0;
+        stockInput.value = currentStock - quantity;
+    }
+
+    updateFinancialData() {
+        fetch('/mauzo/financial-data', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.updateFinancialDisplay(data.data);
+            }
+        })
+        .catch(error => console.error('Error updating financial data:', error));
+    }
+
+    updateFinancialDisplay(data) {
+        const elements = {
+            'mapato_leo': document.getElementById('mapato-jumla'),
+            'mapato_mauzo': document.getElementById('mapato-mauzo'),
+            'mapato_madeni': document.getElementById('mapato-madeni'),
+            'faida_leo': document.getElementById('faida-jumla'),
+            'faida_mauzo': document.getElementById('faida-mauzo'),
+            'faida_marejesho': document.getElementById('faida-marejesho'),
+            'matumizi_leo': document.getElementById('matumizi-leo'),
+            'matumizi_wiki': document.getElementById('matumizi-wiki'),
+            'matumizi_jumla': document.getElementById('matumizi-jumla'),
+            'fedha_leo': document.getElementById('fedha-jumla'),
+            'fedha_mapato': document.getElementById('fedha-mapato'),
+            'fedha_matumizi': document.getElementById('fedha-matumizi'),
+            'faida_halisi': document.getElementById('faida-halisi-jumla'),
+            'faida_halisi_faida': document.getElementById('faida-halisi-faida'),
+            'faida_halisi_matumizi': document.getElementById('faida-halisi-matumizi'),
+            'jumla_kuu': document.getElementById('jumla-kuu-jumla'),
+            'jumla_kuu_mapato': document.getElementById('jumla-kuu-mapato'),
+            'jumla_kuu_matumizi': document.getElementById('jumla-kuu-matumizi')
+        };
+        
+        for (const [key, element] of Object.entries(elements)) {
+            if (element && data[key]) {
+                element.textContent = data[key];
+            }
         }
     }
 
@@ -1533,128 +2363,89 @@ class MauzoManager {
         const stockInput = document.getElementById('stock-input');
         const totalInput = document.getElementById('total-input');
         const quantityInput = document.getElementById('quantity-input');
+        const discountInput = document.getElementById('punguzo-input');
+        const punguzoType = document.getElementById('punguzo-type');
         
         if (bidhaaSearch) bidhaaSearch.value = '';
         if (priceInput) priceInput.value = '';
         if (stockInput) stockInput.value = '';
         if (totalInput) totalInput.value = '';
-        if (quantityInput) quantityInput.value = 1;
-        
-        const discountBidhaaCheck = document.getElementById('punguzo-bidhaa-check');
-        const discountJumlaCheck = document.getElementById('punguzo-jumla-check');
-        const discountBidhaaInput = document.getElementById('discount-bidhaa-input');
-        const discountJumlaInput = document.getElementById('discount-jumla-input');
-        const discountBidhaaType = document.getElementById('discount-bidhaa-type');
-        const discountJumlaType = document.getElementById('discount-jumla-type');
-        
-        if (discountBidhaaCheck) discountBidhaaCheck.checked = false;
-        if (discountJumlaCheck) discountJumlaCheck.checked = false;
-        if (discountBidhaaInput) {
-            discountBidhaaInput.value = '';
-            discountBidhaaInput.disabled = true;
-        }
-        if (discountJumlaInput) {
-            discountJumlaInput.value = '';
-            discountJumlaInput.disabled = true;
-        }
-        if (discountBidhaaType) discountBidhaaType.disabled = true;
-        if (discountJumlaType) discountJumlaType.disabled = true;
+        if (quantityInput) quantityInput.value = '';
+        if (discountInput) discountInput.value = 0;
+        if (punguzoType) punguzoType.value = 'bidhaa';
     }
 
-    openKopeshaModal() {
-        const bidhaaId = document.getElementById('bidhaaSelect').value;
-        const quantity = document.getElementById('quantity-input').value;
+    openKopeshaModal(type) {
+        this.currentKopeshaType = type;
         
-        if (!bidhaaId || !quantity || quantity < 1) {
-            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-            return;
+        let isValid = false;
+        let modalId = '';
+        
+        if (type === 'regular') {
+            modalId = 'kopesha-modal';
+            const bidhaaId = document.getElementById('bidhaaSelect').value;
+            const quantity = document.getElementById('quantity-input').value;
+            
+            if (bidhaaId && quantity && quantity > 0) {
+                isValid = true;
+                
+                document.getElementById('kopesha-bidhaa-id').value = bidhaaId;
+                document.getElementById('kopesha-idadi').value = quantity;
+                document.getElementById('kopesha-jumla').value = document.getElementById('total-input').value;
+                document.getElementById('kopesha-baki').value = document.getElementById('total-input').value;
+                document.getElementById('kopesha-bei').value = document.getElementById('price-input').value;
+                document.getElementById('kopesha-punguzo').value = document.getElementById('punguzo-input').value || 0;
+                document.getElementById('kopesha-punguzo-aina').value = document.getElementById('punguzo-type').value;
+            } else {
+                this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+            }
+        } else if (type === 'barcode') {
+            modalId = 'kopesha-barcode-modal';
+            const rows = document.querySelectorAll('.barcode-row');
+            let validRows = false;
+            
+            rows.forEach(row => {
+                const barcode = row.querySelector('.barcode-input').value.trim();
+                const quantity = row.querySelector('.quantity-input').value;
+                if (barcode && quantity > 0) {
+                    validRows = true;
+                }
+            });
+            
+            if (validRows) {
+                isValid = true;
+                this.prepareBarcodeKopeshaData();
+            } else {
+                this.showNotification('Tafadhali ingiza angalau bidhaa moja!', 'error');
+            }
+        } else if (type === 'kikapu') {
+            modalId = 'kikapu-kopesha-modal';
+            const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+            if (companyCart.length > 0) {
+                isValid = true;
+                this.prepareKikapuKopeshaData();
+            } else {
+                this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
+            }
         }
 
-        const mtejaSelect = document.getElementById('mteja-select');
-        if (mtejaSelect) {
-            mtejaSelect.addEventListener('change', this.fillMtejaDetails.bind(this));
+        if (isValid && modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                if (type === 'regular') this.clearCustomerFields('mteja-select');
+                else if (type === 'barcode') this.clearCustomerFields('barcode-mteja-select');
+                else if (type === 'kikapu') this.clearCustomerFields('kikapu-mteja-select');
+                
+                modal.classList.remove('hidden');
+            }
         }
-
-        const kopeshaModal = document.getElementById('kopesha-modal');
-        if (kopeshaModal) {
-            kopeshaModal.classList.remove('hidden');
-        }
-    }
-
-    fillMtejaDetails() {
-        const select = document.getElementById('mteja-select');
-        if (!select) return;
-
-        const selectedOption = select.options[select.selectedIndex];
-        const kopeshaJina = document.getElementById('kopesha-jina');
-        const kopeshaSimu = document.getElementById('kopesha-simu');
-        const kopeshaBaruaPepe = document.getElementById('kopesha-barua-pepe');
-        const kopeshaAnapoishi = document.getElementById('kopesha-anapoishi');
-        
-        if (selectedOption.value) {
-            if (kopeshaJina) kopeshaJina.value = selectedOption.dataset.jina || '';
-            if (kopeshaSimu) kopeshaSimu.value = selectedOption.dataset.simu || '';
-            if (kopeshaBaruaPepe) kopeshaBaruaPepe.value = selectedOption.dataset.barua_pepe || '';
-            if (kopeshaAnapoishi) kopeshaAnapoishi.value = selectedOption.dataset.anapoishi || '';
-        } else {
-            if (kopeshaJina) kopeshaJina.value = '';
-            if (kopeshaSimu) kopeshaSimu.value = '';
-            if (kopeshaBaruaPepe) kopeshaBaruaPepe.value = '';
-            if (kopeshaAnapoishi) kopeshaAnapoishi.value = '';
-        }
-    }
-
-    addToCart() {
-        const bidhaaSelect = document.getElementById('bidhaaSelect');
-        const quantityInput = document.getElementById('quantity-input');
-        const priceInput = document.getElementById('price-input');
-        
-        if (!bidhaaSelect || !quantityInput || !priceInput) return;
-
-        const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
-        const quantity = parseInt(quantityInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        
-        const discountBidhaaCheck = document.getElementById('punguzo-bidhaa-check');
-        const discountJumlaCheck = document.getElementById('punguzo-jumla-check');
-        const discountBidhaaInput = document.getElementById('discount-bidhaa-input');
-        const discountJumlaInput = document.getElementById('discount-jumla-input');
-        const discountBidhaaType = document.getElementById('discount-bidhaa-type');
-        const discountJumlaType = document.getElementById('discount-jumla-type');
-
-        if (!selectedOption.value || quantity < 1) {
-            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-            return;
-        }
-
-        const productName = selectedOption.text.split(' (')[0];
-        const total = parseFloat(document.getElementById('total-input').value) || 0;
-
-        const cartItem = {
-            jina: productName,
-            bei: price,
-            idadi: quantity,
-            punguzo_bidhaa: discountBidhaaCheck && discountBidhaaCheck.checked ? parseFloat(discountBidhaaInput.value) || 0 : 0,
-            punguzo_jumla: discountJumlaCheck && discountJumlaCheck.checked ? parseFloat(discountJumlaInput.value) || 0 : 0,
-            discount_bidhaa_type: discountBidhaaType ? discountBidhaaType.value : 'fixed',
-            discount_jumla_type: discountJumlaType ? discountJumlaType.value : 'fixed',
-            jumla: total,
-            bidhaa_id: selectedOption.value,
-            timestamp: new Date().toISOString()
-        };
-
-        this.cart.push(cartItem);
-        this.saveCart();
-        this.updateCartCount();
-        
-        this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
-        this.resetForm();
     }
 
     bindBarcodeEvents() {
         const addBarcodeRowBtn = document.getElementById('add-barcode-row');
         const barcodeForm = document.getElementById('barcode-form');
         const clearBarcodeFormBtn = document.getElementById('clear-barcode-form');
+        const kopeshaBarcodeBtn = document.getElementById('kopesha-barcode-btn');
 
         if (addBarcodeRowBtn) {
             addBarcodeRowBtn.addEventListener('click', () => {
@@ -1663,18 +2454,27 @@ class MauzoManager {
         }
 
         if (barcodeForm) {
-            barcodeForm.addEventListener('submit', (e) => {
+            barcodeForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                this.submitBarcodeSales();
+                await this.submitBarcodeSales();
             });
         }
 
         if (clearBarcodeFormBtn) {
             clearBarcodeFormBtn.addEventListener('click', () => {
-                if (confirm('Unahakika unataka kufuta bidhaa zote zilizoscan?')) {
-                    this.clearBarcodeRows();
-                    this.showNotification('Bidhaa zote zimefutwa!', 'success');
-                }
+                this.showConfirmation(
+                    'Unahakika unataka kufuta bidhaa zote zilizoscan?',
+                    () => {
+                        this.clearBarcodeRows();
+                        this.showNotification('Bidhaa zote zimefutwa!', 'success');
+                    }
+                );
+            });
+        }
+
+        if (kopeshaBarcodeBtn) {
+            kopeshaBarcodeBtn.addEventListener('click', () => {
+                this.openKopeshaModal('barcode');
             });
         }
     }
@@ -1686,33 +2486,37 @@ class MauzoManager {
         const newRow = document.createElement('tr');
         newRow.className = 'barcode-row';
         newRow.innerHTML = `
-            <td class="px-3 lg:px-4 py-2 lg:py-3">
+            <td class="px-3 py-2">
                 <input type="text" name="barcode[]" placeholder="Scan barcode" 
-                       class="barcode-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 lg:p-3 w-full text-sm transition-all" />
+                       class="barcode-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 w-full text-xs transition-all" />
             </td>
-            <td class="px-3 lg:px-4 py-2 lg:py-3">
+            <td class="px-3 py-2">
                 <input type="text" name="jina[]" readonly placeholder="Jina la Bidhaa" 
-                       class="product-name border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 lg:p-3 w-full text-sm" />
+                       class="product-name border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
             </td>
-            <td class="px-3 lg:px-4 py-2 lg:py-3">
+            <td class="px-3 py-2">
                 <input type="number" name="bei[]" readonly placeholder="Bei" 
-                       class="product-price border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 lg:p-3 w-full text-sm" />
+                       class="product-price border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
             </td>
-            <td class="px-3 lg:px-4 py-2 lg:py-3">
+            <td class="px-3 py-2">
                 <input type="number" name="idadi[]" min="1" value="1" placeholder="Idadi" 
-                       class="quantity-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 lg:p-3 w-full text-sm transition-all" />
+                       class="quantity-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 w-full text-xs transition-all" />
             </td>
-            <td class="px-3 lg:px-4 py-2 lg:py-3">
+            <td class="px-3 py-2">
                 <input type="number" name="stock[]" readonly placeholder="Baki" 
-                       class="stock-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 lg:p-3 w-full text-sm" />
+                       class="stock-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
             </td>
-            <td class="px-3 lg:px-4 py-2 lg:py-3">
+            <td class="px-3 py-2">
+                <input type="number" name="punguzo[]" min="0" value="0" placeholder="Punguzo" 
+                       class="punguzo-input border border-green-200 rounded-lg p-2 w-full text-xs" />
+            </td>
+            <td class="px-3 py-2">
                 <input type="number" name="jumla[]" readonly placeholder="Jumla" 
-                       class="total-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 lg:p-3 w-full text-sm" />
+                       class="total-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
             </td>
-            <td class="px-3 lg:px-4 py-2 lg:py-3 text-center">
+            <td class="px-3 py-2 text-center">
                 <button type="button" class="remove-barcode-row text-red-500 hover:text-red-700 p-2 rounded-full transition transform hover:scale-110" title="Futa bidhaa">
-                    <i class="fas fa-trash text-sm"></i>
+                    <i class="fas fa-trash text-xs"></i>
                 </button>
             </td>
         `;
@@ -1726,6 +2530,7 @@ class MauzoManager {
     addBarcodeRowEvents(row) {
         const barcodeInput = row.querySelector('.barcode-input');
         const quantityInput = row.querySelector('.quantity-input');
+        const punguzoInput = row.querySelector('.punguzo-input');
         const removeBtn = row.querySelector('.remove-barcode-row');
 
         if (barcodeInput) {
@@ -1753,13 +2558,24 @@ class MauzoManager {
             });
         }
 
+        if (punguzoInput) {
+            punguzoInput.addEventListener('input', () => {
+                this.updateBarcodeRowTotal(row);
+            });
+        }
+
         if (removeBtn) {
             removeBtn.addEventListener('click', () => {
                 const rows = document.querySelectorAll('.barcode-row');
                 if (rows.length > 1) {
-                    row.remove();
-                    this.updateBarcodeTotal();
-                    this.showNotification('Bidhaa imeondolewa!', 'success');
+                    this.showConfirmation(
+                        'Unahakika unataka kuondoa bidhaa hii?',
+                        () => {
+                            row.remove();
+                            this.updateBarcodeTotal();
+                            this.showNotification('Bidhaa imeondolewa!', 'success');
+                        }
+                    );
                 } else {
                     this.showNotification('Huwezi kufuta safu ya mwisho!', 'warning');
                 }
@@ -1795,7 +2611,9 @@ class MauzoManager {
                 row.classList.remove('highlight');
             }, 500);
             
-            this.addBarcodeRow();
+            setTimeout(() => {
+                this.addBarcodeRow();
+            }, 200);
             
             this.showNotification('Bidhaa: ' + product.jina + ' imeongezwa!', 'success');
         } else {
@@ -1823,12 +2641,14 @@ class MauzoManager {
             const stockInput = firstRow.querySelector('.stock-input');
             const totalInput = firstRow.querySelector('.total-input');
             const quantityInput = firstRow.querySelector('.quantity-input');
+            const punguzoInput = firstRow.querySelector('.punguzo-input');
             
             if (productName) productName.value = '';
             if (productPrice) productPrice.value = '';
             if (stockInput) stockInput.value = '';
             if (totalInput) totalInput.value = '';
             if (quantityInput) quantityInput.value = 1;
+            if (punguzoInput) punguzoInput.value = 0;
         }
         
         this.updateBarcodeTotal();
@@ -1837,30 +2657,6 @@ class MauzoManager {
         if (firstBarcodeInput) {
             firstBarcodeInput.focus();
         }
-    }
-
-    updateBarcodeRowTotal(row) {
-        const productPrice = row.querySelector('.product-price');
-        const quantityInput = row.querySelector('.quantity-input');
-        const stockInput = row.querySelector('.stock-input');
-        const totalInput = row.querySelector('.total-input');
-
-        if (!productPrice || !quantityInput || !totalInput) return;
-
-        const price = parseFloat(productPrice.value) || 0;
-        const quantity = parseInt(quantityInput.value) || 0;
-        const stock = stockInput ? parseInt(stockInput.value) || 0 : 0;
-        
-        if (stock > 0 && quantity > stock) {
-            this.showNotification('Idadi uliyoiingiza inazidi idadi iliyopo!', 'error');
-            quantityInput.value = stock;
-            return;
-        }
-        
-        const total = price * quantity;
-        totalInput.value = total;
-        
-        this.updateBarcodeTotal();
     }
 
     updateBarcodeTotal() {
@@ -1879,88 +2675,28 @@ class MauzoManager {
         barcodeTotal.textContent = total.toLocaleString() + '/=';
     }
 
-    submitBarcodeSales() {
-        const items = [];
-        let hasValidItems = false;
-        let totalItems = 0;
-
-        document.querySelectorAll('.barcode-row').forEach(row => {
-            const barcodeInput = row.querySelector('.barcode-input');
-            const quantityInput = row.querySelector('.quantity-input');
-            const productName = row.querySelector('.product-name');
-            const productPrice = row.querySelector('.product-price');
-            
-            if (barcodeInput && quantityInput && productName && productPrice) {
-                const barcode = barcodeInput.value.trim();
-                const quantity = parseInt(quantityInput.value) || 0;
-                const product = productName.value.trim();
-                const price = parseFloat(productPrice.value) || 0;
-                
-                if (barcode && quantity > 0 && product && price > 0) {
-                    items.push({
-                        barcode: barcode,
-                        idadi: quantity,
-                        product_name: product,
-                        bei: price,
-                        punguzo: 0,
-                        jumla: price * quantity
-                    });
-                    hasValidItems = true;
-                    totalItems++;
-                }
-            }
-        });
-
-        if (!hasValidItems) {
-            this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
-            return;
-        }
-
-        if (confirm(`Unahitaji kuuza bidhaa ${totalItems} zilizopatikana?\nJumla: ${document.getElementById('barcode-total').textContent}`)) {
-            fetch("{{ route('mauzo.store.barcode') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ 
-                    items: items
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-                    
-                    this.clearBarcodeRows();
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                } else if (data.errors) {
-                    this.showNotification('Hitilafu: ' + Object.values(data.errors).join(', '), 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
-            });
-        }
-    }
-
     bindSearchEvents() {
         const searchSales = document.getElementById('search-sales');
+        const filterDate = document.getElementById('filter-date');
+        const resetFilters = document.getElementById('reset-filters');
+        
         if (searchSales) {
             searchSales.addEventListener('input', (e) => {
-                const searchTerm = e.target.value.toLowerCase();
-                document.querySelectorAll('.sales-row').forEach(row => {
-                    const product = row.dataset.product;
-                    const date = row.dataset.date;
-                    if (product.includes(searchTerm) || date.includes(searchTerm)) {
-                        row.classList.remove('hidden');
-                    } else {
-                        row.classList.add('hidden');
-                    }
-                });
+                this.filterSalesTable();
+            });
+        }
+        
+        if (filterDate) {
+            filterDate.addEventListener('change', () => {
+                this.filterSalesTable();
+            });
+        }
+        
+        if (resetFilters) {
+            resetFilters.addEventListener('click', () => {
+                searchSales.value = '';
+                filterDate.value = '';
+                this.filterSalesTable();
             });
         }
 
@@ -1980,6 +2716,26 @@ class MauzoManager {
         }
     }
 
+    filterSalesTable() {
+        const searchTerm = document.getElementById('search-sales').value.toLowerCase();
+        const filterDate = document.getElementById('filter-date').value;
+        
+        document.querySelectorAll('.sales-row').forEach(row => {
+            const product = row.dataset.product;
+            const date = row.dataset.date;
+            const rowDate = new Date(date).toISOString().split('T')[0];
+            
+            const matchesSearch = product.includes(searchTerm);
+            const matchesDate = !filterDate || rowDate === filterDate;
+            
+            if (matchesSearch && matchesDate) {
+                row.classList.remove('hidden');
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+    }
+
     bindModalEvents() {
         const closeModal = (modalId) => {
             const modal = document.getElementById(modalId);
@@ -1987,59 +2743,96 @@ class MauzoManager {
         };
 
         const closeKopeshaBtn = document.getElementById('close-kopesha-modal');
-        const kopeshaModal = document.getElementById('kopesha-modal');
+        const cancelKopeshaBtn = document.getElementById('cancel-kopesha');
+        const kopeshaForm = document.getElementById('kopesha-form');
         
-        if (closeKopeshaBtn && kopeshaModal) {
+        if (closeKopeshaBtn) {
             closeKopeshaBtn.addEventListener('click', () => closeModal('kopesha-modal'));
-            kopeshaModal.addEventListener('click', (e) => {
-                if (e.target === kopeshaModal || e.target.classList.contains('modal-overlay')) {
-                    closeModal('kopesha-modal');
+        }
+        if (cancelKopeshaBtn) {
+            cancelKopeshaBtn.addEventListener('click', () => closeModal('kopesha-modal'));
+        }
+        
+        if (kopeshaForm) {
+            kopeshaForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitKopeshaForm(kopeshaForm, 'regular');
+            });
+        }
+        
+        const closeKopeshaBarcodeBtn = document.getElementById('close-kopesha-barcode-modal');
+        const cancelKopeshaBarcodeBtn = document.getElementById('cancel-kopesha-barcode');
+        const kopeshaBarcodeForm = document.getElementById('kopesha-barcode-form');
+        
+        if (closeKopeshaBarcodeBtn) {
+            closeKopeshaBarcodeBtn.addEventListener('click', () => closeModal('kopesha-barcode-modal'));
+        }
+        if (cancelKopeshaBarcodeBtn) {
+            cancelKopeshaBarcodeBtn.addEventListener('click', () => closeModal('kopesha-barcode-modal'));
+        }
+        
+        if (kopeshaBarcodeForm) {
+            kopeshaBarcodeForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitKopeshaForm(kopeshaBarcodeForm, 'barcode');
+            });
+        }
+        
+        const closeKikapuKopeshaBtn = document.getElementById('close-kikapu-kopesha-modal');
+        const cancelKikapuKopeshaBtn = document.getElementById('cancel-kikapu-kopesha');
+        const kikapuKopeshaForm = document.getElementById('kikapu-kopesha-form');
+        
+        if (closeKikapuKopeshaBtn) {
+            closeKikapuKopeshaBtn.addEventListener('click', () => closeModal('kikapu-kopesha-modal'));
+        }
+        if (cancelKikapuKopeshaBtn) {
+            cancelKikapuKopeshaBtn.addEventListener('click', () => closeModal('kikapu-kopesha-modal'));
+        }
+        
+        if (kikapuKopeshaForm) {
+            kikapuKopeshaForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitKopeshaForm(kikapuKopeshaForm, 'kikapu');
+            });
+        }
+        
+        const cancelDeleteBtn = document.getElementById('cancel-delete');
+        const confirmDeleteBtn = document.getElementById('confirm-delete');
+        
+        if (cancelDeleteBtn) {
+            cancelDeleteBtn.addEventListener('click', () => closeModal('delete-confirmation-modal'));
+        }
+        
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', () => {
+                if (this.deleteCallback) {
+                    this.deleteCallback();
                 }
+                closeModal('delete-confirmation-modal');
             });
         }
 
-        const closeKikapuBtn = document.getElementById('close-kikapu-modal');
-        const kikapuModal = document.getElementById('kikapu-modal');
-        
-        if (closeKikapuBtn && kikapuModal) {
-            closeKikapuBtn.addEventListener('click', () => closeModal('kikapu-modal'));
-            kikapuModal.addEventListener('click', (e) => {
-                if (e.target === kikapuModal || e.target.classList.contains('modal-overlay')) {
-                    closeModal('kikapu-modal');
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal || e.target.classList.contains('modal-overlay')) {
+                    modal.classList.add('hidden');
+                    
+                    if (modal.id === 'double-sale-modal') {
+                        this.pendingSaleData = null;
+                    }
                 }
             });
-        }
-
-        const closeKopeshaKikapuBtn = document.getElementById('close-kopesha-kikapu-modal');
-        const kopeshaKikapuModal = document.getElementById('kopesha-kikapu-modal');
-        
-        if (closeKopeshaKikapuBtn && kopeshaKikapuModal) {
-            closeKopeshaKikapuBtn.addEventListener('click', () => closeModal('kopesha-kikapu-modal'));
-            kopeshaKikapuModal.addEventListener('click', (e) => {
-                if (e.target === kopeshaKikapuModal || e.target.classList.contains('modal-overlay')) {
-                    closeModal('kopesha-kikapu-modal');
-                }
-            });
-        }
-
-        const cancelDeleteSale = document.getElementById('cancel-delete-sale');
-        const deleteSaleModal = document.getElementById('delete-sale-modal');
-        
-        if (cancelDeleteSale && deleteSaleModal) {
-            cancelDeleteSale.addEventListener('click', () => closeModal('delete-sale-modal'));
-            deleteSaleModal.addEventListener('click', (e) => {
-                if (e.target === deleteSaleModal || e.target.classList.contains('modal-overlay')) {
-                    closeModal('delete-sale-modal');
-                }
-            });
-        }
+        });
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                closeModal('kopesha-modal');
-                closeModal('kikapu-modal');
-                closeModal('kopesha-kikapu-modal');
-                closeModal('delete-sale-modal');
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.add('hidden');
+                    
+                    if (modal.id === 'double-sale-modal') {
+                        this.pendingSaleData = null;
+                    }
+                });
             }
         });
     }
@@ -2047,162 +2840,121 @@ class MauzoManager {
     bindCartEvents() {
         const clearCartBtn = document.getElementById('clear-cart');
         const checkoutCartBtn = document.getElementById('checkout-cart');
-        const kopeshaKikapuBtn = document.getElementById('kopesha-kikapu-btn');
-        const kopeshaKikapuForm = document.getElementById('kopesha-kikapu-form');
+        const kikapuKopeshaBtn = document.getElementById('kikapu-kopesha-btn');
 
         if (clearCartBtn) {
             clearCartBtn.addEventListener('click', () => {
-                this.clearCart();
+                this.showConfirmation(
+                    'Unahakika unataka kufuta bidhaa zote kwenye kikapu?',
+                    () => {
+                        this.clearCart();
+                    }
+                );
             });
         }
 
         if (checkoutCartBtn) {
-            checkoutCartBtn.addEventListener('click', () => {
-                this.checkoutCart();
+            checkoutCartBtn.addEventListener('click', async () => {
+                await this.checkoutCart();
             });
         }
 
-        if (kopeshaKikapuBtn) {
-            kopeshaKikapuBtn.addEventListener('click', () => {
-                this.openKopeshaKikapuModal();
-            });
-        }
-
-        if (kopeshaKikapuForm) {
-            kopeshaKikapuForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.submitKopeshaKikapu();
+        if (kikapuKopeshaBtn) {
+            kikapuKopeshaBtn.addEventListener('click', () => {
+                this.openKopeshaModal('kikapu');
             });
         }
     }
 
     bindDeleteEvents() {
         document.querySelectorAll('.delete-sale-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const saleId = this.dataset.id;
-                const deleteModal = document.getElementById('delete-sale-modal');
-                const deleteForm = document.getElementById('delete-sale-form');
+            btn.addEventListener('click', (e) => {
+                const saleId = e.target.closest('.delete-sale-btn').dataset.id;
                 
-                if (deleteForm && deleteModal) {
-                    deleteForm.action = `/mauzo/${saleId}`;
-                    deleteModal.classList.remove('hidden');
-                }
+                this.showConfirmation(
+                    'Una uhakika unataka kufuta mauzo haya? Hatua hii haiwezi kutenduliwa.',
+                    () => {
+                        this.deleteSale(saleId);
+                    }
+                );
             });
         });
     }
 
-    showKikapuModal() {
-        this.updateCartDisplay();
-        const kikapuModal = document.getElementById('kikapu-modal');
-        if (kikapuModal) {
-            kikapuModal.classList.remove('hidden');
-        }
-    }
-
-    openKopeshaKikapuModal() {
-        if (this.cart.length === 0) {
-            this.showNotification('Kikapu hakina bidhaa!', 'error');
-            return;
-        }
-        const kopeshaKikapuModal = document.getElementById('kopesha-kikapu-modal');
-        if (kopeshaKikapuModal) {
-            kopeshaKikapuModal.classList.remove('hidden');
-        }
-    }
-
-    submitKopeshaKikapu() {
-        const mtejaSelect = document.getElementById('kikapu-mteja-select');
-        if (!mtejaSelect) return;
-
-        const selectedMteja = mtejaSelect.value;
+    submitKopeshaForm(form, type) {
+        const formData = new FormData(form);
         
-        if (!selectedMteja) {
-            this.showNotification('Tafadhali chagua mteja!', 'error');
-            return;
+        if (type === 'barcode') {
+            const itemsData = document.getElementById('barcode-items-data').value;
+            if (itemsData) {
+                formData.append('items', itemsData);
+            }
+        } else if (type === 'kikapu') {
+            const itemsData = document.getElementById('kikapu-items-data').value;
+            if (itemsData) {
+                formData.append('items', itemsData);
+            }
         }
-
-        fetch("{{ route('mauzo.store.kikapu.loan') }}", {
+        
+        fetch(form.action, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ 
-                jina: selectedMteja,
-                items: this.cart 
-            })
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'success') {
-                this.showNotification(data.message, 'success');
-                this.clearCart();
-                this.closeModal('kikapu-modal');
-                this.closeModal('kopesha-kikapu-modal');
+            if (data.success) {
+                this.showNotification('Deni limerekodiwa kikamilifu!', 'success');
+                this.closeModal(type === 'regular' ? 'kopesha-modal' : 
+                              type === 'barcode' ? 'kopesha-barcode-modal' : 
+                              'kikapu-kopesha-modal');
                 
-                mtejaSelect.value = '';
+                if (type === 'regular') {
+                    this.resetForm();
+                } else if (type === 'barcode') {
+                    this.clearBarcodeRows();
+                } else if (type === 'kikapu') {
+                    this.clearCart();
+                }
+                
+                this.updateFinancialData();
                 
                 setTimeout(() => {
                     window.location.reload();
-                }, 2000);
+                }, 1000);
             } else {
-                this.showNotification(data.message || 'Kuna tatizo kwenye kukopesha bidhaa!', 'error');
+                this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            this.showNotification('Kuna tatizo kwenye kukopesha bidhaa!', 'error');
+            this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
         });
     }
 
-    updateCartDisplay() {
-        const cartTbody = document.getElementById('cart-tbody');
-        const emptyMessage = document.getElementById('empty-cart-message');
-        const cartContent = document.getElementById('cart-content');
-        const cartTotal = document.getElementById('cart-total');
-
-        if (!cartTbody || !emptyMessage || !cartContent || !cartTotal) return;
-
-        if (this.cart.length === 0) {
-            emptyMessage.classList.remove('hidden');
-            cartContent.classList.add('hidden');
-        } else {
-            emptyMessage.classList.add('hidden');
-            cartContent.classList.remove('hidden');
-
-            cartTbody.innerHTML = '';
-            let total = 0;
-
-            this.cart.forEach((item, index) => {
-                total += item.jumla;
-                
-                const row = document.createElement('tr');
-                row.className = 'border-b hover:bg-gray-50 transition';
-                row.innerHTML = `
-                    <td class="border px-4 py-3 text-center text-sm">${index + 1}</td>
-                    <td class="border px-4 py-3 text-sm">${item.jina}</td>
-                    <td class="border px-4 py-3 text-center text-sm">${item.idadi}</td>
-                    <td class="border px-4 py-3 text-right text-sm">${item.bei.toLocaleString()}</td>
-                    <td class="border px-4 py-3 text-right text-sm">${(item.punguzo_bidhaa + item.punguzo_jumla).toLocaleString()}</td>
-                    <td class="border px-4 py-3 text-right text-sm">${item.jumla.toLocaleString()}</td>
-                    <td class="border px-4 py-3 text-center">
-                        <button type="button" class="remove-cart-item text-red-500 hover:text-red-700 transition text-sm" data-index="${index}" title="Ondoa Bidhaa">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                cartTbody.appendChild(row);
-            });
-
-            cartTotal.textContent = total.toLocaleString() + '/=';
-
-            document.querySelectorAll('.remove-cart-item').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const index = parseInt(e.target.closest('.remove-cart-item').dataset.index);
-                    this.removeFromCart(index);
-                });
-            });
-        }
+    deleteSale(saleId) {
+        fetch(`/mauzo/${saleId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.showNotification('Mauzo yamefutwa kikamilifu!', 'success');
+                this.updateFinancialData();
+            } else {
+                this.showNotification(data.message || 'Kuna tatizo kufuta mauzo!', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kufuta mauzo!', 'error');
+        });
     }
 
     removeFromCart(index) {
@@ -2218,43 +2970,7 @@ class MauzoManager {
         this.saveCart();
         this.updateCartCount();
         this.updateCartDisplay();
-        this.showNotification('Kikapu limefutwa!', 'success');
-    }
-
-    checkoutCart() {
-        if (this.cart.length === 0) {
-            this.showNotification('Kikapu hakina bidhaa!', 'error');
-            return;
-        }
-
-        fetch("{{ route('mauzo.store.kikapu') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ 
-                items: this.cart
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-                
-                this.clearCart();
-                this.closeModal('kikapu-modal');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 2000);
-            } else {
-                this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
-        });
+        this.showNotification('kikapu kimefutwa!', 'success');
     }
 
     closeModal(modalId) {
@@ -2263,14 +2979,16 @@ class MauzoManager {
     }
 
     saveCart() {
-        localStorage.setItem('mauzo_cart', JSON.stringify(this.cart));
+        localStorage.setItem(this.cartKey, JSON.stringify(this.cart));
     }
 
     updateCartCount() {
         const cartCount = document.getElementById('cart-count');
         if (cartCount) {
-            if (this.cart.length > 0) {
-                cartCount.textContent = this.cart.length;
+            // Count only items from current company
+            const companyCartCount = this.cart.filter(item => item.company_id === this.companyId).length;
+            if (companyCartCount > 0) {
+                cartCount.textContent = companyCartCount;
                 cartCount.classList.remove('hidden');
             } else {
                 cartCount.classList.add('hidden');
@@ -2288,10 +3006,11 @@ class MauzoManager {
         });
     }
 
-    showNotification(message, type = 'success') {
+    showNotification(message, type = 'success', showButtons = false) {
         const notification = document.getElementById('notification');
         const notificationIcon = document.getElementById('notification-icon');
         const notificationMessage = document.getElementById('notification-message');
+        const notificationButtons = document.getElementById('notification-buttons');
         
         if (!notification || !notificationIcon || !notificationMessage) return;
 
@@ -2318,11 +3037,36 @@ class MauzoManager {
         notification.querySelector('.bg-white').className = `bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border-2 ${borderColor} transform transition-all duration-300 scale-95`;
         notificationMessage.textContent = message;
         
+        if (showButtons) {
+            notificationButtons.classList.remove('hidden');
+        } else {
+            notificationButtons.classList.add('hidden');
+        }
+        
         notification.classList.remove('hidden');
         
-        setTimeout(() => {
-            notification.classList.add('hidden');
-        }, 3000);
+        if (!showButtons) {
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+    }
+
+    showConfirmation(message, confirmCallback) {
+        const deleteMessage = document.getElementById('delete-message');
+        const confirmBtn = document.getElementById('confirm-delete');
+        const cancelBtn = document.getElementById('cancel-delete');
+        const modal = document.getElementById('delete-confirmation-modal');
+        
+        if (deleteMessage && confirmBtn && cancelBtn && modal) {
+            deleteMessage.textContent = message;
+            this.deleteCallback = confirmCallback;
+            modal.classList.remove('hidden');
+        } else {
+            if (confirm(message)) {
+                confirmCallback();
+            }
+        }
     }
 
     lookupReceipt(receiptNo) {
@@ -2335,12 +3079,11 @@ class MauzoManager {
         const noResultsDiv = document.getElementById('no-receipt-found');
         const loadingDiv = document.getElementById('receipt-loading');
 
-        // Show loading
         detailsDiv.classList.add('hidden');
         noResultsDiv.classList.add('hidden');
         loadingDiv.classList.remove('hidden');
 
-        fetch(`/mauzo/receipt-print/${receiptNo}`)
+        fetch(`/mauzo/receipt-data/${receiptNo}`)
             .then(response => response.json())
             .then(data => {
                 loadingDiv.classList.add('hidden');
@@ -2372,15 +3115,15 @@ class MauzoManager {
 
         data.items.forEach((item, index) => {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'bg-white border border-gray-200 rounded-lg p-3';
+            itemDiv.className = 'bg-white border border-gray-200 rounded-lg p-2';
             itemDiv.innerHTML = `
                 <div class="flex justify-between items-center mb-1">
-                    <span class="font-medium text-gray-800">${item.bidhaa}</span>
-                    <span class="text-sm text-gray-600">${item.idadi} x ${item.bei.toLocaleString()}</span>
+                    <span class="font-medium text-black text-xs">${item.bidhaa}</span>
+                    <span class="text-xs text-gray-600">${item.idadi} x ${item.bei.toLocaleString()}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-500">Jumla:</span>
-                    <span class="font-semibold">${item.jumla.toLocaleString()}/=</span>
+                    <span class="text-xs text-gray-500">Jumla:</span>
+                    <span class="font-semibold text-xs">${item.jumla.toLocaleString()}/=</span>
                 </div>
             `;
             itemsList.appendChild(itemDiv);
@@ -2416,4 +3159,5 @@ document.addEventListener('DOMContentLoaded', function() {
     new MauzoManager();
 });
 </script>
+
 @endpush

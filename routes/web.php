@@ -171,21 +171,42 @@ Route::get('/wafanyakazi/export-pdf', [WafanyakaziController::class, 'exportPdf'
 // ================================
 // Mauzo Routes
 // ================================
+
+
+    
+// Main Mauzo Routes
 Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
 Route::post('/mauzo', [MauzoController::class, 'store'])->name('mauzo.store');
-Route::delete('/mauzo/{mauzo}', [MauzoController::class, 'destroy'])->name('mauzo.destroy');
-Route::post('/mauzo/kikapu/store', [MauzoController::class, 'storeKikapu']) ->name('mauzo.store.kikapu');
-Route::post('/mauzo/kikapu/kopesha', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kikapu.loan');
-Route::post('/mauzo/kopesha', [MauzoController::class, 'storeKikapuLoan'])
-    ->name('mauzo.store.kopesha');
-        Route::get('/receipt/{receiptNo}', [MauzoController::class, 'getReceiptData'])->name('mauzo.receipt');
-    Route::get('/search-receipts', [MauzoController::class, 'searchReceipts'])->name('mauzo.search.receipts');
-Route::get('/mauzo/receipt-print/{receiptNo}', [MauzoController::class, 'getReceiptForPrint'])->name('mauzo.receipt.print');
-Route::get('/mauzo/thermal-receipt/{receiptNo}', [MauzoController::class, 'printThermalReceipt'])->name('mauzo.thermal.receipt');
-    
-// ✅ Hifadhi Mauzo kwa kutumia Barcode
+Route::delete('/mauzo/{id}', [MauzoController::class, 'destroy'])->name('mauzo.destroy');
+
+// Barcode Sales
 Route::post('/mauzo/barcode', [MauzoController::class, 'storeBarcode'])->name('mauzo.store.barcode');
 
+// Kikapu (Shopping Cart) Routes
+Route::post('/mauzo/kikapu', [MauzoController::class, 'storeKikapu'])->name('mauzo.store.kikapu');
+Route::post('/mauzo/kikapu/loan', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kikapu.loan');
+
+// Kopesha (Loan) Routes
+Route::post('/mauzo/kopesha', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kopesha');
+Route::post('/mauzo/kopesha/barcode', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kopesha.barcode');
+
+// Double Sale Check
+Route::get('/mauzo/check-double-sale/{bidhaaId}', [MauzoController::class, 'checkDoubleSale'])->name('mauzo.check.double.sale');
+
+// Receipt Routes
+Route::get('/mauzo/receipt-data/{receiptNo}', [MauzoController::class, 'getReceiptData'])->name('mauzo.receipt.data');
+Route::get('/mauzo/search-receipts', [MauzoController::class, 'searchReceipts'])->name('mauzo.search.receipts');
+Route::get('/mauzo/receipt-print/{receiptNo}', [MauzoController::class, 'getReceiptForPrint'])->name('mauzo.receipt.print');
+Route::get('/mauzo/thermal-receipt/{receiptNo}', [MauzoController::class, 'printThermalReceipt'])->name('mauzo.thermal.receipt');
+
+// AJAX/Data Routes
+Route::get('/mauzo/financial-data', [MauzoController::class, 'getFinancialData'])->name('mauzo.financial.data');
+Route::get('/mauzo/product-by-barcode/{barcode}', [MauzoController::class, 'getProductByBarcode'])->name('mauzo.product.by.barcode');
+Route::post('/mauzo/update-stock', [MauzoController::class, 'updateStock'])->name('mauzo.update.stock');
+
+// Product Routes
+Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
 
 // ================================
 // Masaplaya Routes
@@ -195,24 +216,19 @@ Route::post('/masaplaya', [MasaplayaController::class, 'store'])->name('masaplay
 Route::put('/masaplaya/{masaplaya}', [MasaplayaController::class, 'update'])->name('masaplaya.update');
 Route::delete('/masaplaya/{masaplaya}', [MasaplayaController::class, 'destroy'])->name('masaplaya.destroy');
 
-// ================================
-// 🚀 Bidhaa Routes
-// ================================
-
-Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
-Route::post('/bidhaa', [BidhaaController::class, 'store'])->name('bidhaa.store');
-Route::put('/bidhaa/{id}', [BidhaaController::class, 'update'])->name('bidhaa.update');
-Route::delete('/bidhaa/{id}', [BidhaaController::class, 'destroy'])->name('bidhaa.destroy');
-Route::get('/bidhaa/download-sample', [BidhaaController::class, 'downloadSample'])->name('bidhaa.downloadSample');
-Route::post('/bidhaa/upload-csv', [BidhaaController::class, 'uploadCSV'])->name('bidhaa.uploadCSV');
-
-// ✅ Hifadhi bidhaa kwa kutumia barcode
-Route::post('/bidhaa/barcode', [BidhaaController::class, 'storeBarcode'])->name('bidhaa.store.barcode');
-
-// ✅ Tafuta bidhaa kwa barcode (kwa Mauzo page / API)
-Route::get('/bidhaa/tafuta-barcode/{barcode}', [BidhaaController::class, 'tafutaBarcode'])
-    ->name('bidhaa.tafuta.barcode');
-
+    // Main bidhaa routes
+    Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
+    Route::post('/bidhaa', [BidhaaController::class, 'store'])->name('bidhaa.store');
+    Route::put('/bidhaa/{id}', [BidhaaController::class, 'update'])->name('bidhaa.update');
+    Route::delete('/bidhaa/{id}', [BidhaaController::class, 'destroy'])->name('bidhaa.destroy');
+    
+    // CSV operations
+    Route::get('/bidhaa/download-sample', [BidhaaController::class, 'downloadSample'])->name('bidhaa.downloadSample');
+    Route::post('/bidhaa/upload-csv', [BidhaaController::class, 'uploadCSV'])->name('bidhaa.uploadCSV');
+    
+    // Barcode operations
+    Route::post('/bidhaa/barcode', [BidhaaController::class, 'storeBarcode'])->name('bidhaa.store.barcode');
+    Route::get('/bidhaa/tafuta-barcode/{barcode}', [BidhaaController::class, 'tafutaBarcode'])->name('bidhaa.tafuta.barcode');
 // ================================
 // Manunuzi Routes
 // ================================
@@ -229,7 +245,7 @@ Route::get('/madeni/{madeni}/edit', [MadeniController::class, 'edit'])->name('ma
 Route::put('/madeni/{madeni}', [MadeniController::class, 'update'])->name('madeni.update');
 Route::post('/madeni/{madeni}/rejesha', [MadeniController::class, 'rejesha'])->name('madeni.rejesha');
 Route::delete('/madeni/{madeni}', [MadeniController::class, 'destroy'])->name('madeni.destroy');
-
+  Route::get('/madeni/export', [MadeniController::class, 'export'])->name('madeni.export');
 // ================================
 // Uchambuzi Routes
 Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');

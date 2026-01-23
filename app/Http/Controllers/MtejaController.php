@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Mteja;
-use App\Models\History;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class MtejaController extends Controller
 {
@@ -45,38 +45,61 @@ class MtejaController extends Controller
     }
     
     /**
-     * Get company for current user
-     */
-    private function getCompany()
-    {
-        $user = $this->getAuthUser();
-        
-        if (!$user) {
-            abort(403, 'Unauthorized - Please login first');
-        }
-        
-        return $user->company;
-    }
-
-    /**
      * Display all customers belonging to the logged-in user's company.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $company = $this->getCompany();
+        $companyId = $this->getCompanyId();
+        $perPage = $request->input('per_page', 10);
 
-        // Fetch only customers for the logged-in user's company
-        $wateja = Mteja::where('company_id', $company->id)->get();
+        $query = Mteja::where('company_id', $companyId);
 
-        // Add statistics for the dashboard
-        $stats = [
-            'total_customers' => $wateja->count(),
-            'new_customers_this_month' => $wateja->where('created_at', '>=', now()->startOfMonth())->count(),
-            'total_debts' => 'TZS 0', // You can add debt calculation later
-            'vip_customers' => 0, // You can add VIP logic later
-        ];
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('jina', 'LIKE', "%{$search}%")
+                  ->orWhere('simu', 'LIKE', "%{$search}%")
+                  ->orWhere('barua_pepe', 'LIKE', "%{$search}%")
+                  ->orWhere('anapoishi', 'LIKE', "%{$search}%");
+            });
+        }
 
-        return view('wateja.index', compact('wateja', 'stats'));
+        $wateja = $query->latest()
+                       ->paginate($perPage)
+                       ->appends($request->except('page'));
+
+        // Get statistics
+        $totalWateja = $wateja->total();
+        $newThisMonth = Mteja::where('company_id', $companyId)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+        $newToday = Mteja::where('company_id', $companyId)
+            ->whereDate('created_at', today())
+            ->count();
+
+        // PDF Export
+        if ($request->has('export') && $request->export === 'pdf') {
+            $data = [
+                'wateja' => Mteja::where('company_id', $companyId)->latest()->get(),
+                'title' => 'Orodha ya Wateja',
+                'date' => now()->format('d/m/Y'),
+                'total_wateja' => $totalWateja,
+                'new_this_month' => $newThisMonth,
+                'new_today' => $newToday,
+            ];
+            
+            $pdf = Pdf::loadView('wateja.pdf', $data);
+            return $pdf->download('wateja-' . date('Y-m-d') . '.pdf');
+        }
+
+        return view('wateja.index', compact(
+            'wateja', 
+            'totalWateja', 
+            'newThisMonth', 
+            'newToday'
+        ));
     }
 
     /**
@@ -88,102 +111,84 @@ class MtejaController extends Controller
             'jina' => 'required|string|max:255',
             'simu' => 'required|string|max:20',
             'barua_pepe' => 'nullable|email|max:255',
-            'anapoishi' => 'nullable|string|max:255',
+            'anapoishi' => 'nullable|string|max:500',
             'maelezo' => 'nullable|string',
         ]);
 
-        $company = $this->getCompany();
+        $companyId = $this->getCompanyId();
         $user = $this->getAuthUser();
 
-        // ✅ Attach company_id automatically
-        $mteja = $company->wateja()->create([
+        $mteja = Mteja::create([
             'jina' => $request->jina,
             'simu' => $request->simu,
             'barua_pepe' => $request->barua_pepe,
             'anapoishi' => $request->anapoishi,
             'maelezo' => $request->maelezo,
+            'company_id' => $companyId,
         ]);
 
-        // 🧾 Record history
-        History::create([
-            'user'    => $user->name,
-            'action'  => 'Aliongeza Mteja',
-            'details' => "Mteja mpya: {$mteja->jina}, Simu: {$mteja->simu}",
-        ]);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Mteja ameongezwa kikamilifu!'
+            ]);
+        }
 
-        return redirect()->route('wateja.index')->with('success', 'Mteja ameongezwa kikamilifu!');
+        return redirect()->route('wateja.index')
+            ->with('success', 'Mteja ameongezwa kikamilifu!');
     }
 
     /**
      * Update customer details and record changes in history.
      */
-    public function update(Request $request, Mteja $mteja)
+    public function update(Request $request, $id)
     {
         $companyId = $this->getCompanyId();
         $user = $this->getAuthUser();
 
-        // Ensure this record belongs to the same company
-        if ($mteja->company_id !== $companyId) {
-            abort(403, 'Huna ruhusa ya kubadilisha mteja huyu.');
-        }
+        $mteja = Mteja::where('company_id', $companyId)->findOrFail($id);
 
         $request->validate([
             'jina' => 'required|string|max:255',
             'simu' => 'required|string|max:20',
             'barua_pepe' => 'nullable|email|max:255',
-            'anapoishi' => 'nullable|string|max:255',
+            'anapoishi' => 'nullable|string|max:500',
             'maelezo' => 'nullable|string',
         ]);
 
-        $oldData = $mteja->getOriginal();
-
         $mteja->update($request->only('jina', 'simu', 'barua_pepe', 'anapoishi', 'maelezo'));
 
-        // Detect changes
-        $changes = [];
-        foreach (['jina', 'simu', 'barua_pepe', 'anapoishi', 'maelezo'] as $field) {
-            if ($oldData[$field] != $mteja->$field) {
-                $changes[] = ucfirst($field) . ": '{$oldData[$field]}' → '{$mteja->$field}'";
-            }
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Taarifa za mteja zimebadilishwa kikamilifu!'
+            ]);
         }
 
-        $changeDetails = empty($changes) ? 'Hakuna mabadiliko makubwa.' : implode(', ', $changes);
-
-        // 🧾 Record history
-        History::create([
-            'user'    => $user->name,
-            'action'  => 'Amebadilisha Mteja',
-            'details' => "Mteja: {$mteja->jina} - {$changeDetails}",
-        ]);
-
-        return redirect()->route('wateja.index')->with('success', 'Taarifa za mteja zimebadilishwa kikamilifu!');
+        return redirect()->route('wateja.index')
+            ->with('success', 'Taarifa za mteja zimebadilishwa kikamilifu!');
     }
 
     /**
      * Delete a customer and record in history.
      */
-    public function destroy(Mteja $mteja)
+    public function destroy($id, Request $request)
     {
         $companyId = $this->getCompanyId();
         $user = $this->getAuthUser();
 
-        if ($mteja->company_id !== $companyId) {
-            abort(403, 'Huna ruhusa ya kufuta mteja huyu.');
-        }
-
-        $name = $mteja->jina;
-        $simu = $mteja->simu;
-
+        $mteja = Mteja::where('company_id', $companyId)->findOrFail($id);
         $mteja->delete();
 
-        // 🧾 Record history
-        History::create([
-            'user'    => $user->name,
-            'action'  => 'Amefuta Mteja',
-            'details' => "Mteja: {$name}, Simu: {$simu}",
-        ]);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Mteja amefutwa kikamilifu!'
+            ]);
+        }
 
-        return redirect()->route('wateja.index')->with('success', 'Mteja amefutwa kikamilifu!');
+        return redirect()->route('wateja.index')
+            ->with('success', 'Mteja amefutwa kikamilifu!');
     }
 
     /**

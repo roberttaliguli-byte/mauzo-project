@@ -1,742 +1,420 @@
 @extends('layouts.app')
 
-@section('title', 'Bidhaa - DEMODAY')
+@section('title', 'Bidhaa')
 
 @section('page-title', 'Bidhaa')
-@section('page-subtitle', 'Usimamizi wa bidhaa zote - ' . now()->format('d/m/Y'))
+@section('page-subtitle', now()->format('d/m/Y'))
 
 @section('content')
-<div class="space-y-4 md:space-y-6">
-    <!-- Statistics Cards - Responsive -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-green-100 p-4 md:p-6 card-hover">
-            <div class="flex items-center">
-                <div class="p-2 md:p-3 rounded-lg bg-green-100 text-green-600 mr-3 md:mr-4">
-                    <i class="fas fa-boxes text-lg md:text-xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs md:text-sm text-black-500 font-medium truncate">Jumla ya Bidhaa</p>
-                    <h3 class="text-lg md:text-2xl font-bold text-gray-800">{{ $bidhaa->count() }}</h3>
-                </div>
-            </div>
+<div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}">
+    <!-- Notifications -->
+    <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none">
+        @if(session('success'))
+        <div class="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 mb-2 shadow-sm">
+            {{ session('success') }}
         </div>
-        
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-green-100 p-4 md:p-6 card-hover">
-            <div class="flex items-center">
-                <div class="p-2 md:p-3 rounded-lg bg-emerald-100 text-emerald-600 mr-3 md:mr-4">
-                    <i class="fas fa-cubes text-lg md:text-xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs md:text-sm text-black-500 font-medium truncate">Bidhaa Zilizopo</p>
-                    <h3 class="text-lg md:text-2xl font-bold text-black-800">{{ $bidhaa->where('idadi', '>', 0)->count() }}</h3>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-green-100 p-4 md:p-6 card-hover">
-            <div class="flex items-center">
-                <div class="p-2 md:p-3 rounded-lg bg-amber-100 text-amber-600 mr-3 md:mr-4">
-                    <i class="fas fa-exclamation-triangle text-lg md:text-xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs md:text-sm text-black-500 font-medium truncate">Zinazokaribia Kuisha</p>
-                    <h3 class="text-lg md:text-2xl font-bold text-black-800">{{ $bidhaa->where('idadi', '<', 10)->count() }}</h3>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-green-100 p-4 md:p-6 card-hover">
-            <div class="flex items-center">
-                <div class="p-2 md:p-3 rounded-lg bg-red-100 text-red-600 mr-3 md:mr-4">
-                    <i class="fas fa-calendar-times text-lg md:text-xl"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs md:text-sm text-black-500 font-medium truncate">Zilizo Expire</p>
-                    <h3 class="text-lg md:text-2xl font-bold text-black-800">{{ $bidhaa->where('expiry', '<', now())->count() }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Page Navigation Tabs - Mobile Optimized -->
-    <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 p-2 md:p-4 card-hover">
-        <div class="flex space-x-1 md:space-x-6 overflow-x-auto scrollbar-hide">
-            <button 
-                id="taarifa-tab" 
-                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center border-b-2 border-green-500 text-green-600 font-medium md:font-semibold whitespace-nowrap"
-                data-tab="taarifa"
-            >
-                <i class="fas fa-table mr-1 md:mr-2 text-sm md:text-base"></i>
-                <span class="text-xs md:text-sm">Taarifa za Bidhaa</span>
-            </button>
-            <button 
-                id="ingiza-tab" 
-                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center text-gray-500 hover:text-gray-700 whitespace-nowrap"
-                data-tab="ingiza"
-            >
-                <i class="fas fa-plus-circle mr-1 md:mr-2 text-sm md:text-base"></i>
-                <span class="text-xs md:text-sm">Ingiza Bidhaa Mpya</span>
-            </button>
-            <button 
-                id="csv-tab" 
-                class="tab-button flex-shrink-0 pb-2 md:pb-3 px-2 md:px-4 transition-colors flex items-center text-gray-500 hover:text-gray-700 whitespace-nowrap"
-                data-tab="csv"
-            >
-                <i class="fas fa-file-csv mr-1 md:mr-2 text-sm md:text-base"></i>
-                <span class="text-xs md:text-sm">Ingiza kwa CSV</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Flash Messages - Responsive -->
-    @if(session('success'))
-        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-xl p-3 md:p-4">
-            <div class="flex items-start md:items-center">
-                <div class="p-1 md:p-2 rounded-lg bg-green-100 text-green-600 mr-2 md:mr-3 flex-shrink-0">
-                    <i class="fas fa-check-circle text-sm md:text-base"></i>
-                </div>
-                <div class="flex-1">
-                    <p class="text-green-800 font-medium text-xs md:text-sm">{{ session('success') }}</p>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    @if($errors->any())
-        <div class="bg-gradient-to-r from-red-50 to-pink-50 border border-red-300 rounded-xl p-3 md:p-4">
-            <div class="flex items-start md:items-center">
-                <div class="p-1 md:p-2 rounded-lg bg-red-100 text-red-600 mr-2 md:mr-3 flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-sm md:text-base"></i>
-                </div>
-                <div class="flex-1">
-                    <h4 class="text-red-800 font-medium text-xs md:text-sm">Hitilafu katika Uwasilishaji</h4>
-                    <ul class="text-red-700 mt-1 space-y-1">
-                        @foreach($errors->all() as $error)
-                            <li class="text-xs md:text-sm">• {{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-    @endif
-
-<!-- TAB 1: Taarifa za Bidhaa -->
-<div id="taarifa-tab-content" class="space-y-4 lg:space-y-6 tab-content">
-    <!-- Search and Actions - Mobile Optimized -->
-    <div class="bg-gray-200 rounded-xl lg:rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 card-hover">
-        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 lg:mb-6 space-y-4 lg:space-y-0">
-            <h2 class="text-base lg:text-lg xl:text-xl font-bold text-gray-800">Orodha ya Bidhaa</h2>
-            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        id="search-input"
-                        placeholder="Tafuta bidhaa..." 
-                        class="w-full pl-10 pr-4 py-2 lg:py-2 text-sm lg:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    >
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400 text-sm lg:text-base"></i>
-                    </div>
-                </div>
-                <button 
-                    onclick="window.print()" 
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center text-sm lg:text-base"
-                >
-                    <i class="fas fa-print mr-1 lg:mr-2 text-sm lg:text-base"></i>
-                    <span>Print</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Data Table - Responsive -->
-        <div class="overflow-x-auto -mx-2 lg:mx-0">
-            <table class="w-full min-w-full table-auto">
-                <thead>
-                    <tr class="bg-gradient-to-r from-green-400 to-green-700">
-                        <th class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 text-left text-xs lg:text-sm font-semibold text-white">Bidhaa</th>
-                        <th class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 text-left text-xs lg:text-sm font-semibold text-white">Aina</th>
-                        <th class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 text-center text-xs lg:text-sm font-semibold text-white">Idadi</th>
-                        <th class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 text-right text-xs lg:text-sm font-semibold text-white">Bei</th>
-                        <th class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 text-left text-xs lg:text-sm font-semibold text-white">Expiry</th>
-                        <th class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 text-center text-xs lg:text-sm font-semibold text-white print:hidden">Vitendo</th>
-                    </tr>
-                </thead>
-                <tbody id="products-tbody" class="divide-y divide-gray-200">
-                    @forelse($bidhaa as $item)
-                        <tr class="product-row hover:bg-green-50 transition-all duration-200 
-                            @if($item->idadi < 10) bg-gradient-to-r from-amber-50 to-yellow-50 border-l-4 border-amber-400
-                            @elseif($item->expiry < now()) bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-400
-                            @else bg-white @endif"
-                            data-product='@json($item)'>
-                            
-                            <td class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-6 w-6 lg:h-8 lg:w-8 xl:h-10 xl:w-10 bg-green-100 rounded-lg flex items-center justify-center text-green-800 font-semibold text-xs lg:text-sm xl:text-base">
-                                        {{ substr($item->jina, 0, 1) }}
-                                    </div>
-                                    <div class="ml-2 lg:ml-3 xl:ml-4">
-                                        <div class="text-xs lg:text-sm font-semibold text-gray-900 product-name truncate max-w-[80px] lg:max-w-[120px] xl:max-w-none">{{ $item->jina }}</div>
-                                        @if($item->barcode)
-                                        <div class="text-xs text-green-600 font-medium truncate max-w-[60px] lg:max-w-[100px] xl:max-w-none">#{{ $item->barcode }}</div>
-                                        @endif
-                                        <div class="text-xs text-gray-500 lg:hidden">{{ $item->kipimo ?: '--' }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            
-                            <td class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center px-2 py-0.5 lg:py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200 product-type truncate max-w-[60px] lg:max-w-[100px] xl:max-w-none">
-                                    {{ $item->aina }}
-                                </span>
-                            </td>
-                            
-                            <td class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 whitespace-nowrap text-center">
-                                <div class="text-xs lg:text-sm font-semibold 
-                                    @if($item->idadi < 10) text-amber-700
-                                    @elseif($item->idadi == 0) text-red-700
-                                    @else text-green-700 @endif">
-                                    {{ $item->idadi }}
-                                </div>
-                                @if($item->idadi < 10)
-                                <div class="text-xs text-amber-600 font-medium hidden lg:block">Karibu Kwisha</div>
-                                <div class="text-xs text-amber-600 font-medium lg:hidden">!</div>
-                                @endif
-                            </td>
-                            
-                            <td class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 whitespace-nowrap text-right">
-                                <div class="text-xs lg:text-sm font-bold text-green-700 truncate">{{ number_format($item->bei_kuuza, 0) }}</div>
-                                <div class="text-xs text-gray-600 lg:hidden">Nunua: {{ number_format($item->bei_nunua, 0) }}</div>
-                            </td>
-                            
-                            <td class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 whitespace-nowrap">
-                                <div class="text-xs lg:text-sm 
-                                    @if($item->expiry < now()) text-red-700 font-semibold
-                                    @elseif(\Carbon\Carbon::parse($item->expiry)->diffInDays(now()) < 30) text-amber-700
-                                    @else text-gray-700 @endif truncate">
-                                    {{ $item->expiry ? \Carbon\Carbon::parse($item->expiry)->format('d/m/Y') : '--' }}
-                                </div>
-                            </td>
-                            
-                            <td class="px-2 lg:px-4 xl:px-6 py-2 lg:py-3 xl:py-4 whitespace-nowrap text-xs lg:text-sm font-medium print:hidden">
-                                <div class="flex justify-center space-x-1 lg:space-x-2 xl:space-x-3">
-                                    <button 
-                                        class="edit-product-btn text-amber-600 hover:text-amber-800 transition-colors transform hover:scale-110 p-0.5 lg:p-1 xl:p-0"
-                                        title="Badili"
-                                        data-id="{{ $item->id }}"
-                                    >
-                                        <i class="fas fa-edit text-xs lg:text-sm xl:text-base"></i>
-                                    </button>
-                                    <button 
-                                        class="delete-product-btn text-red-500 hover:text-red-700 transition-colors transform hover:scale-110 p-0.5 lg:p-1 xl:p-0"
-                                        title="Futa"
-                                        data-id="{{ $item->id }}"
-                                        data-name="{{ $item->jina }}"
-                                    >
-                                        <i class="fas fa-trash text-xs lg:text-sm xl:text-base"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-4 lg:px-6 xl:px-8 py-6 lg:py-8 xl:py-12 text-center">
-                                <div class="flex flex-col items-center justify-center">
-                                    <i class="fas fa-boxes text-3xl lg:text-4xl xl:text-5xl text-green-300 mb-2 lg:mb-3 xl:mb-4"></i>
-                                    <p class="text-sm lg:text-base xl:text-lg font-semibold text-gray-600 mb-1 lg:mb-2">Hakuna bidhaa bado.</p>
-                                    <p class="text-xs lg:text-sm text-gray-500 mb-2 lg:mb-3 xl:mb-4">Anza kwa kuongeza bidhaa yako ya kwanza</p>
-                                    <button 
-                                        id="go-to-add-product"
-                                        class="bg-gradient-to-r from-green-600 to-green-700 text-white px-3 lg:px-4 xl:px-6 py-1.5 lg:py-2 xl:py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105 flex items-center shadow text-xs lg:text-sm xl:text-base"
-                                    >
-                                        <i class="fas fa-plus-circle mr-1 lg:mr-2 text-xs lg:text-sm xl:text-base"></i>
-                                        <span>Ingiza Bidhaa ya Kwanza</span>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination - Responsive -->
-        @if($bidhaa->hasPages())
-        <div class="mt-4 lg:mt-6">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <!-- Pagination Info -->
-                <div class="text-xs lg:text-sm text-gray-600">
-                    @php
-                        $start = ($bidhaa->currentPage() - 1) * $bidhaa->perPage() + 1;
-                        $end = min($bidhaa->currentPage() * $bidhaa->perPage(), $bidhaa->total());
-                    @endphp
-                    Onyesha {{ $start }} - {{ $end }} ya {{ $bidhaa->total() }} bidhaa
-                </div>
-
-                <!-- Pagination Links -->
-                <nav class="flex items-center space-x-1">
-                    <!-- Previous Button -->
-                    @if($bidhaa->onFirstPage())
-                        <span class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border text-gray-400 text-xs lg:text-sm cursor-not-allowed flex items-center">
-                            <i class="fas fa-chevron-left mr-1 text-xs"></i>
-                            <span class="hidden sm:inline">Nyuma</span>
-                        </span>
-                    @else
-                        <a href="{{ $bidhaa->previousPageUrl() }}" class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs lg:text-sm transition flex items-center">
-                            <i class="fas fa-chevron-left mr-1 text-xs"></i>
-                            <span class="hidden sm:inline">Nyuma</span>
-                        </a>
-                    @endif
-
-                    <!-- Page Numbers -->
-                    <div class="flex items-center space-x-1">
-                        @php
-                            // Show limited page numbers on mobile, more on desktop
-                            $maxPages = 5; // Show 5 page numbers
-                            $current = $bidhaa->currentPage();
-                            $last = $bidhaa->lastPage();
-                            
-                            if ($last <= $maxPages) {
-                                $startPage = 1;
-                                $endPage = $last;
-                            } else {
-                                $half = floor($maxPages / 2);
-                                if ($current <= $half) {
-                                    $startPage = 1;
-                                    $endPage = $maxPages;
-                                } elseif ($current >= ($last - $half)) {
-                                    $startPage = $last - $maxPages + 1;
-                                    $endPage = $last;
-                                } else {
-                                    $startPage = $current - $half;
-                                    $endPage = $current + $half;
-                                }
-                            }
-                        @endphp
-
-                        @if($startPage > 1)
-                            <a href="{{ $bidhaa->url(1) }}" class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs lg:text-sm transition">
-                                1
-                            </a>
-                            @if($startPage > 2)
-                                <span class="px-1 lg:px-2 text-gray-400 text-xs lg:text-sm">...</span>
-                            @endif
-                        @endif
-
-                        @for($page = $startPage; $page <= $endPage; $page++)
-                            @if($page == $bidhaa->currentPage())
-                                <span class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg bg-green-600 text-white font-semibold text-xs lg:text-sm">
-                                    {{ $page }}
-                                </span>
-                            @else
-                                <a href="{{ $bidhaa->url($page) }}" class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs lg:text-sm transition">
-                                    {{ $page }}
-                                </a>
-                            @endif
-                        @endfor
-
-                        @if($endPage < $last)
-                            @if($endPage < $last - 1)
-                                <span class="px-1 lg:px-2 text-gray-400 text-xs lg:text-sm">...</span>
-                            @endif
-                            <a href="{{ $bidhaa->url($last) }}" class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs lg:text-sm transition">
-                                {{ $last }}
-                            </a>
-                        @endif
-                    </div>
-
-                    <!-- Next Button -->
-                    @if($bidhaa->hasMorePages())
-                        <a href="{{ $bidhaa->nextPageUrl() }}" class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs lg:text-sm transition flex items-center">
-                            <span class="hidden sm:inline">Mbele</span>
-                            <i class="fas fa-chevron-right ml-1 text-xs"></i>
-                        </a>
-                    @else
-                        <span class="px-2 lg:px-3 py-1 lg:py-1.5 rounded-lg border text-gray-400 text-xs lg:text-sm cursor-not-allowed flex items-center">
-                            <span class="hidden sm:inline">Mbele</span>
-                            <i class="fas fa-chevron-right ml-1 text-xs"></i>
-                        </span>
-                    @endif
-                </nav>
-
-                <!-- Per Page Selector -->
-                <div class="flex items-center space-x-2">
-                    <span class="text-xs lg:text-sm text-gray-600 hidden sm:inline">Onyesha kwa:</span>
-                    <span class="text-xs lg:text-sm text-gray-600 sm:hidden">Uk:</span>
-                    <select class="border border-gray-300 rounded-lg p-1 lg:p-1.5 text-xs lg:text-sm focus:ring-2 focus:ring-green-500">
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Mobile Simplified Pagination -->
-            <div class="sm:hidden mt-3">
-                <div class="flex items-center justify-between">
-                    @if($bidhaa->onFirstPage())
-                        <span class="px-3 py-1.5 rounded-lg border text-gray-400 text-xs cursor-not-allowed flex items-center">
-                            <i class="fas fa-chevron-left mr-1"></i>
-                        </span>
-                    @else
-                        <a href="{{ $bidhaa->previousPageUrl() }}" class="px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
-                            <i class="fas fa-chevron-left mr-1"></i> Nyuma
-                        </a>
-                    @endif
-
-                    <span class="text-xs text-gray-600">
-                        Uk. {{ $bidhaa->currentPage() }} / {{ $bidhaa->lastPage() }}
-                    </span>
-
-                    @if($bidhaa->hasMorePages())
-                        <a href="{{ $bidhaa->nextPageUrl() }}" class="px-3 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
-                            Mbele <i class="fas fa-chevron-right ml-1"></i>
-                        </a>
-                    @else
-                        <span class="px-3 py-1.5 rounded-lg border text-gray-400 text-xs cursor-not-allowed flex items-center">
-                            Mbele <i class="fas fa-chevron-right ml-1"></i>
-                        </span>
-                    @endif
-                </div>
-            </div>
+        @endif
+        @if(session('error'))
+        <div class="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800 mb-2 shadow-sm">
+            {{ session('error') }}
         </div>
         @endif
     </div>
-</div>
 
-<!-- TAB 2: Ingiza Bidhaa Mpya -->
-<div id="ingiza-tab-content" class="tab-content hidden">
-    <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 p-4 md:p-6 card-hover">
-        <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-4 md:mb-6">Ingiza Bidhaa Mpya</h2>
-        <form method="POST" action="{{ route('bidhaa.store') }}" id="product-form" class="space-y-4 md:space-y-6">
-            @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                <!-- Jina -->
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="jina" 
-                        placeholder=" " 
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-3 pt-4 md:pt-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-3 top-2 md:top-2 text-gray-500 text-xs md:text-xs transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-3 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-xs peer-placeholder-shown:md:text-sm peer-focus:top-2 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-xs font-medium truncate max-w-[90%]">
-                        Jina la Bidhaa
-                    </label>
+    <!-- Stats with Links -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <a href="{{ route('bidhaa.index') }}" class="block bg-white p-3 rounded-lg border border-emerald-200 shadow-sm hover:bg-emerald-50 transition-colors">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Jumla ya Bidhaa</p>
+                    <p class="text-xl font-bold text-emerald-700">{{ $totalProducts }}</p>
                 </div>
-
-                <!-- Aina -->
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="aina" 
-                        placeholder=" " 
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-3 pt-4 md:pt-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-3 top-2 md:top-2 text-gray-500 text-xs md:text-xs transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-3 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-xs peer-placeholder-shown:md:text-sm peer-focus:top-2 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-xs font-medium truncate max-w-[90%]">
-                        Aina
-                    </label>
-                </div>
-
-                <!-- Kipimo -->
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="kipimo" 
-                        placeholder=" " 
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-3 pt-4 md:pt-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
-                    >
-                    <label class="absolute left-3 md:left-3 top-2 md:top-2 text-gray-500 text-xs md:text-xs transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-3 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-xs peer-placeholder-shown:md:text-sm peer-focus:top-2 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-xs font-medium truncate max-w-[90%]">
-                        Kipimo
-                    </label>
-                </div>
-
-                <!-- Idadi -->
-                <div class="relative">
-                    <input 
-                        type="number" 
-                        name="idadi" 
-                        placeholder=" " 
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-3 pt-4 md:pt-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-3 top-2 md:top-2 text-gray-500 text-xs md:text-xs transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-3 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-xs peer-placeholder-shown:md:text-sm peer-focus:top-2 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-xs font-medium truncate max-w-[90%]">
-                        Idadi
-                    </label>
-                </div>
-
-                <!-- Bei Nunua -->
-                <div class="relative">
-                    <input 
-                        type="number" 
-                        step="0.01" 
-                        name="bei_nunua" 
-                        id="buy-price"
-                        placeholder=" " 
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-3 pt-4 md:pt-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-3 top-2 md:top-2 text-gray-500 text-xs md:text-xs transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-3 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-xs peer-placeholder-shown:md:text-sm peer-focus:top-2 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-xs font-medium truncate max-w-[90%]">
-                        Bei Nunua (TZS)
-                    </label>
-                </div>
-
-                <!-- Bei Kuuza -->
-                <div class="relative">
-                    <input 
-                        type="number" 
-                        step="0.01" 
-                        name="bei_kuuza" 
-                        id="sell-price"
-                        placeholder=" " 
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-3 pt-4 md:pt-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-3 top-2 md:top-2 text-gray-500 text-xs md:text-xs transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-3 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-xs peer-placeholder-shown:md:text-sm peer-focus:top-2 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-xs font-medium truncate max-w-[90%]">
-                        Bei Kuuza (TZS)
-                    </label>
-                    <!-- Error Message -->
-                    <p id="price-error" class="text-red-600 font-medium mt-1 md:mt-1 text-xs md:text-xs hidden"></p>
-                </div>
-
-                <!-- Expiry -->
-                <div class="relative">
-                    <input 
-                        type="date" 
-                        name="expiry" 
-                        placeholder=" " 
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-3 pt-4 md:pt-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-    
-                    >
-                    <label class="absolute left-3 md:left-3 top-2 md:top-2 text-gray-500 text-xs md:text-xs transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-3 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-xs peer-placeholder-shown:md:text-sm peer-focus:top-2 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-xs font-medium truncate max-w-[90%]">
-                        Tarehe ya Mwisho
-                    </label>
-                </div>
-
-                <!-- Barcode -->
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="barcode" 
-                        placeholder=" " 
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-3 pt-4 md:pt-5 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
-                    >
-                    <label class="absolute left-3 md:left-3 top-2 md:top-2 text-gray-500 text-xs md:text-xs transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-3 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-xs peer-placeholder-shown:md:text-sm peer-focus:top-2 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-xs font-medium truncate max-w-[90%]">
-                        Barcode
-                    </label>
-                </div>
+                <i class="fas fa-boxes text-emerald-500 text-lg"></i>
             </div>
-
-            <!-- Buttons - Responsive -->
-            <div class="flex flex-col sm:flex-row gap-3 md:gap-3 pt-4 md:pt-4 border-t border-gray-200 mt-4 md:mt-4">
-                <button 
-                    type="submit" 
-                    class="bg-gradient-to-r from-green-600 to-green-700 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-300 transform hover:scale-105 flex items-center justify-center shadow-lg text-sm md:text-sm"
-                >
-                    <i class="fas fa-save mr-1 md:mr-1.5 text-sm md:text-sm"></i>
-                    <span>Hifadhi Bidhaa</span>
-                </button>
-                <button 
-                    type="reset" 
-                    id="reset-form"
-                    class="bg-gray-300 text-gray-700 px-4 md:px-6 py-2 md:py-2.5 rounded-lg hover:bg-gray-400 transition-colors flex items-center justify-center text-sm md:text-sm"
-                >
-                    <i class="fas fa-redo mr-1 md:mr-1.5 text-sm md:text-sm"></i>
-                    <span>Safisha Fomu</span>
-                </button>
+        </a>
+        <a href="{{ route('bidhaa.index') }}?filter=available" class="block bg-white p-3 rounded-lg border border-blue-200 shadow-sm hover:bg-blue-50 transition-colors">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Bidhaa Zilizopo</p>
+                    <p class="text-xl font-bold text-blue-700">{{ $availableProducts }}</p>
+                </div>
+                <i class="fas fa-cubes text-blue-500 text-lg"></i>
             </div>
-        </form>
+        </a>
+        <a href="{{ route('bidhaa.index') }}?filter=low_stock" class="block bg-white p-3 rounded-lg border border-amber-200 shadow-sm hover:bg-amber-50 transition-colors">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Zinazokaribia Kuisha</p>
+                    <p class="text-xl font-bold text-amber-700">{{ $lowStockProducts }}</p>
+                </div>
+                <i class="fas fa-exclamation-triangle text-amber-500 text-lg"></i>
+            </div>
+        </a>
+        <a href="{{ route('bidhaa.index') }}?filter=expired" class="block bg-white p-3 rounded-lg border border-red-200 shadow-sm hover:bg-red-50 transition-colors">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Zilizo Expire</p>
+                    <p class="text-xl font-bold text-red-700">{{ $expiredProducts }}</p>
+                </div>
+                <i class="fas fa-calendar-times text-red-500 text-lg"></i>
+            </div>
+        </a>
     </div>
-</div>
-    <!-- TAB 3: CSV Upload -->
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+        <div class="flex">
+            <button data-tab="taarifa" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 bg-emerald-50 text-emerald-700">
+                <i class="fas fa-table mr-2"></i> Orodha
+            </button>
+            <button data-tab="ingiza" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-plus mr-2"></i> Ingiza
+            </button>
+            <button data-tab="csv" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-file-excel mr-2"></i> Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- TAB 1: Orodha -->
+    <div id="taarifa-tab-content" class="tab-content space-y-3">
+        <!-- Search Bar -->
+        <div class="bg-amber p-3 rounded-lg border border-gray-200 shadow-sm">
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <div class="flex-1 relative">
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="Tafuta bidhaa, aina, barcode..." 
+                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                        value="{{ request()->search }}"
+                    >
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="printProducts()" class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                        <i class="fas fa-print mr-1"></i> Print
+                    </button>
+                    <button onclick="exportPDF()" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">
+                        <i class="fas fa-file-pdf mr-1"></i> PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Table -->
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-emerald-50">
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Bidhaa</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden sm:table-cell">Aina</th>
+                            <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
+                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Bei</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden lg:table-cell">Expiry</th>
+                            <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="products-tbody" class="divide-y divide-gray-100">
+                        @forelse($bidhaa as $item)
+                            <tr class="product-row hover:bg-gray-50" data-product='@json($item)'>
+                                <td class="px-4 py-2">
+                                    <div class="flex items-center">
+                                        <div class="h-8 w-8 bg-emerald-100 rounded flex items-center justify-center text-emerald-800 font-bold text-sm mr-2">
+                                            {{ substr($item->jina, 0, 1) }}
+                                        </div>
+                                        <div>
+                                            <div class="font-medium text-gray-900 text-sm product-name">{{ $item->jina }}</div>
+                                            <div class="text-xs text-gray-500 sm:hidden">{{ $item->aina }}</div>
+                                            @if($item->barcode)
+                                            <div class="text-xs text-emerald-600">#{{ $item->barcode }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-2 hidden sm:table-cell">
+                                    <span class="text-sm text-gray-700">{{ $item->aina }}</span>
+                                </td>
+                                <td class="px-4 py-2 text-center">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
+                                        @if($item->idadi < 10 && $item->idadi > 0) bg-amber-100 text-amber-800
+                                        @elseif($item->idadi == 0) bg-gray-100 text-gray-800
+                                        @else bg-emerald-100 text-emerald-800 @endif">
+                                        {{ $item->idadi }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-right">
+                                    <div class="text-sm font-bold text-emerald-700">{{ number_format($item->bei_kuuza, 0) }}</div>
+                                    <div class="text-xs text-gray-500">Nunua: {{ number_format($item->bei_nunua, 0) }}</div>
+                                </td>
+                                <td class="px-4 py-2 hidden lg:table-cell">
+                                    @if($item->expiry)
+                                        <div class="text-xs 
+                                            @if($item->expiry < now()) text-red-600
+                                            @elseif(\Carbon\Carbon::parse($item->expiry)->diffInDays(now()) < 30) text-amber-600
+                                            @else text-gray-600 @endif">
+                                            {{ \Carbon\Carbon::parse($item->expiry)->format('d/m/Y') }}
+                                        </div>
+                                    @else
+                                        <span class="text-xs text-gray-400">--</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-2 text-center print:hidden">
+                                    <div class="flex justify-center space-x-2">
+                                        <button class="edit-product-btn text-emerald-600 hover:text-emerald-800"
+                                                data-id="{{ $item->id }}" title="Badili">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="delete-product-btn text-red-600 hover:text-red-800"
+                                                data-id="{{ $item->id }}" data-name="{{ $item->jina }}" title="Futa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                    <i class="fas fa-boxes text-3xl mb-2 text-gray-300"></i>
+                                    <p>Hakuna bidhaa bado</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            @if($bidhaa->hasPages())
+            <div class="px-4 py-3 border-t border-gray-200">
+                {{ $bidhaa->links() }}
+            </div>
+            @endif
+        </div>
+
+        <!-- Clear Filter Button -->
+        @if(request('filter'))
+        <div class="text-center">
+            <a href="{{ route('bidhaa.index') }}" class="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200">
+                <i class="fas fa-times mr-1"></i> Ondoa Filter
+            </a>
+        </div>
+        @endif
+    </div>
+
+    <!-- TAB 2: Ingiza -->
+    <div id="ingiza-tab-content" class="tab-content hidden">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <form method="POST" action="{{ route('bidhaa.store') }}" id="product-form" class="space-y-4">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Jina la Bidhaa *</label>
+                        <input type="text" name="jina" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="Ingiza jina" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Aina *</label>
+                        <input type="text" name="aina" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="Aina ya bidhaa" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Kipimo</label>
+                        <input type="text" name="kipimo" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="Mf. 500ml, 1kg">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
+                        <input type="number" name="idadi" min="0"
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="Idadi" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Bei Nunua (TZS) *</label>
+                        <input type="number" step="0.01" name="bei_nunua" id="buy-price"
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="0.00" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Bei Kuuza (TZS) *</label>
+                        <input type="number" step="0.01" name="bei_kuuza" id="sell-price"
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="0.00" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Tarehe ya Mwisho</label>
+                        <input type="date" name="expiry" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Barcode</label>
+                        <input type="text" name="barcode" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="Barcode (hiari)">
+                    </div>
+                </div>
+                <div id="price-error" class="text-red-600 text-xs font-medium hidden"></div>
+                <div class="flex gap-2 pt-4 border-t border-gray-200">
+                    <button type="submit" 
+                            class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium">
+                        <i class="fas fa-save mr-1"></i> Hifadhi
+                    </button>
+                    <button type="reset" 
+                            class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 text-sm">
+                        <i class="fas fa-redo mr-1"></i> Safisha
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TAB 3: Excel Upload -->
     <div id="csv-tab-content" class="tab-content hidden">
-        <div class="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-100 p-4 md:p-6 card-hover">
-            <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-4 md:mb-6">Ingiza Bidhaa kwa CSV</h2>
-
-            <!-- Upload Section - Responsive Layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-                <!-- Upload Form -->
-                <div class="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 md:p-6">
-                    <div class="text-center mb-3 md:mb-4">
-                        <i class="fas fa-file-csv text-3xl md:text-4xl text-green-500 mb-2 md:mb-3"></i>
-                        <h3 class="text-base md:text-lg font-semibold text-green-800 mb-1 md:mb-2">Pakia Faili la CSV</h3>
-                        <p class="text-xs md:text-sm text-green-600 mb-3 md:mb-4">Chagua faili lako la CSV</p>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Upload Card -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div class="mb-4">
+                    <div class="flex items-center mb-3">
+                        <div class="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-upload text-emerald-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-900">Pakia CSV</h3>
+                            <p class="text-xs text-gray-500">Pakia faili la CSV au TXT</p>
+                        </div>
                     </div>
                     
-                    <form method="POST" action="{{ route('bidhaa.uploadCSV') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('bidhaa.uploadCSV') }}" enctype="multipart/form-data" id="csv-upload-form" class="space-y-3">
                         @csrf
-                        <div class="space-y-3 md:space-y-4">
-                            <div class="border-2 border-dashed border-green-300 rounded-lg p-3 md:p-4 bg-white text-center transition-all duration-200 hover:border-green-400">
-                                <input type="file" name="csv_file" accept=".csv,.txt" 
-                                       class="block w-full text-xs md:text-sm text-green-700 file:mr-2 md:file:mr-4 file:py-1 md:file:py-2 file:px-2 md:file:px-4 file:rounded-lg file:border-0 file:text-xs md:file:text-sm file:font-medium file:bg-green-500 file:text-white hover:file:bg-green-600 cursor-pointer" 
-                                       required>
-                                <p class="text-xs text-gray-500 mt-1 md:mt-2">Aina: .csv, .txt | Ukubwa: hadi 10MB</p>
-                            </div>
-                            <button type="submit" 
-                                    class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-3 md:px-4 py-2 md:py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 flex items-center justify-center shadow-md text-sm md:text-base">
-                                <i class="fas fa-upload mr-1 md:mr-2 text-sm md:text-base"></i>
-                                <span>Pakia Faili</span>
-                            </button>
+                        <div>
+                            <input type="file" name="csv_file" accept=".csv,.txt" 
+                                   class="block w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                   required id="csv-file-input">
+                            <p class="text-xs text-gray-500 mt-1">.csv, .txt (Max: 5MB)</p>
                         </div>
+                        <button type="submit" 
+                                class="w-full bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium flex items-center justify-center">
+                            <i class="fas fa-upload mr-1"></i> Pakia & Hifadhi
+                        </button>
                     </form>
+                    
+                    <!-- Upload Progress -->
+                    <div id="upload-progress" class="hidden mt-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-medium text-emerald-700">Inapakia...</span>
+                            <span class="text-xs text-emerald-700" id="progress-percentage">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                            <div id="progress-bar" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="upload-status">Inaanza upakiaji...</p>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Download Sample -->
-                <div class="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 md:p-6">
-                    <div class="text-center mb-3 md:mb-4">
-                        <i class="fas fa-download text-3xl md:text-4xl text-amber-500 mb-2 md:mb-3"></i>
-                        <h3 class="text-base md:text-lg font-semibold text-amber-800 mb-1 md:mb-2">Pakua Faili Sampuli</h3>
-                        <p class="text-xs md:text-sm text-amber-600 mb-3 md:mb-4">Pakua faili la mfano</p>
+            <!-- Download & Results Card -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div class="mb-4">
+                    <div class="flex items-center mb-3">
+                        <div class="h-10 w-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-download text-amber-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-900">Matokeo & Sampuli</h3>
+                            <p class="text-xs text-gray-500">Angalia matokeo na pakua sampuli</p>
+                        </div>
                     </div>
                     
-                    <div class="space-y-3 md:space-y-4">
-                        <div class="bg-white border border-amber-200 rounded-lg p-3 md:p-4 text-center">
-                            <i class="fas fa-table text-xl md:text-2xl text-amber-400 mb-1 md:mb-2"></i>
-                            <p class="text-xs md:text-sm text-amber-700 font-medium">Muundo Sahihi</p>
-                            <p class="text-xs text-gray-600 mt-1">Orodha kamili ya bidhaa</p>
-                        </div>
-                        <a href="{{ route('bidhaa.downloadSample') }}" 
-                           class="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 md:px-4 py-2 md:py-3 rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-200 flex items-center justify-center shadow-md text-sm md:text-base">
-                            <i class="fas fa-file-download mr-1 md:mr-2 text-sm md:text-base"></i>
-                            <span>Pakua Sampuli</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Upload Results -->
-            @if(session('successCount') > 0)
-                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-300 rounded-xl p-3 md:p-4 mb-4 md:mb-6">
-                    <div class="flex items-start md:items-center">
-                        <div class="p-1 md:p-2 rounded-lg bg-green-100 text-green-600 mr-2 md:mr-3 flex-shrink-0">
-                            <i class="fas fa-check-circle text-sm md:text-base"></i>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="text-xs md:text-sm font-semibold text-green-800">Upakiaji Umekamilika!</h4>
-                            <p class="text-green-700 text-xs md:text-sm mt-1">Bidhaa {{ session('successCount') }} zimeongezwa</p>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            @if(session('errorsList') && count(session('errorsList')) > 0)
-                <div class="bg-gradient-to-r from-red-50 to-pink-50 border border-red-300 rounded-xl p-3 md:p-4 mb-4 md:mb-6">
-                    <div class="flex items-start">
-                        <div class="p-1 md:p-2 rounded-lg bg-red-100 text-red-600 mr-2 md:mr-3 mt-1 flex-shrink-0">
-                            <i class="fas fa-exclamation-triangle text-sm md:text-base"></i>
-                        </div>
-                        <div class="flex-1">
-                            <h4 class="text-xs md:text-sm font-semibold text-red-800 mb-1 md:mb-2">Hitilafu katika Upakiaji</h4>
-                            <div class="max-h-24 md:max-h-32 overflow-y-auto pr-1 md:pr-2">
-                                <ul class="space-y-1 text-xs md:text-sm">
-                                    @foreach(session('errorsList') as $error)
-                                        <li class="flex items-start text-red-700">
-                                            <i class="fas fa-times-circle text-red-500 mr-1 md:mr-2 mt-0.5 text-xs"></i>
-                                            <span class="flex-1">{{ $error }}</span>
-                                        </li>
-                                    @endforeach
-                                </ul>
+                    <div class="space-y-4">
+                        <!-- Upload Results -->
+                        <div id="upload-results" class="hidden space-y-2">
+                            <div class="border border-emerald-200 rounded p-3 bg-emerald-50">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="text-xs font-medium text-emerald-800 flex items-center">
+                                        <i class="fas fa-check-circle mr-1"></i> Matokeo ya Upakiaji
+                                    </h4>
+                                    <button onclick="document.getElementById('upload-results').classList.add('hidden')" 
+                                            class="text-emerald-500 hover:text-emerald-700 text-xs">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-emerald-700">Bidhaa Zilizoongezwa:</span>
+                                        <span class="font-medium" id="success-count">0</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-amber-700">Hitilafu Zilizopatikana:</span>
+                                        <span class="font-medium" id="error-count">0</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-gray-600">Mistari Iliyorudishwa:</span>
+                                        <span class="font-medium" id="skipped-count">0</span>
+                                    </div>
+                                    <div class="flex justify-between text-xs">
+                                        <span class="text-blue-700">Jumla ya Mistari:</span>
+                                        <span class="font-medium" id="total-count">0</span>
+                                    </div>
+                                </div>
+                                <div id="error-list" class="mt-2 hidden">
+                                    <p class="text-xs font-medium text-red-700 mb-1">Hitilafu Zilizopatikana:</p>
+                                    <div class="text-xs text-red-600 space-y-1 max-h-40 overflow-y-auto" id="error-items"></div>
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- Download Sample -->
+                        <a href="{{ route('bidhaa.downloadSample') }}" 
+                           class="block w-full bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 text-sm font-medium text-center">
+                            <i class="fas fa-file-download mr-1"></i> Pakua Sampuli
+                        </a>
+                        
+                        <!-- Format Info -->
+                        <div class="border border-emerald-200 rounded p-3 bg-emerald-50">
+                            <h4 class="text-xs font-medium text-emerald-800 mb-2">
+                                <i class="fas fa-table mr-1"></i> Muundo wa Faili
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border border-emerald-200">
+                                    <thead>
+                                        <tr class="bg-emerald-100">
+                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Jina</th>
+                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Aina</th>
+                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Idadi</th>
+                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Bei</th>
+                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800 text-emerald-500">Expiry*</th>
+                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800 text-emerald-500">Barcode*</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="px-2 py-1 border border-emerald-200">Soda</td>
+                                            <td class="px-2 py-1 border border-emerald-200">Vinywaji</td>
+                                            <td class="px-2 py-1 border border-emerald-200">100</td>
+                                            <td class="px-2 py-1 border border-emerald-200">1000</td>
+                                            <td class="px-2 py-1 border border-emerald-200 text-emerald-500">2025-12-31</td>
+                                            <td class="px-2 py-1 border border-emerald-200 text-emerald-500">123456789</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-2 py-1 border border-emerald-200">Mchele</td>
+                                            <td class="px-2 py-1 border border-emerald-200">Chakula</td>
+                                            <td class="px-2 py-1 border border-emerald-200">50</td>
+                                            <td class="px-2 py-1 border border-emerald-200">3500</td>
+                                            <td class="px-2 py-1 border border-emerald-200 text-emerald-500"></td>
+                                            <td class="px-2 py-1 border border-emerald-200 text-emerald-500"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-xs text-emerald-700 mt-2">
+                                <i class="fas fa-info-circle mr-1"></i> * Sehemu hiari - weka tupu au N/A
+                            </p>
+                        </div>
                     </div>
-                </div>
-            @endif
-
-            <!-- Instructions -->
-            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 md:p-4 mb-4 md:mb-6">
-                <div class="flex items-start">
-                    <div class="p-1 md:p-2 rounded-lg bg-blue-100 text-blue-600 mr-2 md:mr-3 flex-shrink-0">
-                        <i class="fas fa-info-circle text-sm md:text-base"></i>
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="text-xs md:text-sm font-semibold text-blue-800 mb-1">Maelekezo Muhimu</h4>
-                        <ul class="text-xs md:text-sm text-blue-700 space-y-1">
-                            <li class="flex items-start">
-                                <span class="mr-1 md:mr-2 text-xs">•</span>
-                                <span>Faili lazima liwjazwe kikamilifu</span>
-                            </li>
-                            <li class="flex items-start">
-                                <span class="mr-1 md:mr-2 text-xs">•</span>
-                                <span>Data ya tarehe: YYYY-MM-DD</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sample File Structure -->
-            <div class="border border-gray-200 rounded-xl overflow-hidden">
-                <div class="bg-gradient-to-r from-green-600 to-green-700 px-3 md:px-4 py-2 md:py-3">
-                    <h3 class="text-xs md:text-sm font-semibold text-white flex items-center">
-                        <i class="fas fa-table mr-1 md:mr-2 text-xs md:text-sm"></i>
-                        <span>Muundo wa Faili la CSV</span>
-                    </h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-xs">
-                        <thead>
-                            <tr class="bg-green-50">
-                                <th class="px-2 md:px-3 py-1 md:py-2 text-left font-semibold text-green-800 border-b border-green-200 truncate">Jina</th>
-                                <th class="px-2 md:px-3 py-1 md:py-2 text-left font-semibold text-green-800 border-b border-green-200 truncate">Aina</th>
-                                <th class="px-2 md:px-3 py-1 md:py-2 text-left font-semibold text-green-800 border-b border-green-200 truncate hidden md:table-cell">Kipimo</th>
-                                <th class="px-2 md:px-3 py-1 md:py-2 text-center font-semibold text-green-800 border-b border-green-200 truncate">Idadi</th>
-                                <th class="px-2 md:px-3 py-1 md:py-2 text-right font-semibold text-green-800 border-b border-green-200 truncate hidden sm:table-cell">Bei_Nunua</th>
-                                <th class="px-2 md:px-3 py-1 md:py-2 text-right font-semibold text-green-800 border-b border-green-200 truncate">Bei_Kuuza</th>
-                                <th class="px-2 md:px-3 py-1 md:py-2 text-left font-semibold text-green-800 border-b border-green-200 truncate hidden lg:table-cell">Expiry</th>
-                                <th class="px-2 md:px-3 py-1 md:py-2 text-left font-semibold text-green-800 border-b border-green-200 truncate hidden xl:table-cell">Barcode</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-green-700 font-medium truncate">Soda</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-gray-600 truncate">Vinywaji</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-gray-600 hidden md:table-cell">500ml</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-center text-green-600 font-semibold">100</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-right text-gray-600 hidden sm:table-cell">600.00</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-right text-green-600 font-semibold">1000.00</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-gray-600 hidden lg:table-cell">2025-12-31</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-blue-600 font-mono hidden xl:table-cell">1234567890123</td>
-                            </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-green-700 font-medium truncate">Mchele</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-gray-600 truncate">Chakula</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-gray-600 hidden md:table-cell">1kg</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-center text-green-600 font-semibold">50</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-right text-gray-600 hidden sm:table-cell">2500.00</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-right text-green-600 font-semibold">3500.00</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-gray-600 hidden lg:table-cell">2026-06-30</td>
-                                <td class="px-2 md:px-3 py-1 md:py-2 text-blue-600 font-mono hidden xl:table-cell">9876543210987</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="bg-gray-50 px-2 md:px-3 py-1 md:py-2 border-t border-gray-200">
-                    <p class="text-xs text-gray-600 text-center">Faili lako lazima liwe na vichwa hivi</p>
                 </div>
             </div>
         </div>
@@ -746,192 +424,99 @@
 <!-- Edit Modal -->
 <div id="edit-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl md:rounded-2xl shadow-xl w-full max-w-2xl mx-auto z-50 max-h-[90vh] overflow-y-auto">
-        <div class="p-4 md:p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Badili Taarifa za Bidhaa</h3>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-50 max-h-[90vh] overflow-y-auto">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">Rekebisha Bidhaa</h3>
         </div>
-        <form id="edit-form" method="POST" class="p-4 md:p-6">
+        <form id="edit-form" method="POST" class="p-4">
             @csrf
             @method('PUT')
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="jina" 
-                        id="edit-jina"
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-4 pt-5 md:pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-4 top-1 md:top-2 text-gray-400 text-xs md:text-sm transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-4 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:md:text-base peer-focus:top-1 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-sm font-medium">
-                        Jina la Bidhaa
-                    </label>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Jina la Bidhaa *</label>
+                    <input type="text" name="jina" id="edit-jina"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
                 </div>
-
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="aina" 
-                        id="edit-aina"
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-4 pt-5 md:pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-4 top-1 md:top-2 text-gray-400 text-xs md:text-sm transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-4 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:md:text-base peer-focus:top-1 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-sm font-medium">
-                        Aina ya Bidhaa
-                    </label>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Aina *</label>
+                    <input type="text" name="aina" id="edit-aina"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
                 </div>
-
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="kipimo" 
-                        id="edit-kipimo"
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-4 pt-5 md:pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
-                    >
-                    <label class="absolute left-3 md:left-4 top-1 md:top-2 text-gray-400 text-xs md:text-sm transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-4 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:md:text-base peer-focus:top-1 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-sm font-medium">
-                        Kipimo
-                    </label>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Kipimo</label>
+                    <input type="text" name="kipimo" id="edit-kipimo"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
-
-                <div class="relative">
-                    <input 
-                        type="number" 
-                        name="idadi" 
-                        id="edit-idadi"
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-4 pt-5 md:pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-4 top-1 md:top-2 text-gray-400 text-xs md:text-sm transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-4 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:md:text-base peer-focus:top-1 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-sm font-medium">
-                        Idadi
-                    </label>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
+                    <input type="number" name="idadi" id="edit-idadi" min="0"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
                 </div>
-
-                <div class="relative">
-                    <input 
-                        type="number" 
-                        step="0.01" 
-                        name="bei_nunua" 
-                        id="edit-bei-nunua"
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-4 pt-5 md:pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-4 top-1 md:top-2 text-gray-400 text-xs md:text-sm transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-4 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:md:text-base peer-focus:top-1 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-sm font-medium">
-                        Bei Nunua
-                    </label>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Bei Nunua (TZS) *</label>
+                    <input type="number" step="0.01" name="bei_nunua" id="edit-bei-nunua"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
                 </div>
-
-                <div class="relative">
-                    <input 
-                        type="number" 
-                        step="0.01" 
-                        name="bei_kuuza" 
-                        id="edit-bei-kuuza"
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-4 pt-5 md:pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base" 
-                        required
-                    >
-                    <label class="absolute left-3 md:left-4 top-1 md:top-2 text-gray-400 text-xs md:text-sm transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-4 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:md:text-base peer-focus:top-1 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-sm font-medium">
-                        Bei Kuuza
-                    </label>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Bei Kuuza (TZS) *</label>
+                    <input type="number" step="0.01" name="bei_kuuza" id="edit-bei-kuuza"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           required>
                 </div>
-
-                <div class="relative">
-                    <input 
-                        type="date" 
-                        name="expiry" 
-                        id="edit-expiry"
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-4 pt-5 md:pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
-                    >
-                    <label class="absolute left-3 md:left-4 top-1 md:top-2 text-gray-400 text-xs md:text-sm transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-4 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:md:text-base peer-focus:top-1 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-sm font-medium">
-                        Tarehe ya Expiry
-                    </label>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Tarehe ya Mwisho</label>
+                    <input type="date" name="expiry" id="edit-expiry"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
-
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="barcode" 
-                        id="edit-barcode"
-                        class="peer border border-gray-300 rounded-lg w-full p-3 md:p-4 pt-5 md:pt-6 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
-                    >
-                    <label class="absolute left-3 md:left-4 top-1 md:top-2 text-gray-400 text-xs md:text-sm transition-all
-                                  peer-placeholder-shown:top-3 peer-placeholder-shown:md:top-4 peer-placeholder-shown:text-gray-400
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:md:text-base peer-focus:top-1 peer-focus:md:top-2 peer-focus:text-green-600
-                                  peer-focus:text-xs peer-focus:md:text-sm font-medium">
-                        Barcode
-                    </label>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Barcode</label>
+                    <input type="text" name="barcode" id="edit-barcode"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
             </div>
-            <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 md:space-x-3 pt-4 md:pt-6 border-t border-gray-200 mt-4 md:mt-6">
-                <button 
-                    type="button" 
-                    id="close-edit-modal"
-                    class="px-4 md:px-6 py-2 md:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm md:text-base"
-                >
+            <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
+                <button type="button" id="close-edit-modal"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
                     Ghairi
                 </button>
-                <button 
-                    type="submit" 
-                    class="px-4 md:px-6 py-2 md:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base"
-                >
-                    Hifadhi Mabadiliko
+                <button type="submit"
+                        class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                    Hifadhi
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Delete Modal -->
 <div id="delete-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl md:rounded-2xl shadow-xl w-full max-w-md mx-auto z-50">
-        <div class="p-4 md:p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Thibitisha Kufuta Bidhaa</h3>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-auto z-50">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">Thibitisha Kufuta</h3>
         </div>
-        <div class="p-4 md:p-6">
-            <div class="flex items-center justify-center mb-3 md:mb-4">
-                <div class="p-2 md:p-3 rounded-full bg-red-100 text-red-600">
-                    <i class="fas fa-exclamation-triangle text-lg md:text-xl"></i>
-                </div>
+        <div class="p-4">
+            <div class="text-center mb-4">
+                <i class="fas fa-exclamation-triangle text-amber-500 text-2xl mb-2"></i>
+                <p class="text-gray-700 text-sm mb-1">Una uhakika unataka kufuta?</p>
+                <p class="text-gray-900 font-medium" id="delete-product-name"></p>
+                <p class="text-gray-500 text-xs mt-2">Hatua hii haiwezi kutenduliwa</p>
             </div>
-            <p class="text-gray-700 mb-4 md:mb-6 text-center text-sm md:text-base">
-                Una uhakika unataka kufuta bidhaa "<span id="delete-product-name" class="font-semibold"></span>"?
-                <br class="hidden sm:block">Hatua hii haiwezi kutenduliwa.
-            </p>
-            <div class="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-2 md:sm:space-x-3">
-                <button 
-                    id="cancel-delete"
-                    class="px-4 md:px-6 py-2 md:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm md:text-base"
-                >
+            <div class="flex gap-2">
+                <button id="cancel-delete"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
                     Ghairi
                 </button>
-                <form id="delete-form" method="POST">
+                <form id="delete-form" method="POST" class="flex-1">
                     @csrf
                     @method('DELETE')
-                    <button 
-                        type="submit" 
-                        class="px-4 md:px-6 py-2 md:py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base"
-                    >
-                        Ndio, Futa
+                    <button type="submit"
+                            class="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                        Futa
                     </button>
                 </form>
             </div>
@@ -942,51 +527,79 @@
 
 @push('styles')
 <style>
-@media (max-width: 640px) {
-    .modal-content {
-        margin: 0;
-        border-radius: 0.75rem;
-    }
+/* Fix for sidebar navigation blur issue */
+.sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
 }
 
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-
-.modal {
+.sidebar-nav .nav-link .nav-text {
+    opacity: 1;
     transition: opacity 0.3s ease;
 }
 
-.tab-content {
-    transition: opacity 0.3s ease;
+/* When sidebar is collapsed */
+.sidebar-collapsed .sidebar-nav .nav-link .nav-text {
+    opacity: 1 !important;
+    position: absolute;
+    left: 100%;
+    margin-left: 15px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    white-space: nowrap;
+    z-index: 9999;
+    visibility: hidden;
+    opacity: 0;
 }
 
-.hidden {
-    display: none !important;
-}
-
-.product-row.hidden {
-    display: none;
+.sidebar-collapsed .sidebar-nav .nav-link:hover .nav-text {
+    visibility: visible;
+    opacity: 1;
 }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-class BidhaaManager {
+class SmartBidhaaManager {
     constructor() {
-        this.currentTab = 'taarifa';
-        this.searchQuery = '';
+        this.currentTab = this.getSavedTab() || 'taarifa';
+        this.searchTimeout = null;
         this.init();
     }
 
     init() {
         this.bindEvents();
-        this.showTab('taarifa');
+        this.showTab(this.currentTab);
+        this.setupAjaxForms();
+        this.fixSidebarNavigation();
+    }
+
+    fixSidebarNavigation() {
+        // Fix for sidebar text blur issue
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            // Check if sidebar has collapse class
+            const isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+            
+            // Make sure nav text is always visible
+            const navTexts = document.querySelectorAll('.sidebar-nav .nav-text');
+            navTexts.forEach(text => {
+                text.style.opacity = '1';
+                text.style.visibility = 'visible';
+            });
+        }
+    }
+
+    getSavedTab() {
+        return sessionStorage.getItem('bidhaa_tab') || 'taarifa';
+    }
+
+    saveTab(tab) {
+        sessionStorage.setItem('bidhaa_tab', tab);
     }
 
     bindEvents() {
@@ -995,27 +608,22 @@ class BidhaaManager {
             button.addEventListener('click', (e) => {
                 const tab = e.target.closest('.tab-button').dataset.tab;
                 this.showTab(tab);
+                this.saveTab(tab);
             });
         });
 
-        // Search functionality
+        // Search with debounce
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
-                this.searchQuery = e.target.value.toLowerCase();
-                this.filterProducts();
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.filterProducts(e.target.value.toLowerCase().trim());
+                }, 300);
             });
         }
 
-        // Go to add product button
-        const goToAddProductBtn = document.getElementById('go-to-add-product');
-        if (goToAddProductBtn) {
-            goToAddProductBtn.addEventListener('click', () => {
-                this.showTab('ingiza');
-            });
-        }
-
-        // Product actions
+        // Edit/Delete buttons
         this.bindProductActions();
 
         // Form validation
@@ -1029,11 +637,11 @@ class BidhaaManager {
         // Update tabs
         document.querySelectorAll('.tab-button').forEach(button => {
             if (button.dataset.tab === tabName) {
-                button.classList.add('border-b-2', 'border-green-500', 'text-green-600', 'font-semibold');
-                button.classList.remove('text-gray-500');
+                button.classList.add('bg-emerald-50', 'text-emerald-700');
+                button.classList.remove('text-gray-600', 'hover:bg-gray-50');
             } else {
-                button.classList.remove('border-b-2', 'border-green-500', 'text-green-600', 'font-semibold');
-                button.classList.add('text-gray-500');
+                button.classList.remove('bg-emerald-50', 'text-emerald-700');
+                button.classList.add('text-gray-600', 'hover:bg-gray-50');
             }
         });
 
@@ -1042,11 +650,7 @@ class BidhaaManager {
             content.classList.add('hidden');
         });
         
-        const activeContent = document.getElementById(`${tabName}-tab-content`);
-        if (activeContent) {
-            activeContent.classList.remove('hidden');
-        }
-
+        document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
         this.currentTab = tabName;
     }
 
@@ -1054,10 +658,9 @@ class BidhaaManager {
         // Edit buttons
         document.querySelectorAll('.edit-product-btn').forEach(button => {
             button.addEventListener('click', (e) => {
-                const productId = e.target.closest('.edit-product-btn').dataset.id;
                 const row = e.target.closest('.product-row');
-                const productData = JSON.parse(row.dataset.product);
-                this.editProduct(productData);
+                const product = JSON.parse(row.dataset.product);
+                this.editProduct(product);
             });
         });
 
@@ -1073,30 +676,68 @@ class BidhaaManager {
 
     bindFormValidation() {
         const productForm = document.getElementById('product-form');
+        const editForm = document.getElementById('edit-form');
         const buyPriceInput = document.getElementById('buy-price');
         const sellPriceInput = document.getElementById('sell-price');
         const priceError = document.getElementById('price-error');
-        const resetButton = document.getElementById('reset-form');
 
-        if (productForm) {
-            productForm.addEventListener('submit', (e) => {
+        // Validation for product form
+        if (productForm && buyPriceInput && sellPriceInput) {
+            const validatePrices = () => {
                 const buyPrice = parseFloat(buyPriceInput.value);
                 const sellPrice = parseFloat(sellPriceInput.value);
 
                 if (buyPrice > sellPrice) {
-                    e.preventDefault();
                     priceError.textContent = '⚠️ Bei ya kununua haiwezi kuwa kubwa kuliko bei ya kuuza!';
                     priceError.classList.remove('hidden');
+                    return false;
                 } else {
                     priceError.classList.add('hidden');
+                    return true;
+                }
+            };
+
+            buyPriceInput.addEventListener('input', validatePrices);
+            sellPriceInput.addEventListener('input', validatePrices);
+
+            productForm.addEventListener('submit', (e) => {
+                if (!validatePrices()) {
+                    e.preventDefault();
+                    e.stopPropagation();
                 }
             });
         }
 
-        if (resetButton) {
-            resetButton.addEventListener('click', () => {
-                priceError.classList.add('hidden');
-            });
+        // Validation for edit form
+        if (editForm) {
+            const editBuyPrice = editForm.querySelector('[name="bei_nunua"]');
+            const editSellPrice = editForm.querySelector('[name="bei_kuuza"]');
+            
+            if (editBuyPrice && editSellPrice) {
+                const editValidatePrices = () => {
+                    const buyPrice = parseFloat(editBuyPrice.value);
+                    const sellPrice = parseFloat(editSellPrice.value);
+                    
+                    if (buyPrice > sellPrice) {
+                        editSellPrice.classList.add('border-red-500');
+                        return false;
+                    } else {
+                        editSellPrice.classList.remove('border-red-500');
+                        return true;
+                    }
+                };
+
+                editBuyPrice.addEventListener('input', editValidatePrices);
+                editSellPrice.addEventListener('input', editValidatePrices);
+
+                editForm.addEventListener('submit', (e) => {
+                    if (!editValidatePrices()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.showNotification('⚠️ Bei ya kununua haiwezi kuwa kubwa kuliko bei ya kuuza!', 'error');
+                    }
+                });
+            }
         }
     }
 
@@ -1105,88 +746,477 @@ class BidhaaManager {
         const editModal = document.getElementById('edit-modal');
         const closeEditBtn = document.getElementById('close-edit-modal');
 
-        closeEditBtn.addEventListener('click', () => {
-            editModal.classList.add('hidden');
-        });
-
-        editModal.addEventListener('click', (e) => {
-            if (e.target === editModal || e.target.classList.contains('modal-overlay')) {
-                editModal.classList.add('hidden');
-            }
-        });
+        if (closeEditBtn) {
+            closeEditBtn.addEventListener('click', () => editModal.classList.add('hidden'));
+        }
+        
+        if (editModal) {
+            editModal.addEventListener('click', (e) => {
+                if (e.target === editModal || e.target.classList.contains('modal-overlay')) {
+                    editModal.classList.add('hidden');
+                }
+            });
+        }
 
         // Delete modal
         const deleteModal = document.getElementById('delete-modal');
         const cancelDeleteBtn = document.getElementById('cancel-delete');
 
-        cancelDeleteBtn.addEventListener('click', () => {
-            deleteModal.classList.add('hidden');
-        });
+        if (cancelDeleteBtn) {
+            cancelDeleteBtn.addEventListener('click', () => deleteModal.classList.add('hidden'));
+        }
+        
+        if (deleteModal) {
+            deleteModal.addEventListener('click', (e) => {
+                if (e.target === deleteModal || e.target.classList.contains('modal-overlay')) {
+                    deleteModal.classList.add('hidden');
+                }
+            });
+        }
 
-        deleteModal.addEventListener('click', (e) => {
-            if (e.target === deleteModal || e.target.classList.contains('modal-overlay')) {
-                deleteModal.classList.add('hidden');
-            }
-        });
-
-        // Close modals on Escape key
+        // Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                editModal.classList.add('hidden');
-                deleteModal.classList.add('hidden');
+                if (editModal) editModal.classList.add('hidden');
+                if (deleteModal) deleteModal.classList.add('hidden');
             }
         });
     }
 
-    filterProducts() {
+    filterProducts(searchTerm) {
         const rows = document.querySelectorAll('.product-row');
+        let found = false;
         
         rows.forEach(row => {
-            const name = row.querySelector('.product-name').textContent.toLowerCase();
-            const type = row.querySelector('.product-type').textContent.toLowerCase();
+            const product = JSON.parse(row.dataset.product);
+            const searchText = `
+                ${product.jina || ''}
+                ${product.aina || ''}
+                ${product.barcode || ''}
+                ${product.kipimo || ''}
+            `.toLowerCase();
             
-            const matches = name.includes(this.searchQuery) || 
-                           type.includes(this.searchQuery);
-            
-            if (matches || this.searchQuery === '') {
+            if (searchText.includes(searchTerm) || !searchTerm) {
                 row.classList.remove('hidden');
+                found = true;
             } else {
                 row.classList.add('hidden');
             }
         });
+
+        if (!found && searchTerm) {
+            this.showNotification('Hakuna bidhaa zinazolingana', 'info');
+        }
     }
 
     editProduct(product) {
-        // Populate edit form
+        const editForm = document.getElementById('edit-form');
+        if (!editForm) return;
+
         document.getElementById('edit-jina').value = product.jina;
         document.getElementById('edit-aina').value = product.aina;
         document.getElementById('edit-kipimo').value = product.kipimo || '';
         document.getElementById('edit-idadi').value = product.idadi;
         document.getElementById('edit-bei-nunua').value = product.bei_nunua;
         document.getElementById('edit-bei-kuuza').value = product.bei_kuuza;
-        document.getElementById('edit-expiry').value = product.expiry || '';
+        document.getElementById('edit-expiry').value = product.expiry ? product.expiry.split('T')[0] : '';
         document.getElementById('edit-barcode').value = product.barcode || '';
-
-        // Set form action
-        document.getElementById('edit-form').action = `/bidhaa/${product.id}`;
-
-        // Show modal
-        document.getElementById('edit-modal').classList.remove('hidden');
+        editForm.action = `/bidhaa/${product.id}`;
+        
+        const editModal = document.getElementById('edit-modal');
+        if (editModal) editModal.classList.remove('hidden');
     }
 
     deleteProduct(productId, productName) {
-        // Populate delete modal
-        document.getElementById('delete-product-name').textContent = productName;
-        document.getElementById('delete-form').action = `/bidhaa/${productId}`;
+        const deleteForm = document.getElementById('delete-form');
+        const deleteModal = document.getElementById('delete-modal');
+        const deleteProductName = document.getElementById('delete-product-name');
+        
+        if (!deleteForm || !deleteModal || !deleteProductName) return;
+        
+        deleteProductName.textContent = productName;
+        deleteForm.action = `/bidhaa/${productId}`;
+        deleteModal.classList.remove('hidden');
+    }
 
-        // Show modal
-        document.getElementById('delete-modal').classList.remove('hidden');
+    setupAjaxForms() {
+        // Product form
+        const productForm = document.getElementById('product-form');
+        if (productForm) {
+            productForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.submitForm(productForm, 'Bidhaa imehifadhiwa!');
+            });
+        }
+
+        // CSV form with improved error handling
+        const csvForm = document.getElementById('csv-upload-form');
+        if (csvForm) {
+            csvForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const fileInput = document.getElementById('csv-file-input');
+                if (!fileInput || !fileInput.files.length) {
+                    this.showNotification('Tafadhali chagua faili', 'error');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                const allowedExtensions = ['csv', 'txt'];
+                const fileExt = file.name.split('.').pop().toLowerCase();
+                
+                if (!allowedExtensions.includes(fileExt)) {
+                    this.showNotification('Aina ya faili hairuhusiwi. Tumia .csv au .txt', 'error');
+                    return;
+                }
+                
+                if (file.size > 5 * 1024 * 1024) {
+                    this.showNotification('Faili ni kubwa sana. Ukubwa upeo ni 5MB', 'error');
+                    return;
+                }
+                
+                // Show progress
+                document.getElementById('upload-progress').classList.remove('hidden');
+                document.getElementById('upload-results').classList.add('hidden');
+                this.updateProgress(10, 'Inaanza upakiaji...');
+                
+                const formData = new FormData(csvForm);
+                
+                try {
+                    this.updateProgress(30, 'Inapakia faili...');
+                    
+                    const response = await fetch(csvForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    this.updateProgress(70, 'Inachambua faili...');
+                    
+                    const data = await response.json();
+                    
+                    this.updateProgress(90, 'Inahifadhi data...');
+                    
+                    setTimeout(() => {
+                        this.updateProgress(100, 'Imekamilika!');
+                        
+                        if (response.ok) {
+                            if (data.success) {
+                                this.showUploadResults(data.data || data);
+                                
+                                if (data.data?.errorCount > 0) {
+                                    this.showNotification(
+                                        `Bidhaa ${data.data.successCount} zimeongezwa lakini kuna hitilafu ${data.data.errorCount}`,
+                                        'warning'
+                                    );
+                                } else {
+                                    this.showNotification(
+                                        `Bidhaa ${data.data.successCount} zimeongezwa kikamilifu!`,
+                                        'success'
+                                    );
+                                }
+                            } else {
+                                this.showNotification(data.message || 'Hitilafu katika upakiaji', 'error');
+                            }
+                        } else {
+                            let errorMessage = 'Hitilafu katika upakiaji';
+                            if (data.message) {
+                                errorMessage = data.message;
+                            } else if (data.errors) {
+                                const firstError = Object.values(data.errors)[0];
+                                errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+                            }
+                            
+                            this.showNotification(errorMessage, 'error');
+                            
+                            if (data.data?.errors) {
+                                this.showUploadResults(data.data);
+                            }
+                        }
+                        
+                        // Reset form
+                        csvForm.reset();
+                        
+                        // Auto-hide results after 15 seconds
+                        setTimeout(() => {
+                            const resultsDiv = document.getElementById('upload-results');
+                            if (resultsDiv) resultsDiv.classList.add('hidden');
+                        }, 15000);
+                    }, 500);
+                    
+                } catch (error) {
+                    this.updateProgress(0, 'Hitilafu ya mtandao');
+                    setTimeout(() => {
+                        this.showNotification('Hitilafu ya mtandao. Hakikisha umeko kwenye mtandao', 'error');
+                        document.getElementById('upload-progress').classList.add('hidden');
+                    }, 1000);
+                }
+            });
+        }
+
+        // Edit form
+        const editForm = document.getElementById('edit-form');
+        if (editForm) {
+            editForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.submitForm(editForm, 'Bidhaa imerekebishwa!');
+                document.getElementById('edit-modal').classList.add('hidden');
+            });
+        }
+
+        // Delete form
+        const deleteForm = document.getElementById('delete-form');
+        if (deleteForm) {
+            deleteForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.submitForm(deleteForm, 'Bidhaa imefutwa!');
+                document.getElementById('delete-modal').classList.add('hidden');
+            });
+        }
+    }
+
+    async submitForm(form, successMessage = 'Operesheni imekamilika!') {
+        const formData = new FormData(form);
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        
+        try {
+            // Disable submit button
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Inatumwa...';
+            
+            const response = await fetch(form.action, {
+                method: form.method,
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                const message = data.message || successMessage;
+                this.showNotification(message, 'success');
+                
+                // Don't reload for CSV uploads
+                if (form.id !== 'csv-upload-form') {
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            } else {
+                const error = data.errors ? Object.values(data.errors)[0][0] : data.message;
+                this.showNotification(error || 'Hitilafu imetokea', 'error');
+            }
+        } catch (error) {
+            this.showNotification('Hitilafu ya mtandao', 'error');
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        }
+    }
+
+    updateProgress(percent, status) {
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const uploadStatus = document.getElementById('upload-status');
+        
+        if (progressBar) progressBar.style.width = `${percent}%`;
+        if (progressPercentage) progressPercentage.textContent = `${percent}%`;
+        if (uploadStatus) uploadStatus.textContent = status;
+        
+        // Hide progress after completion
+        if (percent === 100) {
+            setTimeout(() => {
+                const progressDiv = document.getElementById('upload-progress');
+                if (progressDiv) progressDiv.classList.add('hidden');
+                if (progressBar) progressBar.style.width = '0%';
+                if (progressPercentage) progressPercentage.textContent = '0%';
+            }, 2000);
+        }
+    }
+
+    showUploadResults(data) {
+        const resultsDiv = document.getElementById('upload-results');
+        const successCount = document.getElementById('success-count');
+        const errorCount = document.getElementById('error-count');
+        const skippedCount = document.getElementById('skipped-count');
+        const totalCount = document.getElementById('total-count');
+        const errorList = document.getElementById('error-list');
+        const errorItems = document.getElementById('error-items');
+        
+        if (!resultsDiv || !successCount || !errorCount || !skippedCount || !totalCount) return;
+        
+        successCount.textContent = data.successCount || 0;
+        errorCount.textContent = data.errorCount || 0;
+        skippedCount.textContent = data.skippedRows || 0;
+        totalCount.textContent = data.totalRows || 0;
+        
+        // Show/hide error list
+        if (data.errors && data.errors.length > 0) {
+            errorList.classList.remove('hidden');
+            if (errorItems) {
+                errorItems.innerHTML = '';
+                
+                data.errors.forEach((error, index) => {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'flex items-start border-b border-red-100 pb-1 mb-1';
+                    
+                    let errorText = error;
+                    let rowInfo = '';
+                    
+                    // Extract row number if present
+                    const rowMatch = error.match(/mstari\s*(\d+)/i);
+                    if (rowMatch && rowMatch[1]) {
+                        rowInfo = ` (Mstari ${rowMatch[1]})`;
+                    }
+                    
+                    errorDiv.innerHTML = `
+                        <i class="fas fa-times text-red-500 mr-1 mt-0.5 text-xs"></i>
+                        <div class="flex-1">
+                            <span class="font-medium">${errorText}</span>
+                            ${rowInfo ? `<span class="text-red-400 text-xs ml-1">${rowInfo}</span>` : ''}
+                        </div>
+                    `;
+                    
+                    errorItems.appendChild(errorDiv);
+                    
+                    // Limit to 10 errors
+                    if (index >= 9 && data.errors.length > 10) {
+                        const remaining = data.errors.length - 10;
+                        const moreDiv = document.createElement('div');
+                        moreDiv.className = 'text-red-400 text-xs text-center pt-1';
+                        moreDiv.textContent = `+ ${remaining} zaidi...`;
+                        errorItems.appendChild(moreDiv);
+                        return;
+                    }
+                });
+            }
+        } else {
+            errorList.classList.add('hidden');
+        }
+        
+        resultsDiv.classList.remove('hidden');
+    }
+
+    showNotification(message, type = 'info') {
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+        
+        const colors = {
+            success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+            error: 'bg-red-50 border-red-200 text-red-800',
+            warning: 'bg-amber-50 border-amber-200 text-amber-800',
+            info: 'bg-blue-50 border-blue-200 text-blue-800'
+        };
+
+        const notification = document.createElement('div');
+        notification.className = `rounded border px-4 py-3 text-sm font-medium mb-2 ${colors[type]} shadow-sm animate-fade-in`;
+        notification.textContent = message;
+
+        container.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-10px) translateX(-50%)';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 }
 
-// Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    new BidhaaManager();
+// Print function
+function printProducts() {
+    const printWindow = window.open('', '_blank');
+    const rows = document.querySelectorAll('.product-row');
+    
+    let tableRows = '';
+    rows.forEach(row => {
+        const product = JSON.parse(row.dataset.product);
+        tableRows += `
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${product.jina}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${product.aina}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${product.idadi}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(product.bei_nunua).toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(product.bei_kuuza).toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${product.expiry ? new Date(product.expiry).toLocaleDateString() : '--'}</td>
+            </tr>`;
+    });
+    
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Orodha ya Bidhaa - ${new Date().toLocaleDateString()}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; }
+                th { background-color: #f3f4f6; font-weight: bold; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .header h2 { margin: 0; color: #047857; }
+                .header p { margin: 5px 0 0 0; color: #6b7280; }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h2>Orodha ya Bidhaa</h2>
+                <p>${new Date().toLocaleDateString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bidhaa</th>
+                        <th>Aina</th>
+                        <th>Idadi</th>
+                        <th>Bei Nunua</th>
+                        <th>Bei Kuuza</th>
+                        <th>Expiry</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// PDF Export
+function exportPDF() {
+    const search = new URLSearchParams(window.location.search);
+    search.set('export', 'pdf');
+    window.open(`${window.location.pathname}?${search.toString()}`, '_blank');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    window.bidhaaManager = new SmartBidhaaManager();
+    
+    // Save tab state
+    window.addEventListener('beforeunload', () => {
+        if (window.bidhaaManager) {
+            window.bidhaaManager.saveTab(window.bidhaaManager.currentTab);
+        }
+    });
+    
+    // Fix for sidebar on page load
+    setTimeout(() => {
+        if (window.bidhaaManager) {
+            window.bidhaaManager.fixSidebarNavigation();
+        }
+    }, 100);
 });
 </script>
 @endpush

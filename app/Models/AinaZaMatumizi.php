@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AinaYaMatumizi extends Model
+class AinaZaMatumizi extends Model
 {
     use HasFactory;
 
-    protected $table = 'aina_za_matumizi'; // Specify the table name
-
+    protected $table = 'aina_za_matumizi';
+    
     protected $fillable = [
         'jina',
         'maelezo',
@@ -33,5 +33,13 @@ class AinaYaMatumizi extends Model
     public function matumizi()
     {
         return $this->hasMany(Matumizi::class, 'aina', 'jina');
+    }
+
+    /**
+     * Scope for current company
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
     }
 }
