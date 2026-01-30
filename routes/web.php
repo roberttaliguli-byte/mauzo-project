@@ -250,4 +250,5 @@ Route::delete('/madeni/{madeni}', [MadeniController::class, 'destroy'])->name('m
 // Uchambuzi Routes
 Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
 Route::get('/mwenendo', [UchambuziController::class, 'mwenendoRange']);
+
 // ================================

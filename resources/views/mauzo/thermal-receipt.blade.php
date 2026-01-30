@@ -197,7 +197,7 @@
         <!-- Footer -->
         <div class="text-center py-1">
             <div>ASANTE KWA KUNUNUA</div>
-            <div class="py-1">Risiti hii ni sahihi</div>
+            <div class="py-1">Risiti hii imethibitishwa</div>
             
         </div>
         

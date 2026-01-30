@@ -158,7 +158,7 @@
             </div>
 
 <!-- Financial Overview -->
-<div class="mt-4 lg:mt-6">
+<div class="mt-4 lg:mt-6" id="financial-overview-container">
     <h2 class="text-sm lg:text-base font-bold text-gray-800 flex items-center mb-2 lg:mb-3">
         <div class="relative mr-1.5">
             <div class="w-1.5 h-4 lg:w-2 lg:h-5 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
@@ -183,11 +183,10 @@
                 </div>
                 @php
                     // Sales income (cash sales)
-                    $mapatoMauzo = $mauzos->where('created_at', '>=', today())
-                        ->sum(fn($m) => $m->jumla);
+                    $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
                     
                     // Debt repayment income
-                    $mapatoMadeni = $marejeshos->where('tarehe', today()->toDateString())->sum('kiasi');
+                    $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
                     
                     // Total income = cash sales + debt repayments
                     $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
@@ -225,8 +224,7 @@
 @php
     // Profit from cash sales
     $faidaMauzo = 0;
-    $todayMauzos = $mauzos->where('created_at', '>=', today());
-    foreach($todayMauzos as $mauzo) {
+    foreach($todaysMauzos as $mauzo) {
         $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
         $sellingPrice = $mauzo->bei;
         $quantity = $mauzo->idadi;
@@ -239,16 +237,12 @@
         $faidaMauzo += ($sellingPrice - $buyingPrice) * $quantity - $actualDiscount;
     }
     
-    // Profit from debt repayments - SIMPLE CALCULATION
+    // Profit from debt repayments
     $faidaMarejesho = 0;
-    $todayMarejeshos = $marejeshos->where('tarehe', today()->toDateString());
     
-    foreach($todayMarejeshos as $marejesho) {
+    foreach($todaysMarejeshos as $marejesho) {
         if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
             $debt = $marejesho->madeni;
-            
-            // SIMPLE: Profit = (Actual selling price - Buying price) per item
-            // jumla should already be the discounted total price
             
             $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
             $quantity = $debt->idadi;
@@ -276,7 +270,7 @@
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-green-100">Marejesho:</span>
-                <span class="font-semibold" id="faida-marejesho">{{ number_format($faidaMarejesho) }}</span>
+                                <span class="font-semibold" id="faida-marejesho">{{ number_format($faidaMarejesho) }}</span>
             </div>
             <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
                 <span class="text-green-50 font-semibold">Jumla:</span>
@@ -297,9 +291,9 @@
                 </div>
                 <div class="text-xs font-semibold text-amber-100 uppercase tracking-wide mb-1">Matumizi</div>
                 @php
-                    $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
-                    $matumiziWiki = $matumizi->where('created_at', '>=', now()->startOfWeek())->sum('gharama');
-                    $matumiziJumla = $matumizi->sum('gharama');
+                    $matumiziLeo = $todaysMatumizi->sum('gharama');
+                    $matumiziWiki = $weeklyMatumizi->sum('gharama');
+                    $matumiziJumla = $allMatumizi->sum('gharama');
                 @endphp
                 <div class="space-y-1 text-white text-xs">
                     <div class="flex justify-between items-center">
@@ -331,9 +325,9 @@
                 <div class="text-xs font-semibold text-cyan-100 uppercase tracking-wide mb-1">Fedha Leo</div>
                 @php
                     // Cash in hand today = Cash sales + Debt repayments - Expenses
-                    $mauzoLeo = $mauzos->where('created_at', '>=', today())->sum('jumla');
-                    $mapatoMadeni = $marejeshos->where('tarehe', today()->toDateString())->sum('kiasi');
-                    $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
+                    $mauzoLeo = $todaysMauzos->sum('jumla');
+                    $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
+                    $matumiziLeo = $todaysMatumizi->sum('gharama');
                     
                     $fedhaLeo = ($mauzoLeo + $mapatoMadeni) - $matumiziLeo;
                 @endphp
@@ -366,7 +360,7 @@
         <div class="text-xs font-semibold text-teal-100 uppercase tracking-wide mb-1">Faida Halisi</div>
         @php
             // Use the SAME $jumlaFaida from "Faida ya leo" section
-            $matumiziLeo = $matumizi->where('created_at', '>=', today())->sum('gharama');
+            $matumiziLeo = $todaysMatumizi->sum('gharama');
             $faidaHalisi = $jumlaFaida - $matumiziLeo;
         @endphp
         <div class="space-y-1 text-white text-xs">
@@ -399,18 +393,9 @@
                 <div class="text-xs font-semibold text-rose-100 uppercase tracking-wide mb-1">Jumla Kuu</div>
                 @php
                     // All-time calculations: INCOME - EXPENSES
-                    $allMauzos = $mauzos;
-                    $allMarejeshos = $marejeshos;
-                    
-                    // Total income all time = Cash sales + All debt repayments
-                    $totalCashSales = $allMauzos->sum('jumla');
-                    $totalDebtRepayments = $allMarejeshos->sum('kiasi');
-                    $totalMapato = $totalCashSales + $totalDebtRepayments;
-                    
-                    // Total expenses all time
-                    $totalMatumizi = $matumizi->sum('gharama');
-                    
-                    // Net income all time = Total income - Total expenses
+                    // These should be pre-calculated in controller and passed as separate variables
+                    $totalMapato = $allTimeMauzos->sum('jumla') + $allTimeMarejeshos->sum('kiasi');
+                    $totalMatumizi = $allMatumizi->sum('gharama');
                     $jumlaKuu = $totalMapato - $totalMatumizi;
                 @endphp
                 <div class="space-y-1 text-white text-xs">
@@ -590,7 +575,7 @@
                                     $faida = ($item->bei - $buyingPrice) * $item->idadi - $item->punguzo;
                                     $total = $item->jumla + $item->punguzo;
                                 @endphp
-                                <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}">
+                                <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
                                     <td class="border px-3 py-2">
                                         @if($itemDate === $today)
                                             <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
@@ -618,7 +603,7 @@
                                                 <i class="fas fa-print mr-1 text-xs"></i>
                                             </button>
                                             @endif
-                                            <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}">
+                                            <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
                                                 <i class="fas fa-trash mr-1 text-xs"></i>
                                             </button>
                                         </div>
@@ -720,7 +705,7 @@
                         <tbody id="grouped-sales-tbody">
                             @php
                                 $groupedSales = [];
-                                foreach($mauzos as $sale) {
+                                foreach($allMauzos as $sale) {
                                     $date = $sale->created_at->format('Y-m-d');
                                     $product = $sale->bidhaa->jina;
                                     $key = $date . '|' . $product;
@@ -905,6 +890,38 @@
                     <i class="fas fa-spinner fa-spin text-xl text-emerald-600 mb-3"></i>
                     <p class="text-gray-600 text-sm">Inatafuta taarifa...</p>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Sale Modal -->
+<div id="delete-sale-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-base font-semibold text-black text-center">Thibitisha Ufutaji</h3>
+        </div>
+        <div class="p-4">
+            <div class="text-center mb-4">
+                <i class="fas fa-exclamation-triangle text-amber-500 text-2xl mb-3"></i>
+                <p class="text-black text-sm mb-1" id="delete-sale-message"></p>
+                <div class="bg-red-50 border-l-4 border-red-400 p-3 mt-2 hidden" id="stock-warning">
+                    <div class="flex">
+                        <i class="fas fa-info-circle text-red-400 mt-0.5"></i>
+                        <div class="ml-3">
+                            <p class="text-red-700 text-xs" id="stock-warning-text"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-center space-x-2">
+                <button id="cancel-delete-sale" class="px-4 py-2 border border-gray-300 rounded-lg text-black hover:bg-gray-50 text-sm">
+                    Ghairi
+                </button>
+                <button id="confirm-delete-sale" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
+                    Ndio, Futa
+                </button>
             </div>
         </div>
     </div>
@@ -1162,28 +1179,6 @@
         </div>
     </div>
 </div>
-<!-- Delete Confirmation Modal -->
-<div id="delete-confirmation-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
-    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
-        <div class="p-4 border-b border-gray-200">
-            <h3 class="text-base font-semibold text-black text-center">Thibitisha Ufutaji</h3>
-        </div>
-        <div class="p-4">
-            <p class="text-black text-sm mb-4 text-center" id="delete-message">
-                Una uhakika unataka kufuta mauzo haya?
-            </p>
-            <div class="flex justify-center space-x-2">
-                <button id="cancel-delete" class="px-4 py-2 border border-gray-300 rounded-lg text-black hover:bg-gray-50 text-sm">
-                    Ghairi
-                </button>
-                <button id="confirm-delete" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
-                    Ndio, Futa
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('styles')
@@ -1348,9 +1343,9 @@ button:hover {
 }
 </style>
 @endpush
+
 @push('scripts')
 <script>
-
 class MauzoManager {
     constructor() {
         // Get company ID from meta tag or data attribute
@@ -1367,6 +1362,10 @@ class MauzoManager {
         this.deleteCallback = null;
         this.pendingSaleData = null;
         this.currentKopeshaType = null;
+        this.currentSaleToDelete = null;
+        
+        // Restore tab state BEFORE init to ensure correct tab is shown
+        this.restoreTabState();
         this.init();
     }
 
@@ -1376,14 +1375,183 @@ class MauzoManager {
         this.setTodayDate();
         this.initBidhaaSearch();
         this.initBarcodeRows();
-        this.restoreTabState();
-        this.initReceiptLookup();
         this.initCartDisplay();
         this.initCustomerSelection();
-        this.clearOtherCompanyCarts(); // Clear carts from other companies
+        this.clearOtherCompanyCarts();
+        this.bindDeleteSaleEvents();
+        this.initReceiptLookup();
     }
 
-    // Add method to clear other company carts
+    // Modified: Save and restore tab state properly
+    restoreTabState() {
+        // Get saved tab from localStorage
+        const savedTab = localStorage.getItem('currentMauzoTab');
+        
+        // If no saved tab, default to 'sehemu' (sales tab)
+        this.currentTab = savedTab || 'sehemu';
+        
+        // Show the saved tab immediately
+        setTimeout(() => {
+            this.showTab(this.currentTab, true); // true = initial restore
+        }, 50); // Small delay to ensure DOM is ready
+    }
+
+    // Modified: Show tab with save option
+    showTab(tabName, isRestore = false) {
+        // Hide all tab buttons active state
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Hide all tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+            content.classList.add('hidden');
+        });
+        
+        // Show selected tab
+        const activeTab = document.getElementById(`${tabName}-tab`);
+        const activeContent = document.getElementById(`${tabName}-tab-content`);
+        
+        if (activeTab && activeContent) {
+            activeTab.classList.add('active');
+            activeContent.classList.add('active');
+            activeContent.classList.remove('hidden');
+        }
+
+        // Save to localStorage (only if not restoring)
+        if (!isRestore) {
+            localStorage.setItem('currentMauzoTab', tabName);
+            this.currentTab = tabName;
+        }
+        
+        // Handle tab-specific focus
+        if (tabName === 'barcode') {
+            setTimeout(() => {
+                const firstBarcodeInput = document.querySelector('.barcode-input');
+                if (firstBarcodeInput) {
+                    firstBarcodeInput.focus();
+                }
+            }, 100);
+        }
+        
+        if (tabName === 'risiti') {
+            setTimeout(() => {
+                const searchInput = document.getElementById('search-receipt-input');
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }, 100);
+        }
+        
+        if (tabName === 'kikapu') {
+            this.updateCartDisplay();
+        }
+    }
+
+    bindDeleteSaleEvents() {
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.delete-sale-btn')) {
+                const btn = e.target.closest('.delete-sale-btn');
+                const saleId = btn.dataset.id;
+                const productName = btn.dataset.productName;
+                const quantity = btn.dataset.quantity;
+                
+                this.showDeleteSaleConfirmation(saleId, productName, quantity);
+            }
+        });
+    }
+
+    showDeleteSaleConfirmation(saleId, productName, quantity) {
+        this.currentSaleToDelete = saleId;
+        
+        const modal = document.getElementById('delete-sale-modal');
+        const message = document.getElementById('delete-sale-message');
+        const stockWarning = document.getElementById('stock-warning');
+        const warningText = document.getElementById('stock-warning-text');
+        const cancelBtn = document.getElementById('cancel-delete-sale');
+        const confirmBtn = document.getElementById('confirm-delete-sale');
+        const closeBtn = document.querySelector('#delete-sale-modal .modal-overlay');
+        
+        if (!modal || !message) return;
+        
+        message.textContent = `Una uhakika unataka kufuta mauzo ya "${productName}"?`;
+        
+        if (stockWarning && warningText) {
+            warningText.textContent = `Idadi ya ${quantity} itarudishwa kwenye stok ya bidhaa.`;
+            stockWarning.classList.remove('hidden');
+        }
+        
+        modal.classList.remove('hidden');
+        
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            this.currentSaleToDelete = null;
+        };
+        
+        cancelBtn.onclick = closeModal;
+        if (closeBtn) closeBtn.onclick = closeModal;
+        
+        confirmBtn.onclick = async () => {
+            await this.deleteSale(this.currentSaleToDelete);
+            closeModal();
+        };
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal || e.target.classList.contains('modal-overlay')) {
+                closeModal();
+            }
+        });
+    }
+
+    async deleteSale(saleId) {
+        if (!saleId) return;
+
+        try {
+            const response = await fetch(`/mauzo/${saleId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showNotification('Mauzo yamefutwa kikamilifu! Stock imerudishwa.', 'success');
+                
+                // Remove the row from the table
+                const row = document.querySelector(`.sales-row[data-id="${saleId}"]`);
+                if (row) {
+                    row.remove();
+                    
+                    // Check if table is empty
+                    const rows = document.querySelectorAll('.sales-row');
+                    if (rows.length === 0) {
+                        const tbody = document.getElementById('sales-tbody');
+                        if (tbody) {
+                            tbody.innerHTML = `
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-gray-500 text-xs">
+                                        Hakuna mauzo yaliyorekodiwa bado.
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    }
+                }
+                
+                this.updateFinancialData();
+            } else {
+                this.showNotification(data.message || 'Kuna tatizo kufuta mauzo!', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kufuta mauzo!', 'error');
+        }
+    }
+
     clearOtherCompanyCarts() {
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -1396,7 +1564,6 @@ class MauzoManager {
         keysToRemove.forEach(key => localStorage.removeItem(key));
     }
 
-    // Update: CORRECT DISCOUNT TYPE CALCULATIONS
     updateTotals() {
         const quantityInput = document.getElementById('quantity-input');
         const priceInput = document.getElementById('price-input');
@@ -1416,11 +1583,9 @@ class MauzoManager {
         let finalTotal = 0;
         
         if (discountType === 'bidhaa') {
-            // "k/bidhaa" = discount PER ITEM (multiply by quantity)
             const totalDiscount = discount * quantity;
             finalTotal = baseTotal - totalDiscount;
         } else {
-            // "jumla" = discount ON TOTAL (apply once)
             finalTotal = baseTotal - discount;
         }
         
@@ -1429,7 +1594,6 @@ class MauzoManager {
         totalInput.value = finalTotal.toFixed(2);
         punguzoAinaInput.value = discountType;
         
-        // Update kopesha form values
         const kopeshaIdadi = document.getElementById('kopesha-idadi');
         const kopeshaJumla = document.getElementById('kopesha-jumla');
         const kopeshaBaki = document.getElementById('kopesha-baki');
@@ -1443,7 +1607,6 @@ class MauzoManager {
         if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
     }
 
-    // Update: CORRECT CART ADDITION with company_id
     addToCart() {
         const bidhaaSelect = document.getElementById('bidhaaSelect');
         const quantityInput = document.getElementById('quantity-input');
@@ -1466,10 +1629,7 @@ class MauzoManager {
             return;
         }
 
-        // Get buying price for profit calculation
         const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
-        
-        // Calculate base total and actual discount
         const baseTotal = price * quantity;
         let actualDiscount = discount;
         let profit = 0;
@@ -1482,7 +1642,6 @@ class MauzoManager {
             profit = ((price - buyingPrice) * quantity) - discount;
         }
         
-        // Verify calculation matches displayed total
         const calculatedTotal = baseTotal - actualDiscount;
         if (Math.abs(calculatedTotal - total) > 0.01) {
             this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal}, Ilioingizwa: ${total}`, 'error');
@@ -1491,8 +1650,6 @@ class MauzoManager {
 
         const productName = selectedOption.dataset.jina;
         const barcode = selectedOption.dataset.barcode || '';
-
-        // Get company name from meta tag
         const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
 
         const cartItem = {
@@ -1506,8 +1663,8 @@ class MauzoManager {
             bidhaa_id: selectedOption.value,
             barcode: barcode,
             timestamp: new Date().toISOString(),
-            company_id: this.companyId, // Add company identifier
-            company_name: companyName // Add company name for display
+            company_id: this.companyId,
+            company_name: companyName
         };
 
         this.cart.push(cartItem);
@@ -1519,7 +1676,6 @@ class MauzoManager {
         this.resetForm();
     }
 
-    // Update: CORRECT CART DISPLAY with company filtering
     updateCartDisplay() {
         const emptyMessage = document.getElementById('empty-cart-message');
         const cartContent = document.getElementById('cart-content');
@@ -1529,14 +1685,11 @@ class MauzoManager {
 
         if (!emptyMessage || !cartContent || !cartTbody || !cartTotal) return;
 
-        // Filter cart items by current company
         const companyCart = this.cart.filter(item => item.company_id === this.companyId);
         
-        // Show warning if cart contains items from other companies
         if (companyCart.length !== this.cart.length && companyWarning) {
             companyWarning.classList.remove('hidden');
             
-            // Optionally remove non-company items from cart
             if (companyCart.length === 0) {
                 this.cart = [];
                 this.saveCart();
@@ -1558,16 +1711,13 @@ class MauzoManager {
             companyCart.forEach((item, index) => {
                 total += item.jumla;
                 
-                // Calculate displayed discount
                 let displayedDiscount = item.punguzo;
                 let discountLabel = item.punguzo_aina === 'bidhaa' ? 'k/bidhaa' : 'jumla';
                 
-                // If it's "kwa bidhaa", calculate total discount
                 if (item.punguzo_aina === 'bidhaa') {
                     displayedDiscount = item.punguzo * item.idadi;
                 }
                 
-                // Calculate base total for verification
                 const baseTotal = item.bei * item.idadi;
                 
                 const row = document.createElement('tr');
@@ -1611,7 +1761,6 @@ class MauzoManager {
         }
     }
 
-    // Update: CORRECT BARCODE CALCULATION
     updateBarcodeRowTotal(row) {
         const productPrice = row.querySelector('.product-price');
         const quantityInput = row.querySelector('.quantity-input');
@@ -1634,14 +1783,11 @@ class MauzoManager {
             return;
         }
         
-        // Calculate total based on discount type
         let total = price * quantity;
         
         if (discountType === 'bidhaa') {
-            // Discount per product (k/bidhaa)
             total = total - (punguzo * quantity);
         } else {
-            // Discount on total (jumla)
             total = total - punguzo;
         }
         
@@ -1650,7 +1796,6 @@ class MauzoManager {
         this.updateBarcodeTotal();
     }
 
-    // Update: CORRECT BARCODE SALE SUBMISSION
     async submitBarcodeSales() {
         const items = [];
         let hasValidItems = false;
@@ -1677,10 +1822,8 @@ class MauzoManager {
                 const jumla = parseFloat(totalInput.value) || 0;
                 
                 if (barcode && quantity > 0 && product && price > 0) {
-                    // Find bidhaa_id from barcode
                     const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
                     
-                    // Calculate actual discount based on type
                     let actualDiscount = punguzo;
                     if (discountType === 'bidhaa') {
                         actualDiscount = punguzo * quantity;
@@ -1736,9 +1879,7 @@ class MauzoManager {
         }
     }
 
-    // Update: CORRECT CART CHECKOUT with company validation
     async checkoutCart() {
-        // Filter cart to current company only
         const companyCart = this.cart.filter(item => item.company_id === this.companyId);
         
         if (companyCart.length === 0) {
@@ -1752,7 +1893,7 @@ class MauzoManager {
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'X-Company-ID': this.companyId // Add company header
+                    'X-Company-ID': this.companyId
                 },
                 body: JSON.stringify({ 
                     items: companyCart,
@@ -1780,7 +1921,6 @@ class MauzoManager {
         }
     }
 
-    // Update: CORRECT KOPESHA DATA PREPARATION
     prepareBarcodeKopeshaData() {
         const items = [];
         const punguzoType = document.getElementById('punguzo-type');
@@ -1803,10 +1943,8 @@ class MauzoManager {
                 const jumla = parseFloat(totalInput.value) || 0;
                 
                 if (barcode && quantity > 0 && product && price > 0) {
-                    // Find bidhaa_id from barcode
                     const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
                     
-                    // Calculate actual discount
                     let actualDiscount = punguzo;
                     if (discountType === 'bidhaa') {
                         actualDiscount = punguzo * quantity;
@@ -1822,7 +1960,7 @@ class MauzoManager {
                         punguzo_aina: discountType,
                         jumla: jumla,
                         total_before_discount: (price * quantity),
-                        company_id: this.companyId // Add company ID
+                        company_id: this.companyId
                     });
                 }
             }
@@ -1833,9 +1971,7 @@ class MauzoManager {
         }
     }
 
-    // Update: CORRECT KIKAPU KOPESHA DATA PREPARATION with company filter
     prepareKikapuKopeshaData() {
-        // Filter cart to current company only
         const companyCart = this.cart.filter(item => item.company_id === this.companyId);
         
         if (companyCart.length > 0) {
@@ -1849,17 +1985,10 @@ class MauzoManager {
                 punguzo_aina: item.punguzo_aina,
                 jumla: item.jumla,
                 profit: item.profit || 0,
-                company_id: this.companyId // Add company ID
+                company_id: this.companyId
             }));
             
             document.getElementById('kikapu-items-data').value = JSON.stringify(items);
-        }
-    }
-
-    // Original methods from your script
-    restoreTabState() {
-        if (this.currentTab && this.currentTab !== 'sehemu') {
-            this.showTab(this.currentTab);
         }
     }
 
@@ -1975,12 +2104,11 @@ class MauzoManager {
     }
 
     bindEvents() {
-        // Tab navigation
+        // Modified: Save tab on click
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', (e) => {
                 const tab = e.target.closest('.tab-button').dataset.tab;
                 if (tab) {
-                    localStorage.setItem('currentMauzoTab', tab);
                     this.showTab(tab);
                 }
             });
@@ -2055,46 +2183,6 @@ class MauzoManager {
                     }
                 }, 100);
             });
-        }
-    }
-
-    showTab(tabName) {
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.classList.remove('active');
-        });
-        
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-            content.classList.add('hidden');
-        });
-        
-        const activeTab = document.getElementById(`${tabName}-tab`);
-        const activeContent = document.getElementById(`${tabName}-tab-content`);
-        
-        if (activeTab && activeContent) {
-            activeTab.classList.add('active');
-            activeContent.classList.add('active');
-            activeContent.classList.remove('hidden');
-        }
-
-        this.currentTab = tabName;
-        
-        if (tabName === 'barcode') {
-            setTimeout(() => {
-                const firstBarcodeInput = document.querySelector('.barcode-input');
-                if (firstBarcodeInput) {
-                    firstBarcodeInput.focus();
-                }
-            }, 100);
-        }
-        
-        if (tabName === 'risiti') {
-            setTimeout(() => {
-                const searchInput = document.getElementById('search-receipt-input');
-                if (searchInput) {
-                    searchInput.focus();
-                }
-            }, 100);
         }
     }
 
@@ -2795,22 +2883,6 @@ class MauzoManager {
                 this.submitKopeshaForm(kikapuKopeshaForm, 'kikapu');
             });
         }
-        
-        const cancelDeleteBtn = document.getElementById('cancel-delete');
-        const confirmDeleteBtn = document.getElementById('confirm-delete');
-        
-        if (cancelDeleteBtn) {
-            cancelDeleteBtn.addEventListener('click', () => closeModal('delete-confirmation-modal'));
-        }
-        
-        if (confirmDeleteBtn) {
-            confirmDeleteBtn.addEventListener('click', () => {
-                if (this.deleteCallback) {
-                    this.deleteCallback();
-                }
-                closeModal('delete-confirmation-modal');
-            });
-        }
 
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', (e) => {
@@ -2867,18 +2939,7 @@ class MauzoManager {
     }
 
     bindDeleteEvents() {
-        document.querySelectorAll('.delete-sale-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const saleId = e.target.closest('.delete-sale-btn').dataset.id;
-                
-                this.showConfirmation(
-                    'Una uhakika unataka kufuta mauzo haya? Hatua hii haiwezi kutenduliwa.',
-                    () => {
-                        this.deleteSale(saleId);
-                    }
-                );
-            });
-        });
+        // Handled by bindDeleteSaleEvents
     }
 
     submitKopeshaForm(form, type) {
@@ -2934,29 +2995,6 @@ class MauzoManager {
         });
     }
 
-    deleteSale(saleId) {
-        fetch(`/mauzo/${saleId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                this.showNotification('Mauzo yamefutwa kikamilifu!', 'success');
-                this.updateFinancialData();
-            } else {
-                this.showNotification(data.message || 'Kuna tatizo kufuta mauzo!', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kufuta mauzo!', 'error');
-        });
-    }
-
     removeFromCart(index) {
         this.cart.splice(index, 1);
         this.saveCart();
@@ -2985,7 +3023,6 @@ class MauzoManager {
     updateCartCount() {
         const cartCount = document.getElementById('cart-count');
         if (cartCount) {
-            // Count only items from current company
             const companyCartCount = this.cart.filter(item => item.company_id === this.companyId).length;
             if (companyCartCount > 0) {
                 cartCount.textContent = companyCartCount;
@@ -3053,19 +3090,8 @@ class MauzoManager {
     }
 
     showConfirmation(message, confirmCallback) {
-        const deleteMessage = document.getElementById('delete-message');
-        const confirmBtn = document.getElementById('confirm-delete');
-        const cancelBtn = document.getElementById('cancel-delete');
-        const modal = document.getElementById('delete-confirmation-modal');
-        
-        if (deleteMessage && confirmBtn && cancelBtn && modal) {
-            deleteMessage.textContent = message;
-            this.deleteCallback = confirmCallback;
-            modal.classList.remove('hidden');
-        } else {
-            if (confirm(message)) {
-                confirmCallback();
-            }
+        if (confirm(message)) {
+            confirmCallback();
         }
     }
 
@@ -3156,8 +3182,7 @@ class MauzoManager {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    new MauzoManager();
+    window.mauzoManager = new MauzoManager();
 });
 </script>
-
 @endpush
