@@ -63,6 +63,7 @@ class MauzoController extends Controller
     }
 
 // Display main sales page
+// Display main sales page
 public function index()
 {
     $user = $this->getAuthUser();

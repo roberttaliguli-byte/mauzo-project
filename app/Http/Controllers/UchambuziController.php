@@ -8,6 +8,7 @@ use App\Models\Mauzo;
 use App\Models\Bidhaa;
 use App\Models\Matumizi;
 use App\Models\Marejesho;
+use App\Models\Madeni;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -87,20 +88,47 @@ class UchambuziController extends Controller
             ->values()
             ->toArray();
 
-        // 4️⃣ Gharama ya Bidhaa Zilizouzwa - Cost of goods sold
-        $gharama = $company->bidhaa()
-            ->with('mauzos')
+        // 4️⃣ Faida ya Marejesho - Profit from debt repayments
+        $marejesho = $company->marejeshos()
+            ->with(['madeni' => function($query) {
+                $query->with('bidhaa');
+            }])
+            ->whereDate('created_at', '>=', Carbon::now()->subDays(30))
             ->get()
-            ->map(function ($bidhaa) {
-                $totalSold = $bidhaa->mauzos->sum('idadi');
+            ->filter(function($marejesho) {
+                return $marejesho->madeni && $marejesho->madeni->bidhaa;
+            })
+            ->groupBy(function($marejesho) {
+                return $marejesho->madeni->bidhaa->jina;
+            })
+            ->map(function ($repayments, $productName) {
+                $totalProfit = $repayments->sum(function($marejesho) {
+                    // Calculate profit from each repayment
+                    $debt = $marejesho->madeni;
+                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                    $quantity = $debt->idadi;
+                    
+                    // Calculate actual discount if any
+                    $actualDiscount = $debt->punguzo_aina === 'bidhaa'
+                        ? $debt->punguzo * $quantity
+                        : $debt->punguzo;
+                    
+                    // Selling price after discount (debt amount)
+                    $sellingPrice = $debt->jumla;
+                    
+                    // Total buying cost
+                    $totalBuyingCost = $buyingPrice * $quantity;
+                    
+                    // Profit = Selling price - Buying cost
+                    return $sellingPrice - $totalBuyingCost;
+                });
                 
                 return [
-                    'jina' => $bidhaa->jina,
-                    'total' => $totalSold * $bidhaa->bei_nunua,
-                    'items_sold' => $totalSold,
+                    'jina' => $productName,
+                    'total' => $totalProfit,
+                    'repayment_count' => $repayments->count()
                 ];
             })
-            ->filter(fn($item) => $item['items_sold'] > 0)
             ->values()
             ->toArray();
 
@@ -129,9 +157,9 @@ class UchambuziController extends Controller
                 ->whereBetween('created_at', [$fromDt, $toDt])
                 ->sum('jumla');
 
-            // Debt repayments
+            // Debt repayments amount
             $mapatoMadeni = $company->marejeshos()
-                ->whereBetween('tarehe', [$fromDt->toDateString(), $toDt->toDateString()])
+                ->whereBetween('created_at', [$fromDt, $toDt])
                 ->sum('kiasi');
 
             // Total income
@@ -142,7 +170,7 @@ class UchambuziController extends Controller
                 ->whereBetween('created_at', [$fromDt, $toDt])
                 ->sum('gharama');
 
-            // COST OF GOODS SOLD
+            // COST OF GOODS SOLD for regular sales
             $costOfGoodsSold = $company->mauzo()
                 ->with('bidhaa')
                 ->whereBetween('created_at', [$fromDt, $toDt])
@@ -151,11 +179,41 @@ class UchambuziController extends Controller
                     return $mauzo->idadi * $mauzo->bidhaa->bei_nunua;
                 });
 
-            // Gross profit (Revenue - Cost of Goods Sold)
+            // Profit from debt repayments
+            $faidaMarejesho = $company->marejeshos()
+                ->with(['madeni' => function($query) {
+                    $query->with('bidhaa');
+                }])
+                ->whereBetween('created_at', [$fromDt, $toDt])
+                ->get()
+                ->filter(function($marejesho) {
+                    return $marejesho->madeni && $marejesho->madeni->bidhaa;
+                })
+                ->sum(function($marejesho) {
+                    $debt = $marejesho->madeni;
+                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                    $quantity = $debt->idadi;
+                    
+                    // Calculate actual discount if any
+                    $actualDiscount = $debt->punguzo_aina === 'bidhaa'
+                        ? $debt->punguzo * $quantity
+                        : $debt->punguzo;
+                    
+                    // Selling price after discount (debt amount)
+                    $sellingPrice = $debt->jumla;
+                    
+                    // Total buying cost
+                    $totalBuyingCost = $buyingPrice * $quantity;
+                    
+                    // Profit = Selling price - Buying cost
+                    return $sellingPrice - $totalBuyingCost;
+                });
+
+            // Gross profit from sales (Revenue - Cost of Goods Sold)
             $faidaMauzo = $mapatoMauzo - $costOfGoodsSold;
 
-            // Net profit (Gross profit - Expenses)
-            $faidaHalisi = $faidaMauzo - $jumlaMatumizi;
+            // Total profit (Sales profit + Debt repayment profit - Expenses)
+            $faidaHalisi = ($faidaMauzo + $faidaMarejesho) - $jumlaMatumizi;
 
             // Cash flow (Total income - Expenses)
             $fedhaDroo = $jumlaMapato - $jumlaMatumizi;
@@ -166,6 +224,7 @@ class UchambuziController extends Controller
                 'jumla_mapato' => (float) $jumlaMapato,
                 'jumla_mat' => (float) $jumlaMatumizi,
                 'gharama_bidhaa' => (float) $costOfGoodsSold,
+                'faida_marejesho' => (float) $faidaMarejesho, // ADDED: Profit from debt repayments
                 'faida_mauzo' => (float) $faidaMauzo,
                 'fedha_droo' => (float) $fedhaDroo,
                 'faida_halisi' => (float) $faidaHalisi,
@@ -224,7 +283,7 @@ class UchambuziController extends Controller
             'faidaBidhaa',
             'faidaSiku',
             'mauzoSiku',
-            'gharama',
+            'marejesho', // CHANGED: gharama to marejesho
             'mauzo',
             'mwenendoSummary',
             'thamaniKampuniFormatted',
@@ -251,9 +310,9 @@ class UchambuziController extends Controller
             ->whereBetween('created_at', [$from, $to])
             ->sum('jumla');
 
-        // Debt repayments
+        // Debt repayments amount
         $mapatoMadeni = $company->marejeshos()
-            ->whereBetween('tarehe', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('created_at', [$from, $to])
             ->sum('kiasi');
 
         // Total income
@@ -264,7 +323,7 @@ class UchambuziController extends Controller
             ->whereBetween('created_at', [$from, $to])
             ->sum('gharama');
 
-        // COST OF GOODS SOLD
+        // COST OF GOODS SOLD for regular sales
         $costOfGoodsSold = $company->mauzo()
             ->with('bidhaa')
             ->whereBetween('created_at', [$from, $to])
@@ -273,13 +332,43 @@ class UchambuziController extends Controller
                 return $mauzo->idadi * $mauzo->bidhaa->bei_nunua;
             });
 
-        // Gross profit
+        // Profit from debt repayments
+        $faidaMarejesho = $company->marejeshos()
+            ->with(['madeni' => function($query) {
+                $query->with('bidhaa');
+            }])
+            ->whereBetween('created_at', [$from, $to])
+            ->get()
+            ->filter(function($marejesho) {
+                return $marejesho->madeni && $marejesho->madeni->bidhaa;
+            })
+            ->sum(function($marejesho) {
+                $debt = $marejesho->madeni;
+                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                $quantity = $debt->idadi;
+                
+                // Calculate actual discount if any
+                $actualDiscount = $debt->punguzo_aina === 'bidhaa'
+                    ? $debt->punguzo * $quantity
+                    : $debt->punguzo;
+                
+                // Selling price after discount (debt amount)
+                $sellingPrice = $debt->jumla;
+                
+                // Total buying cost
+                $totalBuyingCost = $buyingPrice * $quantity;
+                
+                // Profit = Selling price - Buying cost
+                return $sellingPrice - $totalBuyingCost;
+            });
+
+        // Gross profit from sales (Revenue - Cost of Goods Sold)
         $faidaMauzo = $mapatoMauzo - $costOfGoodsSold;
 
-        // Net profit
-        $faidaHalisi = $faidaMauzo - $jumlaMatumizi;
+        // Total profit (Sales profit + Debt repayment profit - Expenses)
+        $faidaHalisi = ($faidaMauzo + $faidaMarejesho) - $jumlaMatumizi;
 
-        // Cash flow
+        // Cash flow (Total income - Expenses)
         $fedhaDroo = $jumlaMapato - $jumlaMatumizi;
 
         return response()->json([
@@ -288,6 +377,7 @@ class UchambuziController extends Controller
             'jumla_mapato' => (float) $jumlaMapato,
             'jumla_mat' => (float) $jumlaMatumizi,
             'gharama_bidhaa' => (float) $costOfGoodsSold,
+            'faida_marejesho' => (float) $faidaMarejesho, // ADDED
             'faida_mauzo' => (float) $faidaMauzo,
             'fedha_droo' => (float) $fedhaDroo,
             'faida_halisi' => (float) $faidaHalisi,

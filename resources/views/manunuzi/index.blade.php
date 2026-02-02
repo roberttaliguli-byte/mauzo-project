@@ -132,12 +132,15 @@
                                     </span>
                                 </td>
                                 <td class="px-4 py-2 text-right">
+                                    <!-- Show total purchase price -->
                                     <div class="text-sm font-bold text-emerald-700">{{ number_format($item->bei, 0) }}</div>
-                                    <div class="text-xs text-gray-500">@ {{ number_format($item->unit_cost, 0) }}</div>
+                                    <!-- Show unit cost per item -->
+                                    <div class="text-xs text-gray-500">@ {{ number_format($item->unit_cost, 0) }} / 1</div>
                                 </td>
                                 <td class="px-4 py-2 text-right">
+                                    <!-- Show selling price per item -->
                                     <div class="text-sm font-bold text-green-700">{{ number_format($item->bidhaa->bei_kuuza, 0) }}</div>
-                                    <div class="text-xs text-gray-500">@ {{ number_format($item->bidhaa->bei_kuuza, 0) }}</div>
+                                    <div class="text-xs text-gray-500">@ {{ number_format($item->bidhaa->bei_kuuza, 0) }} / 1</div>
                                 </td>
                                 <td class="px-4 py-2 hidden lg:table-cell">
                                     <div class="text-xs text-gray-700">{{ $item->saplaya ?? '--' }}</div>
@@ -217,17 +220,17 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
                         <input type="number" name="idadi" id="idadi" min="1"
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               placeholder="Idadi" required>
+                               placeholder="Idadi" required oninput="calculateUnitCost()">
                     </div>
 
-                    <!-- Aina ya Bei -->
+                    <!-- Aina ya Bei - Start with Rejareja -->
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Aina ya Bei *</label>
                         <select name="bei_type" id="bei_type" 
                                 class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                                onchange="calculateUnitCost()">
+                                onchange="handleBeiTypeChange()">
+                            <option value="rejareja" selected>Rejareja (Bei per Kimoja)</option>
                             <option value="kwa_zote">Kwa Zote (Bei Jumla)</option>
-                            <option value="rejareja">Rejareja (Bei per Kimoja)</option>
                         </select>
                     </div>
 
@@ -236,8 +239,14 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Bei Nunua (TZS) *</label>
                         <input type="number" step="0.01" name="bei_nunua" id="bei_nunua"
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               placeholder="0.00" required oninput="calculateUnitCost()">
-                        <div class="text-xs text-gray-500 mt-1" id="unit-cost-display"></div>
+                               placeholder="Bei kwa 1" required oninput="calculateUnitCost()">
+                        <div class="text-xs mt-1">
+                            <span id="unit-cost-display" class="font-medium text-emerald-600"></span>
+                            <span id="price-instruction" class="text-gray-500 ml-2">
+                                <i class="fas fa-info-circle"></i>
+                                <span id="instruction-text">Ingiza bei ya 1 bidhaa</span>
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Bei Uza -->
@@ -245,7 +254,7 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Bei Uza (TZS) *</label>
                         <input type="number" step="0.01" name="bei_kuuza" id="bei_kuuza"
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               placeholder="0.00" required>
+                               placeholder="Bei ya kuuza kwa 1" required oninput="validatePrices()">
                     </div>
 
                     <!-- Expiry -->
@@ -277,6 +286,24 @@
                         <textarea name="mengineyo" rows="2"
                                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                   placeholder="Maelezo ya ziada..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Price Calculation Summary -->
+                <div id="price-summary" class="bg-gray-50 p-3 rounded border border-gray-200 hidden">
+                    <div class="text-xs font-medium text-gray-700 mb-1">Muhtasari wa Bei:</div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="text-gray-600">Bei ya Kununua (kwa 1):</div>
+                        <div class="text-right font-medium text-emerald-600" id="summary-unit-cost">0</div>
+                        
+                        <div class="text-gray-600">Jumla ya Kununua:</div>
+                        <div class="text-right font-bold text-emerald-700" id="summary-total-cost">0</div>
+                        
+                        <div class="text-gray-600">Bei ya Kuuza (kwa 1):</div>
+                        <div class="text-right font-medium text-green-600" id="summary-sell-price">0</div>
+                        
+                        <div class="text-gray-600">Faida (kwa 1):</div>
+                        <div class="text-right font-bold text-green-700" id="summary-profit">0</div>
                     </div>
                 </div>
 
@@ -324,7 +351,7 @@
                     <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
                     <input type="number" name="idadi" id="edit-idadi" min="1"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                           required>
+                           required oninput="calculateEditUnitCost()">
                 </div>
 
                 <!-- Aina ya Bei -->
@@ -332,9 +359,9 @@
                     <label class="block text-xs font-medium text-gray-700 mb-1">Aina ya Bei *</label>
                     <select name="bei_type" id="edit-bei-type" 
                             class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" 
-                            onchange="calculateEditUnitCost()">
-                        <option value="kwa_zote">Kwa Zote (Bei Jumla)</option>
+                            onchange="handleEditBeiTypeChange()">
                         <option value="rejareja">Rejareja (Bei per Kimoja)</option>
+                        <option value="kwa_zote">Kwa Zote (Bei Jumla)</option>
                     </select>
                 </div>
 
@@ -344,7 +371,13 @@
                     <input type="number" step="0.01" name="bei_nunua" id="edit-bei-nunua"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                            required oninput="calculateEditUnitCost()">
-                    <div class="text-xs text-gray-500 mt-1" id="edit-unit-cost-display"></div>
+                    <div class="text-xs mt-1">
+                        <span id="edit-unit-cost-display" class="font-medium text-emerald-600"></span>
+                        <span id="edit-price-instruction" class="text-gray-500 ml-2">
+                            <i class="fas fa-info-circle"></i>
+                            <span id="edit-instruction-text">Ingiza bei ya 1 bidhaa</span>
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Bei Uza -->
@@ -352,7 +385,7 @@
                     <label class="block text-xs font-medium text-gray-700 mb-1">Bei Uza (TZS) *</label>
                     <input type="number" step="0.01" name="bei_kuuza" id="edit-bei-kuuza"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                           required>
+                           required oninput="validateEditPrices()">
                 </div>
 
                 <!-- Expiry -->
@@ -383,6 +416,25 @@
                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
                 </div>
             </div>
+            
+            <!-- Edit Price Summary -->
+            <div id="edit-price-summary" class="bg-gray-50 p-3 rounded border border-gray-200 mt-3 hidden">
+                <div class="text-xs font-medium text-gray-700 mb-1">Muhtasari wa Bei:</div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="text-gray-600">Bei ya Kununua (kwa 1):</div>
+                    <div class="text-right font-medium text-emerald-600" id="edit-summary-unit-cost">0</div>
+                    
+                    <div class="text-gray-600">Jumla ya Kununua:</div>
+                    <div class="text-right font-bold text-emerald-700" id="edit-summary-total-cost">0</div>
+                    
+                    <div class="text-gray-600">Bei ya Kuuza (kwa 1):</div>
+                    <div class="text-right font-medium text-green-600" id="edit-summary-sell-price">0</div>
+                    
+                    <div class="text-gray-600">Faida (kwa 1):</div>
+                    <div class="text-right font-bold text-green-700" id="edit-summary-profit">0</div>
+                </div>
+            </div>
+            
             <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
                 <button type="button" id="close-edit-modal"
                         class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
@@ -445,6 +497,7 @@ class SmartManunuziManager {
         this.showTab(this.currentTab);
         this.setupAjaxForms();
         this.setupBidhaaSearch();
+        this.updatePriceSummary();
     }
 
     getSavedTab() {
@@ -484,6 +537,9 @@ class SmartManunuziManager {
 
         // Form validation
         this.bindFormValidation();
+        
+        // Price calculation events
+        this.bindPriceCalculationEvents();
     }
 
     showTab(tabName) {
@@ -575,29 +631,8 @@ class SmartManunuziManager {
         
         // Price validation for main form
         if (manunuziForm) {
-            const beiNunuaInput = document.getElementById('bei_nunua');
-            const beiKuuzaInput = document.getElementById('bei_kuuza');
-            const priceError = document.getElementById('price-error');
-            
-            const validatePrices = () => {
-                const beiNunua = parseFloat(beiNunuaInput.value);
-                const beiKuuza = parseFloat(beiKuuzaInput.value);
-
-                if (beiKuuza < beiNunua) {
-                    priceError.textContent = '⚠️ Bei ya kuuza haiwezi kuwa chini ya bei ya kununua!';
-                    priceError.classList.remove('hidden');
-                    return false;
-                } else {
-                    priceError.classList.add('hidden');
-                    return true;
-                }
-            };
-
-            beiNunuaInput.addEventListener('input', validatePrices);
-            beiKuuzaInput.addEventListener('input', validatePrices);
-
             manunuziForm.addEventListener('submit', (e) => {
-                if (!validatePrices()) {
+                if (!this.validatePrices()) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -606,42 +641,69 @@ class SmartManunuziManager {
 
         // Price validation for edit form
         if (editForm) {
-            const editBeiNunua = editForm.querySelector('[name="bei_nunua"]');
-            const editBeiKuuza = editForm.querySelector('[name="bei_kuuza"]');
+            editForm.addEventListener('submit', (e) => {
+                if (!this.validateEditPrices()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.showNotification('⚠️ Bei ya kuuza haiwezi kuwa chini ya bei ya kununua!', 'error');
+                }
+            });
+        }
+    }
+    
+    bindPriceCalculationEvents() {
+        // Main form price calculation
+        const idadiInput = document.getElementById('idadi');
+        const beiNunuaInput = document.getElementById('bei_nunua');
+        const beiKuuzaInput = document.getElementById('bei_kuuza');
+        
+        if (idadiInput && beiNunuaInput && beiKuuzaInput) {
+            idadiInput.addEventListener('input', () => {
+                this.calculateUnitCost();
+                this.updatePriceSummary();
+                this.validatePrices();
+            });
             
-            if (editBeiNunua && editBeiKuuza) {
-                const editValidatePrices = () => {
-                    const beiNunua = parseFloat(editBeiNunua.value);
-                    const beiKuuza = parseFloat(editBeiKuuza.value);
-                    
-                    if (beiKuuza < beiNunua) {
-                        editBeiKuuza.classList.add('border-red-500');
-                        return false;
-                    } else {
-                        editBeiKuuza.classList.remove('border-red-500');
-                        return true;
-                    }
-                };
-
-                editBeiNunua.addEventListener('input', editValidatePrices);
-                editBeiKuuza.addEventListener('input', editValidatePrices);
-
-                editForm.addEventListener('submit', (e) => {
-                    if (!editValidatePrices()) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.showNotification('⚠️ Bei ya kuuza haiwezi kuwa chini ya bei ya kununua!', 'error');
-                    }
-                });
-            }
+            beiNunuaInput.addEventListener('input', () => {
+                this.calculateUnitCost();
+                this.updatePriceSummary();
+                this.validatePrices();
+            });
+            
+            beiKuuzaInput.addEventListener('input', () => {
+                this.updatePriceSummary();
+                this.validatePrices();
+            });
+        }
+        
+        // Edit form price calculation
+        const editIdadiInput = document.getElementById('edit-idadi');
+        const editBeiNunuaInput = document.getElementById('edit-bei-nunua');
+        const editBeiKuuzaInput = document.getElementById('edit-bei-kuuza');
+        
+        if (editIdadiInput && editBeiNunuaInput && editBeiKuuzaInput) {
+            editIdadiInput.addEventListener('input', () => {
+                this.calculateEditUnitCost();
+                this.updateEditPriceSummary();
+                this.validateEditPrices();
+            });
+            
+            editBeiNunuaInput.addEventListener('input', () => {
+                this.calculateEditUnitCost();
+                this.updateEditPriceSummary();
+                this.validateEditPrices();
+            });
+            
+            editBeiKuuzaInput.addEventListener('input', () => {
+                this.updateEditPriceSummary();
+                this.validateEditPrices();
+            });
         }
     }
 
     setupBidhaaSearch() {
         const searchInput = document.getElementById('bidhaa-search-input');
         const searchResults = document.getElementById('bidhaa-search-results');
-        const bidhaaIdInput = document.getElementById('bidhaa_id');
-        const selectedInfoDiv = document.getElementById('selected-bidhaa-info');
         
         if (!searchInput || !searchResults) return;
 
@@ -686,7 +748,6 @@ class SmartManunuziManager {
 
     displaySearchResults(bidhaa) {
         const searchResults = document.getElementById('bidhaa-search-results');
-        const selectedInfoDiv = document.getElementById('selected-bidhaa-info');
         
         if (bidhaa.length === 0) {
             searchResults.innerHTML = '<div class="p-3 text-sm text-gray-500">Hakuna bidhaa zinazolingana</div>';
@@ -702,8 +763,7 @@ class SmartManunuziManager {
                     <div class="font-medium text-sm text-gray-900">${item.jina}</div>
                     <div class="text-xs text-gray-600">${item.aina} - ${item.kipimo}</div>
                     <div class="text-xs text-emerald-600 mt-1">
-                        Nunua: ${parseFloat(item.bei_nunua).toLocaleString()} | 
-                        Uza: ${parseFloat(item.bei_kuuza).toLocaleString()}
+                        Bei ya sasa: ${parseFloat(item.bei_nunua).toLocaleString()}
                     </div>
                 </div>
             `;
@@ -720,7 +780,6 @@ class SmartManunuziManager {
         const selectedInfoDiv = document.getElementById('selected-bidhaa-info');
         const selectedJina = document.getElementById('selected-jina');
         const selectedInfo = document.getElementById('selected-info');
-        const beiNunuaInput = document.getElementById('bei_nunua');
         const beiKuuzaInput = document.getElementById('bei_kuuza');
 
         // Set values
@@ -730,15 +789,48 @@ class SmartManunuziManager {
         selectedInfo.textContent = `${aina} - ${kipimo}`;
         selectedInfoDiv.classList.remove('hidden');
         
-        // Set prices from product data (user can change them)
-        beiNunuaInput.value = bei_nunua;
-        beiKuuzaInput.value = bei_kuuza;
+        // Set selling price from product data
+        beiKuuzaInput.value = bei_kuuza || '';
         
-        // Calculate unit cost
-        this.calculateUnitCost();
-
-        searchResults.classList.add('hidden');
+        // DO NOT set purchase price automatically
+        document.getElementById('bei_nunua').value = '';
+        
+        // Reset to default bei_type (rejareja)
+        document.getElementById('bei_type').value = 'rejareja';
+        this.updatePlaceholderText();
+        
+        // Focus on quantity
         document.getElementById('idadi').focus();
+        
+        searchResults.classList.add('hidden');
+    }
+
+    updatePlaceholderText() {
+        const beiType = document.getElementById('bei_type').value;
+        const beiNunuaInput = document.getElementById('bei_nunua');
+        const instructionText = document.getElementById('instruction-text');
+        
+        if (beiType === 'kwa_zote') {
+            beiNunuaInput.placeholder = 'Bei ya zote pamoja';
+            instructionText.textContent = 'Ingiza bei jumla ya zote';
+        } else {
+            beiNunuaInput.placeholder = 'Bei kwa 1';
+            instructionText.textContent = 'Ingiza bei ya 1 bidhaa';
+        }
+    }
+
+    updateEditPlaceholderText() {
+        const beiType = document.getElementById('edit-bei-type').value;
+        const beiNunuaInput = document.getElementById('edit-bei-nunua');
+        const instructionText = document.getElementById('edit-instruction-text');
+        
+        if (beiType === 'kwa_zote') {
+            beiNunuaInput.placeholder = 'Bei ya zote pamoja';
+            instructionText.textContent = 'Ingiza bei jumla ya zote';
+        } else {
+            beiNunuaInput.placeholder = 'Bei kwa 1';
+            instructionText.textContent = 'Ingiza bei ya 1 bidhaa';
+        }
     }
 
     calculateUnitCost() {
@@ -747,14 +839,27 @@ class SmartManunuziManager {
         const beiType = document.getElementById('bei_type').value;
         const display = document.getElementById('unit-cost-display');
         
-        if (isNaN(idadi) || isNaN(beiNunua)) return;
+        if (isNaN(idadi) || isNaN(beiNunua)) {
+            display.textContent = '';
+            return { unitCost: 0, totalCost: 0 };
+        }
+        
+        let unitCost = 0;
+        let totalCost = 0;
         
         if (beiType === 'kwa_zote') {
-            const unitCost = idadi > 0 ? beiNunua / idadi : 0;
+            totalCost = beiNunua;
+            unitCost = idadi > 0 ? totalCost / idadi : 0;
             display.textContent = `Bei per kimoja: ${unitCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            display.style.color = '#059669';
         } else {
-            display.textContent = `Bei jumla: ${(beiNunua * idadi).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            unitCost = beiNunua;
+            totalCost = unitCost * idadi;
+            display.textContent = `Bei jumla: ${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            display.style.color = '#2563eb';
         }
+        
+        return { unitCost, totalCost };
     }
 
     calculateEditUnitCost() {
@@ -763,13 +868,168 @@ class SmartManunuziManager {
         const beiType = document.getElementById('edit-bei-type').value;
         const display = document.getElementById('edit-unit-cost-display');
         
-        if (isNaN(idadi) || isNaN(beiNunua)) return;
+        if (isNaN(idadi) || isNaN(beiNunua)) {
+            display.textContent = '';
+            return { unitCost: 0, totalCost: 0 };
+        }
+        
+        let unitCost = 0;
+        let totalCost = 0;
         
         if (beiType === 'kwa_zote') {
-            const unitCost = idadi > 0 ? beiNunua / idadi : 0;
+            totalCost = beiNunua;
+            unitCost = idadi > 0 ? totalCost / idadi : 0;
             display.textContent = `Bei per kimoja: ${unitCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            display.style.color = '#059669';
         } else {
-            display.textContent = `Bei jumla: ${(beiNunua * idadi).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            unitCost = beiNunua;
+            totalCost = unitCost * idadi;
+            display.textContent = `Bei jumla: ${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            display.style.color = '#2563eb';
+        }
+        
+        return { unitCost, totalCost };
+    }
+    
+    validateAndCalculate() {
+        const idadi = parseInt(document.getElementById('idadi').value) || 0;
+        const beiNunua = parseFloat(document.getElementById('bei_nunua').value) || 0;
+        const beiKuuza = parseFloat(document.getElementById('bei_kuuza').value) || 0;
+        const beiType = document.getElementById('bei_type').value;
+        
+        let unitCost = 0;
+        let totalCost = 0;
+        
+        if (beiType === 'kwa_zote') {
+            totalCost = beiNunua;
+            unitCost = idadi > 0 ? totalCost / idadi : 0;
+        } else {
+            unitCost = beiNunua;
+            totalCost = unitCost * idadi;
+        }
+        
+        return {
+            unitCost: unitCost,
+            totalCost: totalCost,
+            idadi: idadi,
+            beiKuuza: beiKuuza
+        };
+    }
+    
+    validateAndCalculateEdit() {
+        const idadi = parseInt(document.getElementById('edit-idadi').value) || 0;
+        const beiNunua = parseFloat(document.getElementById('edit-bei-nunua').value) || 0;
+        const beiKuuza = parseFloat(document.getElementById('edit-bei-kuuza').value) || 0;
+        const beiType = document.getElementById('edit-bei-type').value;
+        
+        let unitCost = 0;
+        let totalCost = 0;
+        
+        if (beiType === 'kwa_zote') {
+            totalCost = beiNunua;
+            unitCost = idadi > 0 ? totalCost / idadi : 0;
+        } else {
+            unitCost = beiNunua;
+            totalCost = unitCost * idadi;
+        }
+        
+        return {
+            unitCost: unitCost,
+            totalCost: totalCost,
+            idadi: idadi,
+            beiKuuza: beiKuuza
+        };
+    }
+    
+    validatePrices() {
+        const { unitCost } = this.validateAndCalculate();
+        const beiKuuzaInput = document.getElementById('bei_kuuza');
+        const beiKuuza = parseFloat(beiKuuzaInput.value) || 0;
+        const priceError = document.getElementById('price-error');
+        
+        if (unitCost > 0 && beiKuuza > 0 && beiKuuza < unitCost) {
+            priceError.textContent = '⚠️ Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja!';
+            priceError.classList.remove('hidden');
+            beiKuuzaInput.classList.add('border-red-500');
+            return false;
+        } else {
+            priceError.classList.add('hidden');
+            beiKuuzaInput.classList.remove('border-red-500');
+            return true;
+        }
+    }
+    
+    validateEditPrices() {
+        const { unitCost } = this.validateAndCalculateEdit();
+        const beiKuuzaInput = document.getElementById('edit-bei-kuuza');
+        const beiKuuza = parseFloat(beiKuuzaInput.value) || 0;
+        
+        if (unitCost > 0 && beiKuuza > 0 && beiKuuza < unitCost) {
+            beiKuuzaInput.classList.add('border-red-500');
+            return false;
+        } else {
+            beiKuuzaInput.classList.remove('border-red-500');
+            return true;
+        }
+    }
+    
+    updatePriceSummary() {
+        const { unitCost, totalCost, beiKuuza } = this.validateAndCalculate();
+        const summaryDiv = document.getElementById('price-summary');
+        
+        if (unitCost > 0 || totalCost > 0 || beiKuuza > 0) {
+            summaryDiv.classList.remove('hidden');
+            
+            document.getElementById('summary-unit-cost').textContent = 
+                unitCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            document.getElementById('summary-total-cost').textContent = 
+                totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            document.getElementById('summary-sell-price').textContent = 
+                beiKuuza.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            if (beiKuuza > unitCost) {
+                const profit = beiKuuza - unitCost;
+                document.getElementById('summary-profit').textContent = 
+                    profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('summary-profit').style.color = '#059669';
+            } else {
+                document.getElementById('summary-profit').textContent = '0.00';
+                document.getElementById('summary-profit').style.color = '#dc2626';
+            }
+        } else {
+            summaryDiv.classList.add('hidden');
+        }
+    }
+    
+    updateEditPriceSummary() {
+        const { unitCost, totalCost, beiKuuza } = this.validateAndCalculateEdit();
+        const summaryDiv = document.getElementById('edit-price-summary');
+        
+        if (unitCost > 0 || totalCost > 0 || beiKuuza > 0) {
+            summaryDiv.classList.remove('hidden');
+            
+            document.getElementById('edit-summary-unit-cost').textContent = 
+                unitCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            document.getElementById('edit-summary-total-cost').textContent = 
+                totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            document.getElementById('edit-summary-sell-price').textContent = 
+                beiKuuza.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            if (beiKuuza > unitCost) {
+                const profit = beiKuuza - unitCost;
+                document.getElementById('edit-summary-profit').textContent = 
+                    profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('edit-summary-profit').style.color = '#059669';
+            } else {
+                document.getElementById('edit-summary-profit').textContent = '0.00';
+                document.getElementById('edit-summary-profit').style.color = '#dc2626';
+            }
+        } else {
+            summaryDiv.classList.add('hidden');
         }
     }
 
@@ -818,8 +1078,12 @@ class SmartManunuziManager {
         document.getElementById('edit-mengineyo').value = manunuzi.mengineyo || '';
         editForm.action = `/manunuzi/${manunuzi.id}`;
         
+        // Update placeholder text
+        this.updateEditPlaceholderText();
+        
         // Calculate initial unit cost display
         this.calculateEditUnitCost();
+        this.updateEditPriceSummary();
         
         const editModal = document.getElementById('edit-modal');
         if (editModal) editModal.classList.remove('hidden');
@@ -924,16 +1188,31 @@ class SmartManunuziManager {
         if (bidhaaIdInput) bidhaaIdInput.value = '';
         if (selectedInfoDiv) selectedInfoDiv.classList.add('hidden');
         
-        // Reset expiry date to today
+        // Reset to default bei_type (rejareja)
+        document.getElementById('bei_type').value = 'rejareja';
+        this.updatePlaceholderText();
+        
+        // Clear displays
+        const display = document.getElementById('unit-cost-display');
+        if (display) display.textContent = '';
+        
+        const summaryDiv = document.getElementById('price-summary');
+        if (summaryDiv) summaryDiv.classList.add('hidden');
+        
+        // Clear error
+        const priceError = document.getElementById('price-error');
+        if (priceError) priceError.classList.add('hidden');
+        
+        // Clear border
+        const beiKuuzaInput = document.getElementById('bei_kuuza');
+        if (beiKuuzaInput) beiKuuzaInput.classList.remove('border-red-500');
+        
+        // Set default expiry date to today
         const today = new Date().toISOString().split('T')[0];
         const expiryInput = document.querySelector('#manunuzi-form input[name="expiry"]');
         if (expiryInput) {
             expiryInput.value = today;
         }
-        
-        // Clear display
-        const display = document.getElementById('unit-cost-display');
-        if (display) display.textContent = '';
         
         // Focus on search input
         if (searchInput) {
@@ -1038,6 +1317,21 @@ function exportPDF() {
     window.open(`${window.location.pathname}?${search.toString()}`, '_blank');
 }
 
+// Helper functions for UI updates
+function handleBeiTypeChange() {
+    window.manunuziManager.updatePlaceholderText();
+    window.manunuziManager.calculateUnitCost();
+    window.manunuziManager.updatePriceSummary();
+    window.manunuziManager.validatePrices();
+}
+
+function handleEditBeiTypeChange() {
+    window.manunuziManager.updateEditPlaceholderText();
+    window.manunuziManager.calculateEditUnitCost();
+    window.manunuziManager.updateEditPriceSummary();
+    window.manunuziManager.validateEditPrices();
+}
+
 // Helper function to clear bidhaa selection
 function clearBidhaaSelection() {
     window.manunuziManager.clearManunuziForm();
@@ -1057,9 +1351,23 @@ function calculateEditUnitCost() {
     window.manunuziManager.calculateEditUnitCost();
 }
 
+// Validation functions
+function validatePrices() {
+    return window.manunuziManager.validatePrices();
+}
+
+function validateEditPrices() {
+    return window.manunuziManager.validateEditPrices();
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     window.manunuziManager = new SmartManunuziManager();
+    
+    // Initialize placeholder text
+    if (window.manunuziManager) {
+        window.manunuziManager.updatePlaceholderText();
+    }
     
     // Save tab state
     window.addEventListener('beforeunload', () => {

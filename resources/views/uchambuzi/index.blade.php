@@ -62,7 +62,7 @@
         <canvas x-show="graph === 'faidaBidhaa'" id="faidaBidhaaChart" x-cloak></canvas>
         <canvas x-show="graph === 'faidaSiku'" id="faidaSikuChart" x-cloak></canvas>
         <canvas x-show="graph === 'mauzoSiku'" id="mauzoSikuChart" x-cloak></canvas>
-        <canvas x-show="graph === 'gharama'" id="gharamaChart" x-cloak></canvas>
+        <canvas x-show="graph === 'marejesho'" id="marejeshoChart" x-cloak></canvas> <!-- CHANGED: gharama to marejesho -->
         <canvas x-show="graph === 'mauzo'" id="mauzoChart" x-cloak></canvas>
       </div>
     </div>
@@ -143,9 +143,10 @@
               <div class="text-lg md:text-xl font-bold text-red-600 mt-1 truncate" x-text="formatCurrency(summary.jumla_mat)"></div>
             </div>
             
-            <div class="bg-white border border-yellow-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Gharama ya Bidhaa</div>
-              <div class="text-lg md:text-xl font-bold text-yellow-600 mt-1 truncate" x-text="formatCurrency(summary.gharama_bidhaa)"></div>
+            <!-- CHANGED: Gharama ya Bidhaa to Faida ya Marejesho -->
+            <div class="bg-white border border-teal-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
+              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Faida ya Marejesho</div>
+              <div class="text-lg md:text-xl font-bold text-teal-600 mt-1 truncate" x-text="formatCurrency(summary.faida_marejesho)"></div>
             </div>
             
             <div class="bg-white border border-teal-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
@@ -225,18 +226,23 @@
                 <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Jumla ya Matumizi</div>
                 <div class="text-base md:text-lg font-bold text-red-600 truncate" x-text="formatCurrency(customSummary.jumla_mat)"></div>
               </div>
-              <div class="border border-yellow-100 rounded-lg p-2 md:p-3 bg-yellow-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Gharama ya Bidhaa</div>
-                <div class="text-base md:text-lg font-bold text-yellow-600 truncate" x-text="formatCurrency(customSummary.gharama_bidhaa)"></div>
+              
+              <!-- CHANGED: Gharama ya Bidhaa to Faida ya Marejesho -->
+              <div class="border border-teal-100 rounded-lg p-2 md:p-3 bg-teal-50">
+                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Faida ya Marejesho</div>
+                <div class="text-base md:text-lg font-bold text-teal-600 truncate" x-text="formatCurrency(customSummary.faida_marejesho)"></div>
               </div>
+              
               <div class="border border-teal-100 rounded-lg p-2 md:p-3 bg-teal-50">
                 <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Faida ya Mauzo</div>
                 <div class="text-base md:text-lg font-bold text-teal-600 truncate" x-text="formatCurrency(customSummary.faida_mauzo)"></div>
               </div>
+              
               <div class="border border-indigo-100 rounded-lg p-2 md:p-3 bg-indigo-50">
                 <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Fedha Dukani</div>
                 <div class="text-base md:text-lg font-bold text-indigo-600 truncate" x-text="formatCurrency(customSummary.fedha_droo)"></div>
               </div>
+              
               <div class="border border-green-200 rounded-lg p-2 md:p-3 bg-green-50">
                 <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Faida Halisi</div>
                 <div class="text-base md:text-lg font-bold text-green-600 truncate" x-text="formatCurrency(customSummary.faida_halisi)"></div>
@@ -374,7 +380,7 @@ document.addEventListener('alpine:init', () => {
       faidaBidhaa: 'Faida kwa Bidhaa',
       faidaSiku: 'Faida kwa Siku',
       mauzoSiku: 'Mauzo kwa Siku',
-      gharama: 'Gharama',
+      marejesho: 'Faida ya Marejesho', // CHANGED: gharama to marejesho
       mauzo: 'Mauzo Jumla'
     },
 
@@ -382,7 +388,7 @@ document.addEventListener('alpine:init', () => {
     faidaByBidhaa: @json($faidaBidhaa ?? []),
     faidaBySiku: @json($faidaSiku ?? []),
     mauzoBySiku: @json($mauzoSiku ?? []),
-    gharamaByBidhaa: @json($gharama ?? []),
+    marejeshoByBidhaa: @json($marejesho ?? []), // CHANGED: gharama to marejesho
     mauzoByBidhaa: @json($mauzo ?? []),
 
     setTab(tabName) {
@@ -422,8 +428,8 @@ document.addEventListener('alpine:init', () => {
         case 'mauzoSiku': 
           config = this.lineChart(this.mauzoBySiku, 'day', 'total', 'rgba(245, 158, 11, 0.8)', 'Mauzo kwa Siku');
           break;
-        case 'gharama': 
-          config = this.barChart(this.gharamaByBidhaa, 'jina', 'total', 'rgba(239, 68, 68, 0.8)', 'Gharama ya Bidhaa');
+        case 'marejesho': 
+          config = this.barChart(this.marejeshoByBidhaa, 'jina', 'total', 'rgba(14, 165, 233, 0.8)', 'Faida ya Marejesho'); // CHANGED: gharama to marejesho
           break;
         case 'mauzo': 
           config = this.barChart(this.mauzoByBidhaa, 'jina', 'total', 'rgba(139, 92, 246, 0.8)', 'Mauzo Jumla');
@@ -636,7 +642,7 @@ document.addEventListener('alpine:init', () => {
           button.disabled = true;
         }
         
-        const response = await fetch(`/api/mwenendo?from=${this.dateFrom}&to=${this.dateTo}`);
+        const response = await fetch(`/uchambuzi/mwenendo?from=${this.dateFrom}&to=${this.dateTo}`);
         
         if (!response.ok) {
           throw new Error(`Server returned ${response.status}: ${response.statusText}`);
@@ -702,9 +708,9 @@ document.addEventListener('alpine:init', () => {
 // Add API route check
 document.addEventListener('DOMContentLoaded', function() {
   // Check if API endpoint is accessible
-  fetch('/api/mwenendo?from=' + new Date().toISOString().split('T')[0] + '&to=' + new Date().toISOString().split('T')[0])
+  fetch('/uchambuzi/mwenendo?from=' + new Date().toISOString().split('T')[0] + '&to=' + new Date().toISOString().split('T')[0])
     .catch(error => {
-      console.warn('API endpoint /api/mwenendo haipatikani. Hakikisha route imefunguliwa.');
+      console.warn('API endpoint /uchambuzi/mwenendo haipatikani. Hakikisha route imefunguliwa.');
     });
 });
 </script>

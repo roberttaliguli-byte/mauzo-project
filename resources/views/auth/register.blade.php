@@ -4,6 +4,56 @@
 
 @section('content')
 <div class="max-w-md mx-auto">
+  <!-- Success Notification -->
+  @if(session('success'))
+    <div id="success-notification" class="mb-4 p-3 rounded-lg bg-gradient-to-r from-green-900/50 to-emerald-900/30 border border-green-700 text-green-200 text-xs animate-fade-in">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <i class="fas fa-check-circle mr-2 text-green-400"></i>
+          <p>{{ session('success') }}</p>
+        </div>
+        <button onclick="document.getElementById('success-notification').remove()" class="text-green-300 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    
+    <script>
+      // Auto-remove success notification after 5 seconds
+      setTimeout(function() {
+        const notification = document.getElementById('success-notification');
+        if (notification) {
+          notification.remove();
+        }
+      }, 5000);
+    </script>
+  @endif
+
+  <!-- Error Notification -->
+  @if(session('error'))
+    <div id="error-notification" class="mb-4 p-3 rounded-lg bg-gradient-to-r from-red-900/50 to-rose-900/30 border border-red-700 text-red-200 text-xs animate-fade-in">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <i class="fas fa-exclamation-circle mr-2 text-red-400"></i>
+          <p>{{ session('error') }}</p>
+        </div>
+        <button onclick="document.getElementById('error-notification').remove()" class="text-red-300 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    
+    <script>
+      // Auto-remove error notification after 5 seconds
+      setTimeout(function() {
+        const notification = document.getElementById('error-notification');
+        if (notification) {
+          notification.remove();
+        }
+      }, 5000);
+    </script>
+  @endif
+
   <!-- Header Section -->
   <div class="text-center mb-4">
     <div class="flex justify-center mb-2">
@@ -25,8 +75,12 @@
     <div class="flex items-center space-x-2">
       @foreach([1, 2, 3] as $step)
         <div class="flex items-center">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 
-            {{ $step == 1 ? 'bg-yellow-500 border-yellow-500 text-white' : 'border-gray-600 text-gray-400' }}
+          <div class="step-indicator w-6 h-6 rounded-full flex items-center justify-center border-2 
+            @if($step == ($currentStep ?? 1)) 
+              bg-yellow-500 border-yellow-500 text-white
+            @else
+              border-gray-600 text-gray-400
+            @endif
             font-semibold text-xs">
             {{ $step }}
           </div>
@@ -38,11 +92,40 @@
     </div>
   </div>
 
+  <!-- Validation Errors Alert -->
+  @if ($errors->any())
+    <div id="validation-errors" class="mb-4 p-3 rounded-lg bg-gradient-to-r from-red-900/50 to-rose-900/30 border border-red-700 text-red-200 text-xs animate-fade-in">
+      <div class="flex items-center justify-between">
+        <div class="flex items-start flex-1">
+          <i class="fas fa-exclamation-circle mr-2 mt-0.5 text-red-400"></i>
+          <div class="flex-1">
+            @foreach ($errors->all() as $error)
+              <p class="mb-1 last:mb-0">{{ $error }}</p>
+            @endforeach
+          </div>
+        </div>
+        <button onclick="document.getElementById('validation-errors').remove()" class="text-red-300 hover:text-white ml-2">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    
+    <script>
+      // Auto-remove validation errors after 10 seconds (longer since they're important)
+      setTimeout(function() {
+        const errors = document.getElementById('validation-errors');
+        if (errors) {
+          errors.remove();
+        }
+      }, 10000);
+    </script>
+  @endif
+
   <form id="multiStepForm" method="POST" action="{{ route('register.post') }}" class="space-y-3">
     @csrf
 
     {{-- Step 1 --}}
-    <div class="step" data-step="1">
+    <div class="step @if(($currentStep ?? 1) != 1) hidden @endif" data-step="1">
       <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border border-gray-700 shadow-lg">
         <div class="text-center mb-3">
           <h2 class="text-base font-bold text-yellow-400">Taarifa za Msingi</h2>
@@ -53,31 +136,43 @@
             <label class="block text-xs font-semibold text-gray-200 mb-1">Jina la Kampuni</label>
             <input name="company_name" value="{{ old('company_name') }}" required
                    placeholder="Jina la kampuni"
-                   class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                   class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('company_name') border-red-500 @else border-gray-600 @enderror text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+            @error('company_name')
+              <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+            @enderror
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-gray-200 mb-1">Jina la Mmiliki</label>
             <input name="owner_name" value="{{ old('owner_name') }}" required
                    placeholder="Jina la mmiliki"
-                   class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                   class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('owner_name') border-red-500 @else border-gray-600 @enderror text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+            @error('owner_name')
+              <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+            @enderror
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-semibold text-gray-200 mb-1">Jinsia</label>
               <select name="owner_gender" required 
-                      class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                      class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('owner_gender') border-red-500 @else border-gray-600 @enderror text-white outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
                 <option value="">Chagua</option>
                 <option value="male" {{ old('owner_gender')=='male'?'selected':'' }}>Mwanaume</option>
                 <option value="female" {{ old('owner_gender')=='female'?'selected':'' }}>Mwanamke</option>
               </select>
+              @error('owner_gender')
+                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+              @enderror
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-gray-200 mb-1">Tarehe ya Kuzaliwa</label>
               <input name="owner_dob" type="date" value="{{ old('owner_dob') }}" required
-                     class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                     class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('owner_dob') border-red-500 @else border-gray-600 @enderror text-white outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+              @error('owner_dob')
+                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+              @enderror
             </div>
           </div>
         </div>
@@ -95,7 +190,7 @@
     </div>
 
     {{-- Step 2 --}}
-    <div class="step hidden" data-step="2">
+    <div class="step @if(($currentStep ?? 1) != 2) hidden @endif" data-step="2">
       <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border border-gray-700 shadow-lg">
         <div class="text-center mb-3">
           <h2 class="text-base font-bold text-yellow-400">Mawasiliano</h2>
@@ -106,18 +201,24 @@
             <label class="block text-xs font-semibold text-gray-200 mb-1">Mahali</label>
             <input name="location" value="{{ old('location') }}" required
                    placeholder="Eneo la kampuni"
-                   class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                   class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('location') border-red-500 @else border-gray-600 @enderror text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+            @error('location')
+              <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+            @enderror
           </div>
 
           <div>
             <label class="block text-xs font-semibold text-gray-200 mb-1">Mkoa</label>
             <select name="region" required 
-                    class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                    class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('region') border-red-500 @else border-gray-600 @enderror text-white outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
               <option value="">Chagua mkoa</option>
               @foreach($regions ?? [] as $region)
                 <option value="{{ $region }}" {{ old('region')== $region ? 'selected' : '' }}>{{ $region }}</option>
               @endforeach
             </select>
+            @error('region')
+              <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+            @enderror
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -125,17 +226,22 @@
               <label class="block text-xs font-semibold text-gray-200 mb-1">Simu</label>
               <input name="phone" value="{{ old('phone') }}" required
                      placeholder="07XXXXXXXX"
-                     class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                     class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('phone') border-red-500 @else border-gray-600 @enderror text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+              @error('phone')
+                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+              @enderror
             </div>
 
             <div>
               <label class="block text-xs font-semibold text-gray-200 mb-1">Barua Pepe</label>
- <input name="company_email" type="email" required
-       value="{{ old('company_email') }}"
-       placeholder="example@kampuni.com"
-       class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
-
-                    </div>
+              <input name="company_email" type="email" required
+                     value="{{ old('company_email') }}"
+                     placeholder="example@kampuni.com"
+                     class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('company_email') border-red-500 @else border-gray-600 @enderror text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+              @error('company_email')
+                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+              @enderror
+            </div>
           </div>
         </div>
 
@@ -158,7 +264,7 @@
     </div>
 
     {{-- Step 3 --}}
-    <div class="step hidden" data-step="3">
+    <div class="step @if(($currentStep ?? 1) != 3) hidden @endif" data-step="3">
       <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 border border-gray-700 shadow-lg">
         <div class="text-center mb-3">
           <h2 class="text-base font-bold text-yellow-400">Akaunti</h2>
@@ -169,7 +275,10 @@
             <label class="block text-xs font-semibold text-gray-200 mb-1">Jina la Mtumiaji</label>
             <input name="username" value="{{ old('username') }}" required
                    placeholder="Jina la kutumia"
-                   class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                   class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('username') border-red-500 @else border-gray-600 @enderror text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+            @error('username')
+              <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+            @enderror
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -177,7 +286,10 @@
               <label class="block text-xs font-semibold text-gray-200 mb-1">Neno la Siri</label>
               <input name="password" type="password" required
                      placeholder="Neno la siri"
-                     class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+                     class="w-full rounded-lg py-2 px-3 bg-gray-700/50 border @error('password') border-red-500 @else border-gray-600 @enderror text-white placeholder-gray-400 outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 text-sm">
+              @error('password')
+                <p class="text-red-400 text-xs mt-1">{{ $message }}</p>
+              @enderror
             </div>
 
             <div>
@@ -216,42 +328,57 @@
         </a>
       </p>
     </div>
-
-    {{-- Validation errors --}}
-    @if ($errors->any())
-      <div class="mt-3 p-2 rounded-lg bg-red-900/50 border border-red-700 text-red-200 text-xs">
-        <ul class="space-y-1">
-          @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-          @endforeach
-        </ul>
-      </div>
-    @endif
   </form>
 </div>
+
+@push('styles')
+<style>
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+</style>
+@endpush
 
 @push('scripts')
 <script>
   (function () {
     const form = document.getElementById('multiStepForm');
     const steps = Array.from(form.querySelectorAll('.step'));
-    let index = 0;
-
+    
+    // Get current step from server-side or default to 1
+    let index = {{ $currentStep ?? 1 }} - 1;
+    
     const update = () => {
-      steps.forEach((s, i) => s.classList.toggle('hidden', i !== index));
-      document.querySelectorAll('[data-step]').forEach((step, i) => {
-        const stepNumber = step.querySelector('.w-6');
-        if (stepNumber) {
-          if (i === index) {
-            stepNumber.classList.add('bg-yellow-500', 'border-yellow-500', 'text-white');
-            stepNumber.classList.remove('border-gray-600', 'text-gray-400');
-          } else {
-            stepNumber.classList.remove('bg-yellow-500', 'border-yellow-500', 'text-white');
-            stepNumber.classList.add('border-gray-600', 'text-gray-400');
-          }
+      // Update step visibility
+      steps.forEach((s, i) => {
+        s.classList.toggle('hidden', i !== index);
+      });
+      
+      // Update step indicators
+      document.querySelectorAll('.step-indicator').forEach((indicator, i) => {
+        if (i === index) {
+          indicator.classList.add('bg-yellow-500', 'border-yellow-500', 'text-white');
+          indicator.classList.remove('border-gray-600', 'text-gray-400');
+        } else {
+          indicator.classList.remove('bg-yellow-500', 'border-yellow-500', 'text-white');
+          indicator.classList.add('border-gray-600', 'text-gray-400');
         }
       });
     };
+
+    // Initialize on page load
+    update();
 
     form.addEventListener('click', function (e) {
       const btn = e.target.closest('button[data-action]');
@@ -259,16 +386,18 @@
       const action = btn.dataset.action;
 
       if (action === 'next') {
-        const inputs = steps[index].querySelectorAll('input[required], select[required]');
+        const currentStep = steps[index];
+        const inputs = currentStep.querySelectorAll('input[required], select[required]');
         let valid = true;
         
         for (const el of inputs) {
           if (!el.value || !el.value.toString().trim()) {
-            el.classList.add('border', 'border-red-500');
+            el.classList.add('border-red-500');
             el.focus();
             valid = false;
+            break;
           } else {
-            el.classList.remove('border', 'border-red-500');
+            el.classList.remove('border-red-500');
           }
         }
         
@@ -284,10 +413,13 @@
       }
     });
 
-    update();
+    // Clear red borders on input
+    form.addEventListener('input', function(e) {
+      if (e.target.hasAttribute('required')) {
+        e.target.classList.remove('border-red-500');
+      }
+    });
   })();
 </script>
 @endpush
 @endsection
-
-

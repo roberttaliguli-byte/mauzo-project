@@ -25,7 +25,8 @@ class AdminController extends Controller
     public function makampuni()
     {
         $companies = Company::all();
-        return view('admin.makampuni', compact('companies'));
+        $total = Company::count(); // ADD THIS LINE
+        return view('admin.dashboard', compact('companies', 'total')); // ADD $total here
     }
 
     /**

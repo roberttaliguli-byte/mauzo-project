@@ -57,20 +57,19 @@ class ManunuziController extends Controller
             ->sum('bei');
 
         // PDF Export
-// In ManunuziController index method
-if ($request->has('export') && $request->export === 'pdf') {
-    $data = [
-        'manunuzi' => Manunuzi::with('bidhaa')
-            ->where('company_id', $companyId)
-            ->orderBy('created_at', 'desc')
-            ->get(),
-        'title' => 'Orodha ya Manunuzi',
-        'date' => now()->format('d/m/Y'),
-    ];
-    
-    $pdf = Pdf::loadView('manunuzi.pdf', $data);
-    return $pdf->download('orodha-ya-manunuzi-' . date('Y-m-d') . '.pdf');
-}
+        if ($request->has('export') && $request->export === 'pdf') {
+            $data = [
+                'manunuzi' => Manunuzi::with('bidhaa')
+                    ->where('company_id', $companyId)
+                    ->orderBy('created_at', 'desc')
+                    ->get(),
+                'title' => 'Orodha ya Manunuzi',
+                'date' => now()->format('d/m/Y'),
+            ];
+            
+            $pdf = Pdf::loadView('manunuzi.pdf', $data);
+            return $pdf->download('orodha-ya-manunuzi-' . date('Y-m-d') . '.pdf');
+        }
 
         return view('manunuzi.index', compact(
             'manunuzi', 
@@ -89,56 +88,80 @@ if ($request->has('export') && $request->export === 'pdf') {
     {
         $companyId = Auth::user()->company_id;
 
+        // First validate basic fields
         $request->validate([
             'bidhaa_id' => 'required|exists:bidhaas,id',
             'idadi' => 'required|integer|min:1',
             'bei_nunua' => 'required|numeric|min:0',
-            'bei_kuuza' => 'required|numeric|min:0|gte:bei_nunua',
+            'bei_kuuza' => 'required|numeric|min:0',
             'bei_type' => 'required|in:kwa_zote,rejareja',
             'expiry' => 'nullable|date',
             'saplaya' => 'nullable|string|max:255',
             'simu' => 'nullable|string|max:20',
             'mengineyo' => 'nullable|string|max:500',
-        ], [
-            'bei_kuuza.gte' => 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua',
         ]);
 
-        return DB::transaction(function () use ($request, $companyId) {
+        // Calculate unit cost based on price type
+        $unitCost = 0;
+        if ($request->bei_type === 'kwa_zote') {
+            // User entered total price for all items
+            $unitCost = $request->bei_nunua / $request->idadi;
+        } else {
+            // User entered price per single item
+            $unitCost = $request->bei_nunua;
+        }
+
+        // Custom validation: Compare selling price with calculated unit cost
+        if ($request->bei_kuuza < $unitCost) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja',
+                'errors' => [
+                    'bei_kuuza' => ['Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja']
+                ]
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($request, $companyId, $unitCost) {
             $bidhaa = Bidhaa::where('id', $request->bidhaa_id)
                             ->where('company_id', $companyId)
                             ->firstOrFail();
 
-            // Calculate actual purchase price based on type
-            if ($request->bei_type === 'kwa_zote') {
-                $totalCost = $request->bei_nunua;
-                $unitCost = $totalCost / $request->idadi;
-            } else {
-                $unitCost = $request->bei_nunua;
-                $totalCost = $unitCost * $request->idadi;
-            }
+            // Calculate total cost
+            $totalCost = ($request->bei_type === 'kwa_zote') 
+                ? $request->bei_nunua 
+                : ($unitCost * $request->idadi);
 
-            // Hifadhi manunuzi
+            // Store purchase
             $manunuzi = Manunuzi::create([
                 'company_id' => $companyId,
                 'bidhaa_id' => $bidhaa->id,
                 'idadi' => $request->idadi,
-                'bei' => $totalCost,
-                'unit_cost' => $unitCost,
+                'bei' => $totalCost, // Total amount paid
+                'unit_cost' => $unitCost, // Cost per single item
                 'expiry' => $request->expiry,
                 'saplaya' => $request->saplaya,
                 'simu' => $request->simu,
                 'mengineyo' => $request->mengineyo,
             ]);
 
-            // Update stock and prices in Bidhaa
+            // Update stock and prices
             $bidhaa->increment('idadi', $request->idadi);
+            
+            // Update purchase price (cost price) to the calculated unit cost
             $bidhaa->bei_nunua = $unitCost;
+            
+            // Update selling price to what user entered
             $bidhaa->bei_kuuza = $request->bei_kuuza;
             $bidhaa->save();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Manunuzi yamehifadhiwa, stock na bei zimeboreshwa!'
+                'message' => 'Manunuzi yamehifadhiwa! Bei ya kununua: ' . number_format($unitCost, 0) . ' kwa 1',
+                'data' => [
+                    'unit_cost' => $unitCost,
+                    'total_cost' => $totalCost
+                ]
             ]);
         });
     }
@@ -153,35 +176,51 @@ if ($request->has('export') && $request->export === 'pdf') {
         // Ensure this manunuzi belongs to this company
         abort_unless($manunuzi->company_id === $companyId, 403, 'Huna ruhusa ya kubadilisha manunuzi haya.');
 
+        // First validate basic fields
         $request->validate([
             'bidhaa_id' => 'required|exists:bidhaas,id',
             'idadi' => 'required|integer|min:1',
             'bei_nunua' => 'required|numeric|min:0',
-            'bei_kuuza' => 'required|numeric|min:0|gte:bei_nunua',
+            'bei_kuuza' => 'required|numeric|min:0',
             'bei_type' => 'required|in:kwa_zote,rejareja',
             'expiry' => 'nullable|date',
             'saplaya' => 'nullable|string|max:255',
             'simu' => 'nullable|string|max:20',
             'mengineyo' => 'nullable|string|max:500',
-        ], [
-            'bei_kuuza.gte' => 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua',
         ]);
 
-        return DB::transaction(function () use ($request, $manunuzi, $companyId) {
+        // Calculate unit cost based on price type
+        $unitCost = 0;
+        if ($request->bei_type === 'kwa_zote') {
+            // User entered total price for all items
+            $unitCost = $request->bei_nunua / $request->idadi;
+        } else {
+            // User entered price per single item
+            $unitCost = $request->bei_nunua;
+        }
+
+        // Custom validation: Compare selling price with calculated unit cost
+        if ($request->bei_kuuza < $unitCost) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja',
+                'errors' => [
+                    'bei_kuuza' => ['Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja']
+                ]
+            ], 422);
+        }
+
+        return DB::transaction(function () use ($request, $manunuzi, $companyId, $unitCost) {
             $oldIdadi = $manunuzi->idadi;
 
             $bidhaa = Bidhaa::where('id', $request->bidhaa_id)
                             ->where('company_id', $companyId)
                             ->firstOrFail();
 
-            // Calculate actual purchase price based on type
-            if ($request->bei_type === 'kwa_zote') {
-                $totalCost = $request->bei_nunua;
-                $unitCost = $totalCost / $request->idadi;
-            } else {
-                $unitCost = $request->bei_nunua;
-                $totalCost = $unitCost * $request->idadi;
-            }
+            // Calculate total cost
+            $totalCost = ($request->bei_type === 'kwa_zote') 
+                ? $request->bei_nunua 
+                : ($unitCost * $request->idadi);
 
             // Update manunuzi
             $manunuzi->update([

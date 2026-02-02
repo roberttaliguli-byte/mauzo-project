@@ -59,13 +59,15 @@
         }
     }
     
-    /* Color Modes */
-    .color-mode-default {
-        --bg-primary: #f9fafb;
-        --bg-secondary: #ffffff;
-        --text-primary: #1f2937;
-        --text-secondary: #6b7280;
-        --border-color: #e5e7eb;
+    /* Color Modes - Only Light and Dark */
+    .color-mode-light {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --border-color: #e2e8f0;
+        --sidebar-bg: #065f46;
+        --sidebar-text: #ffffff;
     }
     
     .color-mode-dark {
@@ -74,14 +76,19 @@
         --text-primary: #f9fafb;
         --text-secondary: #d1d5db;
         --border-color: #4b5563;
+        --sidebar-bg: #065f46;
+        --sidebar-text: #ffffff;
     }
     
+    /* Apply color variables */
     .color-mode-light {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f8fafc;
-        --text-primary: #1e293b;
-        --text-secondary: #64748b;
-        --border-color: #e2e8f0;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+    }
+    
+    .color-mode-dark {
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
     }
     
     /* Sidebar Styles - Mobile Optimized (Half screen) */
@@ -98,6 +105,8 @@
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        background: linear-gradient(135deg, var(--sidebar-bg) 0%, #047857 100%);
+        color: var(--sidebar-text);
     }
     
     .sidebar.open {
@@ -425,6 +434,7 @@
         margin: 0.25rem 0;
         border-radius: 0.5rem;
         font-size: 0.875rem;
+        color: white;
     }
     
     @media (min-width: 768px) {
@@ -454,10 +464,6 @@
     
     .sidebar-item:hover::before {
         left: 100%;
-    }
-    
-    .gradient-bg {
-        background: linear-gradient(135deg, #065f46 0%, #047857 100%);
     }
     
     /* Active navigation item */
@@ -773,14 +779,51 @@
             transform: translateX(250px);
         }
     }
+    
+    /* Alert Styles */
+    .alert-low-stock {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .low-stock-item {
+        padding: 0.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        transition: background-color 0.2s ease;
+    }
+    
+    .low-stock-item:hover {
+        background-color: #f9fafb;
+    }
+    
+    .low-stock-item.dark:hover {
+        background-color: #374151;
+    }
+    
+    .stock-critical {
+        color: #dc2626;
+        font-weight: 600;
+    }
+    
+    .stock-warning {
+        color: #d97706;
+        font-weight: 500;
+    }
+    
+    .no-alerts {
+        padding: 1rem;
+        text-align: center;
+        color: #6b7280;
+        font-style: italic;
+    }
 </style>
     @stack('styles')
 </head>
 
-<body class="color-mode-default no-scroll-x" x-data="app()" :class="[colorMode, sidebarOpen ? 'sidebar-open' : '']" x-init="init()">
+<body class="color-mode-light no-scroll-x" x-data="app()" :class="[colorMode, sidebarOpen ? 'sidebar-open' : '']" x-init="init()">
     
     <!-- Sidebar -->
-    <aside class="sidebar gradient-bg text-white flex flex-col shadow-xl"
+    <aside class="sidebar flex flex-col shadow-xl"
            :class="{'open': sidebarOpen}">
         <!-- Logo Section -->
         <div class="p-3 sm:p-4 text-center border-b border-green-700">
@@ -822,16 +865,11 @@
 
     <!-- Main Content Container -->
     <div class="main-container">
-        <div class="main-content flex flex-col min-h-screen" :class="{
-            'bg-gray-50 text-gray-800': colorMode === 'color-mode-default',
-            'bg-gray-900 text-white': colorMode === 'color-mode-dark', 
-            'bg-white text-gray-900': colorMode === 'color-mode-light'
-        }">
+        <div class="main-content flex flex-col min-h-screen">
             <!-- Header with Hamburger Menu -->
             <header class="sticky top-0 z-30 shadow-sm border-b px-3 sm:px-4 py-2 sm:py-3" :class="{
-                'bg-white border-gray-200': colorMode === 'color-mode-default',
-                'bg-gray-800 border-gray-700': colorMode === 'color-mode-dark',
-                'bg-white border-gray-300': colorMode === 'color-mode-light'
+                'bg-white border-gray-200': colorMode === 'color-mode-light',
+                'bg-gray-800 border-gray-700': colorMode === 'color-mode-dark'
             }">
                 <div class="flex justify-between items-center">
                     <div class="header-left">
@@ -841,19 +879,16 @@
                              @click="toggleSidebar()"
                              aria-label="Toggle Menu">
                             <span :class="{
-                                'bg-gray-800': colorMode === 'color-mode-default',
-                                'bg-white': colorMode === 'color-mode-dark',
-                                'bg-gray-800': colorMode === 'color-mode-light'
+                                'bg-gray-800': colorMode === 'color-mode-light',
+                                'bg-white': colorMode === 'color-mode-dark'
                             }"></span>
                             <span :class="{
-                                'bg-gray-800': colorMode === 'color-mode-default',
-                                'bg-white': colorMode === 'color-mode-dark',
-                                'bg-gray-800': colorMode === 'color-mode-light'
+                                'bg-gray-800': colorMode === 'color-mode-light',
+                                'bg-white': colorMode === 'color-mode-dark'
                             }"></span>
                             <span :class="{
-                                'bg-gray-800': colorMode === 'color-mode-default',
-                                'bg-white': colorMode === 'color-mode-dark',
-                                'bg-gray-800': colorMode === 'color-mode-light'
+                                'bg-gray-800': colorMode === 'color-mode-light',
+                                'bg-white': colorMode === 'color-mode-dark'
                             }"></span>
                         </button>
                         
@@ -861,22 +896,25 @@
                         <div>
                             <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
                             <p class="page-subtitle" :class="{
-                                'text-gray-600': colorMode === 'color-mode-default',
-                                'text-gray-300': colorMode === 'color-mode-dark',
-                                'text-gray-500': colorMode === 'color-mode-light'
+                                'text-gray-600': colorMode === 'color-mode-light',
+                                'text-gray-300': colorMode === 'color-mode-dark'
                             }">@yield('page-subtitle', 'Karibu tena, Meneja!')</p>
                         </div>
                     </div>
                     
                     <div class="flex items-center space-x-1 sm:space-x-2">
                         <!-- Alert Dropdown -->
-                        <div x-data="alertDropdown()" class="relative">
+                        <div x-data="alertDropdown()" x-init="init()" class="relative">
                             <button @click="toggleAlert()"
-                                class="relative p-1 sm:p-2 text-gray-600 hover:text-green-600 transition"
+                                class="relative p-1 sm:p-2 transition"
+                                :class="{
+                                    'text-gray-600 hover:text-green-600': colorMode === 'color-mode-light',
+                                    'text-gray-300 hover:text-green-400': colorMode === 'color-mode-dark'
+                                }"
                                 aria-label="Notifications">
                                 <i class="fas fa-bell icon-md"></i>
-                                <!-- Show dot only if there are unread alerts -->
-                                <template x-if="hasUnreadAlerts">
+                                <!-- Show dot if there are low stock products -->
+                                <template x-if="lowStockCount > 0">
                                     <span class="alert-dot"></span>
                                 </template>
                             </button>
@@ -885,16 +923,85 @@
                                  @click.away="openPro = false"
                                  x-cloak
                                  x-transition
-                                 class="absolute right-0 mt-2 w-56 sm:w-64 bg-white rounded-lg shadow-lg p-2 sm:p-3 z-40">
-                                <!-- Alert message - only shows once per session -->
-                                <div class="px-3 py-2 bg-green-600 text-white rounded text-xs sm:text-sm shadow mb-1">
-                                    TumiaMauzoSheetai sasa
+                                 class="absolute right-0 mt-2 w-72 sm:w-80 rounded-lg shadow-lg p-0 overflow-hidden z-40"
+                                 :class="{
+                                    'bg-white border border-gray-200': colorMode === 'color-mode-light',
+                                    'bg-gray-800 border border-gray-700': colorMode === 'color-mode-dark'
+                                 }">
+                                <!-- Alert header -->
+                                <div class="px-3 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white font-medium">
+                                    <div class="flex justify-between items-center">
+                                        <span>Bidhaa Zinazokaribia Kuisha</span>
+                                        <span x-text="lowStockCount" class="bg-white text-green-600 text-xs px-2 py-1 rounded-full"></span>
+                                    </div>
                                 </div>
-                                <!-- Mark as read button -->
-                                <button @click="markAsRead()"
-                                        class="w-full text-center px-3 py-1.5 text-xs text-gray-600 hover:text-green-600 transition">
-                                    <i class="fas fa-check mr-1"></i> Weka kama imesomwa
-                                </button>
+                                
+                                <!-- Low stock products list -->
+                                <div class="alert-low-stock max-h-64 overflow-y-auto">
+                                    <template x-if="lowStockProducts.length > 0">
+                                        <div>
+                                            <template x-for="product in lowStockProducts" :key="product.id">
+                                                <div class="low-stock-item px-3 py-2 border-b"
+                                                     :class="{
+                                                        'border-gray-100 hover:bg-gray-50': colorMode === 'color-mode-light',
+                                                        'border-gray-700 hover:bg-gray-700': colorMode === 'color-mode-dark'
+                                                     }">
+                                                    <div class="flex justify-between items-start">
+                                                        <div class="flex-1">
+                                                            <div class="font-medium" x-text="product.jina"></div>
+                                                            <div class="text-xs opacity-75 mt-1">
+                                                                <span x-text="product.aina"></span> • 
+                                                                <span x-text="product.kipimo"></span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ml-2 text-right">
+                                                            <div class="text-sm font-bold"
+                                                                 :class="{
+                                                                    'stock-critical': product.idadi <= 3,
+                                                                    'stock-warning': product.idadi > 3 && product.idadi <= 5
+                                                                 }"
+                                                                 x-text="product.idadi + ' ' + (product.kipimo || '')"></div>
+                                                            <div class="text-xs opacity-75 mt-1">
+                                                                Imebaki: <span x-text="product.idadi"></span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-1 text-xs" 
+                                                         :class="{
+                                                            'text-red-600': product.idadi <= 3,
+                                                            'text-amber-600': product.idadi > 3 && product.idadi <= 5
+                                                         }">
+                                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                        <span x-text="getStockMessage(product.idadi)"></span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template x-if="lowStockProducts.length === 0">
+                                        <div class="no-alerts py-4 text-center">
+                                            <i class="fas fa-check-circle text-green-500 text-xl mb-2"></i>
+                                            <p class="text-sm">Hakuna bidhaa zinazokaribia kuisha</p>
+                                            <p class="text-xs opacity-75 mt-1">Bidhaa zote zina idadi ya kutosha</p>
+                                        </div>
+                                    </template>
+                                </div>
+                                
+                                <!-- Footer with view all link -->
+                                <div class="px-3 py-2 border-t"
+                                     :class="{
+                                        'border-gray-100 bg-gray-50': colorMode === 'color-mode-light',
+                                        'border-gray-700 bg-gray-800': colorMode === 'color-mode-dark'
+                                     }">
+                                    <a href="{{ route('bidhaa.index') }}" 
+                                       class="block text-center text-sm font-medium transition-colors"
+                                       :class="{
+                                        'text-green-600 hover:text-green-700': colorMode === 'color-mode-light',
+                                        'text-green-400 hover:text-green-300': colorMode === 'color-mode-dark'
+                                       }">
+                                        <i class="fas fa-list mr-1"></i> Angalia Bidhaa Zote
+                                    </a>
+                                </div>
                             </div>
                         </div>
                         
@@ -907,14 +1014,12 @@
                                 </div>
                                 <div class="hidden sm:block text-left">
                                     <div class="text-sm font-medium" :class="{
-                                        'text-gray-700': colorMode === 'color-mode-default',
-                                        'text-gray-200': colorMode === 'color-mode-dark',
-                                        'text-gray-800': colorMode === 'color-mode-light'
+                                        'text-gray-700': colorMode === 'color-mode-light',
+                                        'text-gray-200': colorMode === 'color-mode-dark'
                                     }">Boss</div>
                                     <div class="text-xs" :class="{
-                                        'text-gray-500': colorMode === 'color-mode-default',
-                                        'text-gray-400': colorMode === 'color-mode-dark',
-                                        'text-gray-600': colorMode === 'color-mode-light'
+                                        'text-gray-500': colorMode === 'color-mode-light',
+                                        'text-gray-400': colorMode === 'color-mode-dark'
                                     }">Meneja</div>
                                 </div>
                                 <i class="fas fa-chevron-down text-xs sm:text-sm hidden sm:block"></i>
@@ -926,38 +1031,33 @@
                                  x-cloak
                                  x-transition
                                  class="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-1" :class="{
-                                    'bg-white border border-gray-200': colorMode === 'color-mode-default',
-                                    'bg-gray-800 border border-gray-700': colorMode === 'color-mode-dark',
-                                    'bg-white border border-gray-300': colorMode === 'color-mode-light'
+                                    'bg-white border border-gray-200': colorMode === 'color-mode-light',
+                                    'bg-gray-800 border border-gray-700': colorMode === 'color-mode-dark'
                                  }">
                                 <a href="{{ route('password.change') }}" 
                                    class="block px-3 py-1.5 text-xs sm:text-sm transition-colors" :class="{
-                                    'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
-                                    'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
-                                    'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
+                                    'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-light',
+                                    'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark'
                                    }">
                                     <i class="fas fa-key mr-1 sm:mr-2 icon-sm"></i>Badili Neno Siri
                                 </a>
                                 <a href="{{ route('company.info') }}" 
                                    class="block px-3 py-1.5 text-xs sm:text-sm transition-colors" :class="{
-                                    'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
-                                    'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
-                                    'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
+                                    'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-light',
+                                    'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark'
                                    }">
                                     <i class="fas fa-building mr-1 sm:mr-2 icon-sm"></i>Taarifa ya Kampuni
                                 </a>
                                 <div class="border-t my-1" :class="{
-                                    'border-gray-100': colorMode === 'color-mode-default',
-                                    'border-gray-700': colorMode === 'color-mode-dark',
-                                    'border-gray-200': colorMode === 'color-mode-light'
+                                    'border-gray-100': colorMode === 'color-mode-light',
+                                    'border-gray-700': colorMode === 'color-mode-dark'
                                 }"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" 
                                             class="w-full text-left px-3 py-1.5 text-xs sm:text-sm transition-colors" :class="{
-                                            'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-default',
-                                            'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark',
-                                            'text-gray-700 hover:bg-gray-100 hover:text-green-600': colorMode === 'color-mode-light'
+                                            'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-light',
+                                            'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark'
                                            }">
                                         <i class="fas fa-sign-out-alt mr-1 sm:mr-2 icon-sm"></i>Toka
                                     </button>
@@ -970,9 +1070,8 @@
 
             <!-- Main Content -->
             <main class="flex-1 overflow-y-auto p-2 sm:p-4 scrollbar-thin content-inner" :class="{
-                'bg-gray-50': colorMode === 'color-mode-default',
-                'bg-gray-900': colorMode === 'color-mode-dark',
-                'bg-white': colorMode === 'color-mode-light'
+                'bg-gray-50': colorMode === 'color-mode-light',
+                'bg-gray-900': colorMode === 'color-mode-dark'
             }">
                 <!-- Responsive wrapper for content -->
                 <div class="max-w-full overflow-x-hidden">
@@ -1002,10 +1101,10 @@
         >
             <div 
                 class="color-mode-option flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                @click="changeColorMode('default'); colorMenuOpen = false"
+                @click="changeColorMode('light'); colorMenuOpen = false"
             >
-                <div class="w-5 h-5 rounded-full bg-gradient-to-r from-blue-400 to-purple-500"></div>
-                <span class="text-xs sm:text-sm">Rangi Za Kawaida</span>
+                <div class="w-5 h-5 rounded-full bg-white border border-gray-300"></div>
+                <span class="text-xs sm:text-sm">Mwanga</span>
             </div>
             <div 
                 class="color-mode-option flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
@@ -1014,13 +1113,6 @@
                 <div class="w-5 h-5 rounded-full bg-gray-800"></div>
                 <span class="text-xs sm:text-sm">Giza</span>
             </div>
-            <div 
-                class="color-mode-option flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
-                @click="changeColorMode('light'); colorMenuOpen = false"
-            >
-                <div class="w-5 h-5 rounded-full bg-white border border-gray-300"></div>
-                <span class="text-xs sm:text-sm">Mwanga</span>
-            </div>
         </div>
     </div>
 
@@ -1028,13 +1120,17 @@
     function app() {
         return {
             sidebarOpen: false,
-            colorMode: 'color-mode-default',
+            colorMode: 'color-mode-light', // Default to light mode only
             
             init() {
                 // Load saved color mode
                 const savedMode = localStorage.getItem('colorMode');
-                if (savedMode) {
+                if (savedMode && (savedMode === 'color-mode-light' || savedMode === 'color-mode-dark')) {
                     this.colorMode = savedMode;
+                } else {
+                    // Default to light mode if no valid mode saved
+                    this.colorMode = 'color-mode-light';
+                    localStorage.setItem('colorMode', this.colorMode);
                 }
                 
                 // Auto-detect if mobile/desktop and set sidebar state
@@ -1107,35 +1203,63 @@
             },
             
             changeColorMode(mode) {
-                this.colorMode = `color-mode-${mode}`;
-                localStorage.setItem('colorMode', this.colorMode);
+                // Only allow 'light' or 'dark' modes
+                if (mode === 'light' || mode === 'dark') {
+                    this.colorMode = `color-mode-${mode}`;
+                    localStorage.setItem('colorMode', this.colorMode);
+                }
             }
         }
     }
     
-    // Separate function for alert dropdown
+    // Separate function for alert dropdown with low stock functionality
     function alertDropdown() {
         return {
             openPro: false,
-            hasUnreadAlerts: false,
+            lowStockProducts: [],
+            lowStockCount: 0,
             
             init() {
-                // Check if alert has been read in this session
-                const alertRead = sessionStorage.getItem('mauzoAlertRead');
+                // Fetch low stock products on initialization
+                this.fetchLowStockProducts();
                 
-                if (!alertRead) {
-                    this.hasUnreadAlerts = true;
-                }
+                // Set up periodic refresh (every 5 minutes)
+                setInterval(() => {
+                    this.fetchLowStockProducts();
+                }, 5 * 60 * 1000);
+            },
+            
+            fetchLowStockProducts() {
+                // Fetch products with low stock (idadi <= 5)
+                fetch(`/api/low-stock-products?company_id={{ auth()->user()->company_id ?? '' }}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.lowStockProducts = data.products || [];
+                        this.lowStockCount = data.count || 0;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching low stock products:', error);
+                        this.lowStockProducts = [];
+                        this.lowStockCount = 0;
+                    });
             },
             
             toggleAlert() {
                 this.openPro = !this.openPro;
+                // Refresh data when opening alert
+                if (this.openPro) {
+                    this.fetchLowStockProducts();
+                }
             },
             
-            markAsRead() {
-                this.hasUnreadAlerts = false;
-                this.openPro = false;
-                sessionStorage.setItem('mauzoAlertRead', 'true');
+            getStockMessage(idadi) {
+                if (idadi <= 1) {
+                    return 'Bidhaa karibu imekwisha kabisa!';
+                } else if (idadi <= 5) {
+                    return 'Bidhaa imekaribia kuisha!';
+                } else {
+                    return 'Bidhaa inakaribia kuisha';
+                }
             }
         }
     }

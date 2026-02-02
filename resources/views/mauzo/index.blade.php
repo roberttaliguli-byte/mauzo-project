@@ -207,8 +207,7 @@
                 </div>
             </div>
         </div>
-
-<!-- Faida -->
+<!-- Faida ya leo - FIXED CODE -->
 <div class="sm:col-span-1 group relative overflow-hidden">
     <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
     <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-green-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
@@ -221,48 +220,64 @@
         <div class="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">
             Faida ya leo
         </div>
-@php
-    // Profit from cash sales
-    $faidaMauzo = 0;
-    foreach($todaysMauzos as $mauzo) {
-        $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-        $sellingPrice = $mauzo->bei;
-        $quantity = $mauzo->idadi;
-        
-        $actualDiscount = $mauzo->punguzo;
-        if ($mauzo->punguzo_aina === 'bidhaa') {
-            $actualDiscount = $mauzo->punguzo * $quantity;
-        }
-        
-        $faidaMauzo += ($sellingPrice - $buyingPrice) * $quantity - $actualDiscount;
-    }
-    
-    // Profit from debt repayments
-    $faidaMarejesho = 0;
-    
-    foreach($todaysMarejeshos as $marejesho) {
-        if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
-            $debt = $marejesho->madeni;
+        @php
+            // ✅ CORRECT PROFIT CALCULATION FOR CASH SALES
+            $faidaMauzo = 0;
+            foreach($todaysMauzos as $mauzo) {
+                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                $sellingPrice = $mauzo->bei;
+                $quantity = $mauzo->idadi;
+                
+                // Calculate TOTAL discount (not per item)
+                $totalDiscount = 0;
+                if ($mauzo->punguzo_aina === 'bidhaa') {
+                    // Discount per item
+                    $totalDiscount = $mauzo->punguzo * $quantity;
+                } else {
+                    // Fixed discount amount
+                    $totalDiscount = $mauzo->punguzo;
+                }
+                
+                // Total revenue BEFORE discount
+                $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+                
+                // Total revenue AFTER discount
+                $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
+                
+                // Total buying cost
+                $totalBuyingCost = $buyingPrice * $quantity;
+                
+                // ✅ CORRECT PROFIT: Revenue after discount minus buying cost
+                $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+                
+                $faidaMauzo += $profit;
+            }
             
-            $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-            $quantity = $debt->idadi;
+            // ✅ CORRECT PROFIT FROM DEBT REPAYMENTS
+            $faidaMarejesho = 0;
+            foreach($todaysMarejeshos as $marejesho) {
+                if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+                    $debt = $marejesho->madeni;
+                    
+                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                    $quantity = $debt->idadi;
+                    
+                    // For debt items, the jumla should already be after discount
+                    $totalBuyingCost = $buyingPrice * $quantity;
+                    
+                    // jumla is the actual selling price (after any discount)
+                    $actualSellingPrice = $debt->jumla;
+                    
+                    // ✅ Profit = Actual selling price - Total buying cost
+                    $profit = $actualSellingPrice - $totalBuyingCost;
+                    
+                    $faidaMarejesho += $profit;
+                }
+            }
             
-            // Total buying cost
-            $totalBuyingCost = $buyingPrice * $quantity;
-            
-            // jumla is the actual selling price (after any discount)
-            $actualSellingPrice = $debt->jumla;
-            
-            // Profit = Actual selling price - Total buying cost
-            $profit = $actualSellingPrice - $totalBuyingCost;
-            
-            $faidaMarejesho += $profit;
-        }
-    }
-    
-    // Total profit = cash sales profit + debt repayment profit
-    $jumlaFaida = $faidaMauzo + $faidaMarejesho;
-@endphp
+            // Total profit = cash sales profit + debt repayment profit
+            $jumlaFaida = $faidaMauzo + $faidaMarejesho;
+        @endphp
         <div class="space-y-1 text-white text-xs">
             <div class="flex justify-between items-center">
                 <span class="text-green-100">Mauzo:</span>
@@ -270,7 +285,7 @@
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-green-100">Marejesho:</span>
-                                <span class="font-semibold" id="faida-marejesho">{{ number_format($faidaMarejesho) }}</span>
+                <span class="font-semibold" id="faida-marejesho">{{ number_format($faidaMarejesho) }}</span>
             </div>
             <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
                 <span class="text-green-50 font-semibold">Jumla:</span>
@@ -525,226 +540,251 @@
             </div>
         </div>
 
-        <!-- TAB 3: Taarifa Fupi -->
-        <div id="taarifa-tab-content" class="tab-content hidden">
-            <div class="bg-emerald-50 rounded-lg shadow border p-4 card-hover">
-                <h2 class="text-base font-semibold mb-3 flex items-center text-black">
-                    <i class="fas fa-file-alt mr-2 text-emerald-600 text-sm"></i>
-                    Taarifa Fupi ya Mauzo
-                </h2>
+      <!-- TAB 3: Taarifa Fupi -->
+<div id="taarifa-tab-content" class="tab-content hidden">
+    <div class="bg-emerald-50 rounded-lg shadow border p-4 card-hover">
+        <h2 class="text-base font-semibold mb-3 flex items-center text-black">
+            <i class="fas fa-file-alt mr-2 text-emerald-600 text-sm"></i>
+            Taarifa Fupi ya Mauzo
+        </h2>
 
-                <!-- Search and Filter -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
-                        <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                    </div>
-                    
-                    <div class="relative">
-                        <i class="fas fa-calendar absolute left-3 top-3 text-gray-400 text-xs"></i>
-                        <input type="date" id="filter-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                    </div>
-                    
-                    <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs">
-                        <i class="fas fa-redo mr-1"></i> Safisha Filter
-                    </button>
-                </div>
-
-                <!-- Sales Table -->
-                <div class="overflow-x-auto rounded-lg shadow-sm border">
-                    <table class="w-full table-auto border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-emerald-600">
-                                <th class="border px-3 py-2 text-left text-white">Tarehe</th>
-                                <th class="border px-3 py-2 text-left text-white">Risiti</th>
-                                <th class="border px-3 py-2 text-left text-white">Bidhaa</th>
-                                <th class="border px-3 py-2 text-left text-white">Idadi</th>
-                                <th class="border px-3 py-2 text-left text-white">Bei</th>
-                                <th class="border px-3 py-2 text-left text-white">Punguzo</th>
-                                <th class="border px-3 py-2 text-left text-white">Faida</th>
-                                <th class="border px-3 py-2 text-left text-white">Jumla</th>
-                                <th class="border px-3 py-2 text-left text-white">Vitendo</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sales-tbody">
-                            @php $today = \Carbon\Carbon::today()->format('Y-m-d'); @endphp
-                            @forelse($mauzos as $item)
-                                @php 
-                                    $itemDate = $item->created_at->format('Y-m-d');
-                                    $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
-                                    $faida = ($item->bei - $buyingPrice) * $item->idadi - $item->punguzo;
-                                    $total = $item->jumla + $item->punguzo;
-                                @endphp
-                                <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
-                                    <td class="border px-3 py-2">
-                                        @if($itemDate === $today)
-                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
-                                        @else
-                                            {{ $item->created_at->format('d/m/Y') }}
-                                        @endif
-                                    </td>
-                                    <td class="border px-3 py-2 font-mono">
-                                        @if($item->receipt_no)
-                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
-                                        @else
-                                            <span class="text-gray-400 text-xs">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="border px-3 py-2">{{ $item->bidhaa->jina }}</td>
-                                    <td class="border px-3 py-2 text-center">{{ $item->idadi }}</td>
-                                    <td class="border px-3 py-2 text-right">{{ number_format($item->bei) }}</td>
-                                    <td class="border px-3 py-2 text-right">{{ number_format($item->punguzo) }}</td>
-                                    <td class="border px-3 py-2 text-right">{{ number_format($faida) }}</td>
-                                    <td class="border px-3 py-2 text-right">{{ number_format($total) }}</td>
-                                    <td class="border px-3 py-2 text-center">
-                                        <div class="flex gap-1 justify-center">
-                                            @if($item->receipt_no)
-                                            <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
-                                                <i class="fas fa-print mr-1 text-xs"></i>
-                                            </button>
-                                            @endif
-                                            <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
-                                                <i class="fas fa-trash mr-1 text-xs"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" class="text-center py-4 text-gray-500 text-xs">Hakuna mauzo yaliyorekodiwa bado.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                @if($mauzos->hasPages())
-                <div class="mt-4">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                        <!-- Pagination Info -->
-                        <div class="text-xs text-gray-600">
-                            @php
-                                $start = ($mauzos->currentPage() - 1) * $mauzos->perPage() + 1;
-                                $end = min($mauzos->currentPage() * $mauzos->perPage(), $mauzos->total());
-                            @endphp
-                            Onyesha {{ $start }} - {{ $end }} ya {{ $mauzos->total() }} mauzo
-                        </div>
-
-                        <!-- Pagination Links -->
-                        <nav class="flex items-center space-x-1">
-                            <!-- Previous Button -->
-                            @if($mauzos->onFirstPage())
-                                <span class="px-3 py-1 rounded-lg border text-gray-400 text-xs cursor-not-allowed">
-                                    <i class="fas fa-chevron-left mr-1"></i> Nyuma
-                                </span>
-                            @else
-                                <a href="{{ $mauzos->previousPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
-                                    <i class="fas fa-chevron-left mr-1"></i> Nyuma
-                                </a>
-                            @endif
-
-                            <!-- Page Numbers -->
-                            <div class="flex items-center space-x-1">
-                                @foreach($mauzos->getUrlRange(1, $mauzos->lastPage()) as $page => $url)
-                                    @if($page == $mauzos->currentPage())
-                                        <span class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-semibold text-xs">
-                                            {{ $page }}
-                                        </span>
-                                    @else
-                                        <a href="{{ $url }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition">
-                                            {{ $page }}
-                                        </a>
-                                    @endif
-                                @endforeach
-                            </div>
-
-                            <!-- Next Button -->
-                            @if($mauzos->hasMorePages())
-                                <a href="{{ $mauzos->nextPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
-                                    Mbele <i class="fas fa-chevron-right ml-1"></i>
-                                </a>
-                            @else
-                                <span class="px-3 py-1 rounded-lg border text-gray-400 text-xs cursor-not-allowed">
-                                    Mbele <i class="fas fa-chevron-right ml-1"></i>
-                                </span>
-                            @endif
-                        </nav>
-                    </div>
-                </div>
-                @endif
+        <!-- Search and Filter -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
+                <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
             </div>
+            
+            <div class="relative">
+                <i class="fas fa-calendar absolute left-3 top-3 text-gray-400 text-xs"></i>
+                <input type="date" id="filter-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
+            </div>
+            
+            <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs">
+                <i class="fas fa-redo mr-1"></i> Safisha Filter
+            </button>
         </div>
 
-        <!-- TAB 4: Mauzo ya Jumla -->
-        <div id="jumla-tab-content" class="tab-content hidden">
-            <div class="bg-emerald-50 rounded-lg shadow border p-4 card-hover">
-                <h2 class="text-base font-bold mb-3 flex items-center text-black">
-                    <i class="fas fa-chart-bar mr-2 text-emerald-600"></i>
-                    Mauzo ya Jumla
-                </h2>
-
-                <!-- Search Area -->
-                <div class="mb-3">
-                    <input type="text" id="search-product" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition">
-                </div>
-
-                <!-- Sales Summary Table -->
-                <div class="overflow-x-auto rounded-lg shadow-sm border">
-                    <table class="w-full border-collapse text-sm" id="grouped-sales-table">
-                        <thead class="bg-emerald-600">
-                            <tr>
-                                <th class="border px-3 py-2 text-left text-white text-xs">Tarehe</th>
-                                <th class="border px-3 py-2 text-left text-white text-xs">Bidhaa</th>
-                                <th class="border px-3 py-2 text-left text-white text-xs">Idadi</th>
-                                <th class="border px-3 py-2 text-left text-white text-xs">Punguzo</th>
-                                <th class="border px-3 py-2 text-left text-white text-xs">Jumla</th>
-                                <th class="border px-3 py-2 text-left text-white text-xs">Faida</th>
-                            </tr>
-                        </thead>
-                        <tbody id="grouped-sales-tbody">
-                            @php
-                                $groupedSales = [];
-                                foreach($allMauzos as $sale) {
-                                    $date = $sale->created_at->format('Y-m-d');
-                                    $product = $sale->bidhaa->jina;
-                                    $key = $date . '|' . $product;
-                                    
-                                    if (!isset($groupedSales[$key])) {
-                                        $groupedSales[$key] = [
-                                            'tarehe' => $date,
-                                            'jina' => $product,
-                                            'idadi' => 0,
-                                            'punguzo' => 0,
-                                            'jumla' => 0,
-                                            'faida' => 0
-                                        ];
-                                    }
-                                    
-                                    $groupedSales[$key]['idadi'] += $sale->idadi;
-                                    $groupedSales[$key]['punguzo'] += $sale->punguzo;
-                                    $groupedSales[$key]['jumla'] += $sale->jumla + $sale->punguzo;
-                                    $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
-                                    $profitPerUnit = $sale->bei - $buyingPrice;
-                                    $groupedSales[$key]['faida'] += $profitPerUnit * $sale->idadi - $sale->punguzo;
-                                }
-                            @endphp
+        <!-- Sales Table -->
+        <div class="overflow-x-auto rounded-lg shadow-sm border">
+            <table class="w-full table-auto border-collapse text-xs">
+                <thead>
+                    <tr class="bg-emerald-600">
+                        <th class="border px-3 py-2 text-left text-white">Tarehe</th>
+                        <th class="border px-3 py-2 text-left text-white">Risiti</th>
+                        <th class="border px-3 py-2 text-left text-white">Bidhaa</th>
+                        <th class="border px-3 py-2 text-left text-white">Idadi</th>
+                        <th class="border px-3 py-2 text-left text-white">Bei</th>
+                        <th class="border px-3 py-2 text-left text-white">Punguzo</th>
+                        <th class="border px-3 py-2 text-left text-white">Faida</th>
+                        <th class="border px-3 py-2 text-left text-white">Jumla</th>
+                        <th class="border px-3 py-2 text-left text-white">Vitendo</th>
+                    </tr>
+                </thead>
+                <tbody id="sales-tbody">
+                    @php 
+                        $today = \Carbon\Carbon::today()->format('Y-m-d'); 
+                        
+                        // ✅ FUNCTION TO CALCULATE ACTUAL DISCOUNT
+                        function actualDiscount($sale) {
+                            return $sale->punguzo_aina === 'bidhaa'
+                                ? $sale->punguzo * $sale->idadi
+                                : $sale->punguzo;
+                        }
+                    @endphp
+                    
+                    @forelse($mauzos as $item)
+                        @php 
+                            $itemDate = $item->created_at->format('Y-m-d');
+                            $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
                             
-                            @foreach($groupedSales as $sale)
-                            <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
-                                <td class="border px-3 py-2 text-xs">{{ $sale['tarehe'] }}</td>
-                                <td class="border px-3 py-2 text-xs">{{ $sale['jina'] }}</td>
-                                <td class="border px-3 py-2 text-center text-xs">{{ $sale['idadi'] }}</td>
-                                <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['punguzo']) }}</td>
-                                <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['jumla']) }}</td>
-                                <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['faida']) }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            // ✅ CALCULATE ACTUAL DISCOUNT
+                            $actualDiscount = actualDiscount($item);
+                            
+                            // ✅ CORRECT PROFIT
+                            $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
+                            
+                            // ✅ CORRECT TOTAL (jumla field should already contain correct total)
+                            $total = $item->jumla;
+                        @endphp
+                        <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
+                            <td class="border px-3 py-2">
+                                @if($itemDate === $today)
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
+                                @else
+                                    {{ $item->created_at->format('d/m/Y') }}
+                                @endif
+                            </td>
+                            <td class="border px-3 py-2 font-mono">
+                                @if($item->receipt_no)
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
+                                @else
+                                    <span class="text-gray-400 text-xs">-</span>
+                                @endif
+                            </td>
+                            <td class="border px-3 py-2">{{ $item->bidhaa->jina }}</td>
+                            <td class="border px-3 py-2 text-center">{{ $item->idadi }}</td>
+                            <td class="border px-3 py-2 text-right">{{ number_format($item->bei) }}</td>
+                            <td class="border px-3 py-2 text-right">{{ number_format($actualDiscount) }}</td>
+                            <td class="border px-3 py-2 text-right">{{ number_format($faida) }}</td>
+                            <td class="border px-3 py-2 text-right">{{ number_format($total) }}</td>
+                            <td class="border px-3 py-2 text-center">
+                                <div class="flex gap-1 justify-center">
+                                    @if($item->receipt_no)
+                                    <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
+                                        <i class="fas fa-print mr-1 text-xs"></i>
+                                    </button>
+                                    @endif
+                                    <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
+                                        <i class="fas fa-trash mr-1 text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-gray-500 text-xs">Hakuna mauzo yaliyorekodiwa bado.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if($mauzos->hasPages())
+        <div class="mt-4">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <!-- Pagination Info -->
+                <div class="text-xs text-gray-600">
+                    @php
+                        $start = ($mauzos->currentPage() - 1) * $mauzos->perPage() + 1;
+                        $end = min($mauzos->currentPage() * $mauzos->perPage(), $mauzos->total());
+                    @endphp
+                    Onyesha {{ $start }} - {{ $end }} ya {{ $mauzos->total() }} mauzo
                 </div>
+
+                <!-- Pagination Links -->
+                <nav class="flex items-center space-x-1">
+                    <!-- Previous Button -->
+                    @if($mauzos->onFirstPage())
+                        <span class="px-3 py-1 rounded-lg border text-gray-400 text-xs cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i> Nyuma
+                        </span>
+                    @else
+                        <a href="{{ $mauzos->previousPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
+                            <i class="fas fa-chevron-left mr-1"></i> Nyuma
+                        </a>
+                    @endif
+
+                    <!-- Page Numbers -->
+                    <div class="flex items-center space-x-1">
+                        @foreach($mauzos->getUrlRange(1, $mauzos->lastPage()) as $page => $url)
+                            @if($page == $mauzos->currentPage())
+                                <span class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-semibold text-xs">
+                                    {{ $page }}
+                                </span>
+                            @else
+                                <a href="{{ $url }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition">
+                                    {{ $page }}
+                                </a>
+                            @endif
+                        @endforeach
+                    </div>
+
+                    <!-- Next Button -->
+                    @if($mauzos->hasMorePages())
+                        <a href="{{ $mauzos->nextPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
+                            Mbele <i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                    @else
+                        <span class="px-3 py-1 rounded-lg border text-gray-400 text-xs cursor-not-allowed">
+                            Mbele <i class="fas fa-chevron-right ml-1"></i>
+                        </span>
+                    @endif
+                </nav>
             </div>
         </div>
+        @endif
+    </div>
+</div>
+
+<!-- TAB 4: Mauzo ya Jumla -->
+<div id="jumla-tab-content" class="tab-content hidden">
+    <div class="bg-emerald-50 rounded-lg shadow border p-4 card-hover">
+        <h2 class="text-base font-bold mb-3 flex items-center text-black">
+            <i class="fas fa-chart-bar mr-2 text-emerald-600"></i>
+            Mauzo ya Jumla
+        </h2>
+
+        <!-- Search Area -->
+        <div class="mb-3">
+            <input type="text" id="search-product" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition">
+        </div>
+
+        <!-- Sales Summary Table -->
+        <div class="overflow-x-auto rounded-lg shadow-sm border">
+            <table class="w-full border-collapse text-sm" id="grouped-sales-table">
+                <thead class="bg-emerald-600">
+                    <tr>
+                        <th class="border px-3 py-2 text-left text-white text-xs">Tarehe</th>
+                        <th class="border px-3 py-2 text-left text-white text-xs">Bidhaa</th>
+                        <th class="border px-3 py-2 text-left text-white text-xs">Idadi</th>
+                        <th class="border px-3 py-2 text-left text-white text-xs">Punguzo</th>
+                        <th class="border px-3 py-2 text-left text-white text-xs">Jumla</th>
+                        <th class="border px-3 py-2 text-left text-white text-xs">Faida</th>
+                    </tr>
+                </thead>
+                <tbody id="grouped-sales-tbody">
+                    @php
+                        $groupedSales = [];
+                        foreach($allMauzos as $sale) {
+                            $date = $sale->created_at->format('Y-m-d');
+                            $product = $sale->bidhaa->jina;
+                            $key = $date . '|' . $product;
+                            
+                            if (!isset($groupedSales[$key])) {
+                                $groupedSales[$key] = [
+                                    'tarehe' => $date,
+                                    'jina' => $product,
+                                    'idadi' => 0,
+                                    'punguzo' => 0,
+                                    'jumla' => 0,
+                                    'faida' => 0
+                                ];
+                            }
+                            
+                            $groupedSales[$key]['idadi'] += $sale->idadi;
+                            
+                            // ✅ CALCULATE ACTUAL DISCOUNT FOR EACH SALE
+                            $saleActualDiscount = $sale->punguzo_aina === 'bidhaa'
+                                ? $sale->punguzo * $sale->idadi
+                                : $sale->punguzo;
+                            
+                            $groupedSales[$key]['punguzo'] += $saleActualDiscount;
+                            $groupedSales[$key]['jumla'] += $sale->jumla;
+                            
+                            // ✅ CORRECT PROFIT CALCULATION
+                            $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
+                            $saleProfit = (($sale->bei - $buyingPrice) * $sale->idadi) - $saleActualDiscount;
+                            $groupedSales[$key]['faida'] += $saleProfit;
+                        }
+                    @endphp
+                    
+                    @foreach($groupedSales as $sale)
+                    <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
+                        <td class="border px-3 py-2 text-xs">{{ $sale['tarehe'] }}</td>
+                        <td class="border px-3 py-2 text-xs">{{ $sale['jina'] }}</td>
+                        <td class="border px-3 py-2 text-center text-xs">{{ $sale['idadi'] }}</td>
+                        <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['punguzo']) }}</td>
+                        <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['jumla']) }}</td>
+                        <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['faida']) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <!-- TAB 5: Kikapu -->
 <div id="kikapu-tab-content" class="tab-content hidden">
@@ -1347,6 +1387,8 @@ button:hover {
 @push('scripts')
 <script>
 class MauzoManager {
+
+
     constructor() {
         // Get company ID from meta tag or data attribute
         this.companyId = document.querySelector('meta[name="company-id"]')?.getAttribute('content') 
@@ -1382,6 +1424,13 @@ class MauzoManager {
         this.initReceiptLookup();
     }
 
+    // ADD THIS HELPER FUNCTION AT THE BEGINNING OF THE MauzoManager CLASS:
+calculateActualDiscount(discount, discountType, quantity) {
+    if (discountType === 'bidhaa') {
+        return discount * quantity;
+    }
+    return discount;
+}
     // Modified: Save and restore tab state properly
     restoreTabState() {
         // Get saved tab from localStorage
@@ -1564,117 +1613,111 @@ class MauzoManager {
         keysToRemove.forEach(key => localStorage.removeItem(key));
     }
 
-    updateTotals() {
-        const quantityInput = document.getElementById('quantity-input');
-        const priceInput = document.getElementById('price-input');
-        const discountInput = document.getElementById('punguzo-input');
-        const totalInput = document.getElementById('total-input');
-        const punguzoAinaInput = document.getElementById('punguzo-aina-input');
-        const punguzoType = document.getElementById('punguzo-type');
-        
-        if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
+// REPLACE THE updateTotals() FUNCTION:
+updateTotals() {
+    const quantityInput = document.getElementById('quantity-input');
+    const priceInput = document.getElementById('price-input');
+    const discountInput = document.getElementById('punguzo-input');
+    const totalInput = document.getElementById('total-input');
+    const punguzoAinaInput = document.getElementById('punguzo-aina-input');
+    const punguzoType = document.getElementById('punguzo-type');
+    
+    if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
 
-        const quantity = parseInt(quantityInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const discount = parseFloat(discountInput.value) || 0;
-        const discountType = punguzoType.value;
-        
-        const baseTotal = quantity * price;
-        let finalTotal = 0;
-        
-        if (discountType === 'bidhaa') {
-            const totalDiscount = discount * quantity;
-            finalTotal = baseTotal - totalDiscount;
-        } else {
-            finalTotal = baseTotal - discount;
-        }
-        
-        finalTotal = Math.max(0, finalTotal);
-        
-        totalInput.value = finalTotal.toFixed(2);
-        punguzoAinaInput.value = discountType;
-        
-        const kopeshaIdadi = document.getElementById('kopesha-idadi');
-        const kopeshaJumla = document.getElementById('kopesha-jumla');
-        const kopeshaBaki = document.getElementById('kopesha-baki');
-        const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
-        const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
-        
-        if (kopeshaIdadi) kopeshaIdadi.value = quantity;
-        if (kopeshaJumla) kopeshaJumla.value = finalTotal;
-        if (kopeshaBaki) kopeshaBaki.value = finalTotal;
-        if (kopeshaPunguzo) kopeshaPunguzo.value = discount;
-        if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
+    const quantity = parseInt(quantityInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const discount = parseFloat(discountInput.value) || 0;
+    const discountType = punguzoType.value;
+    
+    const baseTotal = quantity * price;
+    
+    // ✅ CORRECT: Calculate actual discount
+    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+    const finalTotal = baseTotal - actualDiscount;
+    
+    totalInput.value = Math.max(0, finalTotal);
+    punguzoAinaInput.value = discountType;
+    
+    const kopeshaIdadi = document.getElementById('kopesha-idadi');
+    const kopeshaJumla = document.getElementById('kopesha-jumla');
+    const kopeshaBaki = document.getElementById('kopesha-baki');
+    const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
+    const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
+    
+    if (kopeshaIdadi) kopeshaIdadi.value = quantity;
+    if (kopeshaJumla) kopeshaJumla.value = finalTotal;
+    if (kopeshaBaki) kopeshaBaki.value = finalTotal;
+    if (kopeshaPunguzo) kopeshaPunguzo.value = discount; // Store per-item discount
+    if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
+}
+
+
+// REPLACE THE addToCart() FUNCTION:
+addToCart() {
+    const bidhaaSelect = document.getElementById('bidhaaSelect');
+    const quantityInput = document.getElementById('quantity-input');
+    const priceInput = document.getElementById('price-input');
+    const discountInput = document.getElementById('punguzo-input');
+    const punguzoType = document.getElementById('punguzo-type');
+    const totalInput = document.getElementById('total-input');
+    
+    if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
+
+    const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
+    const quantity = parseInt(quantityInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const discount = parseFloat(discountInput.value) || 0;
+    const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+    const total = parseFloat(totalInput.value) || 0;
+    
+    if (!selectedOption.value || quantity < 1) {
+        this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+        return;
     }
 
-    addToCart() {
-        const bidhaaSelect = document.getElementById('bidhaaSelect');
-        const quantityInput = document.getElementById('quantity-input');
-        const priceInput = document.getElementById('price-input');
-        const discountInput = document.getElementById('punguzo-input');
-        const punguzoType = document.getElementById('punguzo-type');
-        const totalInput = document.getElementById('total-input');
-        
-        if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
-
-        const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
-        const quantity = parseInt(quantityInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const discount = parseFloat(discountInput.value) || 0;
-        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
-        const total = parseFloat(totalInput.value) || 0;
-        
-        if (!selectedOption.value || quantity < 1) {
-            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-            return;
-        }
-
-        const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
-        const baseTotal = price * quantity;
-        let actualDiscount = discount;
-        let profit = 0;
-        
-        if (discountType === 'bidhaa') {
-            actualDiscount = discount * quantity;
-            profit = ((price - buyingPrice) * quantity) - actualDiscount;
-        } else {
-            actualDiscount = discount;
-            profit = ((price - buyingPrice) * quantity) - discount;
-        }
-        
-        const calculatedTotal = baseTotal - actualDiscount;
-        if (Math.abs(calculatedTotal - total) > 0.01) {
-            this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal}, Ilioingizwa: ${total}`, 'error');
-            return;
-        }
-
-        const productName = selectedOption.dataset.jina;
-        const barcode = selectedOption.dataset.barcode || '';
-        const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
-
-        const cartItem = {
-            jina: productName,
-            bei: price,
-            idadi: quantity,
-            punguzo: discount,
-            punguzo_aina: discountType,
-            jumla: total,
-            profit: profit,
-            bidhaa_id: selectedOption.value,
-            barcode: barcode,
-            timestamp: new Date().toISOString(),
-            company_id: this.companyId,
-            company_name: companyName
-        };
-
-        this.cart.push(cartItem);
-        this.saveCart();
-        this.updateCartCount();
-        this.updateCartDisplay();
-        
-        this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
-        this.resetForm();
+    const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
+    const baseTotal = price * quantity;
+    
+    // ✅ CORRECT: Calculate actual discount
+    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+    
+    // ✅ CORRECT: Profit calculation
+    const profit = ((price - buyingPrice) * quantity) - actualDiscount;
+    
+    const calculatedTotal = baseTotal - actualDiscount;
+    if (Math.abs(calculatedTotal - total) > 0.01) {
+        this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal}, Ilioingizwa: ${total}`, 'error');
+        return;
     }
+
+    const productName = selectedOption.dataset.jina;
+    const barcode = selectedOption.dataset.barcode || '';
+    const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
+
+    const cartItem = {
+        jina: productName,
+        bei: price,
+        idadi: quantity,
+        punguzo: discount, // Store the per-item discount
+        punguzo_aina: discountType,
+        actual_discount: actualDiscount, // Store the actual total discount
+        jumla: total,
+        profit: profit,
+        bidhaa_id: selectedOption.value,
+        barcode: barcode,
+        timestamp: new Date().toISOString(),
+        company_id: this.companyId,
+        company_name: companyName
+    };
+
+    this.cart.push(cartItem);
+    this.saveCart();
+    this.updateCartCount();
+    this.updateCartDisplay();
+    
+    this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
+    this.resetForm();
+}
 
     updateCartDisplay() {
         const emptyMessage = document.getElementById('empty-cart-message');
@@ -1761,40 +1804,39 @@ class MauzoManager {
         }
     }
 
-    updateBarcodeRowTotal(row) {
-        const productPrice = row.querySelector('.product-price');
-        const quantityInput = row.querySelector('.quantity-input');
-        const punguzoInput = row.querySelector('.punguzo-input');
-        const stockInput = row.querySelector('.stock-input');
-        const totalInput = row.querySelector('.total-input');
-        const punguzoType = document.getElementById('punguzo-type');
+// REPLACE THE updateBarcodeRowTotal() FUNCTION:
+updateBarcodeRowTotal(row) {
+    const productPrice = row.querySelector('.product-price');
+    const quantityInput = row.querySelector('.quantity-input');
+    const punguzoInput = row.querySelector('.punguzo-input');
+    const stockInput = row.querySelector('.stock-input');
+    const totalInput = row.querySelector('.total-input');
+    const punguzoType = document.getElementById('punguzo-type');
 
-        if (!productPrice || !quantityInput || !totalInput || !punguzoType) return;
+    if (!productPrice || !quantityInput || !totalInput || !punguzoType) return;
 
-        const price = parseFloat(productPrice.value) || 0;
-        const quantity = parseInt(quantityInput.value) || 0;
-        const punguzo = parseFloat(punguzoInput.value) || 0;
-        const stock = stockInput ? parseInt(stockInput.value) || 0 : 0;
-        const discountType = punguzoType.value;
-        
-        if (stock > 0 && quantity > stock) {
-            this.showNotification('Idadi uliyoiingiza inazidi idadi iliyopo!', 'error');
-            quantityInput.value = stock;
-            return;
-        }
-        
-        let total = price * quantity;
-        
-        if (discountType === 'bidhaa') {
-            total = total - (punguzo * quantity);
-        } else {
-            total = total - punguzo;
-        }
-        
-        totalInput.value = Math.max(0, total);
-        
-        this.updateBarcodeTotal();
+    const price = parseFloat(productPrice.value) || 0;
+    const quantity = parseInt(quantityInput.value) || 0;
+    const punguzo = parseFloat(punguzoInput.value) || 0;
+    const stock = stockInput ? parseInt(stockInput.value) || 0 : 0;
+    const discountType = punguzoType.value;
+    
+    if (stock > 0 && quantity > stock) {
+        this.showNotification('Idadi uliyoiingiza inazidi idadi iliyopo!', 'error');
+        quantityInput.value = stock;
+        return;
     }
+    
+    const baseTotal = price * quantity;
+    
+    // ✅ CORRECT: Calculate actual discount
+    const actualDiscount = this.calculateActualDiscount(punguzo, discountType, quantity);
+    const total = baseTotal - actualDiscount;
+    
+    totalInput.value = Math.max(0, total);
+    
+    this.updateBarcodeTotal();
+}
 
     async submitBarcodeSales() {
         const items = [];

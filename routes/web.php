@@ -1,4 +1,5 @@
 <?php
+
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MtejaController;
@@ -18,7 +19,8 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReportController as MainReportController;
 use App\Http\Controllers\UserReportController;
-
+use App\Models\Bidhaa;
+use Illuminate\Http\Request;
 
 // =========================
 // Public routes
@@ -54,6 +56,46 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])
     ->name('password.update');
 
 // =========================
+// Low Stock API Route - ADD THIS SECTION
+// =========================
+Route::middleware(['auth'])->get('/api/low-stock-products', function(Request $request) {
+    try {
+        // Get company ID from authenticated user
+        $companyId = auth()->user()->company_id;
+        
+        // If no company ID, return empty response
+        if (!$companyId) {
+            return response()->json([
+                'success' => true,
+                'count' => 0,
+                'products' => []
+            ]);
+        }
+        
+        // Fetch low stock products (idadi <= 5)
+        $products = Bidhaa::where('company_id', $companyId)
+            ->where('idadi', '<=', 9)
+            ->where('idadi', '>', 0) // Exclude zero stock
+            ->orderBy('idadi', 'asc') // Lowest stock first
+            ->get(['id', 'jina', 'aina', 'kipimo', 'idadi', 'bei_kuuza', 'barcode']);
+        
+        return response()->json([
+            'success' => true,
+            'count' => $products->count(),
+            'products' => $products
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error fetching low stock products',
+            'count' => 0,
+            'products' => []
+        ], 500);
+    }
+})->name('api.low-stock-products');
+
+// =========================
 // Authenticated routes
 // =========================
 Route::middleware('auth')->group(function () {
@@ -61,8 +103,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
     Route::get('/password/change', [PasswordController::class, 'showChangeForm'])->name('password.change');
-   Route::post('/password/update', [PasswordController::class, 'update'])
-    ->name('password.update.auth');
+    Route::post('/password/update', [PasswordController::class, 'update'])
+        ->name('password.update.auth');
     Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
 
     // Boss routes
@@ -90,17 +132,15 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// =========================
-// User report routes
-// =========================
-Route::prefix('user')->group(function () {
-    Route::get('reports/select', [UserReportController::class, 'select'])
-        ->name('user.reports.select');
-    Route::get('reports/download', [UserReportController::class, 'download'])
-        ->name('user.reports.download');
+// Reports routes
+Route::middleware(['auth'])->prefix('reports')->group(function () {
+    Route::get('/select', [UserReportController::class, 'select'])->name('user.reports.select');
+    Route::post('/download', [UserReportController::class, 'download'])->name('user.reports.download');
 });
 
-// =========================
+// Make sure uchambuzi route exists
+Route::get('/uchambuzi', [DashboardController::class, 'index'])->name('uchambuzi.index');
+
 // Admin routes
 // =========================
 Route::middleware(['auth', 'role:admin'])
@@ -126,8 +166,9 @@ Route::middleware(['auth', 'role:admin'])
 
         // Change Password
         Route::get('/change-password', [AdminController::class, 'showChangePassword'])->name('password.show');
-       Route::post('/change-password', [AdminController::class, 'updatePassword'])
-    ->name('admin.password.update');
+        Route::post('/change-password', [AdminController::class, 'updatePassword'])
+            ->name('admin.password.update');
+        
         // User & Company actions
         Route::post('/approve-user/{id}', [AdminController::class, 'approveUser'])->name('approveUser');
         Route::post('/company/{id}/verify', [AdminController::class, 'verifyCompany'])->name('verifyCompany');
@@ -172,8 +213,6 @@ Route::get('/wafanyakazi/export-pdf', [WafanyakaziController::class, 'exportPdf'
 // Mauzo Routes
 // ================================
 
-
-    
 // Main Mauzo Routes
 Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
 Route::post('/mauzo', [MauzoController::class, 'store'])->name('mauzo.store');
@@ -204,10 +243,6 @@ Route::get('/mauzo/financial-data', [MauzoController::class, 'getFinancialData']
 Route::get('/mauzo/product-by-barcode/{barcode}', [MauzoController::class, 'getProductByBarcode'])->name('mauzo.product.by.barcode');
 Route::post('/mauzo/update-stock', [MauzoController::class, 'updateStock'])->name('mauzo.update.stock');
 
-// Product Routes
-Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
-Route::get('/products/{id}', [ProductController::class, 'show'])->name('products.show');
-
 // ================================
 // Masaplaya Routes
 // ================================
@@ -216,19 +251,22 @@ Route::post('/masaplaya', [MasaplayaController::class, 'store'])->name('masaplay
 Route::put('/masaplaya/{masaplaya}', [MasaplayaController::class, 'update'])->name('masaplaya.update');
 Route::delete('/masaplaya/{masaplaya}', [MasaplayaController::class, 'destroy'])->name('masaplaya.destroy');
 
-    // Main bidhaa routes
-    Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
-    Route::post('/bidhaa', [BidhaaController::class, 'store'])->name('bidhaa.store');
-    Route::put('/bidhaa/{id}', [BidhaaController::class, 'update'])->name('bidhaa.update');
-    Route::delete('/bidhaa/{id}', [BidhaaController::class, 'destroy'])->name('bidhaa.destroy');
-    
-    // CSV operations
-    Route::get('/bidhaa/download-sample', [BidhaaController::class, 'downloadSample'])->name('bidhaa.downloadSample');
-    Route::post('/bidhaa/upload-csv', [BidhaaController::class, 'uploadCSV'])->name('bidhaa.uploadCSV');
-    
-    // Barcode operations
-    Route::post('/bidhaa/barcode', [BidhaaController::class, 'storeBarcode'])->name('bidhaa.store.barcode');
-    Route::get('/bidhaa/tafuta-barcode/{barcode}', [BidhaaController::class, 'tafutaBarcode'])->name('bidhaa.tafuta.barcode');
+// ================================
+// Bidhaa Routes
+// ================================
+Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
+Route::post('/bidhaa', [BidhaaController::class, 'store'])->name('bidhaa.store');
+Route::put('/bidhaa/{id}', [BidhaaController::class, 'update'])->name('bidhaa.update');
+Route::delete('/bidhaa/{id}', [BidhaaController::class, 'destroy'])->name('bidhaa.destroy');
+
+// CSV operations
+Route::get('/bidhaa/download-sample', [BidhaaController::class, 'downloadSample'])->name('bidhaa.downloadSample');
+Route::post('/bidhaa/upload-csv', [BidhaaController::class, 'uploadCSV'])->name('bidhaa.uploadCSV');
+
+// Barcode operations
+Route::post('/bidhaa/barcode', [BidhaaController::class, 'storeBarcode'])->name('bidhaa.store.barcode');
+Route::get('/bidhaa/tafuta-barcode/{barcode}', [BidhaaController::class, 'tafutaBarcode'])->name('bidhaa.tafuta.barcode');
+
 // ================================
 // Manunuzi Routes
 // ================================
@@ -237,7 +275,9 @@ Route::post('/manunuzi', [ManunuziController::class, 'store'])->name('manunuzi.s
 Route::put('/manunuzi/{manunuzi}', [ManunuziController::class, 'update'])->name('manunuzi.update');
 Route::delete('/manunuzi/{manunuzi}', [ManunuziController::class, 'destroy'])->name('manunuzi.destroy');
 
+// ================================
 // Madeni Routes
+// ================================
 Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
 Route::get('/madeni/{madeni}/data', [MadeniController::class, 'getDebtData'])->name('madeni.data');
 Route::post('/madeni', [MadeniController::class, 'store'])->name('madeni.store');
@@ -245,10 +285,43 @@ Route::get('/madeni/{madeni}/edit', [MadeniController::class, 'edit'])->name('ma
 Route::put('/madeni/{madeni}', [MadeniController::class, 'update'])->name('madeni.update');
 Route::post('/madeni/{madeni}/rejesha', [MadeniController::class, 'rejesha'])->name('madeni.rejesha');
 Route::delete('/madeni/{madeni}', [MadeniController::class, 'destroy'])->name('madeni.destroy');
-  Route::get('/madeni/export', [MadeniController::class, 'export'])->name('madeni.export');
+Route::get('/madeni/export', [MadeniController::class, 'export'])->name('madeni.export');
+
 // ================================
 // Uchambuzi Routes
 Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
-Route::get('/mwenendo', [UchambuziController::class, 'mwenendoRange']);
+// Add this route for the custom date range
+Route::get('/uchambuzi/mwenendo', [UchambuziController::class, 'mwenendoRange'])->name('uchambuzi.mwenendo.range');
 
-// ================================
+// In routes/web.php (before or after the admin routes group)
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    // ... other admin routes ...
+    
+    // API for new companies notification
+    Route::get('/api/admin/new-companies', function() {
+        // Get companies registered in the last 7 days
+        $newCompanies = \App\Models\Company::with('user')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get([
+                'id', 
+                'company_name', 
+                'owner_name', 
+                'phone', 
+                'email', 
+                'is_verified',
+                'is_user_approved',
+                'package',
+                'package_start',
+                'package_end',
+                'created_at'
+            ]);
+        
+        return response()->json([
+            'success' => true,
+            'count' => $newCompanies->count(),
+            'companies' => $newCompanies
+        ]);
+    })->name('api.admin.new-companies');
+});

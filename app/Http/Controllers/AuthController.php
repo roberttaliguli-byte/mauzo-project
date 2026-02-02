@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\VerifyEmail;
+use App\Mail\NewUserRegistrationNotification;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\Wafanyakazi;
@@ -21,7 +22,7 @@ class AuthController extends Controller
     /**
      * Show registration form
      */
-    public function showRegister()
+    public function showRegister(Request $request)
     {
         $regions = [
             "Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi",
@@ -30,7 +31,34 @@ class AuthController extends Controller
             "Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"
         ];
 
-        return view('auth.register', compact('regions'));
+        // Preserve old input for returning to specific step
+        $oldInput = $request->old();
+        $currentStep = $oldInput ? 1 : 1; // Default to step 1
+        
+        // Determine which step to return to based on validation errors
+        if (session()->has('errors')) {
+            $errors = session()->get('errors')->getBag('default');
+            
+            // Check which fields have errors to determine step
+            $step1Fields = ['company_name', 'owner_name', 'owner_gender', 'owner_dob'];
+            $step2Fields = ['location', 'region', 'phone', 'company_email'];
+            $step3Fields = ['username', 'password'];
+            
+            foreach ($errors->keys() as $field) {
+                if (in_array($field, $step1Fields)) {
+                    $currentStep = 1;
+                    break;
+                } elseif (in_array($field, $step2Fields)) {
+                    $currentStep = 2;
+                    break;
+                } elseif (in_array($field, $step3Fields)) {
+                    $currentStep = 3;
+                    break;
+                }
+            }
+        }
+
+        return view('auth.register', compact('regions', 'currentStep'));
     }
 
     /**
@@ -50,6 +78,9 @@ class AuthController extends Controller
 
             'username'     => 'required|string|max:50|unique:users,username',
             'password'     => 'required|string|min:6|confirmed',
+        ], [
+            'company_email.unique' => 'Barua pepe hii tayari imesajiliwa.',
+            'username.unique' => 'Jina la mtumiaji tayari limetumika.',
         ]);
 
         // Create the company
@@ -80,46 +111,54 @@ class AuthController extends Controller
             'email_verification_token' => $token,
         ]);
 
-        // Send email verification
+        // Send email verification to user
         if ($user->email) {
             Mail::to($user->email)->send(new VerifyEmail($user));
         }
 
+        // Find admin users and send notification
+        $adminUsers = User::where('role', 'admin')->where('is_approved', 1)->get();
+        foreach ($adminUsers as $admin) {
+            if ($admin->email) {
+                Mail::to($admin->email)->send(new NewUserRegistrationNotification($user));
+            }
+        }
+
         return redirect()->route('login')
-            ->with('success', 'Registration successful! Please check your email to verify your account.');
+            ->with('success', 'Usajili umekamilika! Tafadhali angalia barua pepe yako kuthibitisha akaunti.');
     }
 
     /**
      * Handle email verification & auto-approval
      */
-public function verifyEmail($token)
-{
-    \Log::info('Verification token received:', ['token' => $token]);
-    
-    // Find user with this token
-    $user = User::where('email_verification_token', $token)->first();
-    
-    if (!$user) {
-        \Log::error('User not found for token:', ['token' => $token]);
+    public function verifyEmail($token)
+    {
+        \Log::info('Verification token received:', ['token' => $token]);
+        
+        // Find user with this token
+        $user = User::where('email_verification_token', $token)->first();
+        
+        if (!$user) {
+            \Log::error('User not found for token:', ['token' => $token]);
+            return redirect()->route('login')
+                ->with('error', 'Token ya uthibitisho sio sahihi.');
+        }
+        
+        \Log::info('User found:', ['user_id' => $user->id, 'email' => $user->email]);
+        
+        $user->email_verified_at = now();
+        $user->email_verification_token = null;
+        $user->is_approved = 1;
+        $user->save();
+
+        if ($user->company) {
+            $user->company->is_user_approved = 1;
+            $user->company->save();
+        }
+
         return redirect()->route('login')
-            ->with('error', 'Invalid verification token.');
+            ->with('success', 'Barua pepe imethibitishwa! Akaunti yako na kampuni yako zimeidhinishwa kiotomatiki.');
     }
-    
-    \Log::info('User found:', ['user_id' => $user->id, 'email' => $user->email]);
-    
-    $user->email_verified_at = now();
-    $user->email_verification_token = null;
-    $user->is_approved = 1;
-    $user->save();
-
-    if ($user->company) {
-        $user->company->is_user_approved = 1;
-        $user->company->save();
-    }
-
-    return redirect()->route('login')
-        ->with('success', 'Email verified! Your account and company have been automatically approved.');
-}
 
     /**
      * Show login form
@@ -149,7 +188,7 @@ public function verifyEmail($token)
 
             session(['is_admin' => true]);
             return redirect()->route('admin.dashboard')
-                ->with('success', 'Logged in as Admin!');
+                ->with('success', 'Umeingia kama Msimamizi!');
         }
 
         // 2️⃣ Boss/Owner login
@@ -162,19 +201,19 @@ public function verifyEmail($token)
 
             if (!$user->company_id || !$user->company) {
                 Auth::logout();
-                return back()->withErrors(['login' => 'Your account is not linked to any company. Contact admin.'])
+                return back()->withErrors(['login' => 'Akaunti yako haijaunganishwa na kampuni yoyote. Wasiliana na msimamizi.'])
                     ->onlyInput('username');
             }
 
             if (!$user->company->is_user_approved) {
                 Auth::logout();
-                return back()->withErrors(['login' => 'Your company is not approved yet.'])
+                return back()->withErrors(['login' => 'Kampuni yako haijaidhinishwa bado.'])
                     ->onlyInput('username');
             }
 
             if (!$user->is_approved) {
                 Auth::logout();
-                return back()->withErrors(['login' => 'Your account is not approved yet.'])
+                return back()->withErrors(['login' => 'Akaunti yako haijaidhinishwa bado.'])
                     ->onlyInput('username');
             }
 
@@ -182,7 +221,7 @@ public function verifyEmail($token)
             session()->forget('is_admin');
 
             return redirect()->route('dashboard')
-                ->with('success', 'Logged in as Boss!');
+                ->with('success', 'Umeingia kama Mmiliki!');
         }
 
         // 3️⃣ Employee login
@@ -190,7 +229,7 @@ public function verifyEmail($token)
 
         if ($mfanyakazi && Hash::check($credentials['password'], $mfanyakazi->password)) {
             if ($mfanyakazi->getini !== 'ingia') {
-                return back()->withErrors(['login' => 'You are currently not allowed to login.'])
+                return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
                     ->onlyInput('username');
             }
 
@@ -198,11 +237,11 @@ public function verifyEmail($token)
 
             // Redirect directly to Mauzo page
             return redirect()->route('mauzo.index')
-                ->with('success', 'Logged in as Employee!');
+                ->with('success', 'Umeingia kama Mfanyakazi!');
         }
 
         // 4️⃣ Login failed
-        return back()->withErrors(['login' => 'Incorrect username or password.'])
+        return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
             ->onlyInput('username');
     }
 
@@ -247,38 +286,37 @@ public function verifyEmail($token)
     /**
      * Reset the password
      */
-public function resetPassword(Request $request)
-{
-    $request->validate([
-        'token' => 'required',
-        'email' => 'required|email|exists:users,email',
-        'password' => 'required|string|min:8|confirmed',
-    ]);
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
 
-    $status = Password::reset(
-        $request->only('email', 'password', 'password_confirmation', 'token'),
-        function (User $user, string $password) {
-            $user->password = Hash::make($password);
-            $user->setRememberToken(Str::random(60));
-            $user->save();
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (User $user, string $password) {
+                $user->password = Hash::make($password);
+                $user->setRememberToken(Str::random(60));
+                $user->save();
 
-            event(new PasswordReset($user));
+                event(new PasswordReset($user));
 
-            // Optional: auto-login after reset
-            Auth::login($user);
+                // Optional: auto-login after reset
+                Auth::login($user);
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('dashboard') // redirect to dashboard directly
+                            ->with('success', 'Neno la siri limebadilishwa kwa mafanikio! Unaingia sasa.');
         }
-    );
 
-    if ($status === Password::PASSWORD_RESET) {
-        return redirect()->route('dashboard') // redirect to dashboard directly
-                         ->with('success', 'Neno la siri limebadilishwa kwa mafanikio! Unaingia sasa.');
+        return back()->withErrors(['email' => 'Link ya kubadilisha neno la siri si sahihi au imeisha muda wake.']);
     }
 
-    return back()->withErrors(['email' => 'Link ya kubadilisha neno la siri si sahihi au imeisha muda wake.']);
-}
-
-
-// logout
+    // logout
     public function logout(Request $request)
     {
         Auth::logout();
@@ -287,6 +325,6 @@ public function resetPassword(Request $request)
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login')->with('success', 'Logged out successfully.');
+        return redirect('/login')->with('success', 'Umetoka kwenye mfumo kwa mafanikio.');
     }
 }

@@ -1,289 +1,343 @@
 @extends('layouts.app')
 
-@section('title', 'Usimamizi wa Ripoti')
-@section('page-title', 'Usimamizi wa Ripoti')
-@section('page-subtitle', 'Tengeneza na pakua ripoti mbalimbali - ' . now()->format('d/m/Y'))
+@section('title', 'Ripoti za Biashara')
+@section('page-title', 'Ripoti za Biashara')
+@section('page-subtitle', 'Tengeneza ripoti kwa urahisi na uwezo mkubwa')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 md:py-8">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+
+  <div class="px-4 mx-auto max-w-7xl md:px-6 lg:px-8">
     <!-- Header Section -->
-    <div class="mb-8">
-        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Usimamizi wa Ripoti</h1>
-        <p class="text-gray-600">Chagua aina ya ripoti na kipindi cha muda kupata taarifa unazohitaji</p>
+    <div class="mb-8 text-center">
+      <h1 class="text-2xl font-bold text-gray-900 md:text-3xl">📊 Ripoti za Biashara</h1>
+      <p class="max-w-2xl mx-auto mt-2 text-gray-600">Chagua aina ya ripoti na muda, halafu pakua kwa urahisi</p>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Left Column: Report Selection Form -->
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                <!-- Form Header -->
-                <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-5">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-white/20 rounded-lg backdrop-blur-sm mr-4">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h2 class="text-xl font-bold text-white">Uundaji wa Ripoti</h2>
-                            <p class="text-emerald-100 text-sm mt-1">Chagua mipangilio ya ripoti yako</p>
-                        </div>
-                    </div>
+    <!-- Main Selection Card -->
+    <div class="overflow-hidden bg-white rounded-2xl shadow-xl">
+      <div class="p-6 md:p-8">
+        <form id="reportForm" method="POST" action="{{ route('user.reports.download') }}" target="_blank">
+          @csrf
+          
+          <!-- Selection Grid -->
+          <div class="grid grid-cols-1 gap-6 mb-8 lg:grid-cols-3">
+            
+            <!-- Report Type Card -->
+            <div class="relative p-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl">
+              <div class="absolute top-4 right-4">
+                <span class="px-3 py-1 text-xs font-semibold text-amber-800 bg-amber-200 rounded-full">Hatua 1</span>
+              </div>
+              <div class="flex items-center mb-4">
+                <div class="flex items-center justify-center w-12 h-12 mr-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600">
+                  <span class="text-xl">📊</span>
                 </div>
-
-                <!-- Form Content -->
-                <div class="p-6 md:p-8">
-                    <form action="{{ route('user.reports.download') }}" method="GET" target="_blank" id="reportForm">
-                        <!-- Report Type Selection -->
-                        <div class="mb-8">
-                            <div class="flex items-center mb-4">
-                                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                                    <span class="text-emerald-600 font-bold">1</span>
-                                </div>
-                                <label class="text-lg font-semibold text-gray-700">📊 Aina ya Ripoti</label>
-                            </div>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" role="radiogroup">
-                                <div class="relative">
-                                    <input type="radio" id="sales_report" name="report_type" value="sales" class="hidden peer" checked required>
-                                    <label for="sales_report" class="flex flex-col items-center p-5 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:bg-gray-50 transition-all duration-200">
-                                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-3">
-                                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                        </div>
-                                        <span class="font-medium text-gray-700">Ripoti ya Mauzo</span>
-                                        <span class="text-sm text-gray-500 text-center mt-1">Taarifa za mauzo na mapato</span>
-                                    </label>
-                                </div>
-
-                                <div class="relative">
-                                    <input type="radio" id="general_report" name="report_type" value="general" class="hidden peer" required>
-                                    <label for="general_report" class="flex flex-col items-center p-5 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:bg-gray-50 transition-all duration-200">
-                                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-3">
-                                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                            </svg>
-                                        </div>
-                                        <span class="font-medium text-gray-700">Ripoti ya Jumla</span>
-                                        <span class="text-sm text-gray-500 text-center mt-1">Takwimu zote za mfumo</span>
-                                    </label>
-                                </div>
-
-                                <!-- Purchases Report (Manunuzi) -->
-                                <div class="relative">
-                                    <input type="radio" id="purchases_report" name="report_type" value="purchases" class="hidden peer" required>
-                                    <label for="purchases_report" class="flex flex-col items-center p-5 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:bg-gray-50 transition-all duration-200">
-                                        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center mb-3">
-                                            <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18v18H3V3z M3 9h18M9 21V9"></path>
-                                            </svg>
-                                        </div>
-                                        <span class="font-medium text-gray-700">Ripoti ya Manunuzi</span>
-                                        <span class="text-sm text-gray-500 text-center mt-1">Taarifa za manunuzi na gharama</span>
-                                    </label>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <!-- Time Period Selection -->
-                        <div class="mb-8">
-                            <div class="flex items-center mb-4">
-                                <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                                    <span class="text-emerald-600 font-bold">2</span>
-                                </div>
-                                <label class="text-lg font-semibold text-gray-700">⏳ Kipindi cha Muda</label>
-                            </div>
-                            
-                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                @php
-                                    $periods = [
-                                        'leo' => ['label' => 'Leo', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                                        'jana' => ['label' => 'Jana', 'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
-                                        'week' => ['label' => 'Wiki Hii', 'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
-                                        'mwezi' => ['label' => 'Mwezi Huu', 'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
-                                        'yote' => ['label' => 'Yote', 'icon' => 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z']
-                                    ];
-                                @endphp
-                                
-                                @foreach($periods as $value => $data)
-                                    <div class="relative">
-                                        <input type="radio" id="period_{{ $value }}" name="time_period" 
-                                               value="{{ $value }}" 
-                                               class="hidden peer" 
-                                               {{ $value == 'leo' ? 'checked' : '' }} 
-                                               required>
-                                        <label for="period_{{ $value }}" 
-                                               class="flex flex-col items-center justify-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-emerald-500 peer-checked:bg-emerald-50 hover:bg-gray-50 transition-all duration-200">
-                                            <svg class="w-5 h-5 text-gray-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $data['icon'] }}"></path>
-                                            </svg>
-                                            <span class="text-sm font-medium text-gray-700 text-center">{{ $data['label'] }}</span>
-                                        </label>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100">
-                            <button type="submit" 
-                                    class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 active:scale-[0.98]">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                Pakua Ripoti (PDF)
-                            </button>
-                            
-                            <button type="button" 
-                                    onclick="resetForm()"
-                                    class="flex-1 flex items-center justify-center gap-2 bg-white border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-medium py-3 px-6 rounded-xl hover:bg-gray-50 transition-all duration-200 active:scale-[0.98]">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                </svg>
-                                Weka Upya
-                            </button>
-                        </div>
-                    </form>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900">Aina ya Ripoti</h3>
+                  <p class="text-sm text-gray-600">Chagua ripoti unayotaka</p>
                 </div>
-            </div>
-        </div>
-
-        <!-- Right Column: Information & Preview -->
-        <div class="space-y-6">
-            <!-- Preview Card -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-                <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-6 py-5">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-white/20 rounded-lg backdrop-blur-sm mr-4">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-white">Kielelezo cha Ripoti</h3>
-                            <p class="text-emerald-100 text-sm">Muonekano wa ripoti yako</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <div class="bg-gray-50 rounded-xl p-6 border-2 border-dashed border-gray-200">
-                        <div class="flex items-center justify-center mb-4">
-                            <div class="w-16 h-20 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg flex items-center justify-center">
-                                <span class="text-emerald-600 font-bold text-xl">PDF</span>
-                            </div>
-                        </div>
-                        <div class="text-center">
-                            <p class="font-medium text-gray-700 mb-1" id="previewType">Ripoti ya Mauzo</p>
-                            <p class="text-sm text-gray-500 mb-3" id="previewPeriod">Leo</p>
-                            <div class="text-xs text-gray-400 bg-gray-100 rounded-lg py-2 px-3 inline-block">
-                                📊 Inajumuisha takwimu zote, meza na muhtasari
-                            </div>
-                        </div>
-                    </div>
-                </div>
+              </div>
+              <div class="relative">
+                <select name="report_type" id="report_type" class="w-full px-4 py-4 text-gray-800 bg-white border-2 border-gray-200 rounded-xl appearance-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100 focus:outline-none">
+                  <option value="sales">📊 Ripoti ya Mauzo</option>
+                  <option value="manunuzi">🛒 Ripoti ya Manunuzi</option>
+                  <option value="general">📋 Ripoti ya Jumla</option>
+                </select>
+              </div>
             </div>
 
-            <!-- Tips Card -->
-            <div class="bg-gradient-to-br from-emerald-50 to-emerald-50/50 rounded-2xl p-6 border border-emerald-100">
-                <h3 class="font-bold text-gray-800 mb-4 flex items-center">
-                    <svg class="w-5 h-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Vidokezo vya Ripoti
-                </h3>
-                <ul class="space-y-3">
-                    <li class="flex items-start">
-                        <span class="text-emerald-500 mr-2">✓</span>
-                        <span class="text-sm text-gray-600">Ripoti ya Mauzo inaongeza kwa kina taarifa za mauzo</span>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="text-emerald-500 mr-2">✓</span>
-                        <span class="text-sm text-gray-600">Chagua "Yote" kupata ripoti kamili ya mfumo</span>
-                    </li>
-                    <li class="flex items-start">
-                        <span class="text-emerald-500 mr-2">✓</span>
-                        <span class="text-sm text-gray-600">Ripoti zinaweza kuchapishwa au kuhifadhiwa kwa kumbukumbu</span>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- Quick Stats -->
-            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                <h3 class="font-bold text-gray-800 mb-4">Takwimu za Hivi Punde</h3>
-                <div class="space-y-4">
-
-                    <div class="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
-                        <span class="text-sm text-gray-600">Ripoti ya Mwisho</span>
-                        <span class="font-bold text-emerald-600">{{ now()->subDays(1)->format('d/m') }}</span>
-                    </div>
+            <!-- Time Period Card -->
+            <div class="relative p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl">
+              <div class="absolute top-4 right-4">
+                <span class="px-3 py-1 text-xs font-semibold text-blue-800 bg-blue-200 rounded-full">Hatua 2</span>
+              </div>
+              <div class="flex items-center mb-4">
+                <div class="flex items-center justify-center w-12 h-12 mr-4 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600">
+                  <span class="text-xl">⏰</span>
                 </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900">Muda wa Ripoti</h3>
+                  <p class="text-sm text-gray-600">Weka muda wa ripoti</p>
+                </div>
+              </div>
+              <div class="relative">
+                <select name="time_period" id="time_period" class="w-full px-4 py-4 text-gray-800 bg-white border-2 border-gray-200 rounded-xl appearance-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 focus:outline-none">
+                  <option value="today">Leo</option>
+                  <option value="yesterday">Jana</option>
+                  <option value="week">Wiki hii</option>
+                  <option value="month">Mwezi huu</option>
+                  <option value="year">Mwaka huu</option>
+                  <option value="custom">Tarehe Maalum</option>
+                </select>
+              </div>
             </div>
-        </div>
+
+            <!-- Custom Dates Card -->
+            <div id="customDates" class="relative hidden p-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl">
+              <div class="absolute top-4 right-4">
+                <span class="px-3 py-1 text-xs font-semibold text-emerald-800 bg-emerald-200 rounded-full">Hatua 3</span>
+              </div>
+              <div class="flex items-center mb-4">
+                <div class="flex items-center justify-center w-12 h-12 mr-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600">
+                  <span class="text-xl">📅</span>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-900">Tarehe Maalum</h3>
+                  <p class="text-sm text-gray-600">Weka tarehe maalum</p>
+                </div>
+              </div>
+              <div class="space-y-4">
+                <div>
+                  <label class="block mb-2 text-sm font-medium text-gray-700">Kuanzia Tarehe</label>
+                  <input type="date" name="from" id="dateFrom" class="w-full px-4 py-3 text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 focus:outline-none">
+                </div>
+                <div>
+                  <label class="block mb-2 text-sm font-medium text-gray-700">Mpaka Tarehe</label>
+                  <input type="date" name="to" id="dateTo" class="w-full px-4 py-3 text-gray-800 bg-white border-2 border-gray-200 rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 focus:outline-none">
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Error Message -->
+          <div id="errorMessage" class="hidden p-4 mb-6 text-red-700 bg-red-50 border-l-4 border-red-500 rounded-lg">
+            <div class="flex">
+              <svg class="w-6 h-6 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <p id="errorText" class="font-medium"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Success Message -->
+          <div id="successMessage" class="hidden p-4 mb-6 text-green-700 bg-green-50 border-l-4 border-green-500 rounded-lg">
+            <div class="flex">
+              <svg class="w-6 h-6 mr-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <p id="successText" class="font-medium"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-col gap-4 md:flex-row">
+            <!-- Download Button -->
+            <button type="submit" id="generateBtn" class="flex-1 relative flex items-center justify-center gap-3 px-8 py-5 font-bold text-white transition-all duration-300 transform rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span class="text-lg">📥 Pakua Ripoti</span>
+            </button>
+
+            <!-- Reset Button -->
+            <button type="button" id="resetBtn" class="flex-1 relative flex items-center justify-center gap-3 px-8 py-5 font-bold transition-all duration-300 transform border-2 border-gray-300 rounded-2xl bg-gradient-to-r from-white to-gray-50 hover:border-gray-400 hover:from-gray-50 hover:to-gray-100 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] text-rose-600 hover:text-rose-700">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <span class="text-lg">🔄 Anzisha Upya</span>
+            </button>
+
+            <!-- Back Button - Changed to uchambuzi page -->
+            <a href="{{ route('uchambuzi.index') }}" class="flex-1 relative flex items-center justify-center gap-3 px-8 py-5 font-bold transition-all duration-300 transform border-2 border-gray-300 rounded-2xl bg-gradient-to-r from-white to-gray-50 hover:border-gray-400 hover:from-gray-50 hover:to-gray-100 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] text-blue-600 hover:text-blue-700">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+              <span class="text-lg">↩ Rudi Uchambuzi</span>
+            </a>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>
-    // Update preview based on selections
-    function updatePreview() {
-        const reportType = document.querySelector('input[name="report_type"]:checked');
-        const timePeriod = document.querySelector('input[name="time_period"]:checked');
+document.addEventListener('DOMContentLoaded', function() {
+    const timePeriodSelect = document.getElementById('time_period');
+    const customDatesDiv = document.getElementById('customDates');
+    const dateFromInput = document.getElementById('dateFrom');
+    const dateToInput = document.getElementById('dateTo');
+    const errorMessage = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    const successMessage = document.getElementById('successMessage');
+    const successText = document.getElementById('successText');
+    const generateBtn = document.getElementById('generateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const form = document.getElementById('reportForm');
+
+    // Set default dates
+    function setDefaultDates() {
+        const today = new Date();
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
         
-        if (reportType) {
-            const typeText = reportType.value === 'sales' ? 'Ripoti ya Mauzo' : 'Ripoti ya Jumla';
-            document.getElementById('previewType').textContent = typeText;
-        }
+        const todayStr = today.toISOString().split('T')[0];
+        const weekAgoStr = weekAgo.toISOString().split('T')[0];
         
-        if (timePeriod) {
-            const periodLabels = {
-                'leo': 'Leo',
-                'jana': 'Jana',
-                'week': 'Wiki Hii',
-                'mwezi': 'Mwezi Huu',
-                'yote': 'Yote'
-            };
-            document.getElementById('previewPeriod').textContent = periodLabels[timePeriod.value];
+        dateFromInput.value = weekAgoStr;
+        dateToInput.value = todayStr;
+    }
+
+    // Toggle custom dates visibility
+    function toggleCustomDates() {
+        if (timePeriodSelect.value === 'custom') {
+            customDatesDiv.classList.remove('hidden');
+            setDefaultDates();
+        } else {
+            customDatesDiv.classList.add('hidden');
         }
+        hideError();
+        hideSuccess();
+    }
+
+    // Validate dates
+    function validateDates() {
+        if (timePeriodSelect.value !== 'custom') {
+            return true;
+        }
+
+        const from = new Date(dateFromInput.value);
+        const to = new Date(dateToInput.value);
+        const today = new Date();
+
+        if (!dateFromInput.value || !dateToInput.value) {
+            showError('Tafadhali chagua tarehe zote mbili');
+            return false;
+        }
+
+        if (from > to) {
+            showError('Tarehe ya kuanzia haiwezi kuwa baada ya tarehe ya mwisho');
+            return false;
+        }
+
+        if (from > today || to > today) {
+            showError('Tarehe haiwezi kuwa baada ya leo');
+            return false;
+        }
+
+        hideError();
+        return true;
+    }
+
+    // Show error message
+    function showError(message) {
+        errorText.textContent = message;
+        errorMessage.classList.remove('hidden');
+        errorMessage.classList.add('flex');
+        hideSuccess();
+    }
+
+    // Hide error message
+    function hideError() {
+        errorMessage.classList.add('hidden');
+        errorMessage.classList.remove('flex');
+    }
+
+    // Show success message
+    function showSuccess(message) {
+        successText.textContent = message;
+        successMessage.classList.remove('hidden');
+        successMessage.classList.add('flex');
+        hideError();
+    }
+
+    // Hide success message
+    function hideSuccess() {
+        successMessage.classList.add('hidden');
+        successMessage.classList.remove('flex');
+    }
+
+    // Generate report via form submission
+    function generateReport() {
+        if (!validateDates()) {
+            return;
+        }
+
+        // Show success message
+        showSuccess('Ripoti inatengenezwa, inapakua...');
+        
+        // Change button text
+        const originalText = generateBtn.innerHTML;
+        generateBtn.innerHTML = `
+            <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span class="text-lg">Inatengenezwa...</span>
+        `;
+        generateBtn.disabled = true;
+        
+        // Submit the form
+        setTimeout(() => {
+            form.submit();
+            
+            // Reset button after 5 seconds
+            setTimeout(() => {
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+                hideSuccess();
+            }, 5000);
+        }, 1000);
     }
 
     // Reset form
     function resetForm() {
-        document.getElementById('reportForm').reset();
-        updatePreview();
+        form.reset();
+        setDefaultDates();
+        toggleCustomDates();
+        hideError();
+        hideSuccess();
+        
+        // Show notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-xl bg-blue-100 text-blue-800 border-l-4 border-blue-500 transform transition-all duration-300 translate-x-0';
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <span class="ml-3 font-medium">Fomu imeanzishwa upya.</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
-    // Initialize event listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        // Update preview when selections change
-        document.querySelectorAll('input[name="report_type"], input[name="time_period"]').forEach(input => {
-            input.addEventListener('change', updatePreview);
-        });
-        
-        // Initialize preview
-        updatePreview();
+    // Event listeners
+    timePeriodSelect.addEventListener('change', toggleCustomDates);
+    
+    // Handle generate button click
+    generateBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        generateReport();
     });
+
+    resetBtn.addEventListener('click', resetForm);
+
+    // Initialize
+    setDefaultDates();
+    toggleCustomDates();
+});
 </script>
-@endpush
 
 <style>
-    /* Smooth transitions */
-    * {
-        transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
     }
-    
-    /* Mobile optimizations */
-    @media (max-width: 640px) {
-        .container {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        
-        .grid-cols-2 {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
+    to {
+        transform: translateX(0);
+        opacity: 1;
     }
+}
 </style>
-@endsection
+@endpush

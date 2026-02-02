@@ -64,6 +64,11 @@
             .receipt-header {
                 margin-bottom: 3px;
             }
+            .discount-info {
+                font-size: 10px;
+                color: #666;
+                margin-left: 2px;
+            }
         }
         
         body {
@@ -131,8 +136,6 @@
                 Email: {{ $company->email }}
             </div>
             @endif
-            
-
         </div>
         
         <!-- Separator Line - Only if there's company info -->
@@ -170,6 +173,23 @@
             <span class="item-price">{{ number_format($sale->bei) }}</span>
             <span class="item-total">{{ number_format($sale->jumla) }}</span>
         </div>
+        
+        <!-- Show discount info if applicable -->
+        @if($sale->punguzo > 0)
+        <div class="item-row discount-info">
+            <span class="text-left">
+                Punguzo: 
+                @if($sale->punguzo_aina === 'bidhaa')
+                    {{ number_format($sale->punguzo) }} kwa kila bidhaa
+                @else
+                    {{ number_format($sale->punguzo) }} kwa jumla
+                @endif
+            </span>
+            <span class="text-right">
+                -{{ number_format($sale->punguzo_aina === 'bidhaa' ? $sale->punguzo * $sale->idadi : $sale->punguzo) }}
+            </span>
+        </div>
+        @endif
         @endforeach
         
         <div class="dashed-line"></div>
@@ -198,7 +218,6 @@
         <div class="text-center py-1">
             <div>ASANTE KWA KUNUNUA</div>
             <div class="py-1">Risiti hii imethibitishwa</div>
-            
         </div>
         
         <!-- Optional: Add owner name at the bottom if not shown at top -->
@@ -207,6 +226,11 @@
             <div>Mmiliki: {{ $company->owner_name }}</div>
         </div>
         @endif
+        
+        <!-- Print timestamp -->
+        <div class="text-center py-1 text-xs">
+            <div>Ilichapishwa: {{ date('Y-m-d H:i:s') }}</div>
+        </div>
     </div>
     
     <script>
