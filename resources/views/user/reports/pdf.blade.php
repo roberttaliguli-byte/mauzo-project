@@ -226,6 +226,11 @@
     @if($reportType === 'sales')
         <!-- SALES REPORT -->
         @if(isset($sales) && count($sales) > 0)
+            @php
+                $totalSales = 0;
+                $totalProfit = 0;
+                $totalDiscount = 0;
+            @endphp
             <table class="data-table">
                 <thead>
                     <tr>
@@ -249,6 +254,11 @@
                             
                             $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
                             $profit = ($sale->bei * $sale->idadi) - ($buyingPrice * $sale->idadi) - $actualDiscount;
+                            
+                            // Accumulate totals
+                            $totalSales += $sale->jumla;
+                            $totalProfit += $profit;
+                            $totalDiscount += $actualDiscount;
                         @endphp
                         <tr>
                             <td class="text-center">{{ $index + 1 }}</td>
@@ -267,31 +277,21 @@
             <div class="totals-row">
                 <div class="total-item">
                     <span class="total-label">Jumla ya Mauzo:</span>
-                    <span class="total-value">{{ number_format($totalSales ?? 0, 2) }} TZS</span>
+                    <span class="total-value">{{ number_format($totalSales, 2) }} TZS</span>
+                </div>
+                <div class="total-item">
+                    <span class="total-label">Jumla ya Punguzo:</span>
+                    <span class="total-value">{{ number_format($totalDiscount, 2) }} TZS</span>
                 </div>
                 <div class="total-item">
                     <span class="total-label">Jumla ya Faida:</span>
-                    <span class="total-value">{{ number_format($totalProfit ?? 0, 2) }} TZS</span>
-                </div>
-                <div class="total-item">
-                    <span class="total-label">Mapato ya Madeni:</span>
-                    <span class="total-value">{{ number_format($mapatoMadeni ?? 815000, 2) }} TZS</span>
-                </div>
-                <div class="total-item">
-                    <span class="total-label">Faida ya Marejesho:</span>
-                    <span class="total-value">{{ number_format($faidaMarejesho ?? 305000, 2) }} TZS</span>
+                    <span class="total-value">{{ number_format($totalProfit, 2) }} TZS</span>
                 </div>
             </div>
             
-            <!-- Grand Total Calculation -->
+            <!-- Grand Total -->
             <div class="grand-total">
-                @php
-                    // Calculate the correct grand total based on your data
-                    $totalSales = $totalSales ?? 0; // 38,000
-                    $mapatoMadeni = $mapatoMadeni ?? 815000; // 815,000
-                    $correctGrandTotal = $totalSales + $mapatoMadeni; // 38,000 + 815,000 = 853,000
-                @endphp
-                JUMLA YOTE: {{ number_format($correctGrandTotal, 2) }} TZS
+                JUMLA YOTE: {{ number_format($totalSales, 2) }} TZS
             </div>
         @else
             <div class="no-data">Hakuna mauzo katika kipindi hiki</div>
@@ -300,6 +300,9 @@
     @elseif($reportType === 'manunuzi')
         <!-- PURCHASES REPORT -->
         @if(isset($manunuzi) && count($manunuzi) > 0)
+            @php
+                $totalPurchases = 0;
+            @endphp
             <table class="data-table">
                 <thead>
                     <tr>
@@ -314,7 +317,9 @@
                 <tbody>
                     @foreach($manunuzi as $index => $purchase)
                         @php
-                            $total = $purchase->idadi * $purchase->bei;
+                            // Use the actual total field if it exists, otherwise calculate it
+                            $total = $purchase->jumla ?? ($purchase->idadi * $purchase->bei);
+                            $totalPurchases += $total;
                         @endphp
                         <tr>
                             <td class="text-center">{{ $index + 1 }}</td>
@@ -332,7 +337,7 @@
             <div class="totals-row">
                 <div class="total-item">
                     <span class="total-label">Jumla ya Gharama:</span>
-                    <span class="total-value">{{ number_format($totalCost ?? 0, 2) }} TZS</span>
+                    <span class="total-value">{{ number_format($totalPurchases, 2) }} TZS</span>
                 </div>
             </div>
         @else
@@ -348,15 +353,15 @@
                 <div class="section-header">MAPATO</div>
                 <div class="summary-item">
                     <span class="summary-label">Mapato ya Mauzo:</span>
-                    <span class="summary-value">TSh {{ number_format($mapatoMauzo ?? 38000) }}</span>
+                    <span class="summary-value">TSh {{ number_format($mapatoMauzo ?? 0) }}</span>
                 </div>
                 <div class="summary-item">
                     <span class="summary-label">Mapato ya Madeni:</span>
-                    <span class="summary-value">TSh {{ number_format($mapatoMadeni ?? 815000) }}</span>
+                    <span class="summary-value">TSh {{ number_format($mapatoMadeni ?? 0) }}</span>
                 </div>
                 <div class="summary-item">
                     <span class="summary-label">Jumla ya Mapato:</span>
-                    <span class="summary-value">TSh {{ number_format($jumlaMapato ?? 853000) }}</span>
+                    <span class="summary-value">TSh {{ number_format(($mapatoMauzo ?? 0) + ($mapatoMadeni ?? 0)) }}</span>
                 </div>
             </div>
             
@@ -364,15 +369,15 @@
                 <div class="section-header">FAIDA</div>
                 <div class="summary-item">
                     <span class="summary-label">Faida ya Mauzo:</span>
-                    <span class="summary-value">TSh {{ number_format($faidaMauzo ?? 20000) }}</span>
+                    <span class="summary-value">TSh {{ number_format($faidaMauzo ?? 0) }}</span>
                 </div>
                 <div class="summary-item">
                     <span class="summary-label">Faida ya Marejesho:</span>
-                    <span class="summary-value">TSh {{ number_format($faidaMarejesho ?? 305000) }}</span>
+                    <span class="summary-value">TSh {{ number_format($faidaMarejesho ?? 0) }}</span>
                 </div>
                 <div class="summary-item">
                     <span class="summary-label">Faida Halisi:</span>
-                    <span class="summary-value">TSh {{ number_format($faidaHalisi ?? 325000) }}</span>
+                    <span class="summary-value">TSh {{ number_format(($faidaMauzo ?? 0) + ($faidaMarejesho ?? 0)) }}</span>
                 </div>
             </div>
             
@@ -384,7 +389,7 @@
                 </div>
                 <div class="summary-item">
                     <span class="summary-label">Fedha Dukani:</span>
-                    <span class="summary-value">TSh {{ number_format($fedhaDukani ?? 853000) }}</span>
+                    <span class="summary-value">TSh {{ number_format($fedhaDukani ?? 0) }}</span>
                 </div>
             </div>
         </div>
