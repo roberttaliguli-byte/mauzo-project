@@ -34,7 +34,7 @@ class MauzoController extends Controller
         return null;
     }
     
-    // Helper method to get company ID
+    // Helper method to get company ID - FIXED CONSISTENCY
     private function getCompanyId()
     {
         $user = $this->getAuthUser();
@@ -62,95 +62,94 @@ class MauzoController extends Controller
         return $prefix . $newNumber;
     }
 
-// Display main sales page
-// Display main sales page
-public function index()
-{
-    $user = $this->getAuthUser();
-    
-    if (!$user) {
-        return redirect()->route('login')->withErrors(['Unauthorized access']);
+    // Display main sales page
+    public function index()
+    {
+        $user = $this->getAuthUser();
+        
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['Unauthorized access']);
+        }
+        
+        $companyId = $user->company_id;
+        
+        $bidhaa = Bidhaa::where('company_id', $companyId)
+            ->select('id', 'jina', 'bei_kuuza', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo')
+            ->orderBy('jina')
+            ->get();
+
+        // Paginated sales for the Taarifa tab
+        $mauzos = Mauzo::with('bidhaa')
+            ->where('company_id', $companyId)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        $matumizi = Matumizi::where('company_id', $companyId)
+            ->latest()
+            ->get();
+
+        $wateja = Mteja::where('company_id', $companyId)
+            ->orderBy('jina')
+            ->get();
+
+        $madeni = Madeni::with('bidhaa')
+            ->where('company_id', $companyId)
+            ->latest()
+            ->get();
+
+        $marejeshos = Marejesho::with(['madeni.bidhaa'])
+            ->where('company_id', $companyId)
+            ->get();
+        
+        // NEW VARIABLES FOR FINANCIAL OVERVIEW
+        // Today's data
+        $todaysMauzos = Mauzo::with('bidhaa')
+            ->where('company_id', $companyId)
+            ->whereDate('created_at', today())
+            ->get();
+            
+        $todaysMarejeshos = Marejesho::with(['madeni.bidhaa'])
+            ->where('company_id', $companyId)
+            ->whereDate('tarehe', today())
+            ->get();
+            
+        $todaysMatumizi = Matumizi::where('company_id', $companyId)
+            ->whereDate('created_at', today())
+            ->get();
+        
+        // Weekly expenses (this week)
+        $weeklyMatumizi = Matumizi::where('company_id', $companyId)
+            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->get();
+        
+        // All-time data for Jumla Kuu
+        $allTimeMauzos = Mauzo::where('company_id', $companyId)->get();
+        $allTimeMarejeshos = Marejesho::where('company_id', $companyId)->get();
+        $allMatumizi = Matumizi::where('company_id', $companyId)->get();
+        
+        // For grouped sales tab - use all sales, not paginated
+        $allMauzos = Mauzo::with('bidhaa')
+            ->where('company_id', $companyId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        return view('mauzo.index', compact(
+            'bidhaa', 
+            'mauzos', 
+            'matumizi', 
+            'wateja', 
+            'madeni',
+            'marejeshos',
+            'todaysMauzos',
+            'todaysMarejeshos',
+            'todaysMatumizi',
+            'weeklyMatumizi',
+            'allTimeMauzos',
+            'allTimeMarejeshos',
+            'allMatumizi',
+            'allMauzos'
+        ));
     }
-    
-    $companyId = $user->company_id;
-    
-    $bidhaa = Bidhaa::where('company_id', $companyId)
-        ->select('id', 'jina', 'bei_kuuza', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo')
-        ->orderBy('jina')
-        ->get();
-
-    // Paginated sales for the Taarifa tab
-    $mauzos = Mauzo::with('bidhaa')
-        ->where('company_id', $companyId)
-        ->orderBy('created_at', 'desc')
-        ->paginate(10);
-
-    $matumizi = Matumizi::where('company_id', $companyId)
-        ->latest()
-        ->get();
-
-    $wateja = Mteja::where('company_id', $companyId)
-        ->orderBy('jina')
-        ->get();
-
-    $madeni = Madeni::with('bidhaa')
-        ->where('company_id', $companyId)
-        ->latest()
-        ->get();
-
-    $marejeshos = Marejesho::with(['madeni.bidhaa'])
-        ->where('company_id', $companyId)
-        ->get();
-    
-    // NEW VARIABLES FOR FINANCIAL OVERVIEW
-    // Today's data
-    $todaysMauzos = Mauzo::with('bidhaa')
-        ->where('company_id', $companyId)
-        ->whereDate('created_at', today())
-        ->get();
-        
-    $todaysMarejeshos = Marejesho::with(['madeni.bidhaa'])
-        ->where('company_id', $companyId)
-        ->whereDate('tarehe', today())
-        ->get();
-        
-    $todaysMatumizi = Matumizi::where('company_id', $companyId)
-        ->whereDate('created_at', today())
-        ->get();
-    
-    // Weekly expenses (this week)
-    $weeklyMatumizi = Matumizi::where('company_id', $companyId)
-        ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
-        ->get();
-    
-    // All-time data for Jumla Kuu
-    $allTimeMauzos = Mauzo::where('company_id', $companyId)->get();
-    $allTimeMarejeshos = Marejesho::where('company_id', $companyId)->get();
-    $allMatumizi = Matumizi::where('company_id', $companyId)->get();
-    
-    // For grouped sales tab - use all sales, not paginated
-    $allMauzos = Mauzo::with('bidhaa')
-        ->where('company_id', $companyId)
-        ->orderBy('created_at', 'desc')
-        ->get();
-        
-    return view('mauzo.index', compact(
-        'bidhaa', 
-        'mauzos', 
-        'matumizi', 
-        'wateja', 
-        'madeni',
-        'marejeshos',
-        'todaysMauzos',
-        'todaysMarejeshos',
-        'todaysMatumizi',
-        'weeklyMatumizi',
-        'allTimeMauzos',
-        'allTimeMarejeshos',
-        'allMatumizi',
-        'allMauzos'
-    ));
-}
 
     // Get financial data via AJAX
     public function getFinancialData(Request $request)
@@ -261,7 +260,7 @@ public function index()
         ]);
     }
 
-    // Check for double sales - UPDATED to be more strict
+    // Check for double sales
     public function checkDoubleSale($bidhaaId)
     {
         $user = $this->getAuthUser();
@@ -285,7 +284,7 @@ public function index()
         ]);
     }
 
-    // Store sale (normal or loan) - UPDATED to check double sale
+    // Store sale (normal or loan)
     public function store(Request $request)
     {
         $user = $this->getAuthUser();
@@ -297,6 +296,8 @@ public function index()
             ], 401);
         }
         
+        $companyId = $user->company_id;
+
         // Check if this is a loan sale
         if ($request->has('kopesha') && $request->kopesha == '1') {
             return $this->storeLoan($request);
@@ -304,7 +305,7 @@ public function index()
 
         // For regular sale, check for double sale if requested
         if ($request->has('check_double_sale') && $request->check_double_sale == '1') {
-            $hasDoubleSale = $this->checkDoubleSaleInController($request->bidhaa_id);
+            $hasDoubleSale = $this->checkDoubleSaleInController($request->bidhaa_id, $companyId);
             if ($hasDoubleSale) {
                 return response()->json([
                     'success' => false,
@@ -315,23 +316,22 @@ public function index()
             }
         }
 
-        return $this->storeRegularSale($request);
+        return $this->storeRegularSale($request, $companyId);
     }
 
-    // Helper method to check double sale in controller
-    private function checkDoubleSaleInController($bidhaaId)
-    {
-        $companyId = $this->getCompanyId();
-        
-        $recentSale = Mauzo::where('company_id', $companyId)
-            ->where('bidhaa_id', $bidhaaId)
-            ->where('created_at', '>=', Carbon::now()->subMinutes(3))
-            ->first();
-        
-        return $recentSale ? true : false;
-    }
+ // Helper method to check double sale in controller
+private function checkDoubleSaleInController($bidhaaId, $companyId)
+{
+    $recentSale = Mauzo::where('company_id', $companyId)
+        ->where('bidhaa_id', $bidhaaId)
+        ->where('created_at', '>=', Carbon::now()->subSeconds(10))
+        ->first();
 
-    // Store sale via barcode - UPDATED to check double sale
+    return $recentSale ? true : false;
+}
+
+
+    // Store sale via barcode
     public function storeBarcode(Request $request)
     {
         $user = $this->getAuthUser();
@@ -345,12 +345,13 @@ public function index()
         
         $companyId = $user->company_id;
         $items = $request->input('items', []);
+        $paymentMethod = $request->input('lipa_kwa', 'cash');
 
         // Check for double sales in barcode items
         if ($request->has('check_double_sale') && $request->check_double_sale == '1') {
             foreach ($items as $item) {
                 if (isset($item['bidhaa_id'])) {
-                    $hasDoubleSale = $this->checkDoubleSaleInController($item['bidhaa_id']);
+                    $hasDoubleSale = $this->checkDoubleSaleInController($item['bidhaa_id'], $companyId);
                     if ($hasDoubleSale) {
                         return response()->json([
                             'success' => false,
@@ -363,7 +364,7 @@ public function index()
             }
         }
 
-        return DB::transaction(function () use ($items, $companyId, $request) {
+        return DB::transaction(function () use ($items, $companyId, $paymentMethod) {
             $results = [];
             $receiptNo = $this->generateReceiptNo($companyId);
             
@@ -377,7 +378,15 @@ public function index()
 
                 $bidhaa = Bidhaa::where('id', $validated['bidhaa_id'])
                     ->where('company_id', $companyId)
-                    ->firstOrFail();
+                    ->first();
+
+                if (!$bidhaa) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Bidhaa haipatikani!",
+                        'notification' => 'Bidhaa haipo!'
+                    ], 404);
+                }
 
                 // Check expiry
                 if ($bidhaa->expiry && $bidhaa->expiry < now()->toDateString()) {
@@ -402,6 +411,12 @@ public function index()
                 $discount = $validated['punguzo'] ?? 0;
                 $discountType = $validated['punguzo_aina'] ?? 'bidhaa';
                 
+                // Calculate ACTUAL discount based on type
+                $actualDiscount = $discount;
+                if ($discountType === 'bidhaa') {
+                    $actualDiscount = $discount * $validated['idadi'];
+                }
+                
                 // Validate discount
                 if ($discountType === 'jumla' && $discount > $baseTotal) {
                     return response()->json([
@@ -413,7 +428,7 @@ public function index()
                 
                 if ($discountType === 'bidhaa') {
                     $maxAllowedDiscount = ($bidhaa->bei_kuuza - $bidhaa->bei_nunua) * $validated['idadi'];
-                    if ($discount > $maxAllowedDiscount) {
+                    if ($actualDiscount > $maxAllowedDiscount) {
                         return response()->json([
                             'success' => false,
                             'message' => "Punguzo haliruhusiwi kuzidi faida ya " . number_format($maxAllowedDiscount) . " Tsh kwa {$bidhaa->jina}",
@@ -422,12 +437,12 @@ public function index()
                     }
                 }
 
-                $jumla = $baseTotal - $discount;
+                $jumla = $baseTotal - $actualDiscount;
                 
                 // Update stock
                 $bidhaa->decrement('idadi', $validated['idadi']);
 
-                // Create sale record
+                // Create sale record with payment method
                 $mauzo = Mauzo::create([
                     'company_id' => $companyId,
                     'receipt_no' => $receiptNo,
@@ -437,6 +452,7 @@ public function index()
                     'punguzo'    => $discount,
                     'punguzo_aina' => $discountType,
                     'jumla'      => $jumla,
+                    'lipa_kwa'   => $paymentMethod,
                 ]);
 
                 $results[] = $mauzo;
@@ -452,7 +468,7 @@ public function index()
         });
     }
 
-    // Delete sale - UPDATED to restore stock
+    // Delete sale
     public function destroy($id)
     {
         $user = $this->getAuthUser();
@@ -579,6 +595,12 @@ public function index()
             $discount = $request->punguzo ?? 0;
             $discountType = $request->punguzo_aina ?? 'bidhaa';
             
+            // Calculate ACTUAL discount based on type
+            $actualDiscount = $discount;
+            if ($discountType === 'bidhaa') {
+                $actualDiscount = $discount * $request->idadi;
+            }
+            
             if ($discountType === 'jumla' && $discount > $baseTotal) {
                 return response()->json([
                     'success' => false,
@@ -589,13 +611,26 @@ public function index()
             
             if ($discountType === 'bidhaa') {
                 $maxAllowedDiscount = ($request->bei - $bidhaa->bei_nunua) * $request->idadi;
-                if ($discount > $maxAllowedDiscount) {
+                if ($actualDiscount > $maxAllowedDiscount) {
                     return response()->json([
                         'success' => false,
                         'message' => "Punguzo haliruhusiwi kuzidi faida ya " . number_format($maxAllowedDiscount) . " Tsh",
                         'notification' => 'Punguzo limepita kiasi!'
                     ], 422);
                 }
+            }
+
+            // Calculate final total
+            $finalTotal = $baseTotal - $actualDiscount;
+            
+            // Verify the calculated total matches the submitted total
+            $submittedTotal = $request->jumla;
+            if (abs($finalTotal - $submittedTotal) > 0.01) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Jumla iliyoingizwa (" . number_format($submittedTotal, 2) . ") si sahihi. Jumla sahihi ni " . number_format($finalTotal, 2),
+                    'notification' => 'Jumla si sahihi!'
+                ], 422);
             }
 
             // Update stock
@@ -609,13 +644,13 @@ public function index()
                 'bei'           => $request->bei,
                 'punguzo'       => $discount,
                 'punguzo_aina'  => $discountType,
-                'jumla'         => $request->jumla,
+                'jumla'         => $finalTotal,
                 'jina_mkopaji'  => $request->jina_mkopaji,
                 'simu'          => $request->simu,
                 'barua_pepe'    => $request->barua_pepe ?? null,
                 'anapoishi'     => $request->anapoishi ?? null,
                 'tarehe_malipo' => $request->tarehe_malipo,
-                'baki'          => $request->jumla,
+                'baki'          => $finalTotal,
             ]);
 
             return response()->json([
@@ -628,20 +663,9 @@ public function index()
         });
     }
 
-    // Handle regular sales - UPDATED with proper discount calculation
-    private function storeRegularSale(Request $request)
+    // Store regular sale
+    private function storeRegularSale(Request $request, $companyId)
     {
-        $user = $this->getAuthUser();
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized access',
-                'notification' => 'Unauthorized!'
-            ], 401);
-        }
-        
-        $companyId = $user->company_id;
-
         return DB::transaction(function () use ($request, $companyId) {
             $validator = Validator::make($request->all(), [
                 'bidhaa_id'    => 'required|exists:bidhaas,id',
@@ -650,6 +674,7 @@ public function index()
                 'punguzo'      => 'nullable|numeric|min:0',
                 'punguzo_aina' => 'nullable|in:bidhaa,jumla',
                 'jumla'        => 'required|numeric',
+                'lipa_kwa'     => 'nullable|in:cash,lipa_namba,bank',
             ]);
 
             if ($validator->fails()) {
@@ -691,20 +716,18 @@ public function index()
             }
 
             // Calculate totals based on discount type
-            $baseTotal = $request->bei * $request->idadi; // Total before discount
+            $baseTotal = $request->bei * $request->idadi;
             $discount = $request->punguzo ?? 0;
             $discountType = $request->punguzo_aina ?? 'bidhaa';
             
             // Calculate ACTUAL discount based on type
             $actualDiscount = $discount;
             if ($discountType === 'bidhaa') {
-                // For per-item discount, multiply by quantity
                 $actualDiscount = $discount * $request->idadi;
             }
             
             // Validate discount based on type
             if ($discountType === 'jumla') {
-                // For total discount, check it doesn't exceed base total
                 if ($discount > $baseTotal) {
                     return response()->json([
                         'success' => false,
@@ -713,7 +736,6 @@ public function index()
                     ], 422);
                 }
             } else {
-                // For per-item discount, check it doesn't exceed profit per item
                 $maxAllowedDiscountPerItem = $request->bei - $bidhaa->bei_nunua;
                 if ($discount > $maxAllowedDiscountPerItem) {
                     return response()->json([
@@ -750,9 +772,10 @@ public function index()
                 'bidhaa_id'    => $request->bidhaa_id,
                 'idadi'        => $request->idadi,
                 'bei'          => $request->bei,
-                'punguzo'      => $discount, // Store per-item discount amount
+                'punguzo'      => $discount,
                 'punguzo_aina' => $discountType,
                 'jumla'        => $finalTotal,
+                'lipa_kwa'     => $request->lipa_kwa ?? 'cash',
             ]);
 
             return response()->json([
@@ -765,7 +788,7 @@ public function index()
         });
     }
 
-    // Handle basket (kikapu) sales - UPDATED to check double sale
+    // Store basket sales
     public function storeKikapu(Request $request)
     {
         $user = $this->getAuthUser();
@@ -787,6 +810,7 @@ public function index()
             'items.*.punguzo' => 'nullable|numeric|min:0',
             'items.*.punguzo_aina' => 'nullable|in:bidhaa,jumla',
             'items.*.bidhaa_id' => 'required|exists:bidhaas,id',
+            'lipa_kwa' => 'nullable|in:cash,lipa_namba,bank',
         ]);
 
         if ($validator->fails()) {
@@ -800,7 +824,7 @@ public function index()
         // Check for double sales in cart items
         if ($request->has('check_double_sale') && $request->check_double_sale == '1') {
             foreach ($request->items as $item) {
-                $hasDoubleSale = $this->checkDoubleSaleInController($item['bidhaa_id']);
+                $hasDoubleSale = $this->checkDoubleSaleInController($item['bidhaa_id'], $companyId);
                 if ($hasDoubleSale) {
                     return response()->json([
                         'success' => false,
@@ -815,6 +839,7 @@ public function index()
         $saleIds = [];
         $receiptNo = $this->generateReceiptNo($companyId);
         $itemsData = [];
+        $paymentMethod = $request->input('lipa_kwa', 'cash');
         
         try {
             DB::beginTransaction();
@@ -870,16 +895,17 @@ public function index()
 
                     $jumla = $baseTotal - $actualDiscount;
 
-                    // Create sale record
+                    // Create sale record with payment method
                     $mauzo = Mauzo::create([
                         'company_id'   => $companyId,
                         'receipt_no'   => $receiptNo,
                         'bidhaa_id'    => $bidhaa->id,
                         'idadi'        => $item['idadi'],
                         'bei'          => $item['bei'],
-                        'punguzo'      => $discount, // Store per-item discount
+                        'punguzo'      => $discount,
                         'punguzo_aina' => $discountType,
                         'jumla'        => $jumla,
+                        'lipa_kwa'     => $paymentMethod,
                     ]);
 
                     // Update stock
@@ -890,9 +916,9 @@ public function index()
                         'bidhaa' => $bidhaa->jina,
                         'idadi' => $item['idadi'],
                         'bei' => $item['bei'],
-                        'punguzo' => $discount, // Per-item discount
+                        'punguzo' => $discount,
                         'punguzo_aina' => $discountType,
-                        'actual_discount' => $actualDiscount, // Actual discount applied
+                        'actual_discount' => $actualDiscount,
                         'jumla' => $jumla
                     ];
                 } else {
@@ -1001,7 +1027,11 @@ public function index()
 
                     // Calculate total with discount
                     $baseTotal = $price * $quantity;
-                    $jumla = $baseTotal - $discount;
+                    $actualDiscount = $discount;
+                    if ($discountType === 'bidhaa') {
+                        $actualDiscount = $discount * $quantity;
+                    }
+                    $jumla = $baseTotal - $actualDiscount;
 
                     // Update stock
                     $bidhaa->decrement('idadi', $quantity);

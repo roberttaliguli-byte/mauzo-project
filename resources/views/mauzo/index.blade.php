@@ -6,7 +6,10 @@
 @section('page-subtitle', 'Usimamizi wa mauzo - ' . now()->format('d/m/Y'))
 
 @section('content')
-<div class="space-y-4 lg:space-y-6">
+<meta name="company-id" content="{{ auth()->user()->company_id }}">
+<meta name="company-name" content="{{ auth()->user()->company_name ?? 'My Business' }}">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
     
     <!-- Notification System -->
     <div id="notification" class="fixed top-4 lg:top-6 inset-x-0 flex justify-center z-50 hidden">
@@ -49,113 +52,125 @@
             </div>
         </div>
 
-        <!-- TAB 1: Sehemu ya Mauzo -->
-        <div id="sehemu-tab-content" class="space-y-4 tab-content active">
-            <!-- Sales Form - Compact Version -->
-            <div class="bg-white rounded-xl shadow border border-emerald-100 p-4 card-hover">
-                <h2 class="text-base lg:text-lg font-bold text-emerald-800 mb-3 flex items-center">
-                    <i class="fas fa-cash-register mr-2 text-emerald-600 text-sm"></i>
-                    Rekodi Mauzo
-                </h2>
+<!-- TAB 1: Sehemu ya Mauzo -->
+<div id="sehemu-tab-content" class="space-y-4 tab-content active">
+    <!-- Sales Form - Compact Version -->
+    <div class="bg-white rounded-xl shadow border border-emerald-100 p-4 card-hover">
+        <h2 class="text-base lg:text-lg font-bold text-emerald-800 mb-3 flex items-center">
+            <i class="fas fa-cash-register mr-2 text-emerald-600 text-sm"></i>
+            Rekodi Mauzo
+        </h2>
 
-                <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-3" id="sales-form">
-                    @csrf
+        <!-- In the sales form section of the blade file -->
+        <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-3" id="sales-form">
+            @csrf
 
-                    <!-- Compact Product and Basic Info -->
-                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-3">
-                        <!-- Bidhaa with Search -->
-                        <div class="lg:col-span-2">
-                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Bidhaa</label>
-                            <div class="relative">
-                                <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
-                                <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
-                                    <option value="">Chagua Bidhaa...</option>
-                                    @foreach($bidhaa as $item)
-                                    <option
-                                        value="{{ $item->id }}"
-                                        data-bei="{{ $item->bei_kuuza }}"
-                                        data-stock="{{ $item->idadi }}"
-                                        data-jina="{{ e($item->jina) }}"
-                                        data-aina="{{ e($item->aina) }}"
-                                        data-kipimo="{{ e($item->kipimo) }}"
-                                        data-bei-nunua="{{ $item->bei_nunua }}"
-                                        data-barcode="{{ $item->barcode }}"
-                                    >
-                                        {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }} - Stock: {{ $item->idadi }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Idadi -->
-                        <div>
-                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Idadi</label>
-                            <input type="number" name="idadi" id="quantity-input" placeholder="0" min="1" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
-                        </div>
-
-                        <!-- Bei -->
-                        <div>
-                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Bei (Tsh)</label>
-                            <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
-                        </div>
-
-                        <!-- Stock -->
-                        <div>
-                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Stock</label>
-                            <input type="number" id="stock-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
-                        </div>
+            <!-- First Line: 4 columns with Bidhaa taking more width -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                <!-- Bidhaa with Search (Takes more width) -->
+                <div class="lg:col-span-5">
+                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Bidhaa</label>
+                    <div class="relative">
+                        <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                        <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
+                            <option value="">Chagua Bidhaa...</option>
+                            @foreach($bidhaa as $item)
+                            <option
+                                value="{{ $item->id }}"
+                                data-bei="{{ $item->bei_kuuza }}"
+                                data-stock="{{ $item->idadi }}"
+                                data-jina="{{ e($item->jina) }}"
+                                data-aina="{{ e($item->aina) }}"
+                                data-kipimo="{{ e($item->kipimo) }}"
+                                data-bei-nunua="{{ $item->bei_nunua }}"
+                                data-barcode="{{ $item->barcode }}"
+                            >
+                                {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }} - Stock: {{ $item->idadi }}
+                            </option>
+                            @endforeach
+                        </select>
                     </div>
+                </div>
 
-                    <!-- Punguzo Type and Total -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                        <!-- Punguzo Type -->
-                        <div>
-                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Aina ya Punguzo</label>
-                            <div class="flex gap-2">
-                                <select id="punguzo-type" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
-                                    <option value="bidhaa">kwa bidhaa</option>
-                                    <option value="jumla">Jumla</option>
-                                </select>
-                            </div>
-                        </div>
+                <!-- Idadi -->
+                <div class="lg:col-span-2">
+                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Idadi</label>
+                    <input type="number" name="idadi" id="quantity-input" placeholder="0" min="1" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                </div>
 
-                        <!-- Punguzo Amount -->
-                        <div>
-                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Punguzo (Tsh)</label>
-                            <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
-                        </div>
+                <!-- Bei -->
+                <div class="lg:col-span-2">
+                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Bei (Tsh)</label>
+                    <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
+                </div>
 
-                        <!-- Jumla -->
-                        <div>
-                            <label class="block text-xs font-semibold text-emerald-800 mb-1">Jumla (Tsh)</label>
-                            <input type="number" name="jumla" id="total-input" readonly class="w-full bg-emerald-50 border border-emerald-300 rounded-lg p-2 text-sm font-bold text-emerald-800">
-                        </div>
-                    </div>
-
-                    <!-- Hidden fields for kopesha -->
-                    <input type="hidden" name="baki" id="baki-input" value="0">
-                    <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
-                    
-                    <!-- Action Buttons -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-cash-register"></i>
-                            Uza
-                        </button>
-
-                        <button type="button" id="kopesha-btn" class="bg-amber-600 hover:bg-amber-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-hand-holding-usd"></i>
-                            Kopesha
-                        </button>
-
-                        <button type="button" id="add-to-cart-btn" class="bg-emerald-600 hover:bg-emerald-400 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-cart-plus"></i>
-                            Kikapu
-                        </button>
-                    </div>
-                </form>
+                <!-- Stock -->
+                <div class="lg:col-span-3">
+                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Stock</label>
+                    <input type="number" id="stock-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
+                </div>
             </div>
+
+            <!-- Second Line: 4 columns with balanced widths -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                <!-- Aina ya Punguzo -->
+                <div class="lg:col-span-3">
+                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Aina ya Punguzo</label>
+                    <div class="flex gap-2">
+                        <select id="punguzo-type" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                            <option value="bidhaa">kwa bidhaa</option>
+                            <option value="jumla">Jumla</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Punguzo Amount -->
+                <div class="lg:col-span-3">
+                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Punguzo (Tsh)</label>
+                    <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                </div>
+
+                <!-- Jumla -->
+                <div class="lg:col-span-3">
+                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Jumla (Tsh)</label>
+                    <input type="number" name="jumla" id="total-input" readonly class="w-full bg-emerald-50 border border-emerald-300 rounded-lg p-2 text-sm font-bold text-emerald-800">
+                </div>
+
+                <!-- Njia ya Malipo -->
+                <div class="lg:col-span-3">
+                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Njia ya Malipo</label>
+                    <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                        <option value="cash">Cash</option>
+                        <option value="lipa_namba">Lipa Namba</option>
+                        <option value="bank">Bank</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hidden fields - Ensure all are present: -->
+            <input type="hidden" name="baki" id="baki-input" value="0">
+            <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
+            <input type="hidden" name="check_double_sale" id="check-double-sale-input" value="1">
+            
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-cash-register"></i>
+                    Uza
+                </button>
+
+                <button type="button" id="kopesha-btn" class="bg-amber-600 hover:bg-amber-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    Kopesha
+                </button>
+
+                <button type="button" id="add-to-cart-btn" class="bg-emerald-600 hover:bg-emerald-400 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-cart-plus"></i>
+                    Kikapu
+                </button>
+            </div>
+        </form>
+    </div>
 
 <!-- Financial Overview -->
 <div class="mt-4 lg:mt-6" id="financial-overview-container">
@@ -449,7 +464,17 @@
                 <!-- Barcode Form -->
                 <form id="barcode-form" class="space-y-3">
                     @csrf
-                    
+                     <!-- Payment Method for Barcode -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <div>
+            <label class="block text-xs font-semibold text-emerald-800 mb-1">Njia ya Malipo</label>
+            <select name="lipa_kwa" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                <option value="cash">Cash</option>
+                <option value="lipa_namba">Lipa Namba</option>
+                <option value="bank">Bank</option>
+            </select>
+        </div>
+    </div>
                     <!-- Table -->
                     <div class="overflow-x-auto rounded-lg shadow-sm border border-green-200 bg-white/80">
                         <table class="w-full table-auto border-collapse text-sm">
@@ -567,87 +592,106 @@
 
         <!-- Sales Table -->
         <div class="overflow-x-auto rounded-lg shadow-sm border">
-            <table class="w-full table-auto border-collapse text-xs">
-                <thead>
-                    <tr class="bg-emerald-600">
-                        <th class="border px-3 py-2 text-left text-white">Tarehe</th>
-                        <th class="border px-3 py-2 text-left text-white">Risiti</th>
-                        <th class="border px-3 py-2 text-left text-white">Bidhaa</th>
-                        <th class="border px-3 py-2 text-left text-white">Idadi</th>
-                        <th class="border px-3 py-2 text-left text-white">Bei</th>
-                        <th class="border px-3 py-2 text-left text-white">Punguzo</th>
-                        <th class="border px-3 py-2 text-left text-white">Faida</th>
-                        <th class="border px-3 py-2 text-left text-white">Jumla</th>
-                        <th class="border px-3 py-2 text-left text-white">Vitendo</th>
-                    </tr>
-                </thead>
-                <tbody id="sales-tbody">
-                    @php 
-                        $today = \Carbon\Carbon::today()->format('Y-m-d'); 
-                        
-                        // ✅ FUNCTION TO CALCULATE ACTUAL DISCOUNT
-                        function actualDiscount($sale) {
-                            return $sale->punguzo_aina === 'bidhaa'
-                                ? $sale->punguzo * $sale->idadi
-                                : $sale->punguzo;
-                        }
-                    @endphp
-                    
-                    @forelse($mauzos as $item)
-                        @php 
-                            $itemDate = $item->created_at->format('Y-m-d');
-                            $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
-                            
-                            // ✅ CALCULATE ACTUAL DISCOUNT
-                            $actualDiscount = actualDiscount($item);
-                            
-                            // ✅ CORRECT PROFIT
-                            $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
-                            
-                            // ✅ CORRECT TOTAL (jumla field should already contain correct total)
-                            $total = $item->jumla;
-                        @endphp
-                        <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
-                            <td class="border px-3 py-2">
-                                @if($itemDate === $today)
-                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
-                                @else
-                                    {{ $item->created_at->format('d/m/Y') }}
-                                @endif
-                            </td>
-                            <td class="border px-3 py-2 font-mono">
-                                @if($item->receipt_no)
-                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
-                                @else
-                                    <span class="text-gray-400 text-xs">-</span>
-                                @endif
-                            </td>
-                            <td class="border px-3 py-2">{{ $item->bidhaa->jina }}</td>
-                            <td class="border px-3 py-2 text-center">{{ $item->idadi }}</td>
-                            <td class="border px-3 py-2 text-right">{{ number_format($item->bei) }}</td>
-                            <td class="border px-3 py-2 text-right">{{ number_format($actualDiscount) }}</td>
-                            <td class="border px-3 py-2 text-right">{{ number_format($faida) }}</td>
-                            <td class="border px-3 py-2 text-right">{{ number_format($total) }}</td>
-                            <td class="border px-3 py-2 text-center">
-                                <div class="flex gap-1 justify-center">
-                                    @if($item->receipt_no)
-                                    <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
-                                        <i class="fas fa-print mr-1 text-xs"></i>
-                                    </button>
-                                    @endif
-                                    <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
-                                        <i class="fas fa-trash mr-1 text-xs"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="text-center py-4 text-gray-500 text-xs">Hakuna mauzo yaliyorekodiwa bado.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+<!-- In the Taarifa tab sales table -->
+<table class="w-full table-auto border-collapse text-xs">
+    <thead>
+        <tr class="bg-emerald-600">
+            <th class="border px-3 py-2 text-left text-white">Tarehe</th>
+            <th class="border px-3 py-2 text-left text-white">Risiti</th>
+            <th class="border px-3 py-2 text-left text-white">Bidhaa</th>
+            <th class="border px-3 py-2 text-left text-white">Idadi</th>
+            <th class="border px-3 py-2 text-left text-white">Bei</th>
+            <th class="border px-3 py-2 text-left text-white">Punguzo</th>
+            <th class="border px-3 py-2 text-left text-white">Faida</th>
+            <th class="border px-3 py-2 text-left text-white">Malipo</th> <!-- ✅ NEW COLUMN -->
+            <th class="border px-3 py-2 text-left text-white">Jumla</th>
+            <th class="border px-3 py-2 text-left text-white">Vitendo</th>
+        </tr>
+    </thead>
+    <tbody id="sales-tbody">
+        @php 
+            $today = \Carbon\Carbon::today()->format('Y-m-d'); 
+            
+            // ✅ FUNCTION TO CALCULATE ACTUAL DISCOUNT
+            function actualDiscount($sale) {
+                return $sale->punguzo_aina === 'bidhaa'
+                    ? $sale->punguzo * $sale->idadi
+                    : $sale->punguzo;
+            }
+        @endphp
+        
+        @forelse($mauzos as $item)
+            @php 
+                $itemDate = $item->created_at->format('Y-m-d');
+                $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
+                
+                // ✅ CALCULATE ACTUAL DISCOUNT
+                $actualDiscount = actualDiscount($item);
+                
+                // ✅ CORRECT PROFIT
+                $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
+                
+                // ✅ CORRECT TOTAL (jumla field should already contain correct total)
+                $total = $item->jumla;
+                
+                // ✅ Get payment method display
+                $paymentMethod = '';
+                switch($item->lipa_kwa) {
+                    case 'cash':
+                        $paymentMethod = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>';
+                        break;
+                    case 'lipa_namba':
+                        $paymentMethod = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>';
+                        break;
+                    case 'bank':
+                        $paymentMethod = '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>';
+                        break;
+                    default:
+                        $paymentMethod = '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>';
+                }
+            @endphp
+            <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
+                <td class="border px-3 py-2">
+                    @if($itemDate === $today)
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
+                    @else
+                        {{ $item->created_at->format('d/m/Y') }}
+                    @endif
+                </td>
+                <td class="border px-3 py-2 font-mono">
+                    @if($item->receipt_no)
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
+                    @else
+                        <span class="text-gray-400 text-xs">-</span>
+                    @endif
+                </td>
+                <td class="border px-3 py-2">{{ $item->bidhaa->jina }}</td>
+                <td class="border px-3 py-2 text-center">{{ $item->idadi }}</td>
+                <td class="border px-3 py-2 text-right">{{ number_format($item->bei) }}</td>
+                <td class="border px-3 py-2 text-right">{{ number_format($actualDiscount) }}</td>
+                <td class="border px-3 py-2 text-right">{{ number_format($faida) }}</td>
+                <td class="border px-3 py-2 text-center">{!! $paymentMethod !!}</td> <!-- ✅ NEW CELL -->
+                <td class="border px-3 py-2 text-right">{{ number_format($total) }}</td>
+                <td class="border px-3 py-2 text-center">
+                    <div class="flex gap-1 justify-center">
+                        @if($item->receipt_no)
+                        <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
+                            <i class="fas fa-print mr-1 text-xs"></i>
+                        </button>
+                        @endif
+                        <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
+                            <i class="fas fa-trash mr-1 text-xs"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="10" class="text-center py-4 text-gray-500 text-xs">Hakuna mauzo yaliyorekodiwa bado.</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
         </div>
 
         <!-- Pagination -->
@@ -840,6 +884,15 @@
                     <span class="text-emerald-600" id="cart-total">0</span>
                 </div>
             </div>
+            <!-- Payment Method for Kikapu -->
+<div class="mb-3">
+    <label class="block text-xs font-semibold text-emerald-800 mb-1">Njia ya Malipo</label>
+    <select id="kikapu-lipa-kwa" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+        <option value="cash">Cash</option>
+        <option value="lipa_namba">Lipa Namba</option>
+        <option value="bank">Bank</option>
+    </select>
+</div>
 
             <!-- Actions -->
             <div class="flex flex-wrap gap-2">
@@ -1838,130 +1891,142 @@ updateBarcodeRowTotal(row) {
     this.updateBarcodeTotal();
 }
 
-    async submitBarcodeSales() {
-        const items = [];
-        let hasValidItems = false;
-        const punguzoType = document.getElementById('punguzo-type');
+// Update submitBarcodeSales method
+async submitBarcodeSales() {
+    const items = [];
+    let hasValidItems = false;
+    const punguzoType = document.getElementById('punguzo-type');
+    const paymentMethodSelect = document.querySelector('#barcode-form select[name="lipa_kwa"]');
+    const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
 
-        if (!punguzoType) return;
+    if (!punguzoType) return;
 
-        const discountType = punguzoType.value;
+    const discountType = punguzoType.value;
 
-        document.querySelectorAll('.barcode-row').forEach(row => {
-            const barcodeInput = row.querySelector('.barcode-input');
-            const quantityInput = row.querySelector('.quantity-input');
-            const productName = row.querySelector('.product-name');
-            const productPrice = row.querySelector('.product-price');
-            const punguzoInput = row.querySelector('.punguzo-input');
-            const totalInput = row.querySelector('.total-input');
+    document.querySelectorAll('.barcode-row').forEach(row => {
+        const barcodeInput = row.querySelector('.barcode-input');
+        const quantityInput = row.querySelector('.quantity-input');
+        const productName = row.querySelector('.product-name');
+        const productPrice = row.querySelector('.product-price');
+        const punguzoInput = row.querySelector('.punguzo-input');
+        const totalInput = row.querySelector('.total-input');
+        
+        if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
+            const barcode = barcodeInput.value.trim();
+            const quantity = parseInt(quantityInput.value) || 0;
+            const product = productName.value.trim();
+            const price = parseFloat(productPrice.value) || 0;
+            const punguzo = parseFloat(punguzoInput.value) || 0;
+            const jumla = parseFloat(totalInput.value) || 0;
             
-            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
-                const barcode = barcodeInput.value.trim();
-                const quantity = parseInt(quantityInput.value) || 0;
-                const product = productName.value.trim();
-                const price = parseFloat(productPrice.value) || 0;
-                const punguzo = parseFloat(punguzoInput.value) || 0;
-                const jumla = parseFloat(totalInput.value) || 0;
+            if (barcode && quantity > 0 && product && price > 0) {
+                const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
                 
-                if (barcode && quantity > 0 && product && price > 0) {
-                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
-                    
-                    let actualDiscount = punguzo;
-                    if (discountType === 'bidhaa') {
-                        actualDiscount = punguzo * quantity;
-                    }
-                    
-                    items.push({
-                        barcode: barcode,
-                        bidhaa_id: bidhaa ? bidhaa.id : null,
-                        idadi: quantity,
-                        bei: price,
-                        punguzo: punguzo,
-                        punguzo_aina: discountType,
-                        jumla: jumla,
-                        total_before_discount: (price * quantity)
-                    });
-                    hasValidItems = true;
+                let actualDiscount = punguzo;
+                if (discountType === 'bidhaa') {
+                    actualDiscount = punguzo * quantity;
                 }
+                
+                items.push({
+                    barcode: barcode,
+                    bidhaa_id: bidhaa ? bidhaa.id : null,
+                    idadi: quantity,
+                    bei: price,
+                    punguzo: punguzo,
+                    punguzo_aina: discountType,
+                    jumla: jumla,
+                    total_before_discount: (price * quantity)
+                });
+                hasValidItems = true;
             }
+        }
+    });
+
+    if (!hasValidItems) {
+        this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch("{{ route('mauzo.store.barcode') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ 
+                items: items, 
+                punguzo_aina: discountType,
+                lipa_kwa: paymentMethod // ✅ Send payment method
+            })
         });
 
-        if (!hasValidItems) {
-            this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
-            return;
-        }
-
-        try {
-            const response = await fetch("{{ route('mauzo.store.barcode') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ items: items, punguzo_aina: discountType })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-                
-                this.clearBarcodeRows();
-                this.updateFinancialData();
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
-        }
-    }
-
-    async checkoutCart() {
-        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+        const data = await response.json();
         
-        if (companyCart.length === 0) {
-            this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
-            return;
-        }
-
-        try {
-            const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'X-Company-ID': this.companyId
-                },
-                body: JSON.stringify({ 
-                    items: companyCart,
-                    company_id: this.companyId 
-                })
-            });
-
-            const data = await response.json();
+        if (data.success) {
+            this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
             
-            if (data.success) {
-                this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-                
-                this.clearCart();
-                this.updateFinancialData();
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+            this.clearBarcodeRows();
+            this.updateFinancialData();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
     }
+}
+
+async checkoutCart() {
+    const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+    
+    if (companyCart.length === 0) {
+        this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
+        return;
+    }
+
+    // Get payment method from select
+    const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
+    const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
+
+    try {
+        const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Company-ID': this.companyId
+            },
+            body: JSON.stringify({ 
+                items: companyCart,
+                company_id: this.companyId,
+                lipa_kwa: paymentMethod // ✅ Send payment method
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+            
+            this.clearCart();
+            this.updateFinancialData();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+    }
+}
 
     prepareBarcodeKopeshaData() {
         const items = [];

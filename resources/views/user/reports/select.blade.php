@@ -41,6 +41,7 @@
                 <select name="report_type" id="report_type" class="w-full px-4 py-4 text-gray-800 bg-white border-2 border-gray-200 rounded-xl appearance-none focus:border-amber-500 focus:ring-4 focus:ring-amber-100 focus:outline-none">
                   <option value="sales">📊 Ripoti ya Mauzo</option>
                   <option value="manunuzi">🛒 Ripoti ya Manunuzi</option>
+                  <option value="matumizi">💰 Ripoti ya Matumizi</option>
                   <option value="general">📋 Ripoti ya Jumla</option>
                 </select>
               </div>

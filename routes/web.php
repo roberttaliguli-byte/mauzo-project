@@ -187,17 +187,12 @@ Route::put('/wateja/{mteja}', [MtejaController::class, 'update'])->name('wateja.
 Route::delete('/wateja/{mteja}', [MtejaController::class, 'destroy'])->name('wateja.destroy');
 
 // ================================
-// Matumizi Routes
-// ================================
-Route::get('/matumizi', [MatumiziController::class, 'index'])->name('matumizi.index');
-Route::post('/matumizi', [MatumiziController::class, 'store'])->name('matumizi.store');
-Route::put('/matumizi/{id}', [MatumiziController::class, 'update'])->name('matumizi.update');
-Route::delete('/matumizi/{id}', [MatumiziController::class, 'destroy'])->name('matumizi.destroy');
-// Matumizi Routes
+// Use resource route - it automatically generates all standard CRUD routes
 Route::resource('matumizi', MatumiziController::class);
+
+// Add your custom routes
 Route::post('/matumizi/sajili-aina', [MatumiziController::class, 'sajiliAina'])->name('matumizi.sajili-aina');
 Route::delete('/matumizi/aina/{id}', [MatumiziController::class, 'destroyAina'])->name('matumizi.destroy-aina');
-
 // ================================
 // Wafanyakazi Routes
 // ================================

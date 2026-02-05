@@ -103,6 +103,8 @@ class MadeniController extends Controller
             'bidhaa_id' => 'required|exists:bidhaas,id',
             'idadi' => 'required|integer|min:1',
             'bei' => 'required|numeric|min:0',
+            'punguzo' => 'nullable|numeric|min:0', // Add discount validation
+            'punguzo_aina' => 'nullable|in:bidhaa,jumla', // Add discount type validation
             'jumla' => 'required|numeric|min:0',
             'tarehe_malipo' => 'required|date',
         ]);
@@ -132,13 +134,15 @@ class MadeniController extends Controller
                 ]
             );
             
-            // Create debt
+            // Create debt with discount fields
             Madeni::create([
                 'company_id' => $companyId,
                 'mteja_id' => $mteja->id,
                 'bidhaa_id' => $bidhaa->id,
                 'idadi' => $request->idadi,
                 'bei' => $request->bei,
+                'punguzo' => $request->punguzo ?? 0,
+                'punguzo_aina' => $request->punguzo_aina ?? 'bidhaa',
                 'jumla' => $request->jumla,
                 'baki' => $request->jumla,
                 'jina_mkopaji' => $request->jina_mkopaji,
@@ -163,14 +167,16 @@ class MadeniController extends Controller
         $request->validate([
             'kiasi' => 'required|numeric|min:0.01|max:' . $madeni->baki,
             'tarehe' => 'required|date',
+            'lipa_kwa' => 'required|in:cash,lipa_namba,bank', // Add payment method validation
         ]);
         
         return DB::transaction(function () use ($request, $madeni, $companyId) {
-            // Create repayment record
+            // Create repayment record with payment method
             Marejesho::create([
                 'madeni_id' => $madeni->id,
                 'kiasi' => $request->kiasi,
                 'tarehe' => $request->tarehe,
+                'lipa_kwa' => $request->lipa_kwa,
                 'company_id' => $companyId,
             ]);
             
@@ -199,6 +205,8 @@ class MadeniController extends Controller
             'bidhaa_id' => 'required|exists:bidhaas,id',
             'idadi' => 'required|integer|min:1',
             'bei' => 'required|numeric|min:0',
+            'punguzo' => 'nullable|numeric|min:0',
+            'punguzo_aina' => 'nullable|in:bidhaa,jumla',
         ]);
         
         return DB::transaction(function () use ($request, $madeni, $companyId) {
@@ -255,11 +263,13 @@ class MadeniController extends Controller
                 ]);
             }
             
-            // Update debt
+            // Update debt with discount fields
             $madeni->update([
                 'bidhaa_id' => $request->bidhaa_id,
                 'idadi' => $request->idadi,
                 'bei' => $request->bei,
+                'punguzo' => $request->punguzo ?? $madeni->punguzo,
+                'punguzo_aina' => $request->punguzo_aina ?? $madeni->punguzo_aina,
                 'jumla' => $newJumla,
                 'baki' => $newBaki,
                 'jina_mkopaji' => $request->jina_mkopaji,
@@ -327,7 +337,7 @@ class MadeniController extends Controller
         
         $callback = function() use ($debts) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Tarehe', 'Mkopaji', 'Simu', 'Bidhaa', 'Idadi', 'Deni', 'Baki', 'Hali']);
+            fputcsv($file, ['Tarehe', 'Mkopaji', 'Simu', 'Bidhaa', 'Idadi', 'Deni', 'Punguzo', 'Baki', 'Hali']);
             
             foreach ($debts as $debt) {
                 $status = $debt->baki <= 0 ? 'Imelipwa' : 'Inayongoza';
@@ -338,6 +348,7 @@ class MadeniController extends Controller
                     $debt->bidhaa->jina ?? 'N/A',
                     $debt->idadi,
                     $debt->jumla,
+                    $debt->punguzo,
                     $debt->baki,
                     $status
                 ]);
@@ -347,5 +358,24 @@ class MadeniController extends Controller
         };
         
         return response()->stream($callback, 200, $headers);
+    }
+    
+    /**
+     * Get repayment history for a specific debt
+     */
+    public function repaymentHistory(Madeni $madeni)
+    {
+        $companyId = $this->getCompanyId();
+        
+        abort_unless($madeni->company_id === $companyId, 403, 'Huna ruhusa ya kuona historia hii.');
+        
+        $repayments = $madeni->marejeshos()
+                            ->orderBy('tarehe', 'desc')
+                            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'repayments' => $repayments
+        ]);
     }
 }

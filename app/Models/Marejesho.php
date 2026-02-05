@@ -14,9 +14,8 @@ class Marejesho extends Model
         'company_id',
         'kiasi',
         'tarehe',
+        'lipa_kwa', // Add payment method
     ];
-
-    
 
     /**
      * 🧩 A rejesho belongs to one deni (madeni)
@@ -24,8 +23,6 @@ class Marejesho extends Model
     public function madeni()
     {
         return $this->belongsTo(Madeni::class, 'madeni_id');
-
-        
     }
 
     /**

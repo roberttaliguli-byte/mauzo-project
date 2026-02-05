@@ -17,10 +17,11 @@ class Mauzo extends Model
         'idadi',
         'bei',
         'punguzo',
-        'punguzo_aina', // ✅ ADD THIS LINE
+        'punguzo_aina',
         'jumla',
         'is_debt_repayment',
-        'reprint_count', // ✅ Also add this if not already
+        'reprint_count',
+        'lipa_kwa', // ✅ ADDED payment method
     ];
 
     protected $casts = [
@@ -31,9 +32,21 @@ class Mauzo extends Model
     ];
 
     /**
-     * -----------------------------
-     *  Relationship: Each sale belongs to a Bidhaa
-     * -----------------------------
+     * Payment method options
+     */
+    const PAYMENT_METHODS = [
+        'cash' => 'Cash',
+        'lipa_namba' => 'Lipa Namba',
+        'bank' => 'Bank'
+    ];
+
+    /**
+     * Default payment method
+     */
+    const DEFAULT_PAYMENT_METHOD = 'cash';
+
+    /**
+     * Relationship: Each sale belongs to a Bidhaa
      */
     public function bidhaa()
     {
@@ -41,9 +54,7 @@ class Mauzo extends Model
     }
 
     /**
-     * -----------------------------
-     *  Relationship: Each sale belongs to a Company
-     * -----------------------------
+     * Relationship: Each sale belongs to a Company
      */
     public function company()
     {
@@ -51,9 +62,31 @@ class Mauzo extends Model
     }
 
     /**
-     * -----------------------------
-     *  Accessor: Get total with discount applied correctly
-     * -----------------------------
+     * Accessor: Get payment method name
+     */
+    public function getLipaKwaNameAttribute()
+    {
+        return self::PAYMENT_METHODS[$this->lipa_kwa] ?? 'Unknown';
+    }
+
+    /**
+     * Scope: Filter by payment method
+     */
+    public function scopeByPaymentMethod($query, $method)
+    {
+        return $query->where('lipa_kwa', $method);
+    }
+
+    /**
+     * Scope: Filter by date range
+     */
+    public function scopeDateRange($query, $startDate, $endDate)
+    {
+        return $query->whereBetween('created_at', [$startDate, $endDate]);
+    }
+
+    /**
+     * Accessor: Get total with discount applied correctly
      */
     public function getNetTotalAttribute()
     {
@@ -76,9 +109,7 @@ class Mauzo extends Model
     }
 
     /**
-     * -----------------------------
-     *  Accessor: Get total discount (not per item)
-     * -----------------------------
+     * Accessor: Get total discount (not per item)
      */
     public function getTotalDiscountAttribute()
     {
@@ -93,5 +124,19 @@ class Mauzo extends Model
         
         // Fixed discount amount
         return $this->punguzo;
+    }
+
+    /**
+     * Boot method to set default payment method
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->lipa_kwa)) {
+                $model->lipa_kwa = self::DEFAULT_PAYMENT_METHOD;
+            }
+        });
     }
 }
