@@ -70,9 +70,10 @@
             <button data-tab="ingiza" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 text-gray-600 hover:bg-gray-50">
                 <i class="fas fa-plus mr-2"></i> Ingiza
             </button>
-            <button data-tab="csv" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
-                <i class="fas fa-file-excel mr-2"></i> Excel
-            </button>
+ <!-- In the tab section -->
+<button data-tab="excel" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+    <i class="fas fa-file-excel mr-2"></i> Excel
+</button>
         </div>
     </div>
 
@@ -272,153 +273,165 @@
         </div>
     </div>
 
-    <!-- TAB 3: Excel Upload -->
-    <div id="csv-tab-content" class="tab-content hidden">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <!-- Upload Card -->
-            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <div class="mb-4">
-                    <div class="flex items-center mb-3">
-                        <div class="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                            <i class="fas fa-upload text-emerald-600"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-medium text-gray-900">Pakia CSV</h3>
-                            <p class="text-xs text-gray-500">Pakia faili la CSV au TXT</p>
-                        </div>
+
+
+<!-- TAB 3: Excel Upload -->
+<div id="excel-tab-content" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Upload Card -->
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div class="mb-4">
+                <div class="flex items-center mb-3">
+                    <div class="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-upload text-emerald-600"></i>
                     </div>
-                    
-                    <form method="POST" action="{{ route('bidhaa.uploadCSV') }}" enctype="multipart/form-data" id="csv-upload-form" class="space-y-3">
-                        @csrf
-                        <div>
-                            <input type="file" name="csv_file" accept=".csv,.txt" 
-                                   class="block w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                                   required id="csv-file-input">
-                            <p class="text-xs text-gray-500 mt-1">.csv, .txt (Max: 5MB)</p>
-                        </div>
-                        <button type="submit" 
-                                class="w-full bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium flex items-center justify-center">
-                            <i class="fas fa-upload mr-1"></i> Pakia & Hifadhi
-                        </button>
-                    </form>
-                    
-                    <!-- Upload Progress -->
-                    <div id="upload-progress" class="hidden mt-3">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-xs font-medium text-emerald-700">Inapakia...</span>
-                            <span class="text-xs text-emerald-700" id="progress-percentage">0%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-1.5">
-                            <div id="progress-bar" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1" id="upload-status">Inaanza upakiaji...</p>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-900">Pakia Excel/CSV</h3>
+                        <p class="text-xs text-gray-500">Pakia faili la Excel, CSV au TXT</p>
                     </div>
                 </div>
+                
+                <!-- Change the form action and input name -->
+                <form method="POST" action="{{ route('bidhaa.uploadExcel') }}" enctype="multipart/form-data" id="excel-upload-form" class="space-y-3">
+                    @csrf
+                    <div>
+                        <input type="file" name="excel_file" accept=".xlsx,.xls,.csv,.txt" 
+                               class="block w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               required id="excel-file-input">
+                        <p class="text-xs text-gray-500 mt-1">.xlsx, .xls, .csv, .txt (Max: 10MB)</p>
+                    </div>
+                    <button type="submit" 
+                            class="w-full bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium flex items-center justify-center">
+                        <i class="fas fa-upload mr-1"></i> Pakia & Hifadhi
+                    </button>
+                </form>
+                
+                <!-- Upload Progress -->
+                <div id="upload-progress" class="hidden mt-3">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-medium text-emerald-700">Inapakia...</span>
+                        <span class="text-xs text-emerald-700" id="progress-percentage">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-1.5">
+                        <div id="progress-bar" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1" id="upload-status">Inaanza upakiaji...</p>
+                </div>
             </div>
+        </div>
 
-            <!-- Download & Results Card -->
-            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-                <div class="mb-4">
-                    <div class="flex items-center mb-3">
-                        <div class="h-10 w-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
-                            <i class="fas fa-download text-amber-600"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-medium text-gray-900">Matokeo & Sampuli</h3>
-                            <p class="text-xs text-gray-500">Angalia matokeo na pakua sampuli</p>
+        <!-- Download & Results Card -->
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div class="mb-4">
+                <div class="flex items-center mb-3">
+                    <div class="h-10 w-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="fas fa-download text-amber-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-900">Matokeo & Sampuli</h3>
+                        <p class="text-xs text-gray-500">Angalia matokeo na pakua sampuli</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Upload Results -->
+                    <div id="upload-results" class="hidden space-y-2">
+                        <div class="border border-emerald-200 rounded p-3 bg-emerald-50">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-xs font-medium text-emerald-800 flex items-center">
+                                    <i class="fas fa-check-circle mr-1"></i> Matokeo ya Upakiaji
+                                </h4>
+                                <button onclick="document.getElementById('upload-results').classList.add('hidden')" 
+                                        class="text-emerald-500 hover:text-emerald-700 text-xs">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-emerald-700">Bidhaa Zilizoongezwa:</span>
+                                    <span class="font-medium" id="success-count">0</span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-amber-700">Hitilafu Zilizopatikana:</span>
+                                    <span class="font-medium" id="error-count">0</span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-gray-600">Mistari Iliyorudishwa:</span>
+                                    <span class="font-medium" id="skipped-count">0</span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-blue-700">Jumla ya Mistari:</span>
+                                    <span class="font-medium" id="total-count">0</span>
+                                </div>
+                            </div>
+                            <div id="error-list" class="mt-2 hidden">
+                                <p class="text-xs font-medium text-red-700 mb-1">Hitilafu Zilizopatikana:</p>
+                                <div class="text-xs text-red-600 space-y-1 max-h-40 overflow-y-auto" id="error-items"></div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="space-y-4">
-                        <!-- Upload Results -->
-                        <div id="upload-results" class="hidden space-y-2">
-                            <div class="border border-emerald-200 rounded p-3 bg-emerald-50">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="text-xs font-medium text-emerald-800 flex items-center">
-                                        <i class="fas fa-check-circle mr-1"></i> Matokeo ya Upakiaji
-                                    </h4>
-                                    <button onclick="document.getElementById('upload-results').classList.add('hidden')" 
-                                            class="text-emerald-500 hover:text-emerald-700 text-xs">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-emerald-700">Bidhaa Zilizoongezwa:</span>
-                                        <span class="font-medium" id="success-count">0</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-amber-700">Hitilafu Zilizopatikana:</span>
-                                        <span class="font-medium" id="error-count">0</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-gray-600">Mistari Iliyorudishwa:</span>
-                                        <span class="font-medium" id="skipped-count">0</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-blue-700">Jumla ya Mistari:</span>
-                                        <span class="font-medium" id="total-count">0</span>
-                                    </div>
-                                </div>
-                                <div id="error-list" class="mt-2 hidden">
-                                    <p class="text-xs font-medium text-red-700 mb-1">Hitilafu Zilizopatikana:</p>
-                                    <div class="text-xs text-red-600 space-y-1 max-h-40 overflow-y-auto" id="error-items"></div>
-                                </div>
-                            </div>
+                    <!-- Download Sample -->
+                    <a href="{{ route('bidhaa.downloadSample') }}" 
+                       class="block w-full bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 text-sm font-medium text-center">
+                        <i class="fas fa-file-download mr-1"></i> Pakua Sampuli
+                    </a>
+                    
+                    <!-- Format Info -->
+                    <div class="border border-emerald-200 rounded p-3 bg-emerald-50">
+                        <h4 class="text-xs font-medium text-emerald-800 mb-2">
+                            <i class="fas fa-table mr-1"></i> Muundo wa Faili
+                        </h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs border border-emerald-200">
+                                <thead>
+                                    <tr class="bg-emerald-100">
+                                        <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Jina *</th>
+                                        <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Aina *</th>
+                                        <th class="px-2 py-1 border border-emerald-200 text-emerald-800 text-emerald-500">Kipimo</th>
+                                        <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Idadi *</th>
+                                        <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Bei_Nunua *</th>
+                                        <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Bei_Kuuza *</th>
+                                        <th class="px-2 py-1 border border-emerald-200 text-emerald-800 text-emerald-500">Expiry</th>
+                                        <th class="px-2 py-1 border border-emerald-200 text-emerald-800 text-emerald-500">Barcode</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="px-2 py-1 border border-emerald-200">Soda</td>
+                                        <td class="px-2 py-1 border border-emerald-200">Vinywaji</td>
+                                        <td class="px-2 py-1 border border-emerald-200 text-emerald-500">500ml</td>
+                                        <td class="px-2 py-1 border border-emerald-200">100</td>
+                                        <td class="px-2 py-1 border border-emerald-200">600</td>
+                                        <td class="px-2 py-1 border border-emerald-200">1000</td>
+                                        <td class="px-2 py-1 border border-emerald-200 text-emerald-500">2025-12-31</td>
+                                        <td class="px-2 py-1 border border-emerald-200 text-emerald-500">123456789</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-2 py-1 border border-emerald-200">Mchele</td>
+                                        <td class="px-2 py-1 border border-emerald-200">Chakula</td>
+                                        <td class="px-2 py-1 border border-emerald-200 text-emerald-500">1kg</td>
+                                        <td class="px-2 py-1 border border-emerald-200">50</td>
+                                        <td class="px-2 py-1 border border-emerald-200">2500</td>
+                                        <td class="px-2 py-1 border border-emerald-200">3500</td>
+                                        <td class="px-2 py-1 border border-emerald-200 text-emerald-500"></td>
+                                        <td class="px-2 py-1 border border-emerald-200 text-emerald-500"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        
-                        <!-- Download Sample -->
-                        <a href="{{ route('bidhaa.downloadSample') }}" 
-                           class="block w-full bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 text-sm font-medium text-center">
-                            <i class="fas fa-file-download mr-1"></i> Pakua Sampuli
-                        </a>
-                        
-                        <!-- Format Info -->
-                        <div class="border border-emerald-200 rounded p-3 bg-emerald-50">
-                            <h4 class="text-xs font-medium text-emerald-800 mb-2">
-                                <i class="fas fa-table mr-1"></i> Muundo wa Faili
-                            </h4>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs border border-emerald-200">
-                                    <thead>
-                                        <tr class="bg-emerald-100">
-                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Jina</th>
-                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Aina</th>
-                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Idadi</th>
-                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800">Bei</th>
-                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800 text-emerald-500">Expiry*</th>
-                                            <th class="px-2 py-1 border border-emerald-200 text-emerald-800 text-emerald-500">Barcode*</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td class="px-2 py-1 border border-emerald-200">Soda</td>
-                                            <td class="px-2 py-1 border border-emerald-200">Vinywaji</td>
-                                            <td class="px-2 py-1 border border-emerald-200">100</td>
-                                            <td class="px-2 py-1 border border-emerald-200">1000</td>
-                                            <td class="px-2 py-1 border border-emerald-200 text-emerald-500">2025-12-31</td>
-                                            <td class="px-2 py-1 border border-emerald-200 text-emerald-500">123456789</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="px-2 py-1 border border-emerald-200">Mchele</td>
-                                            <td class="px-2 py-1 border border-emerald-200">Chakula</td>
-                                            <td class="px-2 py-1 border border-emerald-200">50</td>
-                                            <td class="px-2 py-1 border border-emerald-200">3500</td>
-                                            <td class="px-2 py-1 border border-emerald-200 text-emerald-500"></td>
-                                            <td class="px-2 py-1 border border-emerald-200 text-emerald-500"></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p class="text-xs text-emerald-700 mt-2">
-                                <i class="fas fa-info-circle mr-1"></i> * Sehemu hiari - weka tupu au N/A
-                            </p>
-                        </div>
+                        <p class="text-xs text-emerald-700 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i> * Inahitajika | Sehemu hiari - weka tupu au N/A
+                        </p>
+                        <p class="text-xs text-blue-700 mt-1">
+                            <i class="fas fa-lightbulb mr-1"></i> Maelekezo: Bei ya kuuza lazima iwe kubwa kuliko bei ya kununua
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Edit Modal -->
@@ -563,6 +576,8 @@
 @endpush
 
 @push('scripts')
+
+
 <script>
 class SmartBidhaaManager {
     constructor() {
@@ -650,7 +665,10 @@ class SmartBidhaaManager {
             content.classList.add('hidden');
         });
         
-        document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
+        const tabContent = document.getElementById(`${tabName}-tab-content`);
+        if (tabContent) {
+            tabContent.classList.remove('hidden');
+        }
         this.currentTab = tabName;
     }
 
@@ -849,43 +867,47 @@ class SmartBidhaaManager {
             });
         }
 
-        // CSV form with improved error handling
-        const csvForm = document.getElementById('csv-upload-form');
-        if (csvForm) {
-            csvForm.addEventListener('submit', async (e) => {
+        // Excel form with improved error handling
+        const excelForm = document.getElementById('excel-upload-form');
+        if (excelForm) {
+            excelForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const fileInput = document.getElementById('csv-file-input');
+                const fileInput = document.getElementById('excel-file-input');
                 if (!fileInput || !fileInput.files.length) {
                     this.showNotification('Tafadhali chagua faili', 'error');
                     return;
                 }
                 
                 const file = fileInput.files[0];
-                const allowedExtensions = ['csv', 'txt'];
+                const allowedExtensions = ['xlsx', 'xls', 'csv', 'txt'];
                 const fileExt = file.name.split('.').pop().toLowerCase();
                 
                 if (!allowedExtensions.includes(fileExt)) {
-                    this.showNotification('Aina ya faili hairuhusiwi. Tumia .csv au .txt', 'error');
+                    this.showNotification('Aina ya faili hairuhusiwi. Tumia .xlsx, .xls, .csv au .txt', 'error');
                     return;
                 }
                 
-                if (file.size > 5 * 1024 * 1024) {
-                    this.showNotification('Faili ni kubwa sana. Ukubwa upeo ni 5MB', 'error');
+                if (file.size > 10 * 1024 * 1024) {
+                    this.showNotification('Faili ni kubwa sana. Ukubwa upeo ni 10MB', 'error');
                     return;
                 }
                 
                 // Show progress
-                document.getElementById('upload-progress').classList.remove('hidden');
-                document.getElementById('upload-results').classList.add('hidden');
+                const progressDiv = document.getElementById('upload-progress');
+                const resultsDiv = document.getElementById('upload-results');
+                
+                if (progressDiv) progressDiv.classList.remove('hidden');
+                if (resultsDiv) resultsDiv.classList.add('hidden');
+                
                 this.updateProgress(10, 'Inaanza upakiaji...');
                 
-                const formData = new FormData(csvForm);
+                const formData = new FormData(excelForm);
                 
                 try {
                     this.updateProgress(30, 'Inapakia faili...');
                     
-                    const response = await fetch(csvForm.action, {
+                    const response = await fetch(excelForm.action, {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -938,7 +960,7 @@ class SmartBidhaaManager {
                         }
                         
                         // Reset form
-                        csvForm.reset();
+                        excelForm.reset();
                         
                         // Auto-hide results after 15 seconds
                         setTimeout(() => {
@@ -951,7 +973,8 @@ class SmartBidhaaManager {
                     this.updateProgress(0, 'Hitilafu ya mtandao');
                     setTimeout(() => {
                         this.showNotification('Hitilafu ya mtandao. Hakikisha umeko kwenye mtandao', 'error');
-                        document.getElementById('upload-progress').classList.add('hidden');
+                        const progressDiv = document.getElementById('upload-progress');
+                        if (progressDiv) progressDiv.classList.add('hidden');
                     }, 1000);
                 }
             });
@@ -1003,8 +1026,8 @@ class SmartBidhaaManager {
                 const message = data.message || successMessage;
                 this.showNotification(message, 'success');
                 
-                // Don't reload for CSV uploads
-                if (form.id !== 'csv-upload-form') {
+                // Don't reload for Excel uploads
+                if (form.id !== 'excel-upload-form') {
                     setTimeout(() => window.location.reload(), 1000);
                 }
             } else {
@@ -1058,7 +1081,7 @@ class SmartBidhaaManager {
         
         // Show/hide error list
         if (data.errors && data.errors.length > 0) {
-            errorList.classList.remove('hidden');
+            if (errorList) errorList.classList.remove('hidden');
             if (errorItems) {
                 errorItems.innerHTML = '';
                 
@@ -1085,9 +1108,9 @@ class SmartBidhaaManager {
                     
                     errorItems.appendChild(errorDiv);
                     
-                    // Limit to 10 errors
-                    if (index >= 9 && data.errors.length > 10) {
-                        const remaining = data.errors.length - 10;
+                    // Limit to 20 errors
+                    if (index >= 19 && data.errors.length > 20) {
+                        const remaining = data.errors.length - 20;
                         const moreDiv = document.createElement('div');
                         moreDiv.className = 'text-red-400 text-xs text-center pt-1';
                         moreDiv.textContent = `+ ${remaining} zaidi...`;
@@ -1097,7 +1120,7 @@ class SmartBidhaaManager {
                 });
             }
         } else {
-            errorList.classList.add('hidden');
+            if (errorList) errorList.classList.add('hidden');
         }
         
         resultsDiv.classList.remove('hidden');
