@@ -67,48 +67,69 @@ class WafanyakaziController extends Controller
     /**
      * Store a newly created employee belonging to the logged-in company.
      */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'jina' => 'required|string|max:255',
-            'simu' => 'nullable|string|max:20',
-            'jinsia' => 'required|string',
-            'anuani' => 'nullable|string|max:500',
-            'barua_pepe' => 'nullable|email|max:255',
-            'ndugu' => 'nullable|string|max:255',
-            'simu_ndugu' => 'nullable|string|max:20',
-            'username' => 'nullable|string|max:255',
-            'password' => 'nullable|string|max:255',
-            'tarehe_kuzaliwa' => 'nullable|date',
+public function store(Request $request)
+{
+    $request->validate([
+        'jina' => 'required|string|max:255',
+        'simu' => 'nullable|string|max:20',
+        'jinsia' => 'required|string',
+        'anuani' => 'nullable|string|max:500',
+        'barua_pepe' => 'nullable|email|max:255',
+        'ndugu' => 'nullable|string|max:255',
+        'simu_ndugu' => 'nullable|string|max:20',
+        'username' => [
+            'required',
+            'string',
+            'max:255',
+            // Check uniqueness across both users and wafanyakazis tables
+            function ($attribute, $value, $fail) {
+                // Check if username exists in users table
+                $existsInUsers = \App\Models\User::where('username', $value)->exists();
+                
+                // Check if username exists in wafanyakazis table
+                $existsInWafanyakazi = \App\Models\Wafanyakazi::where('username', $value)->exists();
+                
+                if ($existsInUsers || $existsInWafanyakazi) {
+                    $fail('Jina la mtumiaji "' . $value . '" tayari limetumika. Tafadhali chagua jingine.');
+                }
+            }
+        ],
+        'password' => 'required|string|min:6|max:255',
+        'tarehe_kuzaliwa' => 'nullable|date',
+    ], [
+        'username.required' => 'Jina la mtumiaji linahitajika.',
+        'password.required' => 'Neno la siri linahitajika.',
+        'password.min' => 'Neno la siri lazima liwe na angalau herufi 6.',
+    ]);
+
+    $data = [
+        'jina' => $request->jina,
+        'simu' => $request->simu,
+        'jinsia' => $request->jinsia,
+        'anuani' => $request->anuani,
+        'barua_pepe' => $request->barua_pepe,
+        'ndugu' => $request->ndugu,
+        'simu_ndugu' => $request->simu_ndugu,
+        'username' => $request->username,
+        'password' => bcrypt($request->password),
+        'tarehe_kuzaliwa' => $request->tarehe_kuzaliwa,          
+        'company_id' => Auth::guard('web')->user()->company_id,
+        'role' => 'mfanyakazi', // ✅ Set role explicitly
+        'getini' => $request->getini ?? 'simama',
+    ];
+
+    Wafanyakazi::create($data);
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Mfanyakazi amesajiliwa kikamilifu!'
         ]);
-
-        $data = [
-            'jina' => $request->jina,
-            'simu' => $request->simu,
-            'jinsia' => $request->jinsia,
-            'anuani' => $request->anuani,
-            'barua_pepe' => $request->barua_pepe,
-            'ndugu' => $request->ndugu,
-            'simu_ndugu' => $request->simu_ndugu,
-            'username' => $request->username,
-            'password' => $request->password ? bcrypt($request->password) : null,
-            'tarehe_kuzaliwa' => $request->tarehe_kuzaliwa,          
-            'company_id' => Auth::user()->company_id,
-            'getini' => 'simama', // Default value
-        ];
-
-        Wafanyakazi::create($data);
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Mfanyakazi amesajiliwa kikamilifu!'
-            ]);
-        }
-
-        return redirect()->route('wafanyakazi.index')
-            ->with('success', 'Mfanyakazi amesajiliwa kikamilifu!');
     }
+
+    return redirect()->route('wafanyakazi.index')
+        ->with('success', 'Mfanyakazi amesajiliwa kikamilifu!');
+}
 
     /**
      * Update the specified employee.

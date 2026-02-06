@@ -6,17 +6,49 @@
 @section('page-subtitle', 'Usimamizi wa mauzo - ' . now()->format('d/m/Y'))
 
 @section('content')
-<meta name="company-id" content="{{ auth()->user()->company_id }}">
-<meta name="company-name" content="{{ auth()->user()->company_name ?? 'My Business' }}">
+@php
+    // Check which guard is active and get company info accordingly
+    $companyId = null;
+    $companyName = 'My Business';
+    
+    if(Auth::guard('mfanyakazi')->check()) {
+        // Employee is logged in
+        $user = Auth::guard('mfanyakazi')->user();
+        $companyId = $user->company_id ?? null;
+        
+        // If employee has company relation, get company name
+        if($user->company) {
+            $companyName = $user->company->company_name ?? 'My Business';
+        }
+    } elseif(Auth::guard('web')->check()) {
+        // Boss/Admin is logged in
+        $user = Auth::guard('web')->user();
+        $companyId = $user->company_id ?? null;
+        
+        // If user has company relation, get company name
+        if($user->company) {
+            $companyName = $user->company->company_name ?? 'My Business';
+        }
+    }
+@endphp
+
+@if($companyId)
+    <meta name="company-id" content="{{ $companyId }}">
+    <meta name="company-name" content="{{ $companyName }}">
+@else
+    <meta name="company-id" content="0">
+    <meta name="company-name" content="{{ $companyName }}">
+@endif
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    
+<!-- Main Container -->
+<div class="space-y-4">
     <!-- Notification System -->
     <div id="notification" class="fixed top-4 lg:top-6 inset-x-0 flex justify-center z-50 hidden">
-        <div class="bg-white rounded-xl lg:rounded-2xl shadow-xl lg:shadow-2xl p-4 lg:p-6 max-w-sm mx-4 border transform transition-all duration-300 scale-95">
+        <div class="bg-white rounded-lg shadow-lg p-4 max-w-sm mx-4 border transform transition-all duration-300 scale-95">
             <div class="flex flex-col items-center text-center">
-                <div id="notification-icon" class="text-3xl lg:text-4xl mb-3 lg:mb-4"></div>
-                <p id="notification-message" class="text-base lg:text-lg font-semibold text-black"></p>
+                <div id="notification-icon" class="text-3xl mb-3"></div>
+                <p id="notification-message" class="text-base font-semibold text-gray-800"></p>
                 <div id="notification-buttons" class="mt-4 space-x-2 hidden">
                     <button id="notification-confirm" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm">Ndio, Futa</button>
                     <button id="notification-cancel" class="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm">Ghairi</button>
@@ -25,991 +57,892 @@
         </div>
     </div>
 
-    <!-- Main Container with All Tabs -->
-    <div class="bg-white rounded-xl lg:rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 card-hover">
-        <!-- Tab Navigation -->
-        <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl p-1 lg:p-2 mb-4 lg:mb-6 shadow-md">
-            <div class="flex flex-wrap gap-1 lg:gap-2" id="tab-nav">
-                <button id="sehemu-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center border-b-2 border-white text-white font-semibold whitespace-nowrap text-xs lg:text-sm" data-tab="sehemu">
-                    <i class="fas fa-cash-register mr-1 lg:mr-2 text-xs"></i>Sehemu ya Mauzo
-                </button>
-                <button id="barcode-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white whitespace-nowrap text-xs lg:text-sm" data-tab="barcode">
-                    <i class="fas fa-barcode mr-1 lg:mr-2 text-xs"></i>Barcode
-                </button>
-                <button id="taarifa-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white whitespace-nowrap text-xs lg:text-sm" data-tab="taarifa">
-                    <i class="fas fa-file-alt mr-1 lg:mr-2 text-xs"></i>Taarifa
-                </button>
-                <button id="jumla-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white whitespace-nowrap text-xs lg:text-sm" data-tab="jumla">
-                    <i class="fas fa-chart-bar mr-1 lg:mr-2 text-xs"></i>Jumla
-                </button>
-                <button id="kikapu-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white relative whitespace-nowrap text-xs lg:text-sm" data-tab="kikapu">
-                    <i class="fas fa-shopping-cart mr-1 lg:mr-2 text-xs"></i>Kikapu
-                    <span id="cart-count" class="absolute -top-1 -right-1 lg:-top-2 lg:-right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 lg:h-5 lg:w-5 flex items-center justify-center hidden">0</span>
-                </button>
-                <button id="risiti-tab" class="tab-button pb-2 px-3 lg:px-4 transition-colors flex items-center text-emerald-100 hover:text-white whitespace-nowrap text-xs lg:text-sm" data-tab="risiti">
-                    <i class="fas fa-receipt mr-1 lg:mr-2 text-xs"></i>Risiti
-                </button>
-            </div>
+    <!-- Tab Navigation -->
+    <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-1 mb-4">
+        <div class="flex flex-wrap gap-1" id="tab-nav">
+            <button id="sehemu-tab" class="tab-button pb-2 px-3 transition-colors flex items-center border-b-2 border-white text-white font-semibold whitespace-nowrap text-sm" data-tab="sehemu">
+                <i class="fas fa-cash-register mr-2 text-xs"></i>Sehemu ya Mauzo
+            </button>
+            <button id="barcode-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="barcode">
+                <i class="fas fa-barcode mr-2 text-xs"></i>Barcode
+            </button>
+            <button id="taarifa-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="taarifa">
+                <i class="fas fa-file-alt mr-2 text-xs"></i>Taarifa
+            </button>
+            <button id="jumla-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="jumla">
+                <i class="fas fa-chart-bar mr-2 text-xs"></i>Jumla
+            </button>
+            <button id="kikapu-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white relative whitespace-nowrap text-sm" data-tab="kikapu">
+                <i class="fas fa-shopping-cart mr-2 text-xs"></i>Kikapu
+                <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+            </button>
+            <button id="risiti-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="risiti">
+                <i class="fas fa-receipt mr-2 text-xs"></i>Risiti
+            </button>
         </div>
+    </div>
 
-<!-- TAB 1: Sehemu ya Mauzo -->
-<div id="sehemu-tab-content" class="space-y-4 tab-content active">
-    <!-- Sales Form - Compact Version -->
-    <div class="bg-white rounded-xl shadow border border-emerald-100 p-4 card-hover">
-        <h2 class="text-base lg:text-lg font-bold text-emerald-800 mb-3 flex items-center">
-            <i class="fas fa-cash-register mr-2 text-emerald-600 text-sm"></i>
-            Rekodi Mauzo
-        </h2>
+    <!-- TAB 1: Sehemu ya Mauzo -->
+    <div id="sehemu-tab-content" class="tab-content active">
+        <!-- Sales Form -->
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-4 mb-4">
+            <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                <i class="fas fa-cash-register mr-2 text-green-600"></i>
+                Rekodi Mauzo
+            </h2>
 
-        <!-- In the sales form section of the blade file -->
-        <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-3" id="sales-form">
-            @csrf
+            <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-4" id="sales-form">
+                @csrf
 
-            <!-- First Line: 4 columns with Bidhaa taking more width -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                <!-- Bidhaa with Search (Takes more width) -->
-                <div class="lg:col-span-5">
-                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Bidhaa</label>
-                    <div class="relative">
-                        <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
-                        <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
-                            <option value="">Chagua Bidhaa...</option>
-                            @foreach($bidhaa as $item)
-                            <option
-                                value="{{ $item->id }}"
-                                data-bei="{{ $item->bei_kuuza }}"
-                                data-stock="{{ $item->idadi }}"
-                                data-jina="{{ e($item->jina) }}"
-                                data-aina="{{ e($item->aina) }}"
-                                data-kipimo="{{ e($item->kipimo) }}"
-                                data-bei-nunua="{{ $item->bei_nunua }}"
-                                data-barcode="{{ $item->barcode }}"
-                            >
-                                {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }} - Stock: {{ $item->idadi }}
-                            </option>
-                            @endforeach
-                        </select>
+                <!-- Product Selection Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                    <!-- Product Selection -->
+                    <div class="lg:col-span-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Bidhaa</label>
+                        <div class="relative">
+                            <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                            <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
+                                <option value="">Chagua Bidhaa...</option>
+                                @foreach($bidhaa as $item)
+                                <option
+                                    value="{{ $item->id }}"
+                                    data-bei="{{ $item->bei_kuuza }}"
+                                    data-stock="{{ $item->idadi }}"
+                                    data-jina="{{ e($item->jina) }}"
+                                    data-aina="{{ e($item->aina) }}"
+                                    data-kipimo="{{ e($item->kipimo) }}"
+                                    data-bei-nunua="{{ $item->bei_nunua }}"
+                                    data-barcode="{{ $item->barcode }}"
+                                >
+                                    {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }} - Stock: {{ $item->idadi }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Quantity -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Idadi</label>
+                        <input type="number" name="idadi" id="quantity-input" placeholder="0" min="1" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                    </div>
+
+                    <!-- Price -->
+                    <div class="lg:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Bei (Tsh)</label>
+                        <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
+                    </div>
+
+                    <!-- Stock -->
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Stock</label>
+                        <input type="number" id="stock-input" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
                 </div>
 
-                <!-- Idadi -->
-                <div class="lg:col-span-2">
-                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Idadi</label>
-                    <input type="number" name="idadi" id="quantity-input" placeholder="0" min="1" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
-                </div>
-
-                <!-- Bei -->
-                <div class="lg:col-span-2">
-                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Bei (Tsh)</label>
-                    <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
-                </div>
-
-                <!-- Stock -->
-                <div class="lg:col-span-3">
-                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Stock</label>
-                    <input type="number" id="stock-input" readonly class="w-full bg-gray-100 border border-emerald-200 rounded-lg p-2 text-sm">
-                </div>
-            </div>
-
-            <!-- Second Line: 4 columns with balanced widths -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                <!-- Aina ya Punguzo -->
-                <div class="lg:col-span-3">
-                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Aina ya Punguzo</label>
-                    <div class="flex gap-2">
-                        <select id="punguzo-type" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                <!-- Discount and Payment Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                    <!-- Discount Type -->
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Punguzo</label>
+                        <select id="punguzo-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
                             <option value="bidhaa">kwa bidhaa</option>
                             <option value="jumla">Jumla</option>
                         </select>
                     </div>
+
+                    <!-- Discount Amount -->
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Punguzo (Tsh)</label>
+                        <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                    </div>
+
+                    <!-- Total -->
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Jumla (Tsh)</label>
+                        <input type="number" name="jumla" id="total-input" readonly class="w-full bg-green-50 border border-green-300 rounded-lg p-2 text-sm font-bold text-gray-800">
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
+                        <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                            <option value="cash">Cash</option>
+                            <option value="lipa_namba">Lipa Namba</option>
+                            <option value="bank">Bank</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- Punguzo Amount -->
-                <div class="lg:col-span-3">
-                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Punguzo (Tsh)</label>
-                    <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                <!-- Hidden fields -->
+                <input type="hidden" name="baki" id="baki-input" value="0">
+                <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
+                <input type="hidden" name="check_double_sale" id="check-double-sale-input" value="1">
+                
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-cash-register"></i>
+                        Uza
+                    </button>
+
+                    <button type="button" id="kopesha-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Kopesha
+                    </button>
+
+                    <button type="button" id="add-to-cart-btn" class="bg-emerald-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-cart-plus"></i>
+                        Kikapu
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Financial Overview -->
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h2 class="text-base font-bold text-gray-800 mb-3">
+                Taarifa Fupi ya Mapato na Matumizi
+            </h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="financial-overview">
+                <!-- Mapato -->
+                <div class="bg-gradient-to-br from-amber-500 to-amber-600 p-3 rounded-lg shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                            <i class="fas fa-money-bill-wave text-white"></i>
+                        </div>
+                    </div>
+                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">
+                        Mapato ya leo
+                    </div>
+                    @php
+                        $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
+                        $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
+                        $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
+                    @endphp
+                    <div class="space-y-1 text-white text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-blue-100">Mauzo:</span>
+                            <span class="font-semibold">{{ number_format($mapatoMauzo) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-blue-100">Madeni:</span>
+                            <span class="font-semibold">{{ number_format($mapatoMadeni) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                            <span class="font-semibold">Jumla:</span>
+                            <span class="font-bold">{{ number_format($jumlaMapato) }}</span>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Jumla -->
-                <div class="lg:col-span-3">
-                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Jumla (Tsh)</label>
-                    <input type="number" name="jumla" id="total-input" readonly class="w-full bg-emerald-50 border border-emerald-300 rounded-lg p-2 text-sm font-bold text-emerald-800">
+                <!-- Faida ya leo -->
+                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                            <i class="fas fa-chart-line text-white"></i>
+                        </div>
+                    </div>
+                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">
+                        Faida ya leo
+                    </div>
+                    @php
+                        $faidaMauzo = 0;
+                        foreach($todaysMauzos as $mauzo) {
+                            $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                            $sellingPrice = $mauzo->bei;
+                            $quantity = $mauzo->idadi;
+                            
+                            $totalDiscount = 0;
+                            if ($mauzo->punguzo_aina === 'bidhaa') {
+                                $totalDiscount = $mauzo->punguzo * $quantity;
+                            } else {
+                                $totalDiscount = $mauzo->punguzo;
+                            }
+                            
+                            $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+                            $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
+                            $totalBuyingCost = $buyingPrice * $quantity;
+                            $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+                            $faidaMauzo += $profit;
+                        }
+                        
+                        $faidaMarejesho = 0;
+                        foreach($todaysMarejeshos as $marejesho) {
+                            if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+                                $debt = $marejesho->madeni;
+                                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                                $quantity = $debt->idadi;
+                                $totalBuyingCost = $buyingPrice * $quantity;
+                                $actualSellingPrice = $debt->jumla;
+                                $profit = $actualSellingPrice - $totalBuyingCost;
+                                $faidaMarejesho += $profit;
+                            }
+                        }
+                        
+                        $jumlaFaida = $faidaMauzo + $faidaMarejesho;
+                    @endphp
+                    <div class="space-y-1 text-white text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-100">Mauzo:</span>
+                            <span class="font-semibold">{{ number_format($faidaMauzo) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-100">Marejesho:</span>
+                            <span class="font-semibold">{{ number_format($faidaMarejesho) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                            <span class="font-semibold">Jumla:</span>
+                            <span class="font-bold">{{ number_format($jumlaFaida) }}</span>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Njia ya Malipo -->
-                <div class="lg:col-span-3">
-                    <label class="block text-xs font-semibold text-emerald-800 mb-1">Njia ya Malipo</label>
-                    <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
+                <!-- Matumizi -->
+                <div class="bg-gradient-to-br from-yellow-500 to-amber-600 p-3 rounded-lg shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                            <i class="fas fa-receipt text-white"></i>
+                        </div>
+                    </div>
+                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Matumizi</div>
+                    @php
+                        $matumiziLeo = $todaysMatumizi->sum('gharama');
+                        $matumiziWiki = $weeklyMatumizi->sum('gharama');
+                        $matumiziJumla = $allMatumizi->sum('gharama');
+                    @endphp
+                    <div class="space-y-1 text-white text-xs">
+                        <div class="flex justify-between items-center">
+                            <span>Leo:</span>
+                            <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Wiki hii:</span>
+                            <span class="font-semibold">{{ number_format($matumiziWiki) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                            <span class="font-semibold">Jumla:</span>
+                            <span class="font-bold">{{ number_format($matumiziJumla) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fedha Leo -->
+                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                            <i class="fas fa-wallet text-white"></i>
+                        </div>
+                    </div>
+                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Fedha Leo</div>
+                    @php
+                        $mauzoLeo = $todaysMauzos->sum('jumla');
+                        $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
+                        $matumiziLeo = $todaysMatumizi->sum('gharama');
+                        $fedhaLeo = ($mauzoLeo + $mapatoMadeni) - $matumiziLeo;
+                    @endphp
+                    <div class="space-y-1 text-white text-xs">
+                        <div class="flex justify-between items-center">
+                            <span>Mapato:</span>
+                            <span class="font-semibold">{{ number_format($mauzoLeo + $mapatoMadeni) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Matumizi:</span>
+                            <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                            <span class="font-semibold">Jumla:</span>
+                            <span class="font-bold">{{ number_format($fedhaLeo) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Faida Halisi -->
+                <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-lg shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                            <i class="fas fa-chart-pie text-white"></i>
+                        </div>
+                    </div>
+                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Faida Halisi</div>
+                    @php
+                        $matumiziLeo = $todaysMatumizi->sum('gharama');
+                        $faidaHalisi = $jumlaFaida - $matumiziLeo;
+                    @endphp
+                    <div class="space-y-1 text-white text-xs">
+                        <div class="flex justify-between items-center">
+                            <span>Faida:</span>
+                            <span class="font-semibold">{{ number_format($jumlaFaida) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Matumizi:</span>
+                            <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                            <span class="font-semibold">Halisi:</span>
+                            <span class="font-bold">{{ number_format($faidaHalisi) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Jumla Kuu -->
+                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="p-2 bg-white/20 rounded-lg">
+                            <i class="fas fa-chart-bar text-white"></i>
+                        </div>
+                    </div>
+                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Jumla Kuu</div>
+                    @php
+                        $totalMapato = $allTimeMauzos->sum('jumla') + $allTimeMarejeshos->sum('kiasi');
+                        $totalMatumizi = $allMatumizi->sum('gharama');
+                        $jumlaKuu = $totalMapato - $totalMatumizi;
+                    @endphp
+                    <div class="space-y-1 text-white text-xs">
+                        <div class="flex justify-between items-center">
+                            <span>Mapato:</span>
+                            <span class="font-semibold">{{ number_format($totalMapato) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Matumizi:</span>
+                            <span class="font-semibold">{{ number_format($totalMatumizi) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                            <span class="font-semibold">Jumla:</span>
+                            <span class="font-bold">{{ number_format($jumlaKuu) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Barcode Sales -->
+    <div id="barcode-tab-content" class="tab-content hidden">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <div class="flex items-center mb-4">
+                <div class="bg-green-600 text-white p-3 rounded-full shadow">
+                    <i class="fas fa-barcode"></i>
+                </div>
+                <h2 class="ml-3 text-lg font-bold text-gray-800">
+                    Mauzo kwa Barcode
+                </h2>
+            </div>
+
+            <form id="barcode-form" class="space-y-4">
+                @csrf
+                <div class="mb-3">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
+                    <select name="lipa_kwa" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
                         <option value="cash">Cash</option>
                         <option value="lipa_namba">Lipa Namba</option>
                         <option value="bank">Bank</option>
                     </select>
                 </div>
-            </div>
 
-            <!-- Hidden fields - Ensure all are present: -->
-            <input type="hidden" name="baki" id="baki-input" value="0">
-            <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
-            <input type="hidden" name="check_double_sale" id="check-double-sale-input" value="1">
-            
-            <!-- Action Buttons -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                    <i class="fas fa-cash-register"></i>
-                    Uza
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="w-full border-collapse text-sm">
+                        <thead class="bg-gray-100 text-gray-700 text-xs uppercase">
+                            <tr>
+                                <th class="border px-3 py-2 text-left">Barcode</th>
+                                <th class="border px-3 py-2 text-left">Bidhaa</th>
+                                <th class="border px-3 py-2 text-left">Bei</th>
+                                <th class="border px-3 py-2 text-left">Idadi</th>
+                                <th class="border px-3 py-2 text-left">Baki</th>
+                                <th class="border px-3 py-2 text-left">Punguzo</th>
+                                <th class="border px-3 py-2 text-left">Jumla</th>
+                                <th class="border px-3 py-2 text-center">Futa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="barcode-tbody">
+                            <tr class="barcode-row">
+                                <td class="px-3 py-2">
+                                    <input type="text" name="barcode[]" placeholder="Scan barcode" 
+                                           class="barcode-input border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg p-2 w-full text-sm" 
+                                           autofocus />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="text" name="jina[]" readonly placeholder="Jina la Bidhaa" 
+                                           class="product-name border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="number" name="bei[]" readonly placeholder="Bei" 
+                                           class="product-price border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="number" name="idadi[]" min="1" value="1" placeholder="Idadi" 
+                                           class="quantity-input border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg p-2 w-full text-sm" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="number" name="stock[]" readonly placeholder="Baki" 
+                                           class="stock-input border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="number" name="punguzo[]" min="0" value="0" placeholder="Punguzo" 
+                                           class="punguzo-input border border-gray-300 rounded-lg p-2 w-full text-sm" />
+                                </td>
+                                <td class="px-3 py-2">
+                                    <input type="number" name="jumla[]" readonly placeholder="Jumla" 
+                                           class="total-input border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
+                                </td>
+                                <td class="px-3 py-2 text-center">
+                                    <button type="button" class="remove-barcode-row text-red-500 hover:text-red-700 p-2 rounded-full transition">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" id="add-barcode-row" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
+                        <i class="fas fa-plus mr-2"></i>
+                        <span>Ongeza Safu Mpya</span>
+                    </button>
+                    
+                    <button type="button" id="kopesha-barcode-btn" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
+                        <i class="fas fa-hand-holding-usd mr-2"></i>
+                        <span>Kopesha Bidhaa</span>
+                    </button>
+                    
+                    <button type="button" id="clear-barcode-form" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
+                        <i class="fas fa-times mr-2"></i>
+                        <span>Futa Yote</span>
+                    </button>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <div class="text-sm font-semibold text-gray-700">
+                        Jumla ya Mauzo: 
+                        <span class="text-green-700 font-bold" id="barcode-total">0</span>
+                    </div>
+
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center transition text-sm">
+                        <i class="fas fa-check mr-2"></i>
+                        Uza Bidhaa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TAB 3: Taarifa Fupi -->
+    <div id="taarifa-tab-content" class="tab-content hidden">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h2 class="text-lg font-semibold mb-3 flex items-center text-gray-800">
+                <i class="fas fa-file-alt mr-2 text-green-600"></i>
+                Taarifa Fupi ya Mauzo
+            </h2>
+
+            <!-- Search and Filter -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
+                </div>
+                
+                <div class="relative">
+                    <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
+                    <input type="date" id="filter-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
+                </div>
+                
+                <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm">
+                    <i class="fas fa-redo mr-1"></i> Safisha Filter
                 </button>
-
-                <button type="button" id="kopesha-btn" class="bg-amber-600 hover:bg-amber-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    Kopesha
-                </button>
-
-                <button type="button" id="add-to-cart-btn" class="bg-emerald-600 hover:bg-emerald-400 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                    <i class="fas fa-cart-plus"></i>
-                    Kikapu
-                </button>
             </div>
-        </form>
-    </div>
 
-<!-- Financial Overview -->
-<div class="mt-4 lg:mt-6" id="financial-overview-container">
-    <h2 class="text-sm lg:text-base font-bold text-gray-800 flex items-center mb-2 lg:mb-3">
-        <div class="relative mr-1.5">
-            <div class="w-1.5 h-4 lg:w-2 lg:h-5 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
-            <div class="absolute top-0.5 -right-1 w-1 h-2.5 lg:w-1.5 lg:h-3 bg-gradient-to-b from-emerald-400 to-teal-600 rounded-full"></div>
-        </div>
-        <span>Taarifa Fupi ya Mapato na Matumizi</span>
-    </h2>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="financial-overview">
-        <!-- Mapato -->
-        <div class="sm:col-span-1 group relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-            <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-blue-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                        <i class="fas fa-money-bill-wave text-white text-sm"></i>
-                    </div>
-                    <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
-                </div>
-                <div class="text-xs font-semibold text-blue-100 uppercase tracking-wide mb-1">
-                    Mapato ya leo
-                </div>
-                @php
-                    // Sales income (cash sales)
-                    $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
-                    
-                    // Debt repayment income
-                    $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
-                    
-                    // Total income = cash sales + debt repayments
-                    $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
-                @endphp
-                <div class="space-y-1 text-white text-xs">
-                    <div class="flex justify-between items-center">
-                        <span class="text-blue-100">Mauzo:</span>
-                        <span class="font-semibold" id="mapato-mauzo">{{ number_format($mapatoMauzo) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-blue-100">Madeni:</span>
-                        <span class="font-semibold" id="mapato-madeni">{{ number_format($mapatoMadeni) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                        <span class="text-blue-50 font-semibold">Jumla:</span>
-                        <span class="font-bold text-sm" id="mapato-jumla">{{ number_format($jumlaMapato) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-<!-- Faida ya leo - FIXED CODE -->
-<div class="sm:col-span-1 group relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-    <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-emerald-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-green-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
-        <div class="flex justify-between items-start mb-2">
-            <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                <i class="fas fa-chart-line text-white text-sm"></i>
-            </div>
-            <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
-        </div>
-        <div class="text-xs font-semibold text-green-100 uppercase tracking-wide mb-1">
-            Faida ya leo
-        </div>
-        @php
-            // ✅ CORRECT PROFIT CALCULATION FOR CASH SALES
-            $faidaMauzo = 0;
-            foreach($todaysMauzos as $mauzo) {
-                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-                $sellingPrice = $mauzo->bei;
-                $quantity = $mauzo->idadi;
-                
-                // Calculate TOTAL discount (not per item)
-                $totalDiscount = 0;
-                if ($mauzo->punguzo_aina === 'bidhaa') {
-                    // Discount per item
-                    $totalDiscount = $mauzo->punguzo * $quantity;
-                } else {
-                    // Fixed discount amount
-                    $totalDiscount = $mauzo->punguzo;
-                }
-                
-                // Total revenue BEFORE discount
-                $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
-                
-                // Total revenue AFTER discount
-                $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
-                
-                // Total buying cost
-                $totalBuyingCost = $buyingPrice * $quantity;
-                
-                // ✅ CORRECT PROFIT: Revenue after discount minus buying cost
-                $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
-                
-                $faidaMauzo += $profit;
-            }
-            
-            // ✅ CORRECT PROFIT FROM DEBT REPAYMENTS
-            $faidaMarejesho = 0;
-            foreach($todaysMarejeshos as $marejesho) {
-                if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
-                    $debt = $marejesho->madeni;
-                    
-                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                    $quantity = $debt->idadi;
-                    
-                    // For debt items, the jumla should already be after discount
-                    $totalBuyingCost = $buyingPrice * $quantity;
-                    
-                    // jumla is the actual selling price (after any discount)
-                    $actualSellingPrice = $debt->jumla;
-                    
-                    // ✅ Profit = Actual selling price - Total buying cost
-                    $profit = $actualSellingPrice - $totalBuyingCost;
-                    
-                    $faidaMarejesho += $profit;
-                }
-            }
-            
-            // Total profit = cash sales profit + debt repayment profit
-            $jumlaFaida = $faidaMauzo + $faidaMarejesho;
-        @endphp
-        <div class="space-y-1 text-white text-xs">
-            <div class="flex justify-between items-center">
-                <span class="text-green-100">Mauzo:</span>
-                <span class="font-semibold" id="faida-mauzo">{{ number_format($faidaMauzo) }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-green-100">Marejesho:</span>
-                <span class="font-semibold" id="faida-marejesho">{{ number_format($faidaMarejesho) }}</span>
-            </div>
-            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                <span class="text-green-50 font-semibold">Jumla:</span>
-                <span class="font-bold text-sm" id="faida-jumla">{{ number_format($jumlaFaida) }}</span>
-            </div>
-        </div>
-    </div>
-</div>
-        <!-- Matumizi -->
-        <div class="sm:col-span-1 group relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-            <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                        <i class="fas fa-receipt text-white text-sm"></i>
-                    </div>
-                    <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
-                </div>
-                <div class="text-xs font-semibold text-amber-100 uppercase tracking-wide mb-1">Matumizi</div>
-                @php
-                    $matumiziLeo = $todaysMatumizi->sum('gharama');
-                    $matumiziWiki = $weeklyMatumizi->sum('gharama');
-                    $matumiziJumla = $allMatumizi->sum('gharama');
-                @endphp
-                <div class="space-y-1 text-white text-xs">
-                    <div class="flex justify-between items-center">
-                        <span class="text-amber-100">Leo:</span>
-                        <span class="font-semibold" id="matumizi-leo">{{ number_format($matumiziLeo) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-amber-100">Wiki hii:</span>
-                        <span class="font-semibold" id="matumizi-wiki">{{ number_format($matumiziWiki) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                        <span class="text-amber-50 font-semibold">Jumla:</span>
-                        <span class="font-bold text-sm" id="matumizi-jumla">{{ number_format($matumiziJumla) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fedha Leo -->
-        <div class="sm:col-span-1 group relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-cyan-700 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-            <div class="relative bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-cyan-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                        <i class="fas fa-wallet text-white text-sm"></i>
-                    </div>
-                    <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
-                </div>
-                <div class="text-xs font-semibold text-cyan-100 uppercase tracking-wide mb-1">Fedha Leo</div>
-                @php
-                    // Cash in hand today = Cash sales + Debt repayments - Expenses
-                    $mauzoLeo = $todaysMauzos->sum('jumla');
-                    $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
-                    $matumiziLeo = $todaysMatumizi->sum('gharama');
-                    
-                    $fedhaLeo = ($mauzoLeo + $mapatoMadeni) - $matumiziLeo;
-                @endphp
-                <div class="space-y-1 text-white text-xs">
-                    <div class="flex justify-between items-center">
-                        <span class="text-cyan-100">Mapato:</span>
-                        <span class="font-semibold" id="fedha-mapato">{{ number_format($mauzoLeo + $mapatoMadeni) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-cyan-100">Matumizi:</span>
-                        <span class="font-semibold" id="fedha-matumizi">{{ number_format($matumiziLeo) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                        <span class="text-cyan-50 font-semibold">Jumla:</span>
-                        <span class="font-bold text-sm" id="fedha-jumla">{{ number_format($fedhaLeo) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-<!-- Faida Halisi -->
-<div class="sm:col-span-1 group relative overflow-hidden">
-    <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-    <div class="relative bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-amber-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
-        <div class="flex justify-between items-start mb-2">
-            <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                <i class="fas fa-chart-pie text-white text-sm"></i>
-            </div>
-            <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
-        </div>
-        <div class="text-xs font-semibold text-teal-100 uppercase tracking-wide mb-1">Faida Halisi</div>
-        @php
-            // Use the SAME $jumlaFaida from "Faida ya leo" section
-            $matumiziLeo = $todaysMatumizi->sum('gharama');
-            $faidaHalisi = $jumlaFaida - $matumiziLeo;
-        @endphp
-        <div class="space-y-1 text-white text-xs">
-            <div class="flex justify-between items-center">
-                <span class="text-teal-100">Faida:</span>
-                <span class="font-semibold" id="faida-halisi-faida">{{ number_format($jumlaFaida) }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-teal-100">Matumizi:</span>
-                <span class="font-semibold" id="faida-halisi-matumizi">{{ number_format($matumiziLeo) }}</span>
-            </div>
-            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                <span class="text-teal-50 font-semibold">Halisi:</span>
-                <span class="font-bold text-sm" id="faida-halisi-jumla">{{ number_format($faidaHalisi) }}</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-        <!-- Jumla Kuu -->
-        <div class="sm:col-span-1 group relative overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-r from-rose-500 to-rose-600 rounded-lg lg:rounded-xl blur-md opacity-60 group-hover:opacity-80 transition duration-500"></div>
-            <div class="relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 p-3 rounded-lg lg:rounded-xl shadow-md border border-rose-400/30 transform transition duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-                        <i class="fas fa-chart-bar text-white text-sm"></i>
-                    </div>
-                    <i class="fas fa-arrow-right text-white/60 text-xs group-hover:translate-x-1 transition-transform"></i>
-                </div>
-                <div class="text-xs font-semibold text-rose-100 uppercase tracking-wide mb-1">Jumla Kuu</div>
-                @php
-                    // All-time calculations: INCOME - EXPENSES
-                    // These should be pre-calculated in controller and passed as separate variables
-                    $totalMapato = $allTimeMauzos->sum('jumla') + $allTimeMarejeshos->sum('kiasi');
-                    $totalMatumizi = $allMatumizi->sum('gharama');
-                    $jumlaKuu = $totalMapato - $totalMatumizi;
-                @endphp
-                <div class="space-y-1 text-white text-xs">
-                    <div class="flex justify-between items-center">
-                        <span class="text-rose-100">Mapato:</span>
-                        <span class="font-semibold" id="jumla-kuu-mapato">{{ number_format($totalMapato) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-rose-100">Matumizi:</span>
-                        <span class="font-semibold" id="jumla-kuu-matumizi">{{ number_format($totalMatumizi) }}</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                        <span class="text-rose-50 font-semibold">Jumla:</span>
-                        <span class="font-bold text-sm" id="jumla-kuu-jumla">{{ number_format($jumlaKuu) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-        </div>
-
-        <!-- TAB 2: Barcode Sales -->
-        <div id="barcode-tab-content" class="tab-content hidden">
-            <div class="rounded-xl shadow border border-green-100 bg-white p-4 card-hover">
-                <!-- Header -->
-                <div class="flex items-center mb-4">
-                    <div class="bg-green-600 text-white p-3 rounded-full shadow">
-                        <i class="fas fa-barcode"></i>
-                    </div>
-                    <h2 class="ml-3 text-base lg:text-lg font-bold text-black tracking-wide">
-                        Mauzo kwa Barcode
-                    </h2>
-                </div>
-
-                <!-- Barcode Form -->
-                <form id="barcode-form" class="space-y-3">
-                    @csrf
-                     <!-- Payment Method for Barcode -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div>
-            <label class="block text-xs font-semibold text-emerald-800 mb-1">Njia ya Malipo</label>
-            <select name="lipa_kwa" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
-                <option value="cash">Cash</option>
-                <option value="lipa_namba">Lipa Namba</option>
-                <option value="bank">Bank</option>
-            </select>
-        </div>
-    </div>
-                    <!-- Table -->
-                    <div class="overflow-x-auto rounded-lg shadow-sm border border-green-200 bg-white/80">
-                        <table class="w-full table-auto border-collapse text-sm">
-                            <thead class="bg-green-400/70 text-black text-xs uppercase">
-                                <tr>
-                                    <th class="border px-3 py-2 text-left">Barcode</th>
-                                    <th class="border px-3 py-2 text-left">Bidhaa</th>
-                                    <th class="border px-3 py-2 text-left">Bei</th>
-                                    <th class="border px-3 py-2 text-left">Idadi</th>
-                                    <th class="border px-3 py-2 text-left">Baki</th>
-                                    <th class="border px-3 py-2 text-left">Punguzo</th>
-                                    <th class="border px-3 py-2 text-left">Jumla</th>
-                                    <th class="border px-3 py-2 text-center">Futa</th>
-                                </tr>
-                            </thead>
-                            <tbody id="barcode-tbody">
-                                <tr class="barcode-row">
-                                    <td class="px-3 py-2">
-                                        <input type="text" name="barcode[]" placeholder="Scan barcode" 
-                                               class="barcode-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 w-full text-xs transition-all" 
-                                               autofocus />
-                                    </td>
-                                    <td class="px-3 py-2">
-                                        <input type="text" name="jina[]" readonly placeholder="Jina la Bidhaa" 
-                                               class="product-name border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
-                                    </td>
-                                    <td class="px-3 py-2">
-                                        <input type="number" name="bei[]" readonly placeholder="Bei" 
-                                               class="product-price border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
-                                    </td>
-                                    <td class="px-3 py-2">
-                                        <input type="number" name="idadi[]" min="1" value="1" placeholder="Idadi" 
-                                               class="quantity-input border border-green-200 focus:border-green-500 focus:ring-2 focus:ring-green-300 rounded-lg p-2 w-full text-xs transition-all" />
-                                    </td>
-                                    <td class="px-3 py-2">
-                                        <input type="number" name="stock[]" readonly placeholder="Baki" 
-                                               class="stock-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
-                                    </td>
-                                    <td class="px-3 py-2">
-                                        <input type="number" name="punguzo[]" min="0" value="0" placeholder="Punguzo" 
-                                               class="punguzo-input border border-green-200 rounded-lg p-2 w-full text-xs" />
-                                    </td>
-                                    <td class="px-3 py-2">
-                                        <input type="number" name="jumla[]" readonly placeholder="Jumla" 
-                                               class="total-input border border-green-100 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-xs" />
-                                    </td>
-                                    <td class="px-3 py-2 text-center">
-                                        <button type="button" class="remove-barcode-row text-red-500 hover:text-red-700 p-2 rounded-full transition transform hover:scale-110" title="Futa bidhaa">
-                                            <i class="fas fa-trash text-xs"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Barcode Action Buttons -->
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" id="add-barcode-row" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg flex items-center transition text-xs">
-                            <i class="fas fa-plus mr-2"></i>
-                            <span>Ongeza Safu Mpya</span>
-                        </button>
-                        
-                        <button type="button" id="kopesha-barcode-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg flex items-center transition text-xs">
-                            <i class="fas fa-hand-holding-usd mr-2"></i>
-                            <span>Kopesha Bidhaa</span>
-                        </button>
-                        
-                        <button type="button" id="clear-barcode-form" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center transition text-xs">
-                            <i class="fas fa-times mr-2"></i>
-                            <span>Futa Yote</span>
-                        </button>
-                    </div>
-
-                    <!-- Total & Action -->
-                    <div class="flex flex-col lg:flex-row justify-between items-center gap-3 pt-2 border-t border-gray-200">
-                        <div class="text-sm font-semibold text-black">
-                            Jumla ya Mauzo: 
-                            <span class="text-green-700 font-bold" id="barcode-total">0</span>
-                        </div>
-
-                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow flex items-center transition-all duration-300 hover:scale-[1.02] text-sm">
-                            <i class="fas fa-check mr-2"></i>
-                            Uza Bidhaa
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-      <!-- TAB 3: Taarifa Fupi -->
-<div id="taarifa-tab-content" class="tab-content hidden">
-    <div class="bg-emerald-50 rounded-lg shadow border p-4 card-hover">
-        <h2 class="text-base font-semibold mb-3 flex items-center text-black">
-            <i class="fas fa-file-alt mr-2 text-emerald-600 text-sm"></i>
-            Taarifa Fupi ya Mauzo
-        </h2>
-
-        <!-- Search and Filter -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-3">
-            <div class="relative">
-                <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-xs"></i>
-                <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-            </div>
-            
-            <div class="relative">
-                <i class="fas fa-calendar absolute left-3 top-3 text-gray-400 text-xs"></i>
-                <input type="date" id="filter-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition">
-            </div>
-            
-            <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-xs">
-                <i class="fas fa-redo mr-1"></i> Safisha Filter
-            </button>
-        </div>
-
-        <!-- Sales Table -->
-        <div class="overflow-x-auto rounded-lg shadow-sm border">
-<!-- In the Taarifa tab sales table -->
-<table class="w-full table-auto border-collapse text-xs">
-    <thead>
-        <tr class="bg-emerald-600">
-            <th class="border px-3 py-2 text-left text-white">Tarehe</th>
-            <th class="border px-3 py-2 text-left text-white">Risiti</th>
-            <th class="border px-3 py-2 text-left text-white">Bidhaa</th>
-            <th class="border px-3 py-2 text-left text-white">Idadi</th>
-            <th class="border px-3 py-2 text-left text-white">Bei</th>
-            <th class="border px-3 py-2 text-left text-white">Punguzo</th>
-            <th class="border px-3 py-2 text-left text-white">Faida</th>
-            <th class="border px-3 py-2 text-left text-white">Malipo</th> <!-- ✅ NEW COLUMN -->
-            <th class="border px-3 py-2 text-left text-white">Jumla</th>
-            <th class="border px-3 py-2 text-left text-white">Vitendo</th>
-        </tr>
-    </thead>
-    <tbody id="sales-tbody">
-        @php 
-            $today = \Carbon\Carbon::today()->format('Y-m-d'); 
-            
-            // ✅ FUNCTION TO CALCULATE ACTUAL DISCOUNT
-            function actualDiscount($sale) {
-                return $sale->punguzo_aina === 'bidhaa'
-                    ? $sale->punguzo * $sale->idadi
-                    : $sale->punguzo;
-            }
-        @endphp
-        
-        @forelse($mauzos as $item)
-            @php 
-                $itemDate = $item->created_at->format('Y-m-d');
-                $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
-                
-                // ✅ CALCULATE ACTUAL DISCOUNT
-                $actualDiscount = actualDiscount($item);
-                
-                // ✅ CORRECT PROFIT
-                $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
-                
-                // ✅ CORRECT TOTAL (jumla field should already contain correct total)
-                $total = $item->jumla;
-                
-                // ✅ Get payment method display
-                $paymentMethod = '';
-                switch($item->lipa_kwa) {
-                    case 'cash':
-                        $paymentMethod = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>';
-                        break;
-                    case 'lipa_namba':
-                        $paymentMethod = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>';
-                        break;
-                    case 'bank':
-                        $paymentMethod = '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>';
-                        break;
-                    default:
-                        $paymentMethod = '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>';
-                }
-            @endphp
-            <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
-                <td class="border px-3 py-2">
-                    @if($itemDate === $today)
-                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
-                    @else
-                        {{ $item->created_at->format('d/m/Y') }}
-                    @endif
-                </td>
-                <td class="border px-3 py-2 font-mono">
-                    @if($item->receipt_no)
-                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
-                    @else
-                        <span class="text-gray-400 text-xs">-</span>
-                    @endif
-                </td>
-                <td class="border px-3 py-2">{{ $item->bidhaa->jina }}</td>
-                <td class="border px-3 py-2 text-center">{{ $item->idadi }}</td>
-                <td class="border px-3 py-2 text-right">{{ number_format($item->bei) }}</td>
-                <td class="border px-3 py-2 text-right">{{ number_format($actualDiscount) }}</td>
-                <td class="border px-3 py-2 text-right">{{ number_format($faida) }}</td>
-                <td class="border px-3 py-2 text-center">{!! $paymentMethod !!}</td> <!-- ✅ NEW CELL -->
-                <td class="border px-3 py-2 text-right">{{ number_format($total) }}</td>
-                <td class="border px-3 py-2 text-center">
-                    <div class="flex gap-1 justify-center">
-                        @if($item->receipt_no)
-                        <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
-                            <i class="fas fa-print mr-1 text-xs"></i>
-                        </button>
-                        @endif
-                        <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
-                            <i class="fas fa-trash mr-1 text-xs"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="10" class="text-center py-4 text-gray-500 text-xs">Hakuna mauzo yaliyorekodiwa bado.</td>
-            </tr>
-        @endforelse
-    </tbody>
-</table>
-        </div>
-
-        <!-- Pagination -->
-        @if($mauzos->hasPages())
-        <div class="mt-4">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <!-- Pagination Info -->
-                <div class="text-xs text-gray-600">
-                    @php
-                        $start = ($mauzos->currentPage() - 1) * $mauzos->perPage() + 1;
-                        $end = min($mauzos->currentPage() * $mauzos->perPage(), $mauzos->total());
-                    @endphp
-                    Onyesha {{ $start }} - {{ $end }} ya {{ $mauzos->total() }} mauzo
-                </div>
-
-                <!-- Pagination Links -->
-                <nav class="flex items-center space-x-1">
-                    <!-- Previous Button -->
-                    @if($mauzos->onFirstPage())
-                        <span class="px-3 py-1 rounded-lg border text-gray-400 text-xs cursor-not-allowed">
-                            <i class="fas fa-chevron-left mr-1"></i> Nyuma
-                        </span>
-                    @else
-                        <a href="{{ $mauzos->previousPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
-                            <i class="fas fa-chevron-left mr-1"></i> Nyuma
-                        </a>
-                    @endif
-
-                    <!-- Page Numbers -->
-                    <div class="flex items-center space-x-1">
-                        @foreach($mauzos->getUrlRange(1, $mauzos->lastPage()) as $page => $url)
-                            @if($page == $mauzos->currentPage())
-                                <span class="px-3 py-1 rounded-lg bg-emerald-600 text-white font-semibold text-xs">
-                                    {{ $page }}
-                                </span>
-                            @else
-                                <a href="{{ $url }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition">
-                                    {{ $page }}
-                                </a>
-                            @endif
-                        @endforeach
-                    </div>
-
-                    <!-- Next Button -->
-                    @if($mauzos->hasMorePages())
-                        <a href="{{ $mauzos->nextPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs transition flex items-center">
-                            Mbele <i class="fas fa-chevron-right ml-1"></i>
-                        </a>
-                    @else
-                        <span class="px-3 py-1 rounded-lg border text-gray-400 text-xs cursor-not-allowed">
-                            Mbele <i class="fas fa-chevron-right ml-1"></i>
-                        </span>
-                    @endif
-                </nav>
-            </div>
-        </div>
-        @endif
-    </div>
-</div>
-
-<!-- TAB 4: Mauzo ya Jumla -->
-<div id="jumla-tab-content" class="tab-content hidden">
-    <div class="bg-emerald-50 rounded-lg shadow border p-4 card-hover">
-        <h2 class="text-base font-bold mb-3 flex items-center text-black">
-            <i class="fas fa-chart-bar mr-2 text-emerald-600"></i>
-            Mauzo ya Jumla
-        </h2>
-
-        <!-- Search Area -->
-        <div class="mb-3">
-            <input type="text" id="search-product" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 transition">
-        </div>
-
-        <!-- Sales Summary Table -->
-        <div class="overflow-x-auto rounded-lg shadow-sm border">
-            <table class="w-full border-collapse text-sm" id="grouped-sales-table">
-                <thead class="bg-emerald-600">
-                    <tr>
-                        <th class="border px-3 py-2 text-left text-white text-xs">Tarehe</th>
-                        <th class="border px-3 py-2 text-left text-white text-xs">Bidhaa</th>
-                        <th class="border px-3 py-2 text-left text-white text-xs">Idadi</th>
-                        <th class="border px-3 py-2 text-left text-white text-xs">Punguzo</th>
-                        <th class="border px-3 py-2 text-left text-white text-xs">Jumla</th>
-                        <th class="border px-3 py-2 text-left text-white text-xs">Faida</th>
-                    </tr>
-                </thead>
-                <tbody id="grouped-sales-tbody">
-                    @php
-                        $groupedSales = [];
-                        foreach($allMauzos as $sale) {
-                            $date = $sale->created_at->format('Y-m-d');
-                            $product = $sale->bidhaa->jina;
-                            $key = $date . '|' . $product;
-                            
-                            if (!isset($groupedSales[$key])) {
-                                $groupedSales[$key] = [
-                                    'tarehe' => $date,
-                                    'jina' => $product,
-                                    'idadi' => 0,
-                                    'punguzo' => 0,
-                                    'jumla' => 0,
-                                    'faida' => 0
-                                ];
-                            }
-                            
-                            $groupedSales[$key]['idadi'] += $sale->idadi;
-                            
-                            // ✅ CALCULATE ACTUAL DISCOUNT FOR EACH SALE
-                            $saleActualDiscount = $sale->punguzo_aina === 'bidhaa'
-                                ? $sale->punguzo * $sale->idadi
-                                : $sale->punguzo;
-                            
-                            $groupedSales[$key]['punguzo'] += $saleActualDiscount;
-                            $groupedSales[$key]['jumla'] += $sale->jumla;
-                            
-                            // ✅ CORRECT PROFIT CALCULATION
-                            $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
-                            $saleProfit = (($sale->bei - $buyingPrice) * $sale->idadi) - $saleActualDiscount;
-                            $groupedSales[$key]['faida'] += $saleProfit;
-                        }
-                    @endphp
-                    
-                    @foreach($groupedSales as $sale)
-                    <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
-                        <td class="border px-3 py-2 text-xs">{{ $sale['tarehe'] }}</td>
-                        <td class="border px-3 py-2 text-xs">{{ $sale['jina'] }}</td>
-                        <td class="border px-3 py-2 text-center text-xs">{{ $sale['idadi'] }}</td>
-                        <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['punguzo']) }}</td>
-                        <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['jumla']) }}</td>
-                        <td class="border px-3 py-2 text-right text-xs">{{ number_format($sale['faida']) }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- TAB 5: Kikapu -->
-<div id="kikapu-tab-content" class="tab-content hidden">
-    <div class="bg-white rounded-xl shadow border border-gray-100 p-4 card-hover">
-        <h2 class="text-base font-bold mb-3 flex items-center text-black">
-            <i class="fas fa-shopping-cart mr-2 text-blue-600"></i>
-            Bidhaa Zilizo Kwenye Kikapu
-        </h2>
-
-        <!-- Company Cart Warning (hidden by default) -->
-        <div id="company-cart-warning" class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3 hidden">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm text-yellow-700">
-                        Bidhaa zilizokuwa kwenye kikapu zimeondolewa kwa sababu hazikuwa za kampuni yako.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div id="empty-cart-message" class="text-center text-gray-600 py-8">
-            <i class="fas fa-shopping-cart text-3xl text-gray-400 mb-3"></i>
-            <p class="text-sm">Hakuna bidhaa kwenye kikapu kwa sasa.</p>
-        </div>
-        
-        <div id="cart-content" class="hidden">
-            <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-                <table class="w-full text-xs">
-                    <thead class="bg-gray-100 text-gray-700">
-                        <tr>
-                            <th class="border px-3 py-2 text-left">S/N</th>
-                            <th class="border px-3 py-2 text-left">Bidhaa</th>
-                            <th class="border px-3 py-2 text-left">Idadi</th>
-                            <th class="border px-3 py-2 text-left">Bei</th>
-                            <th class="border px-3 py-2 text-left">Punguzo</th>
-                            <th class="border px-3 py-2 text-left">Jumla</th>
-                            <th class="border px-3 py-2 text-left">Ondoa</th>
+            <!-- Sales Table -->
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="w-full border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border px-3 py-2 text-left text-gray-700">Tarehe</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Risiti</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Bidhaa</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Idadi</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Bei</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Punguzo</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Faida</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Malipo</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Jumla</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Vitendo</th>
                         </tr>
                     </thead>
-                    <tbody id="cart-tbody">
-                        <!-- Cart items will be populated here by JavaScript -->
+                    <tbody id="sales-tbody">
+                        @php 
+                            $today = \Carbon\Carbon::today()->format('Y-m-d'); 
+                            
+                            function actualDiscount($sale) {
+                                return $sale->punguzo_aina === 'bidhaa'
+                                    ? $sale->punguzo * $sale->idadi
+                                    : $sale->punguzo;
+                            }
+                        @endphp
+                        
+                        @forelse($mauzos as $item)
+                            @php 
+                                $itemDate = $item->created_at->format('Y-m-d');
+                                $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
+                                $actualDiscount = actualDiscount($item);
+                                $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
+                                $total = $item->jumla;
+                                
+                                $paymentMethod = '';
+                                switch($item->lipa_kwa) {
+                                    case 'cash':
+                                        $paymentMethod = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>';
+                                        break;
+                                    case 'lipa_namba':
+                                        $paymentMethod = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>';
+                                        break;
+                                    case 'bank':
+                                        $paymentMethod = '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>';
+                                        break;
+                                    default:
+                                        $paymentMethod = '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>';
+                                }
+                            @endphp
+                            <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
+                                <td class="border px-3 py-2">
+                                    @if($itemDate === $today)
+                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
+                                    @else
+                                        {{ $item->created_at->format('d/m/Y') }}
+                                    @endif
+                                </td>
+                                <td class="border px-3 py-2 font-mono">
+                                    @if($item->receipt_no)
+                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
+                                    @else
+                                        <span class="text-gray-400 text-xs">-</span>
+                                    @endif
+                                </td>
+                                <td class="border px-3 py-2">{{ $item->bidhaa->jina }}</td>
+                                <td class="border px-3 py-2 text-center">{{ $item->idadi }}</td>
+                                <td class="border px-3 py-2 text-right">{{ number_format($item->bei) }}</td>
+                                <td class="border px-3 py-2 text-right">{{ number_format($actualDiscount) }}</td>
+                                <td class="border px-3 py-2 text-right">{{ number_format($faida) }}</td>
+                                <td class="border px-3 py-2 text-center">{!! $paymentMethod !!}</td>
+                                <td class="border px-3 py-2 text-right">{{ number_format($total) }}</td>
+                                <td class="border px-3 py-2 text-center">
+                                    <div class="flex gap-1 justify-center">
+                                        @if($item->receipt_no)
+                                        <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
+                                            <i class="fas fa-print mr-1"></i>
+                                        </button>
+                                        @endif
+                                        <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
+                                            <i class="fas fa-trash mr-1"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="10" class="text-center py-4 text-gray-500">Hakuna mauzo yaliyorekodiwa bado.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <!-- Total -->
-            <div class="flex justify-between items-center my-3">
-                <div class="text-left font-semibold text-black text-base">
-                    Jumla ya gharama: 
-                    <span class="text-emerald-600" id="cart-total">0</span>
+            <!-- Pagination -->
+            @if($mauzos->hasPages())
+            <div class="mt-4">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="text-sm text-gray-600">
+                        @php
+                            $start = ($mauzos->currentPage() - 1) * $mauzos->perPage() + 1;
+                            $end = min($mauzos->currentPage() * $mauzos->perPage(), $mauzos->total());
+                        @endphp
+                        Onyesha {{ $start }} - {{ $end }} ya {{ $mauzos->total() }} mauzo
+                    </div>
+
+                    <nav class="flex items-center space-x-1">
+                        @if($mauzos->onFirstPage())
+                            <span class="px-3 py-1 rounded-lg border text-gray-400 text-sm cursor-not-allowed">
+                                <i class="fas fa-chevron-left mr-1"></i> Nyuma
+                            </span>
+                        @else
+                            <a href="{{ $mauzos->previousPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm transition flex items-center">
+                                <i class="fas fa-chevron-left mr-1"></i> Nyuma
+                            </a>
+                        @endif
+
+                        <div class="flex items-center space-x-1">
+                            @foreach($mauzos->getUrlRange(1, $mauzos->lastPage()) as $page => $url)
+                                @if($page == $mauzos->currentPage())
+                                    <span class="px-3 py-1 rounded-lg bg-green-600 text-white font-semibold text-sm">
+                                        {{ $page }}
+                                    </span>
+                                @else
+                                    <a href="{{ $url }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm transition">
+                                        {{ $page }}
+                                    </a>
+                                @endif
+                            @endforeach
+                        </div>
+
+                        @if($mauzos->hasMorePages())
+                            <a href="{{ $mauzos->nextPageUrl() }}" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm transition flex items-center">
+                                Mbele <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        @else
+                            <span class="px-3 py-1 rounded-lg border text-gray-400 text-sm cursor-not-allowed">
+                                Mbele <i class="fas fa-chevron-right ml-1"></i>
+                            </span>
+                        @endif
+                    </nav>
                 </div>
             </div>
-            <!-- Payment Method for Kikapu -->
-<div class="mb-3">
-    <label class="block text-xs font-semibold text-emerald-800 mb-1">Njia ya Malipo</label>
-    <select id="kikapu-lipa-kwa" class="w-full border border-emerald-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-200">
-        <option value="cash">Cash</option>
-        <option value="lipa_namba">Lipa Namba</option>
-        <option value="bank">Bank</option>
-    </select>
-</div>
+            @endif
+        </div>
+    </div>
 
-            <!-- Actions -->
-            <div class="flex flex-wrap gap-2">
-                <button id="clear-cart" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center transition shadow-sm text-xs">
-                    <i class="fas fa-trash mr-2"></i>
-                    Futa Kikapu
-                </button>
-                <button id="kikapu-kopesha-btn" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg flex items-center transition shadow-sm text-xs">
-                    <i class="fas fa-hand-holding-usd mr-2"></i>
-                    Kopesha
-                </button>
-                <button id="checkout-cart" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg flex items-center transition shadow-sm text-xs">
-                    <i class="fas fa-check mr-2"></i>
-                    Funga Kapu
-                </button>
+    <!-- TAB 4: Mauzo ya Jumla -->
+    <div id="jumla-tab-content" class="tab-content hidden">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3 flex items-center text-gray-800">
+                <i class="fas fa-chart-bar mr-2 text-green-600"></i>
+                Mauzo ya Jumla
+            </h2>
+
+            <div class="mb-3">
+                <input type="text" id="search-product" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+            </div>
+
+            <div class="overflow-x-auto rounded-lg border border-gray-200">
+                <table class="w-full border-collapse text-sm" id="grouped-sales-table">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="border px-3 py-2 text-left text-gray-700 text-sm">Tarehe</th>
+                            <th class="border px-3 py-2 text-left text-gray-700 text-sm">Bidhaa</th>
+                            <th class="border px-3 py-2 text-left text-gray-700 text-sm">Idadi</th>
+                            <th class="border px-3 py-2 text-left text-gray-700 text-sm">Punguzo</th>
+                            <th class="border px-3 py-2 text-left text-gray-700 text-sm">Jumla</th>
+                            <th class="border px-3 py-2 text-left text-gray-700 text-sm">Faida</th>
+                        </tr>
+                    </thead>
+                    <tbody id="grouped-sales-tbody">
+                        @php
+                            $groupedSales = [];
+                            foreach($allMauzos as $sale) {
+                                $date = $sale->created_at->format('Y-m-d');
+                                $product = $sale->bidhaa->jina;
+                                $key = $date . '|' . $product;
+                                
+                                if (!isset($groupedSales[$key])) {
+                                    $groupedSales[$key] = [
+                                        'tarehe' => $date,
+                                        'jina' => $product,
+                                        'idadi' => 0,
+                                        'punguzo' => 0,
+                                        'jumla' => 0,
+                                        'faida' => 0
+                                    ];
+                                }
+                                
+                                $groupedSales[$key]['idadi'] += $sale->idadi;
+                                $saleActualDiscount = $sale->punguzo_aina === 'bidhaa'
+                                    ? $sale->punguzo * $sale->idadi
+                                    : $sale->punguzo;
+                                $groupedSales[$key]['punguzo'] += $saleActualDiscount;
+                                $groupedSales[$key]['jumla'] += $sale->jumla;
+                                $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
+                                $saleProfit = (($sale->bei - $buyingPrice) * $sale->idadi) - $saleActualDiscount;
+                                $groupedSales[$key]['faida'] += $saleProfit;
+                            }
+                        @endphp
+                        
+                        @foreach($groupedSales as $sale)
+                        <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
+                            <td class="border px-3 py-2 text-sm">{{ $sale['tarehe'] }}</td>
+                            <td class="border px-3 py-2 text-sm">{{ $sale['jina'] }}</td>
+                            <td class="border px-3 py-2 text-center text-sm">{{ $sale['idadi'] }}</td>
+                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['punguzo']) }}</td>
+                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['jumla']) }}</td>
+                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['faida']) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: Kikapu -->
+    <div id="kikapu-tab-content" class="tab-content hidden">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3 flex items-center text-gray-800">
+                <i class="fas fa-shopping-cart mr-2 text-blue-600"></i>
+                Bidhaa Zilizo Kwenye Kikapu
+            </h2>
+
+            <div id="company-cart-warning" class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3 hidden">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            Bidhaa zilizokuwa kwenye kikapu zimeondolewa kwa sababu hazikuwa za kampuni yako.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="empty-cart-message" class="text-center text-gray-600 py-8">
+                <i class="fas fa-shopping-cart text-3xl text-gray-400 mb-3"></i>
+                <p class="text-sm">Hakuna bidhaa kwenye kikapu kwa sasa.</p>
+            </div>
+            
+            <div id="cart-content" class="hidden">
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 text-gray-700">
+                            <tr>
+                                <th class="border px-3 py-2 text-left">S/N</th>
+                                <th class="border px-3 py-2 text-left">Bidhaa</th>
+                                <th class="border px-3 py-2 text-left">Idadi</th>
+                                <th class="border px-3 py-2 text-left">Bei</th>
+                                <th class="border px-3 py-2 text-left">Punguzo</th>
+                                <th class="border px-3 py-2 text-left">Jumla</th>
+                                <th class="border px-3 py-2 text-left">Ondoa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-tbody">
+                            <!-- Cart items will be populated here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-between items-center my-3">
+                    <div class="font-semibold text-gray-800 text-base">
+                        Jumla ya gharama: 
+                        <span class="text-green-600" id="cart-total">0</span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
+                    <select id="kikapu-lipa-kwa" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                        <option value="cash">Cash</option>
+                        <option value="lipa_namba">Lipa Namba</option>
+                        <option value="bank">Bank</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <button id="clear-cart" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
+                        <i class="fas fa-trash mr-2"></i>
+                        Futa Kikapu
+                    </button>
+                    <button id="kikapu-kopesha-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
+                        <i class="fas fa-hand-holding-usd mr-2"></i>
+                        Kopesha
+                    </button>
+                    <button id="checkout-cart" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
+                        <i class="fas fa-check mr-2"></i>
+                        Funga Kapu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 6: Risiti -->
+    <div id="risiti-tab-content" class="tab-content hidden">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+            <h2 class="text-lg font-bold mb-3 flex items-center text-gray-800">
+                <i class="fas fa-receipt mr-2 text-green-600"></i>
+                Chapisha Risiti
+            </h2>
+
+            <div class="mb-4">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    <input type="text" id="search-receipt-input" placeholder="Weka namba ya risiti (MS-20260110-0001)..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
+                </div>
+                <div class="mt-1 text-sm text-gray-500 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                    Namba ya risiti inapatikana kwenye tab ya "Taarifa"
+                </div>
+            </div>
+
+            <div id="receipt-details" class="hidden">
+                <div class="bg-gray-50 rounded-lg border border-gray-200 p-3 mb-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-semibold text-gray-800 text-sm">Risiti No:</span>
+                        <span id="receipt-no-display" class="font-mono font-bold text-green-700 text-sm"></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-semibold text-gray-800 text-sm">Tarehe:</span>
+                        <span id="receipt-date-display" class="text-sm"></span>
+                    </div>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-semibold text-gray-800 text-sm">Idadi ya Bidhaa:</span>
+                        <span id="receipt-items-count" class="text-sm"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-gray-800 text-sm">Jumla:</span>
+                        <span id="receipt-total-display" class="font-bold text-sm"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <h3 class="font-semibold text-gray-800 text-sm mb-2">Bidhaa:</h3>
+                    <div id="receipt-items-list" class="space-y-2 max-h-40 overflow-y-auto">
+                        <!-- Items will be populated here -->
+                    </div>
+                </div>
+
+                <div class="flex justify-center">
+                    <button id="print-thermal-receipt" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm">
+                        <i class="fas fa-print"></i>
+                        Chapisha Risiti
+                    </button>
+                </div>
+            </div>
+
+            <div id="no-receipt-found" class="hidden text-center py-6">
+                <i class="fas fa-receipt text-3xl text-gray-400 mb-3"></i>
+                <p class="text-gray-600 text-sm">Hakuna risiti iliyopatikana.</p>
+                <p class="text-sm text-gray-500 mt-1">Ingiza namba ya risiti ili kuona taarifa</p>
+            </div>
+
+            <div id="receipt-loading" class="hidden text-center py-6">
+                <i class="fas fa-spinner fa-spin text-xl text-green-600 mb-3"></i>
+                <p class="text-gray-600 text-sm">Inatafuta taarifa...</p>
             </div>
         </div>
     </div>
 </div>
 
-        <!-- TAB 6: Risiti -->
-        <div id="risiti-tab-content" class="tab-content hidden">
-            <div class="bg-white rounded-xl shadow border p-4 card-hover">
-                <h2 class="text-base font-bold mb-3 flex items-center text-black">
-                    <i class="fas fa-receipt mr-2 text-emerald-600"></i>
-                    Chapisha Risiti
-                </h2>
-
-                <!-- Search Receipt -->
-                <div class="mb-4">
-                    <div class="relative">
-                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                        <input type="text" id="search-receipt-input" placeholder="Weka namba ya risiti (MS-20260110-0001)..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                    </div>
-                    <div class="mt-1 text-xs text-gray-500 flex items-center">
-                        <i class="fas fa-info-circle mr-2 text-blue-500"></i>
-                        Namba ya risiti inapatikana kwenye tab ya "Taarifa"
-                    </div>
-                </div>
-
-                <!-- Receipt Details -->
-                <div id="receipt-details" class="hidden">
-                    <div class="bg-gray-50 rounded-lg border border-gray-200 p-3 mb-3">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-semibold text-black text-xs">Risiti No:</span>
-                            <span id="receipt-no-display" class="font-mono font-bold text-emerald-700 text-xs"></span>
-                        </div>
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-semibold text-black text-xs">Tarehe:</span>
-                            <span id="receipt-date-display" class="text-xs"></span>
-                        </div>
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-semibold text-black text-xs">Idadi ya Bidhaa:</span>
-                            <span id="receipt-items-count" class="text-xs"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="font-semibold text-black text-xs">Jumla:</span>
-                            <span id="receipt-total-display" class="font-bold text-sm"></span>
-                        </div>
-                    </div>
-
-                    <!-- Items List -->
-                    <div class="mb-3">
-                        <h3 class="font-semibold text-black text-xs mb-2">Bidhaa:</h3>
-                        <div id="receipt-items-list" class="space-y-2 max-h-40 overflow-y-auto">
-                            <!-- Items will be populated here -->
-                        </div>
-                    </div>
-
-                    <!-- Print Button -->
-                    <div class="flex justify-center">
-                        <button id="print-thermal-receipt" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow text-sm">
-                            <i class="fas fa-print"></i>
-                            Chapisha Risiti
-                        </button>
-                    </div>
-                </div>
-
-                <!-- No Results Message -->
-                <div id="no-receipt-found" class="hidden text-center py-6">
-                    <i class="fas fa-receipt text-3xl text-gray-400 mb-3"></i>
-                    <p class="text-gray-600 text-sm">Hakuna risiti iliyopatikana.</p>
-                    <p class="text-xs text-gray-500 mt-1">Ingiza namba ya risiti ili kuona taarifa</p>
-                </div>
-
-                <!-- Loading -->
-                <div id="receipt-loading" class="hidden text-center py-6">
-                    <i class="fas fa-spinner fa-spin text-xl text-emerald-600 mb-3"></i>
-                    <p class="text-gray-600 text-sm">Inatafuta taarifa...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- Modals -->
 <!-- Delete Sale Modal -->
 <div id="delete-sale-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-2 z-50">
         <div class="p-4 border-b border-gray-200">
-            <h3 class="text-base font-semibold text-black text-center">Thibitisha Ufutaji</h3>
+            <h3 class="text-base font-semibold text-gray-800 text-center">Thibitisha Ufutaji</h3>
         </div>
         <div class="p-4">
             <div class="text-center mb-4">
-                <i class="fas fa-exclamation-triangle text-amber-500 text-2xl mb-3"></i>
-                <p class="text-black text-sm mb-1" id="delete-sale-message"></p>
+                <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mb-3"></i>
+                <p class="text-gray-800 text-sm mb-1" id="delete-sale-message"></p>
                 <div class="bg-red-50 border-l-4 border-red-400 p-3 mt-2 hidden" id="stock-warning">
                     <div class="flex">
                         <i class="fas fa-info-circle text-red-400 mt-0.5"></i>
                         <div class="ml-3">
-                            <p class="text-red-700 text-xs" id="stock-warning-text"></p>
+                            <p class="text-red-700 text-sm" id="stock-warning-text"></p>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="flex justify-center space-x-2">
-                <button id="cancel-delete-sale" class="px-4 py-2 border border-gray-300 rounded-lg text-black hover:bg-gray-50 text-sm">
+                <button id="cancel-delete-sale" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm">
                     Ghairi
                 </button>
                 <button id="confirm-delete-sale" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">
@@ -1023,18 +956,17 @@
 <!-- Kopesha Modal -->
 <div id="kopesha-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50 max-h-[85vh] overflow-y-auto">
-        <div class="sticky top-0 bg-gradient-to-r from-amber-500 to-amber-600 p-3 text-white flex items-center">
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-2 z-50">
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-3 text-white flex items-center">
             <i class="fas fa-hand-holding-usd mr-2"></i>
             <h2 class="text-base font-semibold">Kopesha Bidhaa</h2>
-            <button type="button" id="close-kopesha-modal" class="ml-auto text-white hover:text-gray-200 text-lg">
+            <button type="button" id="close-kopesha-modal" class="ml-auto text-white hover:text-gray-200">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
         <form method="POST" action="{{ route('mauzo.store') }}" class="p-4 space-y-3" id="kopesha-form">
             @csrf
-
             <input type="hidden" name="bidhaa_id" id="kopesha-bidhaa-id">
             <input type="hidden" name="idadi" id="kopesha-idadi">
             <input type="hidden" name="jumla" id="kopesha-jumla">
@@ -1044,10 +976,9 @@
             <input type="hidden" name="punguzo_aina" id="kopesha-punguzo-aina">
             <input type="hidden" name="kopesha" value="1">
 
-            <!-- Mteja Select -->
             <div>
-                <label class="block text-xs font-semibold mb-1 text-black">Mteja Aliyesajiliwa</label>
-                <select id="mteja-select" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 hover:border-amber-400 transition">
+                <label class="block text-sm font-semibold mb-1 text-gray-700">Mteja Aliyesajiliwa</label>
+                <select id="mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     <option value="">-- Mteja Mpya --</option>
                     @foreach($wateja as $m)
                         <option value="{{ $m->id }}" data-jina="{{ $m->jina }}" data-simu="{{ $m->simu }}" data-barua_pepe="{{ $m->barua_pepe }}" data-anapoishi="{{ $m->anapoishi }}">
@@ -1057,38 +988,36 @@
                 </select>
             </div>
 
-            <!-- New Customer Info -->
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Jina la Mkopaji *</label>
-                <input type="text" name="jina_mkopaji" id="kopesha-jina" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Jina la Mkopaji *</label>
+                <input type="text" name="jina_mkopaji" id="kopesha-jina" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Namba ya Simu *</label>
-                <input type="text" name="simu" id="kopesha-simu" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Namba ya Simu *</label>
+                <input type="text" name="simu" id="kopesha-simu" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Barua Pepe</label>
-                <input type="email" name="barua_pepe" id="kopesha-barua-pepe" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Barua Pepe</label>
+                <input type="email" name="barua_pepe" id="kopesha-barua-pepe" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Anapoishi</label>
-                <input type="text" name="anapoishi" id="kopesha-anapoishi" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Anapoishi</label>
+                <input type="text" name="anapoishi" id="kopesha-anapoishi" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Tarehe ya Malipo *</label>
-                <input type="date" name="tarehe_malipo" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Tarehe ya Malipo *</label>
+                <input type="date" name="tarehe_malipo" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
-            <!-- Buttons -->
             <div class="flex justify-end gap-2 pt-3 border-t border-gray-200">
                 <button type="button" id="cancel-kopesha" class="bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg text-white font-semibold transition text-sm">
                     Funga
                 </button>
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition shadow text-sm">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition text-sm">
                     <i class="fas fa-check mr-1"></i>
                     Hifadhi
                 </button>
@@ -1100,11 +1029,11 @@
 <!-- Kopesha Barcode Modal -->
 <div id="kopesha-barcode-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
-        <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-3 text-white flex items-center">
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-2 z-50">
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-3 text-white flex items-center">
             <i class="fas fa-hand-holding-usd mr-2"></i>
             <h2 class="text-base font-semibold">Kopesha Bidhaa za Barcode</h2>
-            <button type="button" id="close-kopesha-barcode-modal" class="ml-auto text-white hover:text-gray-200 text-lg">
+            <button type="button" id="close-kopesha-barcode-modal" class="ml-auto text-white hover:text-gray-200">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -1113,8 +1042,8 @@
             @csrf
             
             <div>
-                <label class="block text-xs font-semibold mb-1 text-black">Chagua Mteja</label>
-                <select id="barcode-mteja-select" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                <label class="block text-sm font-semibold mb-1 text-gray-700">Chagua Mteja</label>
+                <select id="barcode-mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     <option value="">-- Mteja Mpya --</option>
                     @foreach($wateja as $mteja)
                         <option value="{{ $mteja->id }}" data-jina="{{ $mteja->jina }}" data-simu="{{ $mteja->simu }}" data-barua_pepe="{{ $mteja->barua_pepe }}" data-anapoishi="{{ $mteja->anapoishi }}">
@@ -1127,30 +1056,29 @@
                 </select>
             </div>
 
-            <!-- New Customer Info -->
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Jina la Mkopaji *</label>
-                <input type="text" name="jina_mkopaji" id="barcode-kopesha-jina" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Jina la Mkopaji *</label>
+                <input type="text" name="jina_mkopaji" id="barcode-kopesha-jina" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Namba ya Simu *</label>
-                <input type="text" name="simu" id="barcode-kopesha-simu" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Namba ya Simu *</label>
+                <input type="text" name="simu" id="barcode-kopesha-simu" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Barua Pepe</label>
-                <input type="email" name="barua_pepe" id="barcode-kopesha-barua-pepe" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Barua Pepe</label>
+                <input type="email" name="barua_pepe" id="barcode-kopesha-barua-pepe" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Anapoishi</label>
-                <input type="text" name="anapoishi" id="barcode-kopesha-anapoishi" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Anapoishi</label>
+                <input type="text" name="anapoishi" id="barcode-kopesha-anapoishi" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Tarehe ya Malipo *</label>
-                <input type="date" name="tarehe_malipo" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Tarehe ya Malipo *</label>
+                <input type="date" name="tarehe_malipo" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
             <input type="hidden" name="items" id="barcode-items-data">
@@ -1159,7 +1087,7 @@
                 <button type="button" id="cancel-kopesha-barcode" class="bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg text-white font-semibold transition text-sm">
                     Funga
                 </button>
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition shadow text-sm">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition text-sm">
                     <i class="fas fa-check mr-1"></i>
                     Thibitisha Kopesha
                 </button>
@@ -1171,11 +1099,11 @@
 <!-- Kopesha Kikapu Modal -->
 <div id="kikapu-kopesha-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
-        <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-3 text-white flex items-center">
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-2 z-50">
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-3 text-white flex items-center">
             <i class="fas fa-hand-holding-usd mr-2"></i>
             <h2 class="text-base font-semibold">Kopesha Bidhaa za Kikapu</h2>
-            <button type="button" id="close-kikapu-kopesha-modal" class="ml-auto text-white hover:text-gray-200 text-lg">
+            <button type="button" id="close-kikapu-kopesha-modal" class="ml-auto text-white hover:text-gray-200">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -1184,8 +1112,8 @@
             @csrf
             
             <div>
-                <label class="block text-xs font-semibold mb-1 text-black">Chagua Mteja</label>
-                <select id="kikapu-mteja-select" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                <label class="block text-sm font-semibold mb-1 text-gray-700">Chagua Mteja</label>
+                <select id="kikapu-mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
                     <option value="">-- Mteja Mpya --</option>
                     @foreach($wateja as $mteja)
                         <option value="{{ $mteja->id }}" data-jina="{{ $mteja->jina }}" data-simu="{{ $mteja->simu }}" data-barua_pepe="{{ $mteja->barua_pepe }}" data-anapoishi="{{ $mteja->anapoishi }}">
@@ -1198,30 +1126,29 @@
                 </select>
             </div>
 
-            <!-- New Customer Info -->
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Jina la Mkopaji *</label>
-                <input type="text" name="jina_mkopaji" id="kikapu-kopesha-jina" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Jina la Mkopaji *</label>
+                <input type="text" name="jina_mkopaji" id="kikapu-kopesha-jina" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Namba ya Simu *</label>
-                <input type="text" name="simu" id="kikapu-kopesha-simu" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Namba ya Simu *</label>
+                <input type="text" name="simu" id="kikapu-kopesha-simu" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Barua Pepe</label>
-                <input type="email" name="barua_pepe" id="kikapu-kopesha-barua-pepe" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Barua Pepe</label>
+                <input type="email" name="barua_pepe" id="kikapu-kopesha-barua-pepe" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Anapoishi</label>
-                <input type="text" name="anapoishi" id="kikapu-kopesha-anapoishi" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition">
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Anapoishi</label>
+                <input type="text" name="anapoishi" id="kikapu-kopesha-anapoishi" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
             </div>
 
             <div>
-                <label class="block text-black text-xs font-semibold mb-1">Tarehe ya Malipo *</label>
-                <input type="date" name="tarehe_malipo" class="w-full border border-amber-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition" required>
+                <label class="block text-gray-700 text-sm font-semibold mb-1">Tarehe ya Malipo *</label>
+                <input type="date" name="tarehe_malipo" class="w-full border border-gray-300 rounded-lg p-2 text-sm" required>
             </div>
 
             <input type="hidden" name="items" id="kikapu-items-data">
@@ -1230,7 +1157,7 @@
                 <button type="button" id="cancel-kikapu-kopesha" class="bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg text-white font-semibold transition text-sm">
                     Funga
                 </button>
-                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition shadow text-sm">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition text-sm">
                     <i class="fas fa-check mr-1"></i>
                     Thibitisha Kopesha
                 </button>
@@ -1239,14 +1166,14 @@
     </div>
 </div>
 
-<!-- Simple Double Sale Warning Modal -->
+<!-- Double Sale Warning Modal -->
 <div id="double-sale-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
     <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 z-50">
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-2 z-50">
         <div class="bg-gradient-to-r from-orange-500 to-orange-600 p-3 text-white flex items-center">
             <i class="fas fa-exclamation-triangle mr-2"></i>
             <h2 class="text-base font-semibold">Onana tena</h2>
-            <button type="button" id="close-double-sale-modal" class="ml-auto text-white hover:text-gray-200 text-lg">
+            <button type="button" id="close-double-sale-modal" class="ml-auto text-white hover:text-gray-200">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -1256,7 +1183,7 @@
                 <i class="fas fa-exclamation-circle text-2xl mr-2"></i>
             </div>
             
-            <p class="text-sm text-black mb-3">
+            <p class="text-sm text-gray-800 mb-3">
                 Unataka kuuza tena "<span id="double-sale-product-name" class="font-semibold"></span>"?
             </p>
             
@@ -1264,7 +1191,7 @@
                 <button type="button" id="cancel-double-sale" class="bg-gray-400 hover:bg-gray-500 px-4 py-2 rounded-lg text-white font-semibold transition text-sm">
                     Ghairi
                 </button>
-                <button type="button" id="confirm-double-sale" class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition shadow text-sm">
+                <button type="button" id="confirm-double-sale" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-white font-semibold flex items-center gap-1 transition text-sm">
                     <i class="fas fa-check mr-1"></i>
                     Uza
                 </button>
@@ -1276,46 +1203,6 @@
 
 @push('styles')
 <style>
-/* Responsive Design */
-@media (max-width: 640px) {
-    .text-xs {
-        font-size: 0.75rem;
-    }
-    .text-sm {
-        font-size: 0.8rem;
-    }
-    .p-2 {
-        padding: 0.4rem;
-    }
-    .p-3 {
-        padding: 0.6rem;
-    }
-    .grid-cols-1 {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 1024px) {
-    .container {
-        max-width: 100%;
-        padding: 0 1rem;
-    }
-    
-    #sehemu-tab-content {
-        max-height: calc(100vh - 250px);
-        overflow-y: auto;
-    }
-}
-
-/* Modal Responsive */
-@media (max-width: 640px) {
-    .modal-content {
-        width: 95% !important;
-        margin: 0.5rem !important;
-    }
-}
-
-/* Tab styles */
 .tab-content {
     transition: opacity 0.3s ease;
 }
@@ -1333,7 +1220,6 @@
     color: white !important;
 }
 
-/* Card hover effect */
 .card-hover {
     transition: all 0.3s ease;
 }
@@ -1343,7 +1229,26 @@
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Scrollbar styling */
+.modal {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.hidden {
+    display: none !important;
+}
+
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95% !important;
+        margin: 0.5rem !important;
+    }
+}
+
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -1361,78 +1266,6 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
-}
-
-/* Modal animations */
-.modal {
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Hide elements */
-.hidden {
-    display: none !important;
-}
-
-/* Text colors */
-.text-black {
-    color: #000000;
-}
-
-.text-emerald-800 {
-    color: #065f46;
-}
-
-.text-emerald-600 {
-    color: #059669;
-}
-
-/* Input focus styles */
-input:focus, select:focus, textarea:focus {
-    outline: none;
-    ring: 2px;
-}
-
-/* Button transitions */
-button {
-    transition: all 0.2s ease;
-}
-
-button:hover {
-    transform: translateY(-1px);
-}
-
-/* Table responsive */
-.table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Print styles */
-@media print {
-    .no-print {
-        display: none !important;
-    }
-}
-
-/* Highlight animation */
-@keyframes highlight {
-    0% { background-color: rgba(34, 197, 94, 0.1); }
-    100% { background-color: transparent; }
-}
-
-.highlight {
-    animation: highlight 1s ease;
-}
-
-/* Barcode row highlight */
-.barcode-row.highlight {
-    background-color: rgba(34, 197, 94, 0.1);
-    transition: background-color 0.5s ease;
 }
 </style>
 @endpush

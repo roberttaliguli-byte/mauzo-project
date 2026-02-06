@@ -3,15 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Wafanyakazi extends Authenticatable
-
 {
     use HasFactory;
 
-    protected $table = 'wafanyakazis'; // ensure table name is correct
+    protected $table = 'wafanyakazis';
 
     protected $fillable = [
         'jina',
@@ -23,15 +21,18 @@ class Wafanyakazi extends Authenticatable
         'simu_ndugu',
         'username',
         'password',
-        'role',
+        'role', // ✅ Make sure this is included
         'tarehe_kuzaliwa',
         'getini',
-        'company_id', // ✅ added for company linkage
+        'company_id',
     ];
-
 
     protected $hidden = ['password'];
 
+    // ✅ Add this to always set role as 'mfanyakazi'
+    protected $attributes = [
+        'role' => 'mfanyakazi',
+    ];
 
     /**
      * ✅ Uhusiano na kampuni (Company)

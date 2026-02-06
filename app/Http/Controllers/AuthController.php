@@ -171,79 +171,97 @@ class AuthController extends Controller
     /**
      * Handle login for all types
      */
-    public function loginPost(Request $request)
-    {
-        $credentials = $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-        ]);
+/**
+ * Handle login for all types
+ */
+public function loginPost(Request $request)
+{
+    $credentials = $request->validate([
+        'username' => 'required|string',
+        'password' => 'required|string',
+    ]);
 
-        // 1️⃣ Admin login
-        if (Auth::attempt([
-            'username' => $credentials['username'],
-            'password' => $credentials['password'],
-            'role' => 'admin',
-            'is_approved' => 1
-        ], $request->boolean('remember'))) {
+    // 1️⃣ Admin login (role = 'admin')
+    if (Auth::guard('web')->attempt([
+        'username' => $credentials['username'],
+        'password' => $credentials['password'],
+        'role' => 'admin',
+        'is_approved' => 1
+    ], $request->boolean('remember'))) {
 
-            session(['is_admin' => true]);
-            return redirect()->route('admin.dashboard')
-                ->with('success', 'Umeingia kama Msimamizi!');
-        }
-
-        // 2️⃣ Boss/Owner login
-        if (Auth::attempt([
-            'username' => $credentials['username'],
-            'password' => $credentials['password']
-        ], $request->boolean('remember'))) {
-
-            $user = Auth::user();
-
-            if (!$user->company_id || !$user->company) {
-                Auth::logout();
-                return back()->withErrors(['login' => 'Akaunti yako haijaunganishwa na kampuni yoyote. Wasiliana na msimamizi.'])
-                    ->onlyInput('username');
-            }
-
-            if (!$user->company->is_user_approved) {
-                Auth::logout();
-                return back()->withErrors(['login' => 'Kampuni yako haijaidhinishwa bado.'])
-                    ->onlyInput('username');
-            }
-
-            if (!$user->is_approved) {
-                Auth::logout();
-                return back()->withErrors(['login' => 'Akaunti yako haijaidhinishwa bado.'])
-                    ->onlyInput('username');
-            }
-
-            $request->session()->regenerate();
-            session()->forget('is_admin');
-
-            return redirect()->route('dashboard')
-                ->with('success', 'Umeingia kama Mmiliki!');
-        }
-
-        // 3️⃣ Employee login
-        $mfanyakazi = Wafanyakazi::where('username', $credentials['username'])->first();
-
-        if ($mfanyakazi && Hash::check($credentials['password'], $mfanyakazi->password)) {
-            if ($mfanyakazi->getini !== 'ingia') {
-                return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
-                    ->onlyInput('username');
-            }
-
-            Auth::guard('mfanyakazi')->login($mfanyakazi);
-
-            // Redirect directly to Mauzo page
-            return redirect()->route('mauzo.index')
-                ->with('success', 'Umeingia kama Mfanyakazi!');
-        }
-
-        // 4️⃣ Login failed
-        return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
-            ->onlyInput('username');
+        $request->session()->regenerate();
+        return redirect()->route('admin.dashboard')
+            ->with('success', 'Umeingia kama Msimamizi!');
     }
+
+    // 2️⃣ Boss/Owner login (role = 'boss')
+    if (Auth::guard('web')->attempt([
+        'username' => $credentials['username'],
+        'password' => $credentials['password']
+    ], $request->boolean('remember'))) {
+
+        $user = Auth::guard('web')->user();
+
+        // Check if user is boss (not admin)
+        if ($user->role !== 'boss') {
+            Auth::guard('web')->logout();
+            return back()->withErrors(['login' => 'Huna ruhusa ya kuingia hapa.'])
+                ->onlyInput('username');
+        }
+
+        if (!$user->company_id || !$user->company) {
+            Auth::guard('web')->logout();
+            return back()->withErrors(['login' => 'Akaunti yako haijaunganishwa na kampuni yoyote. Wasiliana na msimamizi.'])
+                ->onlyInput('username');
+        }
+
+        if (!$user->company->is_user_approved) {
+            Auth::guard('web')->logout();
+            return back()->withErrors(['login' => 'Kampuni yako haijaidhinishwa bado.'])
+                ->onlyInput('username');
+        }
+
+        if (!$user->is_approved) {
+            Auth::guard('web')->logout();
+            return back()->withErrors(['login' => 'Akaunti yako haijaidhinishwa bado.'])
+                ->onlyInput('username');
+        }
+
+        $request->session()->regenerate();
+        return redirect()->route('dashboard')
+            ->with('success', 'Umeingia kama Mmiliki!');
+    }
+
+    // 3️⃣ Employee login (role = 'mfanyakazi')
+    if (Auth::guard('mfanyakazi')->attempt([
+        'username' => $credentials['username'],
+        'password' => $credentials['password']
+    ], $request->boolean('remember'))) {
+
+        $mfanyakazi = Auth::guard('mfanyakazi')->user();
+
+        if ($mfanyakazi->getini !== 'ingia') {
+            Auth::guard('mfanyakazi')->logout();
+            return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
+                ->onlyInput('username');
+        }
+
+        // Check if employee has company_id
+        if (!$mfanyakazi->company_id) {
+            Auth::guard('mfanyakazi')->logout();
+            return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
+                ->onlyInput('username');
+        }
+
+        $request->session()->regenerate();
+        return redirect()->route('mauzo.index')
+            ->with('success', 'Umeingia kama Mfanyakazi!');
+    }
+
+    // 4️⃣ Login failed
+    return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
+        ->onlyInput('username');
+}
 
     /**
      * Show forgot password form
@@ -317,14 +335,18 @@ class AuthController extends Controller
     }
 
     // logout
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        session()->forget('is_admin');
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/login')->with('success', 'Umetoka kwenye mfumo kwa mafanikio.');
+public function logout(Request $request)
+{
+    // Check which guard is active and logout from it
+    if (Auth::guard('mfanyakazi')->check()) {
+        Auth::guard('mfanyakazi')->logout();
+    } elseif (Auth::guard('web')->check()) {
+        Auth::guard('web')->logout();
     }
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login')->with('success', 'Umetoka kwenye mfumo kwa mafanikio.');
+}
 }

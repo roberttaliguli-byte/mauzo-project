@@ -99,7 +99,7 @@
                 width: 100% !important;
             }
             .company-name {
-                font-size: 16px !important;
+                font-size: 19px !important;
                 font-weight: bold !important;
                 margin-bottom: 3px !important;
                 text-transform: uppercase !important;
