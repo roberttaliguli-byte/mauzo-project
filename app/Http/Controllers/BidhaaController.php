@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class BidhaaController extends Controller
 {
@@ -124,67 +125,81 @@ class BidhaaController extends Controller
     /**
      * Hifadhi bidhaa mpya (normal form)
      */
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'jina' => 'required|string|max:255',
-            'aina' => 'required|string|max:255',
-            'kipimo' => 'nullable|string|max:100',
-            'idadi' => 'required|integer|min:0',
-            'bei_nunua' => 'required|numeric|min:0',
-            'bei_kuuza' => 'required|numeric|min:0',
-            'expiry' => 'nullable|date|after_or_equal:today',
-            'barcode' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('bidhaas', 'barcode')->where(function ($query) {
-                    return $query->where('company_id', $this->getCompanyId());
-                })
-            ],
-        ], [
-            'jina.required' => 'Jina la bidhaa linahitajika',
-            'aina.required' => 'Aina ya bidhaa inahitajika',
-            'idadi.required' => 'Idadi ya bidhaa inahitajika',
-            'bei_nunua.required' => 'Bei ya kununua inahitajika',
-            'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
-            'expiry.after_or_equal' => 'Tarehe ya mwisho haiwezi kuwa ya zamani',
-            'barcode.unique' => 'Barcode tayari ipo kwenye mfumo',
-        ]);
+// In the store method, update the validation rules:
+public function store(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'jina' => 'required|string|max:255',
+        'aina' => 'required|string|max:255',
+        'kipimo' => 'nullable|string|max:100',
+        'idadi' => 'required|integer|min:0',
+        'bei_nunua' => 'required|numeric|min:0',
+        'bei_kuuza' => 'required|numeric|min:0',
+        'expiry' => 'nullable|date|after_or_equal:today',
+        'barcode' => [
+            'nullable',
+            'string',
+            'max:255',
+            Rule::unique('bidhaas', 'barcode')->where(function ($query) {
+                return $query->where('company_id', $this->getCompanyId());
+            })
+        ],
+        'picha' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // Add this line
+    ], [
+        'jina.required' => 'Jina la bidhaa linahitajika',
+        'aina.required' => 'Aina ya bidhaa inahitajika',
+        'idadi.required' => 'Idadi ya bidhaa inahitajika',
+        'bei_nunua.required' => 'Bei ya kununua inahitajika',
+        'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
+        'expiry.after_or_equal' => 'Tarehe ya mwisho haiwezi kuwa ya zamani',
+        'barcode.unique' => 'Barcode tayari ipo kwenye mfumo',
+        'picha.image' => 'Faili ya picha inapaswa kuwa picha',
+        'picha.mimes' => 'Picha inapaswa kuwa ya aina: jpeg, png, jpg, gif, webp',
+        'picha.max' => 'Picha haiwezi kuzidi 2MB',
+    ]);
 
-        // Validate that selling price is not lower than buying price
-        $validator->after(function ($validator) use ($request) {
-            if ($request->bei_kuuza < $request->bei_nunua) {
-                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
-            }
-        });
-
-        if ($validator->fails()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hitilafu katika uthibitishaji',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            return back()->withErrors($validator)->withInput();
+    // Validate that selling price is not lower than buying price
+    $validator->after(function ($validator) use ($request) {
+        if ($request->bei_kuuza < $request->bei_nunua) {
+            $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
         }
+    });
 
-        $validated = $validator->validated();
-        $validated['company_id'] = $this->getCompanyId();
-
-        Bidhaa::create($validated);
-
+    if ($validator->fails()) {
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Bidhaa imeongezwa kikamilifu!'
-            ]);
+                'success' => false,
+                'message' => 'Hitilafu katika uthibitishaji',
+                'errors' => $validator->errors()
+            ], 422);
         }
-
-        return redirect()->route('bidhaa.index')
-            ->with('success', 'Bidhaa imeongezwa kikamilifu!');
+        return back()->withErrors($validator)->withInput();
     }
+
+    $validated = $validator->validated();
+    $validated['company_id'] = $this->getCompanyId();
+
+    // Handle image upload
+    if ($request->hasFile('picha')) {
+        $image = $request->file('picha');
+        $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('bidhaa_images', $imageName, 'public');
+        $validated['picha'] = $path;
+    }
+
+    Bidhaa::create($validated);
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Bidhaa imeongezwa kikamilifu!'
+        ]);
+    }
+
+    return redirect()->route('bidhaa.index')
+        ->with('success', 'Bidhaa imeongezwa kikamilifu!');
+}
+
 
     /**
      * Hifadhi bidhaa kwa kutumia barcode
@@ -271,72 +286,91 @@ class BidhaaController extends Controller
     /**
      * Rekebisha bidhaa
      */
-    public function update(Request $request, $id)
-    {
-        $companyId = $this->getCompanyId();
-        $bidhaa = Bidhaa::where('id', $id)
-                        ->where('company_id', $companyId)
-                        ->firstOrFail();
+// Also update the update method similarly:
+public function update(Request $request, $id)
+{
+    $companyId = $this->getCompanyId();
+    $bidhaa = Bidhaa::where('id', $id)
+                    ->where('company_id', $companyId)
+                    ->firstOrFail();
 
-        $validator = Validator::make($request->all(), [
-            'jina' => 'required|string|max:255',
-            'aina' => 'required|string|max:255',
-            'kipimo' => 'nullable|string|max:100',
-            'idadi' => 'required|integer|min:0',
-            'bei_nunua' => 'required|numeric|min:0',
-            'bei_kuuza' => 'required|numeric|min:0',
-            'expiry' => 'nullable|date|after_or_equal:today',
-            'barcode' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('bidhaas', 'barcode')
-                    ->where(function ($query) use ($companyId) {
-                        return $query->where('company_id', $companyId);
-                    })
-                    ->ignore($bidhaa->id)
-            ],
-        ], [
-            'jina.required' => 'Jina la bidhaa linahitajika',
-            'aina.required' => 'Aina ya bidhaa inahitajika',
-            'idadi.required' => 'Idadi ya bidhaa inahitajika',
-            'bei_nunua.required' => 'Bei ya kununua inahitajika',
-            'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
-            'expiry.after_or_equal' => 'Tarehe ya mwisho haiwezi kuwa ya zamani',
-            'barcode.unique' => 'Barcode tayari ipo kwenye mfumo',
-        ]);
+    $validator = Validator::make($request->all(), [
+        'jina' => 'required|string|max:255',
+        'aina' => 'required|string|max:255',
+        'kipimo' => 'nullable|string|max:100',
+        'idadi' => 'required|integer|min:0',
+        'bei_nunua' => 'required|numeric|min:0',
+        'bei_kuuza' => 'required|numeric|min:0',
+        'expiry' => 'nullable|date|after_or_equal:today',
+        'barcode' => [
+            'nullable',
+            'string',
+            'max:255',
+            Rule::unique('bidhaas', 'barcode')
+                ->where(function ($query) use ($companyId) {
+                    return $query->where('company_id', $companyId);
+                })
+                ->ignore($bidhaa->id)
+        ],
+        'picha' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // Add this line
+    ], [
+        'jina.required' => 'Jina la bidhaa linahitajika',
+        'aina.required' => 'Aina ya bidhaa inahitajika',
+        'idadi.required' => 'Idadi ya bidhaa inahitajika',
+        'bei_nunua.required' => 'Bei ya kununua inahitajika',
+        'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
+        'expiry.after_or_equal' => 'Tarehe ya mwisho haiwezi kuwa ya zamani',
+        'barcode.unique' => 'Barcode tayari ipo kwenye mfumo',
+        'picha.image' => 'Faili ya picha inapaswa kuwa picha',
+        'picha.mimes' => 'Picha inapaswa kuwa ya aina: jpeg, png, jpg, gif, webp',
+        'picha.max' => 'Picha haiwezi kuzidi 2MB',
+    ]);
 
-        $validator->after(function ($validator) use ($request) {
-            if ($request->bei_kuuza < $request->bei_nunua) {
-                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
-            }
-        });
-
-        if ($validator->fails()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hitilafu katika uthibitishaji',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            return back()->withErrors($validator)->withInput();
+    $validator->after(function ($validator) use ($request) {
+        if ($request->bei_kuuza < $request->bei_nunua) {
+            $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
         }
+    });
 
-        $validated = $validator->validated();
-
-        $bidhaa->update($validated);
-
+    if ($validator->fails()) {
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Bidhaa imerekebishwa kikamilifu!'
-            ]);
+                'success' => false,
+                'message' => 'Hitilafu katika uthibitishaji',
+                'errors' => $validator->errors()
+            ], 422);
         }
-
-        return redirect()->route('bidhaa.index')
-            ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
+        return back()->withErrors($validator)->withInput();
     }
+
+    $validated = $validator->validated();
+
+    // Handle image upload
+    if ($request->hasFile('picha')) {
+        // Delete old image if exists
+        if ($bidhaa->picha && Storage::disk('public')->exists($bidhaa->picha)) {
+            Storage::disk('public')->delete($bidhaa->picha);
+        }
+        
+        $image = $request->file('picha');
+        $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+        $path = $image->storeAs('bidhaa_images', $imageName, 'public');
+        $validated['picha'] = $path;
+    }
+
+    $bidhaa->update($validated);
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Bidhaa imerekebishwa kikamilifu!'
+        ]);
+    }
+
+    return redirect()->route('bidhaa.index')
+        ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
+}
+
 
     /**
      * Futa bidhaa

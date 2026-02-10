@@ -1331,4 +1331,113 @@ private function checkDoubleSaleInController($bidhaaId, $companyId)
         
         return $this->storeKikapuLoan($request);
     }
+
+    // Get sales with filters for AJAX
+public function getFilteredSales(Request $request)
+{
+    $user = $this->getAuthUser();
+    if (!$user) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+    }
+    
+    $companyId = $user->company_id;
+    
+    $query = Mauzo::with('bidhaa')
+        ->where('company_id', $companyId);
+    
+    // Search by product name
+    if ($request->has('search') && $request->search != '') {
+        $searchTerm = $request->search;
+        $query->whereHas('bidhaa', function ($q) use ($searchTerm) {
+            $q->where('jina', 'like', '%' . $searchTerm . '%');
+        })->orWhere('receipt_no', 'like', '%' . $searchTerm . '%')
+          ->orWhere('lipa_kwa', 'like', '%' . $searchTerm . '%');
+    }
+    
+    // Date range filter
+    if ($request->has('start_date') && $request->start_date != '') {
+        $query->whereDate('created_at', '>=', $request->start_date);
+    }
+    
+    if ($request->has('end_date') && $request->end_date != '') {
+        $query->whereDate('created_at', '<=', $request->end_date);
+    }
+    
+    $sales = $query->orderBy('created_at', 'desc')->get();
+    
+    $html = '';
+    $today = \Carbon\Carbon::today()->format('Y-m-d');
+    
+    foreach($sales as $item) {
+        $itemDate = $item->created_at->format('Y-m-d');
+        $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
+        $actualDiscount = $this->actualDiscount($item);
+        $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
+        $total = $item->jumla;
+        
+        $paymentMethod = '';
+        switch($item->lipa_kwa) {
+            case 'cash':
+                $paymentMethod = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>';
+                break;
+            case 'lipa_namba':
+                $paymentMethod = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>';
+                break;
+            case 'bank':
+                $paymentMethod = '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>';
+                break;
+            default:
+                $paymentMethod = '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>';
+        }
+        
+        $html .= '
+        <tr class="sales-row" data-product="'.strtolower($item->bidhaa->jina).'" data-date="'.$itemDate.'" data-id="'.$item->id.'">
+            <td class="border px-3 py-2">
+                '.($itemDate === $today ? 
+                    '<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>' : 
+                    $item->created_at->format('d/m/Y')).'
+            </td>
+            <td class="border px-3 py-2 font-mono">
+                '.($item->receipt_no ? 
+                    '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="'.$item->receipt_no.'" title="Bonyeza kunakili">'.substr($item->receipt_no, -8).'</span>' : 
+                    '<span class="text-gray-400 text-xs">-</span>').'
+            </td>
+            <td class="border px-3 py-2">'.$item->bidhaa->jina.'</td>
+            <td class="border px-3 py-2 text-center">'.$item->idadi.'</td>
+            <td class="border px-3 py-2 text-right">'.number_format($item->bei).'</td>
+            <td class="border px-3 py-2 text-right">'.number_format($actualDiscount).'</td>
+            <td class="border px-3 py-2 text-right">'.number_format($faida).'</td>
+            <td class="border px-3 py-2 text-center">'.$paymentMethod.'</td>
+            <td class="border px-3 py-2 text-right">'.number_format($total).'</td>
+            <td class="border px-3 py-2 text-center">
+                <div class="flex gap-1 justify-center">
+                    '.($item->receipt_no ? 
+                    '<button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="'.$item->receipt_no.'">
+                        <i class="fas fa-print mr-1"></i>
+                    </button>' : '').'
+                    <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="'.$item->id.'" data-product-name="'.$item->bidhaa->jina.'" data-quantity="'.$item->idadi.'">
+                        <i class="fas fa-trash mr-1"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>';
+    }
+    
+    if($html == '') {
+        $html = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Hakuna mauzo yaliyopatikana kwenye filter hii.</td></tr>';
+    }
+    
+    return response()->json([
+        'success' => true,
+        'html' => $html
+    ]);
+}
+
+// Helper function to calculate actual discount
+private function actualDiscount($sale)
+{
+    return $sale->punguzo_aina === 'bidhaa'
+        ? $sale->punguzo * $sale->idadi
+        : $sale->punguzo;
+}
 }

@@ -13,7 +13,7 @@
     {{-- Sidebar --}}
     <aside class="w-64 bg-green-800 text-white flex flex-col">
         <div class="p-6 text-center border-b border-gray-700">
-            <div class="text-2xl font-bold mb-1">DEMODAY</div>
+            <div class="text-2xl font-bold mb-1">Mauzosheetai</div>
             <div class="text-sm">Boss</div>
         </div>
         <nav class="flex-1 p-4 space-y-2">

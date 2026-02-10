@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Masaplaya - DEMODAY')
+@section('title', 'Masaplaya - Mauzosheetai')
 
 @section('page-title', 'Masaplaya')
 @section('page-subtitle', 'Usimamizi wa wasaplaya wote - ' . now()->format('d/m/Y'))

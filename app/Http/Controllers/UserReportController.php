@@ -643,4 +643,62 @@ private function getPurchasesData($companyId, $dateRange)
         
         return "{$type}_{$period}_{$date}.pdf";
     }
+    // Add this method to your UserReportController
+public function preview(Request $request)
+{
+    $request->validate([
+        'report_type' => 'required|in:sales,manunuzi,matumizi,general',
+        'time_period' => 'required|in:today,yesterday,week,month,year,custom',
+        'from' => 'required_if:time_period,custom|date',
+        'to' => 'required_if:time_period,custom|date|after_or_equal:from',
+    ]);
+
+    $timePeriod = $request->get('time_period');
+    $reportType = $request->get('report_type');
+    
+    // Get date range
+    $dateRange = $this->getDateRange($timePeriod, $request);
+    
+    // Get user and company
+    $user = Auth::user();
+    $company = $user->company;
+    $companyId = $company->id;
+
+    // Prepare base data
+    $data = [
+        'reportType' => $reportType,
+        'selectedPeriod' => $timePeriod,
+        'dateFrom' => $dateRange['start'] ? $dateRange['start']->format('Y-m-d') : null,
+        'dateTo' => $dateRange['end'] ? $dateRange['end']->format('Y-m-d') : null,
+        'companyName' => $company->company_name ?? 'Biashara',
+        'date' => Carbon::now()->format('d/m/Y'),
+        'currentTime' => Carbon::now()->format('H:i:s'),
+    ];
+
+    // Get data based on report type
+    switch ($reportType) {
+        case 'sales':
+            $salesData = $this->getSalesData($companyId, $dateRange);
+            $data = array_merge($data, $salesData);
+            break;
+        case 'manunuzi':
+            $purchasesData = $this->getPurchasesData($companyId, $dateRange);
+            $data = array_merge($data, $purchasesData);
+            break;
+        case 'matumizi':
+            $expensesData = $this->getExpensesData($companyId, $dateRange);
+            $data = array_merge($data, $expensesData);
+            break;
+        case 'general':
+            $generalData = $this->getGeneralData($companyId, $dateRange);
+            $data = array_merge($data, $generalData);
+            break;
+    }
+
+    // Generate PDF for preview
+    $pdf = PDF::loadView('user.reports.pdf', $data);
+    $pdf->setPaper('A4', 'portrait');
+    
+    return $pdf->stream('preview.pdf');
+}
 }

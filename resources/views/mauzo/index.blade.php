@@ -1,11 +1,17 @@
+
 @extends('layouts.app')
 
-@section('title', 'Mauzo - DEMODAY')
+@section('title', 'Mauzosheetai')
 
 @section('page-title', 'Mauzo')
 @section('page-subtitle', 'Usimamizi wa mauzo - ' . now()->format('d/m/Y'))
 
 @section('content')
+@php
+    // Check user type
+    $isMfanyakazi = Auth::guard('mfanyakazi')->check();
+    $isBoss = Auth::guard('web')->check();
+@endphp
 @php
     // Check which guard is active and get company info accordingly
     $companyId = null;
@@ -199,222 +205,254 @@
             </form>
         </div>
 
-        <!-- Financial Overview -->
+        <!-- Financial Overview - Modified for mfanyakazi -->
         <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
             <h2 class="text-base font-bold text-gray-800 mb-3">
                 Taarifa Fupi ya Mapato na Matumizi
             </h2>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="financial-overview">
-                <!-- Mapato -->
-                <div class="bg-gradient-to-br from-amber-500 to-amber-600 p-3 rounded-lg shadow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                            <i class="fas fa-money-bill-wave text-white"></i>
-                        </div>
-                    </div>
-                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">
-                        Mapato ya leo
-                    </div>
-                    @php
-                        $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
-                        $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
-                        $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
-                    @endphp
-                    <div class="space-y-1 text-white text-xs">
-                        <div class="flex justify-between items-center">
-                            <span class="text-blue-100">Mauzo:</span>
-                            <span class="font-semibold">{{ number_format($mapatoMauzo) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-blue-100">Madeni:</span>
-                            <span class="font-semibold">{{ number_format($mapatoMadeni) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                            <span class="font-semibold">Jumla:</span>
-                            <span class="font-bold">{{ number_format($jumlaMapato) }}</span>
+            @if($isMfanyakazi)
+                <!-- Simplified view for mfanyakazi -->
+                <div class="grid grid-cols-1 gap-3">
+                    <div class="bg-gray-200 p-4 rounded-lg shadow">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="p-3 bg-white/20 rounded-lg">
+                                    <i class="fas fa-money-bill-wave text-green text-lg"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-semibold text-green uppercase tracking-wide mb-1">
+                                        Mapato ya leo
+                                    </div>
+                                    @php
+                                        $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
+                                        $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
+                                        $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
+                                    @endphp
+                                    <div class="text-green text-lg font-bold">
+                                        {{ number_format($jumlaMapato) }} Tsh
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-green/80 text-xs">
+                                <i class="fas fa-calendar-day mr-1"></i> {{ now()->format('d/m/Y') }}
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Faida ya leo -->
-                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                            <i class="fas fa-chart-line text-white"></i>
+            @else
+                <!-- Full view for boss/admin -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="financial-overview">
+                    <!-- Mapato -->
+                    <div class="bg-gradient-to-br from-amber-500 to-amber-600 p-3 rounded-lg shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="p-2 bg-white/20 rounded-lg">
+                                <i class="fas fa-money-bill-wave text-white"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">
+                            Mapato ya leo
+                        </div>
+                        @php
+                            $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
+                            $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
+                            $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
+                        @endphp
+                        <div class="space-y-1 text-white text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="text-blue-100">Mauzo:</span>
+                                <span class="font-semibold">{{ number_format($mapatoMauzo) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-blue-100">Madeni:</span>
+                                <span class="font-semibold">{{ number_format($mapatoMadeni) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                                <span class="font-semibold">Jumla:</span>
+                                <span class="font-bold">{{ number_format($jumlaMapato) }}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">
-                        Faida ya leo
-                    </div>
-                    @php
-                        $faidaMauzo = 0;
-                        foreach($todaysMauzos as $mauzo) {
-                            $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-                            $sellingPrice = $mauzo->bei;
-                            $quantity = $mauzo->idadi;
-                            
-                            $totalDiscount = 0;
-                            if ($mauzo->punguzo_aina === 'bidhaa') {
-                                $totalDiscount = $mauzo->punguzo * $quantity;
-                            } else {
-                                $totalDiscount = $mauzo->punguzo;
-                            }
-                            
-                            $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
-                            $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
-                            $totalBuyingCost = $buyingPrice * $quantity;
-                            $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
-                            $faidaMauzo += $profit;
-                        }
-                        
-                        $faidaMarejesho = 0;
-                        foreach($todaysMarejeshos as $marejesho) {
-                            if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
-                                $debt = $marejesho->madeni;
-                                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                                $quantity = $debt->idadi;
+
+                    <!-- Faida ya leo -->
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="p-2 bg-white/20 rounded-lg">
+                                <i class="fas fa-chart-line text-white"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">
+                            Faida ya leo
+                        </div>
+                        @php
+                            $faidaMauzo = 0;
+                            foreach($todaysMauzos as $mauzo) {
+                                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                                $sellingPrice = $mauzo->bei;
+                                $quantity = $mauzo->idadi;
+                                
+                                $totalDiscount = 0;
+                                if ($mauzo->punguzo_aina === 'bidhaa') {
+                                    $totalDiscount = $mauzo->punguzo * $quantity;
+                                } else {
+                                    $totalDiscount = $mauzo->punguzo;
+                                }
+                                
+                                $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+                                $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
                                 $totalBuyingCost = $buyingPrice * $quantity;
-                                $actualSellingPrice = $debt->jumla;
-                                $profit = $actualSellingPrice - $totalBuyingCost;
-                                $faidaMarejesho += $profit;
+                                $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+                                $faidaMauzo += $profit;
                             }
-                        }
-                        
-                        $jumlaFaida = $faidaMauzo + $faidaMarejesho;
-                    @endphp
-                    <div class="space-y-1 text-white text-xs">
-                        <div class="flex justify-between items-center">
-                            <span class="text-green-100">Mauzo:</span>
-                            <span class="font-semibold">{{ number_format($faidaMauzo) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-green-100">Marejesho:</span>
-                            <span class="font-semibold">{{ number_format($faidaMarejesho) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                            <span class="font-semibold">Jumla:</span>
-                            <span class="font-bold">{{ number_format($jumlaFaida) }}</span>
+                            
+                            $faidaMarejesho = 0;
+                            foreach($todaysMarejeshos as $marejesho) {
+                                if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+                                    $debt = $marejesho->madeni;
+                                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                                    $quantity = $debt->idadi;
+                                    $totalBuyingCost = $buyingPrice * $quantity;
+                                    $actualSellingPrice = $debt->jumla;
+                                    $profit = $actualSellingPrice - $totalBuyingCost;
+                                    $faidaMarejesho += $profit;
+                                }
+                            }
+                            
+                            $jumlaFaida = $faidaMauzo + $faidaMarejesho;
+                        @endphp
+                        <div class="space-y-1 text-white text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="text-green-100">Mauzo:</span>
+                                <span class="font-semibold">{{ number_format($faidaMauzo) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-green-100">Marejesho:</span>
+                                <span class="font-semibold">{{ number_format($faidaMarejesho) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                                <span class="font-semibold">Jumla:</span>
+                                <span class="font-bold">{{ number_format($jumlaFaida) }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Matumizi -->
-                <div class="bg-gradient-to-br from-yellow-500 to-amber-600 p-3 rounded-lg shadow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                            <i class="fas fa-receipt text-white"></i>
+                    <!-- Matumizi -->
+                    <div class="bg-gradient-to-br from-yellow-500 to-amber-600 p-3 rounded-lg shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="p-2 bg-white/20 rounded-lg">
+                                <i class="fas fa-receipt text-white"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Matumizi</div>
+                        @php
+                            $matumiziLeo = $todaysMatumizi->sum('gharama');
+                            $matumiziWiki = $weeklyMatumizi->sum('gharama');
+                            $matumiziJumla = $allMatumizi->sum('gharama');
+                        @endphp
+                        <div class="space-y-1 text-white text-xs">
+                            <div class="flex justify-between items-center">
+                                <span>Leo:</span>
+                                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Wiki hii:</span>
+                                <span class="font-semibold">{{ number_format($matumiziWiki) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                                <span class="font-semibold">Jumla:</span>
+                                <span class="font-bold">{{ number_format($matumiziJumla) }}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Matumizi</div>
-                    @php
-                        $matumiziLeo = $todaysMatumizi->sum('gharama');
-                        $matumiziWiki = $weeklyMatumizi->sum('gharama');
-                        $matumiziJumla = $allMatumizi->sum('gharama');
-                    @endphp
-                    <div class="space-y-1 text-white text-xs">
-                        <div class="flex justify-between items-center">
-                            <span>Leo:</span>
-                            <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span>Wiki hii:</span>
-                            <span class="font-semibold">{{ number_format($matumiziWiki) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                            <span class="font-semibold">Jumla:</span>
-                            <span class="font-bold">{{ number_format($matumiziJumla) }}</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Fedha Leo -->
-                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                            <i class="fas fa-wallet text-white"></i>
+                    <!-- Fedha Leo -->
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="p-2 bg-white/20 rounded-lg">
+                                <i class="fas fa-wallet text-white"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Fedha Leo</div>
+                        @php
+                            $mauzoLeo = $todaysMauzos->sum('jumla');
+                            $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
+                            $matumiziLeo = $todaysMatumizi->sum('gharama');
+                            $fedhaLeo = ($mauzoLeo + $mapatoMadeni) - $matumiziLeo;
+                        @endphp
+                        <div class="space-y-1 text-white text-xs">
+                            <div class="flex justify-between items-center">
+                                <span>Mapato:</span>
+                                <span class="font-semibold">{{ number_format($mauzoLeo + $mapatoMadeni) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Matumizi:</span>
+                                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                                <span class="font-semibold">Jumla:</span>
+                                <span class="font-bold">{{ number_format($fedhaLeo) }}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Fedha Leo</div>
-                    @php
-                        $mauzoLeo = $todaysMauzos->sum('jumla');
-                        $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
-                        $matumiziLeo = $todaysMatumizi->sum('gharama');
-                        $fedhaLeo = ($mauzoLeo + $mapatoMadeni) - $matumiziLeo;
-                    @endphp
-                    <div class="space-y-1 text-white text-xs">
-                        <div class="flex justify-between items-center">
-                            <span>Mapato:</span>
-                            <span class="font-semibold">{{ number_format($mauzoLeo + $mapatoMadeni) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span>Matumizi:</span>
-                            <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                            <span class="font-semibold">Jumla:</span>
-                            <span class="font-bold">{{ number_format($fedhaLeo) }}</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Faida Halisi -->
-                <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-lg shadow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                            <i class="fas fa-chart-pie text-white"></i>
+                    <!-- Faida Halisi -->
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 p-3 rounded-lg shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="p-2 bg-white/20 rounded-lg">
+                                <i class="fas fa-chart-pie text-white"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Faida Halisi</div>
+                        @php
+                            $matumiziLeo = $todaysMatumizi->sum('gharama');
+                            $faidaHalisi = $jumlaFaida - $matumiziLeo;
+                        @endphp
+                        <div class="space-y-1 text-white text-xs">
+                            <div class="flex justify-between items-center">
+                                <span>Faida:</span>
+                                <span class="font-semibold">{{ number_format($jumlaFaida) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Matumizi:</span>
+                                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                                <span class="font-semibold">Halisi:</span>
+                                <span class="font-bold">{{ number_format($faidaHalisi) }}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Faida Halisi</div>
-                    @php
-                        $matumiziLeo = $todaysMatumizi->sum('gharama');
-                        $faidaHalisi = $jumlaFaida - $matumiziLeo;
-                    @endphp
-                    <div class="space-y-1 text-white text-xs">
-                        <div class="flex justify-between items-center">
-                            <span>Faida:</span>
-                            <span class="font-semibold">{{ number_format($jumlaFaida) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span>Matumizi:</span>
-                            <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                            <span class="font-semibold">Halisi:</span>
-                            <span class="font-bold">{{ number_format($faidaHalisi) }}</span>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Jumla Kuu -->
-                <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
-                    <div class="flex justify-between items-start mb-2">
-                        <div class="p-2 bg-white/20 rounded-lg">
-                            <i class="fas fa-chart-bar text-white"></i>
+                    <!-- Jumla Kuu -->
+                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="p-2 bg-white/20 rounded-lg">
+                                <i class="fas fa-chart-bar text-white"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Jumla Kuu</div>
-                    @php
-                        $totalMapato = $allTimeMauzos->sum('jumla') + $allTimeMarejeshos->sum('kiasi');
-                        $totalMatumizi = $allMatumizi->sum('gharama');
-                        $jumlaKuu = $totalMapato - $totalMatumizi;
-                    @endphp
-                    <div class="space-y-1 text-white text-xs">
-                        <div class="flex justify-between items-center">
-                            <span>Mapato:</span>
-                            <span class="font-semibold">{{ number_format($totalMapato) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span>Matumizi:</span>
-                            <span class="font-semibold">{{ number_format($totalMatumizi) }}</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                            <span class="font-semibold">Jumla:</span>
-                            <span class="font-bold">{{ number_format($jumlaKuu) }}</span>
+                        <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Jumla Kuu</div>
+                        @php
+                            $totalMapato = $allTimeMauzos->sum('jumla') + $allTimeMarejeshos->sum('kiasi');
+                            $totalMatumizi = $allMatumizi->sum('gharama');
+                            $jumlaKuu = $totalMapato - $totalMatumizi;
+                        @endphp
+                        <div class="space-y-1 text-white text-xs">
+                            <div class="flex justify-between items-center">
+                                <span>Mapato:</span>
+                                <span class="font-semibold">{{ number_format($totalMapato) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span>Matumizi:</span>
+                                <span class="font-semibold">{{ number_format($totalMatumizi) }}</span>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+                                <span class="font-semibold">Jumla:</span>
+                                <span class="font-bold">{{ number_format($jumlaKuu) }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 
@@ -528,7 +566,7 @@
         </div>
     </div>
 
-    <!-- TAB 3: Taarifa Fupi -->
+    <!-- TAB 3: Taarifa Fupi - Modified with Date Range Search -->
     <div id="taarifa-tab-content" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
             <h2 class="text-lg font-semibold mb-3 flex items-center text-gray-800">
@@ -536,20 +574,25 @@
                 Taarifa Fupi ya Mauzo
             </h2>
 
-            <!-- Search and Filter -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
-                <div class="relative">
+            <!-- Search and Filter - UPDATED WITH DATE RANGE -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-4">
+                <div class="relative lg:col-span-2">
                     <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
+                    <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa, risiti, malipo..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
                 </div>
                 
                 <div class="relative">
                     <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
-                    <input type="date" id="filter-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
+                    <input type="date" id="filter-start-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Toka">
                 </div>
                 
-                <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm">
-                    <i class="fas fa-redo mr-1"></i> Safisha Filter
+                <div class="relative">
+                    <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
+                    <input type="date" id="filter-end-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Mpaka">
+                </div>
+                
+                <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-redo"></i> Safisha Filter
                 </button>
             </div>
 
@@ -564,7 +607,9 @@
                             <th class="border px-3 py-2 text-left text-gray-700">Idadi</th>
                             <th class="border px-3 py-2 text-left text-gray-700">Bei</th>
                             <th class="border px-3 py-2 text-left text-gray-700">Punguzo</th>
+                            @unless($isMfanyakazi)
                             <th class="border px-3 py-2 text-left text-gray-700">Faida</th>
+                            @endunless
                             <th class="border px-3 py-2 text-left text-gray-700">Malipo</th>
                             <th class="border px-3 py-2 text-left text-gray-700">Jumla</th>
                             <th class="border px-3 py-2 text-left text-gray-700">Vitendo</th>
@@ -623,7 +668,9 @@
                                 <td class="border px-3 py-2 text-center">{{ $item->idadi }}</td>
                                 <td class="border px-3 py-2 text-right">{{ number_format($item->bei) }}</td>
                                 <td class="border px-3 py-2 text-right">{{ number_format($actualDiscount) }}</td>
+                                @unless($isMfanyakazi)
                                 <td class="border px-3 py-2 text-right">{{ number_format($faida) }}</td>
+                                @endunless
                                 <td class="border px-3 py-2 text-center">{!! $paymentMethod !!}</td>
                                 <td class="border px-3 py-2 text-right">{{ number_format($total) }}</td>
                                 <td class="border px-3 py-2 text-center">
@@ -641,7 +688,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center py-4 text-gray-500">Hakuna mauzo yaliyorekodiwa bado.</td>
+                                <td colspan="{{ $isMfanyakazi ? '9' : '10' }}" class="text-center py-4 text-gray-500">Hakuna mauzo yaliyorekodiwa bado.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -701,7 +748,7 @@
         </div>
     </div>
 
-    <!-- TAB 4: Mauzo ya Jumla -->
+    <!-- TAB 4: Mauzo ya Jumla - Modified for mfanyakazi -->
     <div id="jumla-tab-content" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
             <h2 class="text-lg font-bold mb-3 flex items-center text-gray-800">
@@ -722,7 +769,9 @@
                             <th class="border px-3 py-2 text-left text-gray-700 text-sm">Idadi</th>
                             <th class="border px-3 py-2 text-left text-gray-700 text-sm">Punguzo</th>
                             <th class="border px-3 py-2 text-left text-gray-700 text-sm">Jumla</th>
+                            @unless($isMfanyakazi)
                             <th class="border px-3 py-2 text-left text-gray-700 text-sm">Faida</th>
+                            @endunless
                         </tr>
                     </thead>
                     <tbody id="grouped-sales-tbody">
@@ -763,7 +812,9 @@
                             <td class="border px-3 py-2 text-center text-sm">{{ $sale['idadi'] }}</td>
                             <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['punguzo']) }}</td>
                             <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['jumla']) }}</td>
+                            @unless($isMfanyakazi)
                             <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['faida']) }}</td>
+                            @endunless
                         </tr>
                         @endforeach
                     </tbody>
@@ -771,6 +822,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- TAB 5: Kikapu -->
     <div id="kikapu-tab-content" class="tab-content hidden">
@@ -1273,8 +1325,6 @@
 @push('scripts')
 <script>
 class MauzoManager {
-
-
     constructor() {
         // Get company ID from meta tag or data attribute
         this.companyId = document.querySelector('meta[name="company-id"]')?.getAttribute('content') 
@@ -1291,6 +1341,10 @@ class MauzoManager {
         this.pendingSaleData = null;
         this.currentKopeshaType = null;
         this.currentSaleToDelete = null;
+        this.searchTimer = null;
+        
+        // Check if user is mfanyakazi
+        this.isMfanyakazi = document.body.hasAttribute('data-mfanyakazi') || false;
         
         // Restore tab state BEFORE init to ensure correct tab is shown
         this.restoreTabState();
@@ -1308,43 +1362,38 @@ class MauzoManager {
         this.clearOtherCompanyCarts();
         this.bindDeleteSaleEvents();
         this.initReceiptLookup();
+        this.bindSearchEvents();
     }
 
-    // ADD THIS HELPER FUNCTION AT THE BEGINNING OF THE MauzoManager CLASS:
-calculateActualDiscount(discount, discountType, quantity) {
-    if (discountType === 'bidhaa') {
-        return discount * quantity;
+    // Helper function to calculate actual discount
+    calculateActualDiscount(discount, discountType, quantity) {
+        if (discountType === 'bidhaa') {
+            return discount * quantity;
+        }
+        return discount;
     }
-    return discount;
-}
-    // Modified: Save and restore tab state properly
+
+    // Save and restore tab state properly
     restoreTabState() {
-        // Get saved tab from localStorage
         const savedTab = localStorage.getItem('currentMauzoTab');
-        
-        // If no saved tab, default to 'sehemu' (sales tab)
         this.currentTab = savedTab || 'sehemu';
         
-        // Show the saved tab immediately
         setTimeout(() => {
-            this.showTab(this.currentTab, true); // true = initial restore
-        }, 50); // Small delay to ensure DOM is ready
+            this.showTab(this.currentTab, true);
+        }, 50);
     }
 
-    // Modified: Show tab with save option
+    // Show tab with save option
     showTab(tabName, isRestore = false) {
-        // Hide all tab buttons active state
         document.querySelectorAll('.tab-button').forEach(button => {
             button.classList.remove('active');
         });
         
-        // Hide all tab content
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
             content.classList.add('hidden');
         });
         
-        // Show selected tab
         const activeTab = document.getElementById(`${tabName}-tab`);
         const activeContent = document.getElementById(`${tabName}-tab-content`);
         
@@ -1354,13 +1403,11 @@ calculateActualDiscount(discount, discountType, quantity) {
             activeContent.classList.remove('hidden');
         }
 
-        // Save to localStorage (only if not restoring)
         if (!isRestore) {
             localStorage.setItem('currentMauzoTab', tabName);
             this.currentTab = tabName;
         }
         
-        // Handle tab-specific focus
         if (tabName === 'barcode') {
             setTimeout(() => {
                 const firstBarcodeInput = document.querySelector('.barcode-input');
@@ -1456,19 +1503,17 @@ calculateActualDiscount(discount, discountType, quantity) {
             if (data.success) {
                 this.showNotification('Mauzo yamefutwa kikamilifu! Stock imerudishwa.', 'success');
                 
-                // Remove the row from the table
                 const row = document.querySelector(`.sales-row[data-id="${saleId}"]`);
                 if (row) {
                     row.remove();
                     
-                    // Check if table is empty
                     const rows = document.querySelectorAll('.sales-row');
                     if (rows.length === 0) {
                         const tbody = document.getElementById('sales-tbody');
                         if (tbody) {
                             tbody.innerHTML = `
                                 <tr>
-                                    <td colspan="9" class="text-center py-4 text-gray-500 text-xs">
+                                    <td colspan="${this.isMfanyakazi ? '9' : '10'}" class="text-center py-4 text-gray-500 text-xs">
                                         Hakuna mauzo yaliyorekodiwa bado.
                                     </td>
                                 </tr>
@@ -1499,111 +1544,102 @@ calculateActualDiscount(discount, discountType, quantity) {
         keysToRemove.forEach(key => localStorage.removeItem(key));
     }
 
-// REPLACE THE updateTotals() FUNCTION:
-updateTotals() {
-    const quantityInput = document.getElementById('quantity-input');
-    const priceInput = document.getElementById('price-input');
-    const discountInput = document.getElementById('punguzo-input');
-    const totalInput = document.getElementById('total-input');
-    const punguzoAinaInput = document.getElementById('punguzo-aina-input');
-    const punguzoType = document.getElementById('punguzo-type');
-    
-    if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
+    updateTotals() {
+        const quantityInput = document.getElementById('quantity-input');
+        const priceInput = document.getElementById('price-input');
+        const discountInput = document.getElementById('punguzo-input');
+        const totalInput = document.getElementById('total-input');
+        const punguzoAinaInput = document.getElementById('punguzo-aina-input');
+        const punguzoType = document.getElementById('punguzo-type');
+        
+        if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
 
-    const quantity = parseInt(quantityInput.value) || 0;
-    const price = parseFloat(priceInput.value) || 0;
-    const discount = parseFloat(discountInput.value) || 0;
-    const discountType = punguzoType.value;
-    
-    const baseTotal = quantity * price;
-    
-    // ✅ CORRECT: Calculate actual discount
-    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
-    const finalTotal = baseTotal - actualDiscount;
-    
-    totalInput.value = Math.max(0, finalTotal);
-    punguzoAinaInput.value = discountType;
-    
-    const kopeshaIdadi = document.getElementById('kopesha-idadi');
-    const kopeshaJumla = document.getElementById('kopesha-jumla');
-    const kopeshaBaki = document.getElementById('kopesha-baki');
-    const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
-    const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
-    
-    if (kopeshaIdadi) kopeshaIdadi.value = quantity;
-    if (kopeshaJumla) kopeshaJumla.value = finalTotal;
-    if (kopeshaBaki) kopeshaBaki.value = finalTotal;
-    if (kopeshaPunguzo) kopeshaPunguzo.value = discount; // Store per-item discount
-    if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
-}
-
-
-// REPLACE THE addToCart() FUNCTION:
-addToCart() {
-    const bidhaaSelect = document.getElementById('bidhaaSelect');
-    const quantityInput = document.getElementById('quantity-input');
-    const priceInput = document.getElementById('price-input');
-    const discountInput = document.getElementById('punguzo-input');
-    const punguzoType = document.getElementById('punguzo-type');
-    const totalInput = document.getElementById('total-input');
-    
-    if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
-
-    const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
-    const quantity = parseInt(quantityInput.value) || 0;
-    const price = parseFloat(priceInput.value) || 0;
-    const discount = parseFloat(discountInput.value) || 0;
-    const discountType = punguzoType ? punguzoType.value : 'bidhaa';
-    const total = parseFloat(totalInput.value) || 0;
-    
-    if (!selectedOption.value || quantity < 1) {
-        this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-        return;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const discount = parseFloat(discountInput.value) || 0;
+        const discountType = punguzoType.value;
+        
+        const baseTotal = quantity * price;
+        const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+        const finalTotal = baseTotal - actualDiscount;
+        
+        totalInput.value = Math.max(0, finalTotal);
+        punguzoAinaInput.value = discountType;
+        
+        const kopeshaIdadi = document.getElementById('kopesha-idadi');
+        const kopeshaJumla = document.getElementById('kopesha-jumla');
+        const kopeshaBaki = document.getElementById('kopesha-baki');
+        const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
+        const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
+        
+        if (kopeshaIdadi) kopeshaIdadi.value = quantity;
+        if (kopeshaJumla) kopeshaJumla.value = finalTotal;
+        if (kopeshaBaki) kopeshaBaki.value = finalTotal;
+        if (kopeshaPunguzo) kopeshaPunguzo.value = discount;
+        if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
     }
 
-    const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
-    const baseTotal = price * quantity;
-    
-    // ✅ CORRECT: Calculate actual discount
-    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
-    
-    // ✅ CORRECT: Profit calculation
-    const profit = ((price - buyingPrice) * quantity) - actualDiscount;
-    
-    const calculatedTotal = baseTotal - actualDiscount;
-    if (Math.abs(calculatedTotal - total) > 0.01) {
-        this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal}, Ilioingizwa: ${total}`, 'error');
-        return;
+    addToCart() {
+        const bidhaaSelect = document.getElementById('bidhaaSelect');
+        const quantityInput = document.getElementById('quantity-input');
+        const priceInput = document.getElementById('price-input');
+        const discountInput = document.getElementById('punguzo-input');
+        const punguzoType = document.getElementById('punguzo-type');
+        const totalInput = document.getElementById('total-input');
+        
+        if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
+
+        const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
+        const quantity = parseInt(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const discount = parseFloat(discountInput.value) || 0;
+        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+        const total = parseFloat(totalInput.value) || 0;
+        
+        if (!selectedOption.value || quantity < 1) {
+            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+            return;
+        }
+
+        const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
+        const baseTotal = price * quantity;
+        const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+        const profit = ((price - buyingPrice) * quantity) - actualDiscount;
+        
+        const calculatedTotal = baseTotal - actualDiscount;
+        if (Math.abs(calculatedTotal - total) > 0.01) {
+            this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal}, Ilioingizwa: ${total}`, 'error');
+            return;
+        }
+
+        const productName = selectedOption.dataset.jina;
+        const barcode = selectedOption.dataset.barcode || '';
+        const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
+
+        const cartItem = {
+            jina: productName,
+            bei: price,
+            idadi: quantity,
+            punguzo: discount,
+            punguzo_aina: discountType,
+            actual_discount: actualDiscount,
+            jumla: total,
+            profit: profit,
+            bidhaa_id: selectedOption.value,
+            barcode: barcode,
+            timestamp: new Date().toISOString(),
+            company_id: this.companyId,
+            company_name: companyName
+        };
+
+        this.cart.push(cartItem);
+        this.saveCart();
+        this.updateCartCount();
+        this.updateCartDisplay();
+        
+        this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
+        this.resetForm();
     }
-
-    const productName = selectedOption.dataset.jina;
-    const barcode = selectedOption.dataset.barcode || '';
-    const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
-
-    const cartItem = {
-        jina: productName,
-        bei: price,
-        idadi: quantity,
-        punguzo: discount, // Store the per-item discount
-        punguzo_aina: discountType,
-        actual_discount: actualDiscount, // Store the actual total discount
-        jumla: total,
-        profit: profit,
-        bidhaa_id: selectedOption.value,
-        barcode: barcode,
-        timestamp: new Date().toISOString(),
-        company_id: this.companyId,
-        company_name: companyName
-    };
-
-    this.cart.push(cartItem);
-    this.saveCart();
-    this.updateCartCount();
-    this.updateCartDisplay();
-    
-    this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
-    this.resetForm();
-}
 
     updateCartDisplay() {
         const emptyMessage = document.getElementById('empty-cart-message');
@@ -1647,8 +1683,6 @@ addToCart() {
                     displayedDiscount = item.punguzo * item.idadi;
                 }
                 
-                const baseTotal = item.bei * item.idadi;
-                
                 const row = document.createElement('tr');
                 row.className = 'border-b hover:bg-gray-50 transition';
                 row.innerHTML = `
@@ -1690,176 +1724,168 @@ addToCart() {
         }
     }
 
-// REPLACE THE updateBarcodeRowTotal() FUNCTION:
-updateBarcodeRowTotal(row) {
-    const productPrice = row.querySelector('.product-price');
-    const quantityInput = row.querySelector('.quantity-input');
-    const punguzoInput = row.querySelector('.punguzo-input');
-    const stockInput = row.querySelector('.stock-input');
-    const totalInput = row.querySelector('.total-input');
-    const punguzoType = document.getElementById('punguzo-type');
-
-    if (!productPrice || !quantityInput || !totalInput || !punguzoType) return;
-
-    const price = parseFloat(productPrice.value) || 0;
-    const quantity = parseInt(quantityInput.value) || 0;
-    const punguzo = parseFloat(punguzoInput.value) || 0;
-    const stock = stockInput ? parseInt(stockInput.value) || 0 : 0;
-    const discountType = punguzoType.value;
-    
-    if (stock > 0 && quantity > stock) {
-        this.showNotification('Idadi uliyoiingiza inazidi idadi iliyopo!', 'error');
-        quantityInput.value = stock;
-        return;
-    }
-    
-    const baseTotal = price * quantity;
-    
-    // ✅ CORRECT: Calculate actual discount
-    const actualDiscount = this.calculateActualDiscount(punguzo, discountType, quantity);
-    const total = baseTotal - actualDiscount;
-    
-    totalInput.value = Math.max(0, total);
-    
-    this.updateBarcodeTotal();
-}
-
-// Update submitBarcodeSales method
-async submitBarcodeSales() {
-    const items = [];
-    let hasValidItems = false;
-    const punguzoType = document.getElementById('punguzo-type');
-    const paymentMethodSelect = document.querySelector('#barcode-form select[name="lipa_kwa"]');
-    const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
-
-    if (!punguzoType) return;
-
-    const discountType = punguzoType.value;
-
-    document.querySelectorAll('.barcode-row').forEach(row => {
-        const barcodeInput = row.querySelector('.barcode-input');
-        const quantityInput = row.querySelector('.quantity-input');
-        const productName = row.querySelector('.product-name');
+    updateBarcodeRowTotal(row) {
         const productPrice = row.querySelector('.product-price');
+        const quantityInput = row.querySelector('.quantity-input');
         const punguzoInput = row.querySelector('.punguzo-input');
+        const stockInput = row.querySelector('.stock-input');
         const totalInput = row.querySelector('.total-input');
+        const punguzoType = document.getElementById('punguzo-type');
+
+        if (!productPrice || !quantityInput || !totalInput || !punguzoType) return;
+
+        const price = parseFloat(productPrice.value) || 0;
+        const quantity = parseInt(quantityInput.value) || 0;
+        const punguzo = parseFloat(punguzoInput.value) || 0;
+        const stock = stockInput ? parseInt(stockInput.value) || 0 : 0;
+        const discountType = punguzoType.value;
         
-        if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
-            const barcode = barcodeInput.value.trim();
-            const quantity = parseInt(quantityInput.value) || 0;
-            const product = productName.value.trim();
-            const price = parseFloat(productPrice.value) || 0;
-            const punguzo = parseFloat(punguzoInput.value) || 0;
-            const jumla = parseFloat(totalInput.value) || 0;
+        if (stock > 0 && quantity > stock) {
+            this.showNotification('Idadi uliyoiingiza inazidi idadi iliyopo!', 'error');
+            quantityInput.value = stock;
+            return;
+        }
+        
+        const baseTotal = price * quantity;
+        const actualDiscount = this.calculateActualDiscount(punguzo, discountType, quantity);
+        const total = baseTotal - actualDiscount;
+        
+        totalInput.value = Math.max(0, total);
+        this.updateBarcodeTotal();
+    }
+
+    async submitBarcodeSales() {
+        const items = [];
+        let hasValidItems = false;
+        const punguzoType = document.getElementById('punguzo-type');
+        const paymentMethodSelect = document.querySelector('#barcode-form select[name="lipa_kwa"]');
+        const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
+
+        if (!punguzoType) return;
+
+        const discountType = punguzoType.value;
+
+        document.querySelectorAll('.barcode-row').forEach(row => {
+            const barcodeInput = row.querySelector('.barcode-input');
+            const quantityInput = row.querySelector('.quantity-input');
+            const productName = row.querySelector('.product-name');
+            const productPrice = row.querySelector('.product-price');
+            const punguzoInput = row.querySelector('.punguzo-input');
+            const totalInput = row.querySelector('.total-input');
             
-            if (barcode && quantity > 0 && product && price > 0) {
-                const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
+            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
+                const barcode = barcodeInput.value.trim();
+                const quantity = parseInt(quantityInput.value) || 0;
+                const product = productName.value.trim();
+                const price = parseFloat(productPrice.value) || 0;
+                const punguzo = parseFloat(punguzoInput.value) || 0;
+                const jumla = parseFloat(totalInput.value) || 0;
                 
-                let actualDiscount = punguzo;
-                if (discountType === 'bidhaa') {
-                    actualDiscount = punguzo * quantity;
+                if (barcode && quantity > 0 && product && price > 0) {
+                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
+                    
+                    let actualDiscount = punguzo;
+                    if (discountType === 'bidhaa') {
+                        actualDiscount = punguzo * quantity;
+                    }
+                    
+                    items.push({
+                        barcode: barcode,
+                        bidhaa_id: bidhaa ? bidhaa.id : null,
+                        idadi: quantity,
+                        bei: price,
+                        punguzo: punguzo,
+                        punguzo_aina: discountType,
+                        jumla: jumla,
+                        total_before_discount: (price * quantity)
+                    });
+                    hasValidItems = true;
                 }
-                
-                items.push({
-                    barcode: barcode,
-                    bidhaa_id: bidhaa ? bidhaa.id : null,
-                    idadi: quantity,
-                    bei: price,
-                    punguzo: punguzo,
-                    punguzo_aina: discountType,
-                    jumla: jumla,
-                    total_before_discount: (price * quantity)
-                });
-                hasValidItems = true;
             }
-        }
-    });
-
-    if (!hasValidItems) {
-        this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
-        return;
-    }
-
-    try {
-        const response = await fetch("{{ route('mauzo.store.barcode') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ 
-                items: items, 
-                punguzo_aina: discountType,
-                lipa_kwa: paymentMethod // ✅ Send payment method
-            })
         });
 
-        const data = await response.json();
-        
-        if (data.success) {
-            this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-            
-            this.clearBarcodeRows();
-            this.updateFinancialData();
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
+        if (!hasValidItems) {
+            this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
-    }
-}
 
-async checkoutCart() {
-    const companyCart = this.cart.filter(item => item.company_id === this.companyId);
-    
-    if (companyCart.length === 0) {
-        this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
-        return;
-    }
+        try {
+            const response = await fetch("{{ route('mauzo.store.barcode') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ 
+                    items: items, 
+                    punguzo_aina: discountType,
+                    lipa_kwa: paymentMethod
+                })
+            });
 
-    // Get payment method from select
-    const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
-    const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
-
-    try {
-        const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'X-Company-ID': this.companyId
-            },
-            body: JSON.stringify({ 
-                items: companyCart,
-                company_id: this.companyId,
-                lipa_kwa: paymentMethod // ✅ Send payment method
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-            this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+            const data = await response.json();
             
-            this.clearCart();
-            this.updateFinancialData();
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+            if (data.success) {
+                this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+                this.clearBarcodeRows();
+                this.updateFinancialData();
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
     }
-}
+
+    async checkoutCart() {
+        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+        
+        if (companyCart.length === 0) {
+            this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
+            return;
+        }
+
+        const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
+        const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
+
+        try {
+            const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Company-ID': this.companyId
+                },
+                body: JSON.stringify({ 
+                    items: companyCart,
+                    company_id: this.companyId,
+                    lipa_kwa: paymentMethod
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+                this.clearCart();
+                this.updateFinancialData();
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+        }
+    }
 
     prepareBarcodeKopeshaData() {
         const items = [];
@@ -2044,7 +2070,6 @@ async checkoutCart() {
     }
 
     bindEvents() {
-        // Modified: Save tab on click
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', (e) => {
                 const tab = e.target.closest('.tab-button').dataset.tab;
@@ -2310,7 +2335,6 @@ async checkoutCart() {
 
             if (response.ok) {
                 this.showNotification('Mauzo yamehifadhiwa kikamilifu! Namba ya risiti: ' + data.receipt_no, 'success');
-                
                 this.resetForm();
                 this.updateStockDisplay(formData.get('bidhaa_id'));
                 this.updateFinancialData();
@@ -2705,17 +2729,27 @@ async checkoutCart() {
 
     bindSearchEvents() {
         const searchSales = document.getElementById('search-sales');
-        const filterDate = document.getElementById('filter-date');
+        const filterStartDate = document.getElementById('filter-start-date');
+        const filterEndDate = document.getElementById('filter-end-date');
         const resetFilters = document.getElementById('reset-filters');
         
         if (searchSales) {
             searchSales.addEventListener('input', (e) => {
+                if (this.searchTimer) clearTimeout(this.searchTimer);
+                this.searchTimer = setTimeout(() => {
+                    this.filterSalesTable();
+                }, 500);
+            });
+        }
+        
+        if (filterStartDate) {
+            filterStartDate.addEventListener('change', () => {
                 this.filterSalesTable();
             });
         }
         
-        if (filterDate) {
-            filterDate.addEventListener('change', () => {
+        if (filterEndDate) {
+            filterEndDate.addEventListener('change', () => {
                 this.filterSalesTable();
             });
         }
@@ -2723,7 +2757,8 @@ async checkoutCart() {
         if (resetFilters) {
             resetFilters.addEventListener('click', () => {
                 searchSales.value = '';
-                filterDate.value = '';
+                filterStartDate.value = '';
+                filterEndDate.value = '';
                 this.filterSalesTable();
             });
         }
@@ -2746,21 +2781,59 @@ async checkoutCart() {
 
     filterSalesTable() {
         const searchTerm = document.getElementById('search-sales').value.toLowerCase();
-        const filterDate = document.getElementById('filter-date').value;
+        const startDate = document.getElementById('filter-start-date').value;
+        const endDate = document.getElementById('filter-end-date').value;
         
-        document.querySelectorAll('.sales-row').forEach(row => {
-            const product = row.dataset.product;
-            const date = row.dataset.date;
-            const rowDate = new Date(date).toISOString().split('T')[0];
-            
-            const matchesSearch = product.includes(searchTerm);
-            const matchesDate = !filterDate || rowDate === filterDate;
-            
-            if (matchesSearch && matchesDate) {
-                row.classList.remove('hidden');
+        const tbody = document.getElementById('sales-tbody');
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Inapakia...</td></tr>';
+        
+        fetch('/mauzo/filtered-sales', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                search: searchTerm,
+                start_date: startDate,
+                end_date: endDate
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('sales-tbody').innerHTML = data.html;
+                this.bindReceiptEvents();
+                this.bindDeleteSaleEvents();
             } else {
-                row.classList.add('hidden');
+                this.showNotification('Kuna tatizo kwenye kupata taarifa!', 'error');
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Kuna tatizo kwenye kupata taarifa.</td></tr>';
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kupata taarifa!', 'error');
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Kuna tatizo kwenye kupata taarifa.</td></tr>';
+        });
+    }
+
+    bindReceiptEvents() {
+        document.querySelectorAll('.copy-receipt').forEach(element => {
+            element.addEventListener('click', (e) => {
+                const receiptNo = e.target.dataset.receipt;
+                navigator.clipboard.writeText(receiptNo).then(() => {
+                    this.showNotification('Namba ya risiti imenakiliwa!', 'success');
+                });
+            });
+        });
+        
+        document.querySelectorAll('.print-single-receipt').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const receiptNo = e.target.closest('.print-single-receipt').dataset.receiptNo;
+                if (receiptNo) {
+                    this.printSingleReceipt(receiptNo);
+                }
+            });
         });
     }
 

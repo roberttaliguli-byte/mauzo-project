@@ -229,6 +229,7 @@ Route::get('/mauzo/check-double-sale/{bidhaaId}', [MauzoController::class, 'chec
 
 // Receipt Routes
 Route::get('/mauzo/receipt-data/{receiptNo}', [MauzoController::class, 'getReceiptData'])->name('mauzo.receipt.data');
+Route::post('/mauzo/filtered-sales', [MauzoController::class, 'getFilteredSales'])->name('mauzo.filtered');
 Route::get('/mauzo/search-receipts', [MauzoController::class, 'searchReceipts'])->name('mauzo.search.receipts');
 Route::get('/mauzo/receipt-print/{receiptNo}', [MauzoController::class, 'getReceiptForPrint'])->name('mauzo.receipt.print');
 Route::get('/mauzo/thermal-receipt/{receiptNo}', [MauzoController::class, 'printThermalReceipt'])->name('mauzo.thermal.receipt');
@@ -254,7 +255,7 @@ Route::post('/bidhaa', [BidhaaController::class, 'store'])->name('bidhaa.store')
 Route::put('/bidhaa/{id}', [BidhaaController::class, 'update'])->name('bidhaa.update');
 Route::delete('/bidhaa/{id}', [BidhaaController::class, 'destroy'])->name('bidhaa.destroy');
 
-// Excel routes
+// Excel routes - MAKE SURE THESE ARE CORRECTLY DEFINED
 Route::post('/bidhaa/upload-excel', [BidhaaController::class, 'uploadExcel'])->name('bidhaa.uploadExcel');
 Route::get('/bidhaa/download-sample', [BidhaaController::class, 'downloadSample'])->name('bidhaa.downloadSample');
 
