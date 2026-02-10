@@ -544,15 +544,16 @@
             </template>
           </button>
 
-          <!-- Notifications Dropdown -->
-          <div 
-            x-show="openNotifications" 
-            @click.away="openNotifications = false" 
-            x-cloak
-            x-transition
-            class="dropdown-menu"
-            style="min-width: 350px; max-width: 90vw;"
-          >
+<!-- Notifications Dropdown -->
+<div 
+  x-show="openNotifications" 
+  @click.away="openNotifications = false" 
+  x-cloak
+  x-transition
+  class="dropdown-menu"
+  style="width: 350px; max-width: calc(100vw - 2rem);"
+  x-bind:style="window.innerWidth <= 640 ? 'position: fixed; left: 50%; top: 4rem; transform: translateX(-50%); right: auto;' : ''"
+>
             <!-- Header -->
             <div class="px-4 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white">
               <div class="flex justify-between items-center">
@@ -687,14 +688,10 @@
             <div class="py-2">
               <div class="px-4 py-2 border-b border-gray-100">
                 <div class="font-medium">Admin</div>
-                <div class="text-xs text-gray-500">mauzoheet9@mauzosheet.com</div>
+                <div class="text-xs text-gray-500">mauzoheet9@gmail.com</div>
               </div>
               
-              <a href="{{ route('admin.password.show') }}" class="profile-dropdown-item">
-                <i class="fas fa-key text-gray-400"></i>
-                <span>Badili Neno Siri</span>
-              </a>
-              
+      
               <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="profile-dropdown-item w-full">
@@ -805,12 +802,20 @@
             });
         },
         
-        toggleNotifications() {
-          this.openNotifications = !this.openNotifications;
-          if (this.openNotifications) {
-            this.fetchNewCompanies();
-          }
-        },
+toggleNotifications() {
+  this.openNotifications = !this.openNotifications;
+  if (this.openNotifications) {
+    this.fetchNewCompanies();
+    
+    // On mobile, prevent body scrolling when dropdown is open
+    if (window.innerWidth <= 640) {
+      document.body.style.overflow = 'hidden';
+    }
+  } else {
+    // Restore scrolling
+    document.body.style.overflow = '';
+  }
+},
         
         markAsSeen(companyId) {
           this.seenCompanies.add(companyId);

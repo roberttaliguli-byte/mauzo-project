@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class BidhaaController extends Controller
 {
@@ -123,83 +122,187 @@ class BidhaaController extends Controller
     }
     
     /**
-     * Hifadhi bidhaa mpya (normal form)
+     * Search all bidhaa (for AJAX search - searches across ALL products)
      */
-// In the store method, update the validation rules:
-public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'jina' => 'required|string|max:255',
-        'aina' => 'required|string|max:255',
-        'kipimo' => 'nullable|string|max:100',
-        'idadi' => 'required|integer|min:0',
-        'bei_nunua' => 'required|numeric|min:0',
-        'bei_kuuza' => 'required|numeric|min:0',
-        'expiry' => 'nullable|date|after_or_equal:today',
-        'barcode' => [
-            'nullable',
-            'string',
-            'max:255',
-            Rule::unique('bidhaas', 'barcode')->where(function ($query) {
-                return $query->where('company_id', $this->getCompanyId());
-            })
-        ],
-        'picha' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // Add this line
-    ], [
-        'jina.required' => 'Jina la bidhaa linahitajika',
-        'aina.required' => 'Aina ya bidhaa inahitajika',
-        'idadi.required' => 'Idadi ya bidhaa inahitajika',
-        'bei_nunua.required' => 'Bei ya kununua inahitajika',
-        'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
-        'expiry.after_or_equal' => 'Tarehe ya mwisho haiwezi kuwa ya zamani',
-        'barcode.unique' => 'Barcode tayari ipo kwenye mfumo',
-        'picha.image' => 'Faili ya picha inapaswa kuwa picha',
-        'picha.mimes' => 'Picha inapaswa kuwa ya aina: jpeg, png, jpg, gif, webp',
-        'picha.max' => 'Picha haiwezi kuzidi 2MB',
-    ]);
-
-    // Validate that selling price is not lower than buying price
-    $validator->after(function ($validator) use ($request) {
-        if ($request->bei_kuuza < $request->bei_nunua) {
-            $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
-        }
-    });
-
-    if ($validator->fails()) {
-        if ($request->ajax() || $request->wantsJson()) {
+    public function searchAll(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        
+        $search = trim($request->input('search', ''));
+        
+        // Validate search term length
+        if (empty($search) || strlen($search) < 2) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hitilafu katika uthibitishaji',
-                'errors' => $validator->errors()
-            ], 422);
+                'message' => 'Tafadhali ingiza angalau herufi 2 kwa ajili ya utafutaji',
+                'data' => []
+            ]);
         }
-        return back()->withErrors($validator)->withInput();
+        
+        try {
+            // Search across ALL bidhaa in the database (no pagination limit)
+            $bidhaa = Bidhaa::where('company_id', $companyId)
+                ->where(function($query) use ($search) {
+                    $query->where('jina', 'LIKE', "%{$search}%")
+                          ->orWhere('aina', 'LIKE', "%{$search}%")
+                          ->orWhere('barcode', 'LIKE', "%{$search}%")
+                          ->orWhere('kipimo', 'LIKE', "%{$search}%");
+                })
+                ->orderBy('jina')
+                ->take(500) // Limit to prevent performance issues
+                ->get()
+                ->map(function($item) {
+                    // Determine stock status
+                    $stockStatus = 'in-stock';
+                    if ($item->idadi == 0) {
+                        $stockStatus = 'out-of-stock';
+                    } elseif ($item->idadi < 10) {
+                        $stockStatus = 'low-stock';
+                    }
+                    
+                    return [
+                        'id' => $item->id,
+                        'jina' => $item->jina,
+                        'aina' => $item->aina,
+                        'kipimo' => $item->kipimo,
+                        'idadi' => $item->idadi,
+                        'bei_nunua' => $item->bei_nunua,
+                        'bei_kuuza' => $item->bei_kuuza,
+                        'expiry' => $item->expiry ? $item->expiry->format('Y-m-d') : null,
+                        'barcode' => $item->barcode,
+                        'stock_status' => $stockStatus,
+                        'created_at' => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : null,
+                        'updated_at' => $item->updated_at ? $item->updated_at->format('Y-m-d H:i:s') : null
+                    ];
+                });
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Utafutaji umekamilika',
+                'data' => $bidhaa,
+                'count' => $bidhaa->count(),
+                'search_term' => $search
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Search error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hitilafu katika utafutaji: ' . $e->getMessage(),
+                'data' => []
+            ], 500);
+        }
     }
-
-    $validated = $validator->validated();
-    $validated['company_id'] = $this->getCompanyId();
-
-    // Handle image upload
-    if ($request->hasFile('picha')) {
-        $image = $request->file('picha');
-        $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-        $path = $image->storeAs('bidhaa_images', $imageName, 'public');
-        $validated['picha'] = $path;
+    
+    /**
+     * Get product for editing (AJAX endpoint)
+     */
+    public function editProduct($id)
+    {
+        try {
+            $companyId = $this->getCompanyId();
+            
+            $product = Bidhaa::where('id', $id)
+                            ->where('company_id', $companyId)
+                            ->first();
+            
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bidhaa haijapatikana'
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $product->id,
+                    'jina' => $product->jina,
+                    'aina' => $product->aina,
+                    'kipimo' => $product->kipimo,
+                    'idadi' => $product->idadi,
+                    'bei_nunua' => $product->bei_nunua,
+                    'bei_kuuza' => $product->bei_kuuza,
+                    'expiry' => $product->expiry ? $product->expiry->format('Y-m-d') : null,
+                    'barcode' => $product->barcode
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Edit product error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hitilafu katika kupakua bidhaa'
+            ], 500);
+        }
     }
-
-    Bidhaa::create($validated);
-
-    if ($request->ajax() || $request->wantsJson()) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Bidhaa imeongezwa kikamilifu!'
+    
+    /**
+     * Hifadhi bidhaa mpya (normal form)
+     */
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'jina' => 'required|string|max:255',
+            'aina' => 'required|string|max:255',
+            'kipimo' => 'nullable|string|max:100',
+            'idadi' => 'required|integer|min:0',
+            'bei_nunua' => 'required|numeric|min:0',
+            'bei_kuuza' => 'required|numeric|min:0',
+            'expiry' => 'nullable|date|after_or_equal:today',
+            'barcode' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('bidhaas', 'barcode')->where(function ($query) {
+                    return $query->where('company_id', $this->getCompanyId());
+                })
+            ],
+        ], [
+            'jina.required' => 'Jina la bidhaa linahitajika',
+            'aina.required' => 'Aina ya bidhaa inahitajika',
+            'idadi.required' => 'Idadi ya bidhaa inahitajika',
+            'bei_nunua.required' => 'Bei ya kununua inahitajika',
+            'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
+            'expiry.after_or_equal' => 'Tarehe ya mwisho haiwezi kuwa ya zamani',
+            'barcode.unique' => 'Barcode tayari ipo kwenye mfumo',
         ]);
+
+        // Validate that selling price is not lower than buying price
+        $validator->after(function ($validator) use ($request) {
+            if ($request->bei_kuuza < $request->bei_nunua) {
+                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
+            }
+        });
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hitilafu katika uthibitishaji',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
+        $validated['company_id'] = $this->getCompanyId();
+
+        Bidhaa::create($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bidhaa imeongezwa kikamilifu!'
+            ]);
+        }
+
+        return redirect()->route('bidhaa.index')
+            ->with('success', 'Bidhaa imeongezwa kikamilifu!');
     }
-
-    return redirect()->route('bidhaa.index')
-        ->with('success', 'Bidhaa imeongezwa kikamilifu!');
-}
-
 
     /**
      * Hifadhi bidhaa kwa kutumia barcode
@@ -286,91 +389,72 @@ public function store(Request $request)
     /**
      * Rekebisha bidhaa
      */
-// Also update the update method similarly:
-public function update(Request $request, $id)
-{
-    $companyId = $this->getCompanyId();
-    $bidhaa = Bidhaa::where('id', $id)
-                    ->where('company_id', $companyId)
-                    ->firstOrFail();
+    public function update(Request $request, $id)
+    {
+        $companyId = $this->getCompanyId();
+        $bidhaa = Bidhaa::where('id', $id)
+                        ->where('company_id', $companyId)
+                        ->firstOrFail();
 
-    $validator = Validator::make($request->all(), [
-        'jina' => 'required|string|max:255',
-        'aina' => 'required|string|max:255',
-        'kipimo' => 'nullable|string|max:100',
-        'idadi' => 'required|integer|min:0',
-        'bei_nunua' => 'required|numeric|min:0',
-        'bei_kuuza' => 'required|numeric|min:0',
-        'expiry' => 'nullable|date|after_or_equal:today',
-        'barcode' => [
-            'nullable',
-            'string',
-            'max:255',
-            Rule::unique('bidhaas', 'barcode')
-                ->where(function ($query) use ($companyId) {
-                    return $query->where('company_id', $companyId);
-                })
-                ->ignore($bidhaa->id)
-        ],
-        'picha' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // Add this line
-    ], [
-        'jina.required' => 'Jina la bidhaa linahitajika',
-        'aina.required' => 'Aina ya bidhaa inahitajika',
-        'idadi.required' => 'Idadi ya bidhaa inahitajika',
-        'bei_nunua.required' => 'Bei ya kununua inahitajika',
-        'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
-        'expiry.after_or_equal' => 'Tarehe ya mwisho haiwezi kuwa ya zamani',
-        'barcode.unique' => 'Barcode tayari ipo kwenye mfumo',
-        'picha.image' => 'Faili ya picha inapaswa kuwa picha',
-        'picha.mimes' => 'Picha inapaswa kuwa ya aina: jpeg, png, jpg, gif, webp',
-        'picha.max' => 'Picha haiwezi kuzidi 2MB',
-    ]);
+        $validator = Validator::make($request->all(), [
+            'jina' => 'required|string|max:255',
+            'aina' => 'required|string|max:255',
+            'kipimo' => 'nullable|string|max:100',
+            'idadi' => 'required|integer|min:0',
+            'bei_nunua' => 'required|numeric|min:0',
+            'bei_kuuza' => 'required|numeric|min:0',
+            'expiry' => 'nullable|date|after_or_equal:today',
+            'barcode' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('bidhaas', 'barcode')
+                    ->where(function ($query) use ($companyId) {
+                        return $query->where('company_id', $companyId);
+                    })
+                    ->ignore($bidhaa->id)
+            ],
+        ], [
+            'jina.required' => 'Jina la bidhaa linahitajika',
+            'aina.required' => 'Aina ya bidhaa inahitajika',
+            'idadi.required' => 'Idadi ya bidhaa inahitajika',
+            'bei_nunua.required' => 'Bei ya kununua inahitajika',
+            'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
+            'expiry.after_or_equal' => 'Tarehe ya mwisho haiwezi kuwa ya zamani',
+            'barcode.unique' => 'Barcode tayari ipo kwenye mfumo',
+        ]);
 
-    $validator->after(function ($validator) use ($request) {
-        if ($request->bei_kuuza < $request->bei_nunua) {
-            $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
+        $validator->after(function ($validator) use ($request) {
+            if ($request->bei_kuuza < $request->bei_nunua) {
+                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
+            }
+        });
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hitilafu katika uthibitishaji',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return back()->withErrors($validator)->withInput();
         }
-    });
 
-    if ($validator->fails()) {
+        $validated = $validator->validated();
+
+        $bidhaa->update($validated);
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => false,
-                'message' => 'Hitilafu katika uthibitishaji',
-                'errors' => $validator->errors()
-            ], 422);
+                'success' => true,
+                'message' => 'Bidhaa imerekebishwa kikamilifu!'
+            ]);
         }
-        return back()->withErrors($validator)->withInput();
+
+        return redirect()->route('bidhaa.index')
+            ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
     }
-
-    $validated = $validator->validated();
-
-    // Handle image upload
-    if ($request->hasFile('picha')) {
-        // Delete old image if exists
-        if ($bidhaa->picha && Storage::disk('public')->exists($bidhaa->picha)) {
-            Storage::disk('public')->delete($bidhaa->picha);
-        }
-        
-        $image = $request->file('picha');
-        $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-        $path = $image->storeAs('bidhaa_images', $imageName, 'public');
-        $validated['picha'] = $path;
-    }
-
-    $bidhaa->update($validated);
-
-    if ($request->ajax() || $request->wantsJson()) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Bidhaa imerekebishwa kikamilifu!'
-        ]);
-    }
-
-    return redirect()->route('bidhaa.index')
-        ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
-}
-
 
     /**
      * Futa bidhaa
@@ -492,353 +576,346 @@ public function update(Request $request, $id)
         }
     }
 
+    /**
+     * Pakia Excel/CSV na hifadhi bidhaa
+     */
+    public function uploadExcel(Request $request)
+    {
+        // Validate file - support both Excel and CSV
+        $validator = Validator::make($request->all(), [
+            'excel_file' => 'required|file|mimes:csv,txt,xls,xlsx|max:10240', // 10MB max
+        ], [
+            'excel_file.required' => 'Tafadhali chagua faili',
+            'excel_file.mimes' => 'Aina ya faili hairuhusiwi. Tumia: CSV, TXT, XLS, XLSX',
+            'excel_file.max' => 'Faili ni kubwa sana. Ukubwa upeo ni 10MB',
+        ]);
 
-
-
-
-
-
-
-
-/**
- * Pakia Excel/CSV na hifadhi bidhaa
- */
-public function uploadExcel(Request $request)
-{
-    // Validate file - support both Excel and CSV
-    $validator = Validator::make($request->all(), [
-        'excel_file' => 'required|file|mimes:csv,txt,xls,xlsx|max:10240', // 10MB max
-    ], [
-        'excel_file.required' => 'Tafadhali chagua faili',
-        'excel_file.mimes' => 'Aina ya faili hairuhusiwi. Tumia: CSV, TXT, XLS, XLSX',
-        'excel_file.max' => 'Faili ni kubwa sana. Ukubwa upeo ni 10MB',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Hitilafu katika faili',
-            'errors' => $validator->errors()
-        ], 422);
-    }
-
-    $companyId = $this->getCompanyId();
-    $errors = [];
-    $successCount = 0;
-    $lineNumber = 0;
-    $skippedRows = 0;
-    $totalRows = 0;
-
-    try {
-        $file = $request->file('excel_file');
-        $extension = strtolower($file->getClientOriginalExtension());
-        
-        // Process based on file type
-        if (in_array($extension, ['xls', 'xlsx'])) {
-            $rows = $this->processExcelFile($file);
-        } else {
-            $rows = $this->processCSVFile($file);
-        }
-        
-        if (empty($rows)) {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Faili liko tupu au halina data.',
+                'message' => 'Hitilafu katika faili',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $companyId = $this->getCompanyId();
+        $errors = [];
+        $successCount = 0;
+        $lineNumber = 0;
+        $skippedRows = 0;
+        $totalRows = 0;
+
+        try {
+            $file = $request->file('excel_file');
+            $extension = strtolower($file->getClientOriginalExtension());
+            
+            // Process based on file type
+            if (in_array($extension, ['xls', 'xlsx'])) {
+                $rows = $this->processExcelFile($file);
+            } else {
+                $rows = $this->processCSVFile($file);
+            }
+            
+            if (empty($rows)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Faili liko tupu au halina data.',
+                    'data' => [
+                        'successCount' => 0,
+                        'errorCount' => 1,
+                        'skippedRows' => 0,
+                        'totalRows' => 0,
+                        'errors' => ['Faili halina data au muundo sio sahihi']
+                    ]
+                ]);
+            }
+            
+            $totalRows = count($rows);
+            
+            // Start transaction for data consistency
+            DB::beginTransaction();
+            
+            // Process each row
+            foreach ($rows as $index => $rowData) {
+                $lineNumber = $index + 2; // +2 because index starts at 0 and header is row 1
+                
+                // Skip empty rows
+                if (empty(array_filter($rowData, function($value) { 
+                    return $value !== '' && $value !== null && trim($value) !== ''; 
+                }))) {
+                    $skippedRows++;
+                    continue;
+                }
+                
+                // Normalize column names (case-insensitive)
+                $normalizedRow = [];
+                foreach ($rowData as $key => $value) {
+                    $normalizedKey = strtolower(trim($key));
+                    $normalizedRow[$normalizedKey] = trim($value);
+                }
+                
+                // Map column names
+                $columnMapping = [
+                    'jina' => 'Jina',
+                    'aina' => 'Aina',
+                    'kipimo' => 'Kipimo',
+                    'idadi' => 'Idadi',
+                    'bei_nunua' => 'Bei_Nunua',
+                    'bei nunua' => 'Bei_Nunua',
+                    'beinunua' => 'Bei_Nunua',
+                    'bei_kuuza' => 'Bei_Kuuza',
+                    'bei kuuza' => 'Bei_Kuuza',
+                    'beikuuza' => 'Bei_Kuuza',
+                    'expiry' => 'Expiry',
+                    'expirydate' => 'Expiry',
+                    'tarehe ya mwisho' => 'Expiry',
+                    'barcode' => 'Barcode',
+                    'namba ya mfumo' => 'Barcode',
+                ];
+                
+                // Get values with fallback
+                $jina = '';
+                foreach (['jina', 'name', 'bidhaa'] as $key) {
+                    if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
+                        $jina = $normalizedRow[$key];
+                        break;
+                    }
+                }
+                
+                $aina = '';
+                foreach (['aina', 'category', 'aina ya bidhaa'] as $key) {
+                    if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
+                        $aina = $normalizedRow[$key];
+                        break;
+                    }
+                }
+                
+                $idadi = '';
+                foreach (['idadi', 'quantity', 'stock', 'kiasi'] as $key) {
+                    if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
+                        $idadi = $normalizedRow[$key];
+                        break;
+                    }
+                }
+                
+                $beiNunua = '';
+                foreach (['bei_nunua', 'bei nunua', 'beinunua', 'buying price', 'cost price'] as $key) {
+                    if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
+                        $beiNunua = $normalizedRow[$key];
+                        break;
+                    }
+                }
+                
+                $beiKuuza = '';
+                foreach (['bei_kuuza', 'bei kuuza', 'beikuuza', 'selling price', 'sale price'] as $key) {
+                    if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
+                        $beiKuuza = $normalizedRow[$key];
+                        break;
+                    }
+                }
+                
+                $kipimo = '';
+                foreach (['kipimo', 'unit', 'measure', 'kiasi cha kipimo'] as $key) {
+                    if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
+                        $kipimo = $normalizedRow[$key];
+                        break;
+                    }
+                }
+                
+                $expiry = '';
+                foreach (['expiry', 'expirydate', 'tarehe ya mwisho', 'expiry date'] as $key) {
+                    if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
+                        $expiry = $normalizedRow[$key];
+                        break;
+                    }
+                }
+                
+                $barcode = '';
+                foreach (['barcode', 'namba ya mfumo', 'code'] as $key) {
+                    if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
+                        $barcode = $normalizedRow[$key];
+                        break;
+                    }
+                }
+                
+                // Validate required fields
+                if (empty($jina)) {
+                    $errors[] = "Mstari {$lineNumber}: Jina la bidhaa linakosekana";
+                    continue;
+                }
+                
+                if (empty($aina)) {
+                    $errors[] = "Mstari {$lineNumber}: Aina ya bidhaa inakosekana";
+                    continue;
+                }
+                
+                // IDADI CAN BE 0 OR EMPTY - SET DEFAULT TO 0
+                if ($idadi === '' || $idadi === null) {
+                    $idadi = 0;
+                }
+                
+                if (empty($beiNunua)) {
+                    $errors[] = "Mstari {$lineNumber}: Bei ya kununua inakosekana";
+                    continue;
+                }
+                
+                if (empty($beiKuuza)) {
+                    $errors[] = "Mstari {$lineNumber}: Bei ya kuuza inakosekana";
+                    continue;
+                }
+                
+                // Validate numeric fields - ALLOW 0 FOR IDADI
+                if (!is_numeric($idadi) || (int)$idadi < 0) {
+                    $errors[] = "Mstari {$lineNumber}: Idadi '{$idadi}' si sahihi. Lazima iwe namba nzuri au sifuri (0).";
+                    continue;
+                }
+                
+                if (!is_numeric($beiNunua) || (float)$beiNunua < 0) {
+                    $errors[] = "Mstari {$lineNumber}: Bei ya kununua '{$beiNunua}' si sahihi. Lazima iwe namba nzuri.";
+                    continue;
+                }
+                
+                if (!is_numeric($beiKuuza) || (float)$beiKuuza < 0) {
+                    $errors[] = "Mstari {$lineNumber}: Bei ya kuuza '{$beiKuuza}' si sahihi. Lazima iwe namba nzuri.";
+                    continue;
+                }
+                
+                if ((float)$beiKuuza < (float)$beiNunua) {
+                    $errors[] = "Mstari {$lineNumber}: Bei kuuza ({$beiKuuza}) haiwezi kuwa chini ya bei nunua ({$beiNunua}).";
+                    continue;
+                }
+                
+                // Parse expiry date (optional)
+                $expiryDate = null;
+                if (!empty($expiry) && strtolower($expiry) !== 'n/a' && strtolower($expiry) !== 'na') {
+                    $parsedDate = $this->parseDate($expiry);
+                    if (!$parsedDate) {
+                        $errors[] = "Mstari {$lineNumber}: Tarehe ya expiry '{$expiry}' si sahihi. Tumia muundo YYYY-MM-DD, DD/MM/YYYY au DD-MM-YYYY";
+                        continue;
+                    }
+                    
+                    // Check if expiry is in the past (but still allow it - just warn)
+                    if (strtotime($parsedDate) < strtotime('today')) {
+                        // Just log a warning but don't stop the upload
+                        \Log::warning("Mstari {$lineNumber}: Tarehe ya expiry '{$parsedDate}' imepita.");
+                    }
+                    
+                    $expiryDate = $parsedDate;
+                }
+                
+                // Check barcode uniqueness (optional)
+                if (!empty($barcode)) {
+                    // Remove any whitespace
+                    $barcode = trim($barcode);
+                    
+                    // Check if barcode already exists
+                    $existingBarcode = Bidhaa::where('barcode', $barcode)
+                                            ->where('company_id', $companyId)
+                                            ->exists();
+                    
+                    if ($existingBarcode) {
+                        $errors[] = "Mstari {$lineNumber}: Barcode '{$barcode}' tayari ipo kwenye mfumo.";
+                        continue;
+                    }
+                }
+                
+                try {
+                    // Check if product with same name and type already exists
+                    $existingProduct = Bidhaa::where('jina', $jina)
+                                            ->where('aina', $aina)
+                                            ->where('company_id', $companyId)
+                                            ->first();
+                    
+                    if ($existingProduct) {
+                        // If quantity is provided, update the stock
+                        if ((int)$idadi > 0) {
+                            $existingProduct->update([
+                                'idadi' => $existingProduct->idadi + (int)$idadi,
+                            ]);
+                        }
+                        
+                        // Always update prices
+                        $existingProduct->update([
+                            'bei_nunua' => (float)$beiNunua,
+                            'bei_kuuza' => (float)$beiKuuza,
+                            'expiry' => $expiryDate ?: $existingProduct->expiry,
+                            'barcode' => !empty($barcode) ? $barcode : $existingProduct->barcode,
+                            'kipimo' => !empty($kipimo) ? $kipimo : $existingProduct->kipimo,
+                        ]);
+                        
+                        $successCount++;
+                    } else {
+                        // Create new product - even with 0 quantity
+                        Bidhaa::create([
+                            'company_id' => $companyId,
+                            'jina' => $jina,
+                            'aina' => $aina,
+                            'kipimo' => !empty($kipimo) ? $kipimo : null,
+                            'idadi' => (int)$idadi, // Can be 0
+                            'bei_nunua' => (float)$beiNunua,
+                            'bei_kuuza' => (float)$beiKuuza,
+                            'expiry' => $expiryDate,
+                            'barcode' => !empty($barcode) ? $barcode : null,
+                        ]);
+                        
+                        $successCount++;
+                    }
+                } catch (\Exception $e) {
+                    $errors[] = "Mstari {$lineNumber}: Hitilafu ya ndani - " . $e->getMessage();
+                    \Log::error('Excel Upload Error: ' . $e->getMessage(), [
+                        'row' => $rowData,
+                        'line' => $lineNumber
+                    ]);
+                }
+            }
+            
+            // Commit transaction
+            DB::commit();
+            
+            // Prepare response
+            $response = [
+                'success' => true,
+                'message' => "Upakiaji umekamilika!",
+                'data' => [
+                    'successCount' => $successCount,
+                    'errorCount' => count($errors),
+                    'skippedRows' => $skippedRows,
+                    'totalRows' => $totalRows,
+                    'errors' => array_slice($errors, 0, 50) // Limit to first 50 errors
+                ]
+            ];
+            
+            if (count($errors) > 0 && $successCount === 0) {
+                $response['success'] = false;
+                $response['message'] = "Upakiaji umeshindwa. Hakuna bidhaa zilizoongezwa.";
+            } elseif (count($errors) > 0) {
+                $response['message'] = "Upakiaji umekamilika kwa hitilafu " . count($errors);
+            } elseif ($successCount === 0) {
+                $response['success'] = false;
+                $response['message'] = "Hakuna bidhaa zilizoongezwa. Hakikisha data yako iko sahihi.";
+            }
+            
+            return response()->json($response);
+            
+        } catch (\Exception $e) {
+            // Rollback on error
+            DB::rollBack();
+            \Log::error('Excel Upload Processing Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Hitilafu katika usindikaji wa faili: ' . $e->getMessage(),
                 'data' => [
                     'successCount' => 0,
                     'errorCount' => 1,
                     'skippedRows' => 0,
                     'totalRows' => 0,
-                    'errors' => ['Faili halina data au muundo sio sahihi']
+                    'errors' => ['Hitilafu ya jumla: ' . $e->getMessage()]
                 ]
-            ]);
+            ], 500);
         }
-        
-        $totalRows = count($rows);
-        
-        // Start transaction for data consistency
-        DB::beginTransaction();
-        
-        // Process each row
-        foreach ($rows as $index => $rowData) {
-            $lineNumber = $index + 2; // +2 because index starts at 0 and header is row 1
-            
-            // Skip empty rows
-            if (empty(array_filter($rowData, function($value) { 
-                return $value !== '' && $value !== null && trim($value) !== ''; 
-            }))) {
-                $skippedRows++;
-                continue;
-            }
-            
-            // Normalize column names (case-insensitive)
-            $normalizedRow = [];
-            foreach ($rowData as $key => $value) {
-                $normalizedKey = strtolower(trim($key));
-                $normalizedRow[$normalizedKey] = trim($value);
-            }
-            
-            // Map column names
-            $columnMapping = [
-                'jina' => 'Jina',
-                'aina' => 'Aina',
-                'kipimo' => 'Kipimo',
-                'idadi' => 'Idadi',
-                'bei_nunua' => 'Bei_Nunua',
-                'bei nunua' => 'Bei_Nunua',
-                'beinunua' => 'Bei_Nunua',
-                'bei_kuuza' => 'Bei_Kuuza',
-                'bei kuuza' => 'Bei_Kuuza',
-                'beikuuza' => 'Bei_Kuuza',
-                'expiry' => 'Expiry',
-                'expirydate' => 'Expiry',
-                'tarehe ya mwisho' => 'Expiry',
-                'barcode' => 'Barcode',
-                'namba ya mfumo' => 'Barcode',
-            ];
-            
-            // Get values with fallback
-            $jina = '';
-            foreach (['jina', 'name', 'bidhaa'] as $key) {
-                if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
-                    $jina = $normalizedRow[$key];
-                    break;
-                }
-            }
-            
-            $aina = '';
-            foreach (['aina', 'category', 'aina ya bidhaa'] as $key) {
-                if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
-                    $aina = $normalizedRow[$key];
-                    break;
-                }
-            }
-            
-            $idadi = '';
-            foreach (['idadi', 'quantity', 'stock', 'kiasi'] as $key) {
-                if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
-                    $idadi = $normalizedRow[$key];
-                    break;
-                }
-            }
-            
-            $beiNunua = '';
-            foreach (['bei_nunua', 'bei nunua', 'beinunua', 'buying price', 'cost price'] as $key) {
-                if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
-                    $beiNunua = $normalizedRow[$key];
-                    break;
-                }
-            }
-            
-            $beiKuuza = '';
-            foreach (['bei_kuuza', 'bei kuuza', 'beikuuza', 'selling price', 'sale price'] as $key) {
-                if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
-                    $beiKuuza = $normalizedRow[$key];
-                    break;
-                }
-            }
-            
-            $kipimo = '';
-            foreach (['kipimo', 'unit', 'measure', 'kiasi cha kipimo'] as $key) {
-                if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
-                    $kipimo = $normalizedRow[$key];
-                    break;
-                }
-            }
-            
-            $expiry = '';
-            foreach (['expiry', 'expirydate', 'tarehe ya mwisho', 'expiry date'] as $key) {
-                if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
-                    $expiry = $normalizedRow[$key];
-                    break;
-                }
-            }
-            
-            $barcode = '';
-            foreach (['barcode', 'namba ya mfumo', 'code'] as $key) {
-                if (isset($normalizedRow[$key]) && $normalizedRow[$key] !== '') {
-                    $barcode = $normalizedRow[$key];
-                    break;
-                }
-            }
-            
-            // Validate required fields
-            if (empty($jina)) {
-                $errors[] = "Mstari {$lineNumber}: Jina la bidhaa linakosekana";
-                continue;
-            }
-            
-            if (empty($aina)) {
-                $errors[] = "Mstari {$lineNumber}: Aina ya bidhaa inakosekana";
-                continue;
-            }
-            
-            // IDADI CAN BE 0 OR EMPTY - SET DEFAULT TO 0
-            if ($idadi === '' || $idadi === null) {
-                $idadi = 0;
-            }
-            
-            if (empty($beiNunua)) {
-                $errors[] = "Mstari {$lineNumber}: Bei ya kununua inakosekana";
-                continue;
-            }
-            
-            if (empty($beiKuuza)) {
-                $errors[] = "Mstari {$lineNumber}: Bei ya kuuza inakosekana";
-                continue;
-            }
-            
-            // Validate numeric fields - ALLOW 0 FOR IDADI
-            if (!is_numeric($idadi) || (int)$idadi < 0) {
-                $errors[] = "Mstari {$lineNumber}: Idadi '{$idadi}' si sahihi. Lazima iwe namba nzuri au sifuri (0).";
-                continue;
-            }
-            
-            if (!is_numeric($beiNunua) || (float)$beiNunua < 0) {
-                $errors[] = "Mstari {$lineNumber}: Bei ya kununua '{$beiNunua}' si sahihi. Lazima iwe namba nzuri.";
-                continue;
-            }
-            
-            if (!is_numeric($beiKuuza) || (float)$beiKuuza < 0) {
-                $errors[] = "Mstari {$lineNumber}: Bei ya kuuza '{$beiKuuza}' si sahihi. Lazima iwe namba nzuri.";
-                continue;
-            }
-            
-            if ((float)$beiKuuza < (float)$beiNunua) {
-                $errors[] = "Mstari {$lineNumber}: Bei kuuza ({$beiKuuza}) haiwezi kuwa chini ya bei nunua ({$beiNunua}).";
-                continue;
-            }
-            
-            // Parse expiry date (optional)
-            $expiryDate = null;
-            if (!empty($expiry) && strtolower($expiry) !== 'n/a' && strtolower($expiry) !== 'na') {
-                $parsedDate = $this->parseDate($expiry);
-                if (!$parsedDate) {
-                    $errors[] = "Mstari {$lineNumber}: Tarehe ya expiry '{$expiry}' si sahihi. Tumia muundo YYYY-MM-DD, DD/MM/YYYY au DD-MM-YYYY";
-                    continue;
-                }
-                
-                // Check if expiry is in the past (but still allow it - just warn)
-                if (strtotime($parsedDate) < strtotime('today')) {
-                    // Just log a warning but don't stop the upload
-                    \Log::warning("Mstari {$lineNumber}: Tarehe ya expiry '{$parsedDate}' imepita.");
-                }
-                
-                $expiryDate = $parsedDate;
-            }
-            
-            // Check barcode uniqueness (optional)
-            if (!empty($barcode)) {
-                // Remove any whitespace
-                $barcode = trim($barcode);
-                
-                // Check if barcode already exists
-                $existingBarcode = Bidhaa::where('barcode', $barcode)
-                                        ->where('company_id', $companyId)
-                                        ->exists();
-                
-                if ($existingBarcode) {
-                    $errors[] = "Mstari {$lineNumber}: Barcode '{$barcode}' tayari ipo kwenye mfumo.";
-                    continue;
-                }
-            }
-            
-            try {
-                // Check if product with same name and type already exists
-                $existingProduct = Bidhaa::where('jina', $jina)
-                                        ->where('aina', $aina)
-                                        ->where('company_id', $companyId)
-                                        ->first();
-                
-                if ($existingProduct) {
-                    // If quantity is provided, update the stock
-                    if ((int)$idadi > 0) {
-                        $existingProduct->update([
-                            'idadi' => $existingProduct->idadi + (int)$idadi,
-                        ]);
-                    }
-                    
-                    // Always update prices
-                    $existingProduct->update([
-                        'bei_nunua' => (float)$beiNunua,
-                        'bei_kuuza' => (float)$beiKuuza,
-                        'expiry' => $expiryDate ?: $existingProduct->expiry,
-                        'barcode' => !empty($barcode) ? $barcode : $existingProduct->barcode,
-                        'kipimo' => !empty($kipimo) ? $kipimo : $existingProduct->kipimo,
-                    ]);
-                    
-                    $successCount++;
-                } else {
-                    // Create new product - even with 0 quantity
-                    Bidhaa::create([
-                        'company_id' => $companyId,
-                        'jina' => $jina,
-                        'aina' => $aina,
-                        'kipimo' => !empty($kipimo) ? $kipimo : null,
-                        'idadi' => (int)$idadi, // Can be 0
-                        'bei_nunua' => (float)$beiNunua,
-                        'bei_kuuza' => (float)$beiKuuza,
-                        'expiry' => $expiryDate,
-                        'barcode' => !empty($barcode) ? $barcode : null,
-                    ]);
-                    
-                    $successCount++;
-                }
-            } catch (\Exception $e) {
-                $errors[] = "Mstari {$lineNumber}: Hitilafu ya ndani - " . $e->getMessage();
-                \Log::error('Excel Upload Error: ' . $e->getMessage(), [
-                    'row' => $rowData,
-                    'line' => $lineNumber
-                ]);
-            }
-        }
-        
-        // Commit transaction
-        DB::commit();
-        
-        // Prepare response
-        $response = [
-            'success' => true,
-            'message' => "Upakiaji umekamilika!",
-            'data' => [
-                'successCount' => $successCount,
-                'errorCount' => count($errors),
-                'skippedRows' => $skippedRows,
-                'totalRows' => $totalRows,
-                'errors' => array_slice($errors, 0, 50) // Limit to first 50 errors
-            ]
-        ];
-        
-        if (count($errors) > 0 && $successCount === 0) {
-            $response['success'] = false;
-            $response['message'] = "Upakiaji umeshindwa. Hakuna bidhaa zilizoongezwa.";
-        } elseif (count($errors) > 0) {
-            $response['message'] = "Upakiaji umekamilika kwa hitilafu " . count($errors);
-        } elseif ($successCount === 0) {
-            $response['success'] = false;
-            $response['message'] = "Hakuna bidhaa zilizoongezwa. Hakikisha data yako iko sahihi.";
-        }
-        
-        return response()->json($response);
-        
-    } catch (\Exception $e) {
-        // Rollback on error
-        DB::rollBack();
-        \Log::error('Excel Upload Processing Error: ' . $e->getMessage());
-        
-        return response()->json([
-            'success' => false,
-            'message' => 'Hitilafu katika usindikaji wa faili: ' . $e->getMessage(),
-            'data' => [
-                'successCount' => 0,
-                'errorCount' => 1,
-                'skippedRows' => 0,
-                'totalRows' => 0,
-                'errors' => ['Hitilafu ya jumla: ' . $e->getMessage()]
-            ]
-        ], 500);
     }
-}
+    
     /**
      * Process Excel file (XLS, XLSX)
      */
