@@ -14,7 +14,6 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Writer\Xls;          // <-- Add this
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class BidhaaController extends Controller
@@ -476,17 +475,17 @@ class BidhaaController extends Controller
         // Set title and metadata
         $sheet->setTitle('Bidhaa Zote');
         
-        // Set headers with styling
+        // Set headers with exact column names (NO ASTERISKS for easier matching)
         $headers = [
-            'A1' => 'Jina la Bidhaa *',
-            'B1' => 'Aina *',
+            'A1' => 'Jina la Bidhaa', // Required
+            'B1' => 'Aina',           // Required
             'C1' => 'Kipimo',
-            'D1' => 'Idadi *',
-            'E1' => 'Bei Nunua (TZS) *',
-            'F1' => 'Bei Kuuza (TZS) *',
-            'G1' => 'Expiry Date (YYYY-MM-DD)',
+            'D1' => 'Idadi',           // Required
+            'E1' => 'Bei Nunua',        // Required
+            'F1' => 'Bei Kuuza',        // Required
+            'G1' => 'Expiry Date',
             'H1' => 'Barcode',
-            'I1' => 'Faida (TZS)',
+            'I1' => 'Faida',
             'J1' => 'Asilimia',
             'K1' => 'Hali ya Hisa'
         ];
@@ -555,19 +554,6 @@ class BidhaaController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Add instructions row
-        $row += 2;
-        $sheet->setCellValue('A' . $row, 'MAELEKEZO YA KUJAZA:');
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-        
-        $row++;
-        $sheet->setCellValue('A' . $row, '* - Columns marked with * are required');
-        $row++;
-        $sheet->setCellValue('A' . $row, 'Expiry Date format: YYYY-MM-DD (e.g., 2025-12-31)');
-        $row++;
-        $sheet->setCellValue('A' . $row, 'If product with same Jina, Aina, and Kipimo exists, it will be UPDATED');
-        $sheet->getStyle('A' . $row)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000'));
-        
         // Create file
         $writer = new Xlsx($spreadsheet);
         $filename = "bidhaa_zote_" . date('Y-m-d_His') . ".xlsx";
@@ -581,7 +567,7 @@ class BidhaaController extends Controller
     }
 
     /**
-     * Pakua mfano wa faili la Excel (XLSX format)
+     * Pakua mfano wa faili la Excel (XLSX format) - SIMPLIFIED VERSION
      */
     public function downloadSample()
     {
@@ -589,17 +575,18 @@ class BidhaaController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         
         // Set title
-        $sheet->setTitle('Sampuli ya Bidhaa');
+        $sheet->setTitle('Sampuli');
         
-        // Set headers with styling
+        // Set headers with EXACT column names (NO ASTERISKS, NO EXTRA TEXT)
+        // These exact names will be used to match the columns during upload
         $headers = [
-            'A1' => 'Jina la Bidhaa *',
-            'B1' => 'Aina *',
+            'A1' => 'Jina la Bidhaa', // Required
+            'B1' => 'Aina',           // Required
             'C1' => 'Kipimo',
-            'D1' => 'Idadi *',
-            'E1' => 'Bei Nunua (TZS) *',
-            'F1' => 'Bei Kuuza (TZS) *',
-            'G1' => 'Expiry Date (YYYY-MM-DD)',
+            'D1' => 'Idadi',           // Required
+            'E1' => 'Bei Nunua',        // Required
+            'F1' => 'Bei Kuuza',        // Required
+            'G1' => 'Expiry Date',
             'H1' => 'Barcode'
         ];
         
@@ -632,15 +619,10 @@ class BidhaaController extends Controller
         
         $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
         
-        // Sample data
+        // SIMPLE SAMPLE DATA - just 2 rows for testing
         $sampleData = [
-            ['Soda', 'Vinywaji', '500ml', '100', '600', '1000', '2025-12-31', '1234567890123'],
-            ['Soda', 'Vinywaji', '1L', '50', '800', '1500', '2025-12-31', '987654321'],
-            ['Mchele', 'Chakula', '1kg', '200', '2500', '3500', '2026-01-15', ''],
-            ['Mchele', 'Chakula', '5kg', '75', '12000', '16500', '2026-01-15', 'MCHELE5KG001'],
-            ['Sabuni', 'Usafi', '400g', '30', '1200', '1800', '2024-12-01', ''],
-            ['Maji', 'Vinywaji', '1.5L', '200', '500', '800', '', 'MAJI1500'],
-            ['Bidhaa Imeisha', 'Mfano', 'pcs', '0', '1000', '1500', '', ''],
+            ['Soda', 'Vinywaji', '500ml', 100, 600, 1000, '2025-12-31', '123456789'],
+            ['Mchele', 'Chakula', '1kg', 200, 2500, 3500, '2026-01-15', '']
         ];
         
         $row = 2;
@@ -674,31 +656,6 @@ class BidhaaController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Add instructions
-        $row += 2;
-        $sheet->setCellValue('A' . $row, 'MAELEKEZO:');
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
-        
-        $row++;
-        $sheet->setCellValue('A' . $row, '1. Usibadilishe headers - weka kama zilivyo');
-        $row++;
-        $sheet->setCellValue('A' . $row, '2. Safu zilizo na * zinahitajika (Required)');
-        $row++;
-        $sheet->setCellValue('A' . $row, '3. Expiry Date format: YYYY-MM-DD (mfano: 2025-12-31)');
-        $row++;
-        $sheet->setCellValue('A' . $row, '4. Kama bidhaa ipo (Jina, Aina na Kipimo zinalingana) - itaboreshwa (updated)');
-        $sheet->getStyle('A' . $row)->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000'));
-        $row++;
-        $sheet->setCellValue('A' . $row, '5. Kama bidhaa haipo - itaongezwa mpya (created)');
-        $row++;
-        $sheet->setCellValue('A' . $row, '6. Acha expiry ikiwa huna tarehe');
-        $row++;
-        $sheet->setCellValue('A' . $row, '7. Barcode inaweza kuachwa wazi');
-        
-        // Style instructions
-        $instructionRange = 'A' . ($row - 6) . ':A' . $row;
-        $sheet->getStyle($instructionRange)->getFont()->setSize(11);
-        
         // Create file
         $writer = new Xlsx($spreadsheet);
         $filename = "sampuli_bidhaa_" . date('Y-m-d') . ".xlsx";
@@ -713,7 +670,7 @@ class BidhaaController extends Controller
 
     /**
      * Pakia Excel/CSV na hifadhi bidhaa
-     * If product with same jina, aina, and kipimo exists -> UPDATE
+     * If product with same jina, aina, and kipimo exists -> UPDATE (add quantity)
      * Otherwise -> CREATE NEW
      */
     public function uploadExcel(Request $request)
@@ -747,11 +704,8 @@ class BidhaaController extends Controller
             $file = $request->file('excel_file');
             $extension = strtolower($file->getClientOriginalExtension());
             
-            if (in_array($extension, ['xls', 'xlsx'])) {
-                $rows = $this->processExcelFile($file);
-            } else {
-                $rows = $this->processCSVFile($file);
-            }
+            // Process the file
+            $rows = $this->processExcelFile($file);
             
             if (empty($rows)) {
                 return response()->json([
@@ -774,30 +728,34 @@ class BidhaaController extends Controller
             DB::beginTransaction();
             
             foreach ($rows as $index => $rowData) {
-                $lineNumber = $index + 2;
+                $lineNumber = $index + 2; // +2 because row 1 is header
                 
-                if (empty(array_filter($rowData, function($value) { 
-                    return $value !== '' && $value !== null && trim($value) !== ''; 
-                }))) {
+                // Check if row is empty
+                $isEmpty = true;
+                foreach ($rowData as $value) {
+                    if ($value !== null && trim($value) !== '') {
+                        $isEmpty = false;
+                        break;
+                    }
+                }
+                
+                if ($isEmpty) {
                     $skippedRows++;
                     continue;
                 }
                 
-                $normalizedRow = [];
-                foreach ($rowData as $key => $value) {
-                    $normalizedKey = strtolower(trim($key));
-                    $normalizedRow[$normalizedKey] = trim($value);
-                }
+                // Extract values using direct column names (case-insensitive)
+                $jina = $this->getExcelValue($rowData, ['Jina la Bidhaa', 'jina la bidhaa', 'Jina', 'jina']);
+                $aina = $this->getExcelValue($rowData, ['Aina', 'aina']);
+                $kipimo = $this->getExcelValue($rowData, ['Kipimo', 'kipimo']);
+                $idadi = $this->getExcelValue($rowData, ['Idadi', 'idadi']);
+                $beiNunua = $this->getExcelValue($rowData, ['Bei Nunua', 'bei nunua', 'Bei', 'bei']);
+                $beiKuuza = $this->getExcelValue($rowData, ['Bei Kuuza', 'bei kuuza']);
+                $expiry = $this->getExcelValue($rowData, ['Expiry Date', 'expiry date', 'Expiry', 'expiry']);
+                $barcode = $this->getExcelValue($rowData, ['Barcode', 'barcode']);
                 
-                // Get values
-                $jina = $this->getValue($normalizedRow, ['jina la bidhaa', 'jina', 'name', 'bidhaa']);
-                $aina = $this->getValue($normalizedRow, ['aina', 'category', 'aina ya bidhaa']);
-                $kipimo = $this->getValue($normalizedRow, ['kipimo', 'unit', 'measure', 'kiasi cha kipimo']);
-                $idadi = $this->getValue($normalizedRow, ['idadi', 'quantity', 'stock', 'kiasi']);
-                $beiNunua = $this->getValue($normalizedRow, ['bei nunua (tzs)', 'bei_nunua', 'bei nunua', 'beinunua', 'buying price', 'cost price']);
-                $beiKuuza = $this->getValue($normalizedRow, ['bei kuuza (tzs)', 'bei_kuuza', 'bei kuuza', 'beikuuza', 'selling price', 'sale price']);
-                $expiry = $this->getValue($normalizedRow, ['expiry date (yyyy-mm-dd)', 'expiry', 'expirydate', 'tarehe ya mwisho', 'expiry date']);
-                $barcode = $this->getValue($normalizedRow, ['barcode', 'namba ya mfumo', 'code']);
+                // Debug log
+                \Log::info("Row {$lineNumber}: jina={$jina}, aina={$aina}, idadi={$idadi}, beiNunua={$beiNunua}, beiKuuza={$beiKuuza}");
                 
                 // Validate required fields
                 if (empty($jina)) {
@@ -810,20 +768,24 @@ class BidhaaController extends Controller
                     continue;
                 }
                 
+                // Handle idadi (default to 0 if empty)
                 if ($idadi === '' || $idadi === null) {
                     $idadi = 0;
                 }
                 
-                if (empty($beiNunua)) {
+                // Validate bei nunua
+                if ($beiNunua === '' || $beiNunua === null) {
                     $errors[] = "Mstari {$lineNumber}: Bei ya kununua inakosekana";
                     continue;
                 }
                 
-                if (empty($beiKuuza)) {
+                // Validate bei kuuza
+                if ($beiKuuza === '' || $beiKuuza === null) {
                     $errors[] = "Mstari {$lineNumber}: Bei ya kuuza inakosekana";
                     continue;
                 }
                 
+                // Validate numeric values
                 if (!is_numeric($idadi) || (int)$idadi < 0) {
                     $errors[] = "Mstari {$lineNumber}: Idadi '{$idadi}' si sahihi";
                     continue;
@@ -839,11 +801,13 @@ class BidhaaController extends Controller
                     continue;
                 }
                 
+                // Validate price logic
                 if ((float)$beiKuuza < (float)$beiNunua) {
                     $errors[] = "Mstari {$lineNumber}: Bei kuuza haiwezi kuwa chini ya bei nunua";
                     continue;
                 }
                 
+                // Parse expiry date if provided
                 $expiryDate = null;
                 if (!empty($expiry) && strtolower($expiry) !== 'n/a' && strtolower($expiry) !== 'na') {
                     $parsedDate = $this->parseDate($expiry);
@@ -859,7 +823,7 @@ class BidhaaController extends Controller
                               ->where('jina', $jina)
                               ->where('aina', $aina);
                 
-                // Handle kipimo - if provided in file, match exactly; if not, match where kipimo is null
+                // Handle kipimo - if provided, match exactly; if not, match where kipimo is null or empty
                 if (!empty($kipimo)) {
                     $query->where('kipimo', $kipimo);
                 } else {
@@ -873,15 +837,19 @@ class BidhaaController extends Controller
                 
                 try {
                     if ($existingProduct) {
-                        // UPDATE existing product
+                        // UPDATE existing product - ADD to existing quantity
                         $updateData = [
-                            'idadi' => $existingProduct->idadi + (int)$idadi, // Add to existing quantity
+                            'idadi' => $existingProduct->idadi + (int)$idadi,
                             'bei_nunua' => (float)$beiNunua,
                             'bei_kuuza' => (float)$beiKuuza,
-                            'expiry' => $expiryDate ?: $existingProduct->expiry,
                         ];
                         
-                        // Only update barcode if provided and not empty
+                        // Update expiry only if provided
+                        if ($expiryDate) {
+                            $updateData['expiry'] = $expiryDate;
+                        }
+                        
+                        // Update barcode only if provided and not empty
                         if (!empty($barcode)) {
                             // Check if barcode already exists on another product
                             $barcodeExists = Bidhaa::where('barcode', $barcode)
@@ -899,6 +867,7 @@ class BidhaaController extends Controller
                         
                         $existingProduct->update($updateData);
                         $updatedCount++;
+                        
                     } else {
                         // CREATE new product
                         $createData = [
@@ -964,6 +933,7 @@ class BidhaaController extends Controller
             
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Excel upload error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Hitilafu katika usindikaji: ' . $e->getMessage(),
@@ -974,128 +944,96 @@ class BidhaaController extends Controller
                     'totalRows' => 0,
                     'updatedCount' => 0,
                     'createdCount' => 0,
-                    'errors' => ['Hitilafu ya jumla']
+                    'errors' => ['Hitilafu ya jumla: ' . $e->getMessage()]
                 ]
             ], 500);
         }
     }
-    
+
     /**
-     * Helper to get value from normalized row
+     * Helper to get value from Excel row with flexible matching
      */
-    private function getValue($row, $possibleKeys)
+    private function getExcelValue($row, $possibleKeys)
     {
         foreach ($possibleKeys as $key) {
-            if (isset($row[$key]) && $row[$key] !== '') {
-                return $row[$key];
+            $key = strtolower(trim($key));
+            foreach ($row as $rowKey => $value) {
+                $rowKeyLower = strtolower(trim($rowKey));
+                if ($rowKeyLower == $key) {
+                    return $value;
+                }
             }
         }
         return '';
     }
     
-/**
- * Process Excel file (XLS, XLSX)
- */
-private function processExcelFile($file)
-{
-    $rows = [];
-    
-    try {
-        if (!class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
-            throw new \Exception('PhpSpreadsheet library haijapatikana');
-        }
+    /**
+     * Process Excel file (XLS, XLSX)
+     */
+    private function processExcelFile($file)
+    {
+        $rows = [];
         
-        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getRealPath());
-        $reader->setReadDataOnly(true);
-        $spreadsheet = $reader->load($file->getRealPath());
-        
-        $worksheet = $spreadsheet->getActiveSheet();
-        $highestRow = $worksheet->getHighestRow();
-        $highestColumn = $worksheet->getHighestColumn();
-        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
-        
-        $header = [];
-        for ($col = 1; $col <= $highestColumnIndex; $col++) {
-            // Get cell using column letter instead of index
-            $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
-            $cellValue = $worksheet->getCell($columnLetter . '1')->getValue();
-            $header[$col] = trim($cellValue ?? '');
-        }
-        
-        for ($row = 2; $row <= $highestRow; $row++) {
-            $rowData = [];
-            $isEmptyRow = true;
+        try {
+            if (!class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
+                throw new \Exception('PhpSpreadsheet library haijapatikana');
+            }
             
+            $reader = IOFactory::createReaderForFile($file->getRealPath());
+            $reader->setReadDataOnly(true);
+            $spreadsheet = $reader->load($file->getRealPath());
+            
+            $worksheet = $spreadsheet->getActiveSheet();
+            $highestRow = $worksheet->getHighestRow();
+            $highestColumn = $worksheet->getHighestColumn();
+            $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+            
+            // Get headers from first row
+            $headers = [];
             for ($col = 1; $col <= $highestColumnIndex; $col++) {
-                // Get cell using column letter
                 $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
-                $cellValue = $worksheet->getCell($columnLetter . $row)->getValue();
-                
+                $cellValue = $worksheet->getCell($columnLetter . '1')->getValue();
                 if ($cellValue instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText) {
                     $cellValue = $cellValue->getPlainText();
                 }
-                
-                if ($cellValue !== null && trim($cellValue) !== '') {
-                    $isEmptyRow = false;
-                }
-                
-                $columnName = $header[$col] ?? 'Column' . $col;
-                $rowData[$columnName] = trim($cellValue ?? '');
+                $headers[$col] = trim($cellValue ?? '');
             }
             
-            if (!$isEmptyRow) {
-                $rows[] = $rowData;
-            }
-        }
-        
-    } catch (\Exception $e) {
-        throw new \Exception('Hitilafu katika kusoma faili la Excel: ' . $e->getMessage());
-    }
-    
-    return $rows;
-}
-    
-    /**
-     * Process CSV/TXT file
-     */
-    private function processCSVFile($file)
-    {
-        $rows = [];
-        $header = null;
-        
-        if (($handle = fopen($file->getRealPath(), 'r')) !== false) {
-            $firstLine = fgets($handle);
-            rewind($handle);
-            
-            $delimiter = ',';
-            if (strpos($firstLine, ';') !== false) {
-                $delimiter = ';';
-            } elseif (strpos($firstLine, "\t") !== false) {
-                $delimiter = "\t";
-            }
-            
-            while (($row = fgetcsv($handle, 1000, $delimiter)) !== false) {
-                if ($row === null || count(array_filter($row, function($value) { 
-                    return $value !== '' && $value !== null && trim($value) !== ''; 
-                })) === 0) {
-                    continue;
-                }
-                
-                $row = array_map('trim', $row);
-                
-                if ($header === null) {
-                    $header = $row;
-                    continue;
-                }
-                
+            // Process data rows (starting from row 2)
+            for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
-                foreach ($header as $index => $column) {
-                    $rowData[$column] = isset($row[$index]) ? $row[$index] : '';
+                
+                for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                    $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+                    $cellValue = $worksheet->getCell($columnLetter . $row)->getValue();
+                    
+                    if ($cellValue instanceof \PhpOffice\PhpSpreadsheet\RichText\RichText) {
+                        $cellValue = $cellValue->getPlainText();
+                    }
+                    
+                    $header = $headers[$col] ?? 'Column' . $col;
+                    if (!empty($header)) {
+                        $rowData[$header] = trim($cellValue ?? '');
+                    }
                 }
                 
-                $rows[] = $rowData;
+                // Only add non-empty rows
+                $hasData = false;
+                foreach ($rowData as $value) {
+                    if (!empty($value)) {
+                        $hasData = true;
+                        break;
+                    }
+                }
+                
+                if ($hasData) {
+                    $rows[] = $rowData;
+                }
             }
-            fclose($handle);
+            
+        } catch (\Exception $e) {
+            \Log::error('Excel processing error: ' . $e->getMessage());
+            throw new \Exception('Hitilafu katika kusoma faili la Excel: ' . $e->getMessage());
         }
         
         return $rows;
