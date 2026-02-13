@@ -255,19 +255,17 @@ Route::post('/bidhaa', [BidhaaController::class, 'store'])->name('bidhaa.store')
 Route::put('/bidhaa/{id}', [BidhaaController::class, 'update'])->name('bidhaa.update');
 Route::delete('/bidhaa/{id}', [BidhaaController::class, 'destroy'])->name('bidhaa.destroy');
 
-// === NEW SEARCH ROUTES ADDED HERE ===
+// === SEARCH ROUTES ===
 Route::get('/bidhaa/search', [BidhaaController::class, 'searchAll'])->name('bidhaa.search');
 Route::get('/bidhaa/{id}/edit-product', [BidhaaController::class, 'editProduct'])->name('bidhaa.edit-product');
-// ====================================
 
-// Excel routes
+// === EXCEL/CSV ROUTES ===
 Route::post('/bidhaa/upload-excel', [BidhaaController::class, 'uploadExcel'])->name('bidhaa.uploadExcel');
 Route::get('/bidhaa/download-sample', [BidhaaController::class, 'downloadSample'])->name('bidhaa.downloadSample');
 
-// Barcode operations
+// === BARCODE ROUTES ===
 Route::post('/bidhaa/barcode', [BidhaaController::class, 'storeBarcode'])->name('bidhaa.store.barcode');
 Route::get('/bidhaa/tafuta-barcode/{barcode}', [BidhaaController::class, 'tafutaBarcode'])->name('bidhaa.tafuta.barcode');
-
 // ================================
 // Manunuzi Routes
 // ================================

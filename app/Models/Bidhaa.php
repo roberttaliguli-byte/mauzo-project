@@ -4,14 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Marejesho;
-use App\Models\Madeni;
 
 class Bidhaa extends Model
 {
     use HasFactory;
 
-    // ✅ Explicitly link to the correct table
     protected $table = 'bidhaas';
 
     protected $fillable = [
@@ -24,8 +21,17 @@ class Bidhaa extends Model
         'expiry',
         'barcode',
         'company_id',
-    
-        
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'expiry' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     /**
@@ -43,12 +49,9 @@ class Bidhaa extends Model
     {
         return $this->hasMany(Mauzo::class, 'bidhaa_id');
     }
-    
-
 
     public function company()
-{
-    return $this->belongsTo(\App\Models\Company::class);
-}
-
+    {
+        return $this->belongsTo(\App\Models\Company::class);
+    }
 }

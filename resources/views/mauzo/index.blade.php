@@ -336,34 +336,34 @@
                         </div>
                     </div>
 
-                    <!-- Matumizi -->
-                    <div class="bg-gradient-to-br from-yellow-500 to-amber-600 p-3 rounded-lg shadow">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="p-2 bg-white/20 rounded-lg">
-                                <i class="fas fa-receipt text-white"></i>
-                            </div>
-                        </div>
-                        <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Matumizi</div>
-                        @php
-                            $matumiziLeo = $todaysMatumizi->sum('gharama');
-                            $matumiziWiki = $weeklyMatumizi->sum('gharama');
-                            $matumiziJumla = $allMatumizi->sum('gharama');
-                        @endphp
-                        <div class="space-y-1 text-white text-xs">
-                            <div class="flex justify-between items-center">
-                                <span>Leo:</span>
-                                <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span>Wiki hii:</span>
-                                <span class="font-semibold">{{ number_format($matumiziWiki) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                                <span class="font-semibold">Jumla:</span>
-                                <span class="font-bold">{{ number_format($matumiziJumla) }}</span>
-                            </div>
-                        </div>
-                    </div>
+<!-- Matumizi -->
+<div class="bg-gradient-to-br from-yellow-500 to-amber-600 p-3 rounded-lg shadow">
+    <div class="flex justify-between items-start mb-2">
+        <div class="p-2 bg-white/20 rounded-lg">
+            <i class="fas fa-receipt text-white"></i>
+        </div>
+    </div>
+
+    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-2">Matumizi</div>
+
+    @php
+        $matumiziLeo = $todaysMatumizi->sum('gharama');
+        $matumiziJumla = $todaysMatumizi->sum('gharama');
+    @endphp
+
+    <div class="text-white text-xs">
+        <div class="flex justify-between items-center mb-3">
+            <span>Leo:</span>
+            <span class="font-semibold">{{ number_format($matumiziLeo) }}</span>
+        </div>
+
+        <div class="flex justify-between items-center border-t border-white/20 pt-3">
+            <span class="font-semibold">Jumla:</span>
+            <span class="font-bold text-sm">{{ number_format($matumiziJumla) }}</span>
+        </div>
+    </div>
+</div>
+
 
                     <!-- Fedha Leo -->
                     <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
