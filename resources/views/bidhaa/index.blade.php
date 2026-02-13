@@ -73,7 +73,7 @@
                 
                 @if(request('filter') == 'out_of_stock')
                 <a href="{{ route('bidhaa.index') }}" 
-                   class="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm">
+                   class="inline-flex items-center px-2 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-sm">
                     <i class="fas fa-times mr-1"></i> Ondoa Filter
                 </a>
                 @endif
@@ -81,11 +81,11 @@
             
             <!-- Download Buttons -->
             <div class="flex gap-2">
-                <button onclick="exportPDF()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-                    <i class="fas fa-file-pdf mr-1"></i> PDF (Zote)
+                <button onclick="exportPDF()" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-red-green text-sm font-medium">
+                    <i class="fas fa-file-pdf mr-1"></i> PDF
                 </button>
-                <button onclick="exportExcel()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
-                    <i class="fas fa-file-excel mr-1"></i> Excel (Zote)
+                <button onclick="exportExcel()" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
+                    <i class="fas fa-file-excel mr-1"></i> Excel 
                 </button>
             </div>
         </div>
