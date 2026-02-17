@@ -670,7 +670,7 @@ class BidhaaController extends Controller
 
     /**
      * Pakia Excel/CSV na hifadhi bidhaa
-     * If product with same jina, aina, and kipimo exists -> UPDATE (add quantity)
+     * If product with same jina, aina, and kipimo exists -> UPDATE (replace quantity with Excel value)
      * Otherwise -> CREATE NEW
      */
     public function uploadExcel(Request $request)
@@ -702,7 +702,6 @@ class BidhaaController extends Controller
 
         try {
             $file = $request->file('excel_file');
-            $extension = strtolower($file->getClientOriginalExtension());
             
             // Process the file
             $rows = $this->processExcelFile($file);
@@ -837,9 +836,9 @@ class BidhaaController extends Controller
                 
                 try {
                     if ($existingProduct) {
-                        // UPDATE existing product - ADD to existing quantity
+                        // UPDATE existing product - REPLACE quantity with Excel value (NOT ADD)
                         $updateData = [
-                            'idadi' => $existingProduct->idadi + (int)$idadi,
+                            'idadi' => (int)$idadi, // REPLACE, NOT ADD
                             'bei_nunua' => (float)$beiNunua,
                             'bei_kuuza' => (float)$beiKuuza,
                         ];
