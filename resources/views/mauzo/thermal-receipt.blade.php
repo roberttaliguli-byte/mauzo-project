@@ -5,170 +5,288 @@
     <title>Risiti {{ $receiptNo }}</title>
     <style>
         @media print {
+            @page {
+                size: 72mm auto;
+                margin: 0;
+            }
+            
             body {
                 width: 72mm !important;
-                max-width: 72mm !important;
                 margin: 0 !important;
                 padding: 2mm !important;
-                font-family: "Arial Narrow", "Liberation Sans Narrow", sans-serif !important;
-                font-size: 11px !important;
-                line-height: 1.2 !important;
+                font-family: 'Arial', 'Helvetica', 'Liberation Sans', sans-serif !important;
+                font-size: 12px !important; /* Slightly larger base font */
+                line-height: 1.3 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+                color: #000000 !important;
+                background: white !important;
             }
+            
             * {
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box !important;
             }
+            
             .no-print {
                 display: none !important;
             }
+            
             .container {
                 width: 100% !important;
                 max-width: 68mm !important;
-                padding: 1mm !important;
-                overflow: hidden !important;
+                margin: 0 auto !important;
             }
+            
+            /* Text alignment */
             .text-center { text-align: center !important; }
             .text-right { text-align: right !important; }
             .text-left { text-align: left !important; }
-            .font-bold { 
-                font-weight: bold !important;
+            
+            /* Improved bold text - using multiple techniques for better visibility */
+            .font-bold, 
+            .font-large, 
+            .font-xlarge,
+            .company-name,
+            .total-section .item-row:last-child span {
+                font-weight: 700 !important;
+                text-shadow: 0.2px 0.2px 0.2px rgba(0,0,0,0.1) !important;
+                -webkit-text-stroke: 0.2px black !important;
+                letter-spacing: 0.2px !important;
             }
+            
+            /* Larger font sizes with better contrast */
             .font-large { 
-                font-size: 14px !important;
-                font-weight: bold !important;
+                font-size: 15px !important;
+                font-weight: 700 !important;
             }
+            
             .font-xlarge { 
-                font-size: 16px !important;
-                font-weight: bold !important;
+                font-size: 18px !important;
+                font-weight: 800 !important;
             }
+            
             .font-small {
-                font-size: 10px !important;
+                font-size: 11px !important;
             }
-            .border-top { border-top: 2px solid #000 !important; }
-            .border-bottom { border-bottom: 2px solid #000 !important; }
+            
+            /* Borders - made darker and thicker */
+            .border-top { 
+                border-top: 2px solid #000 !important; 
+                border-top-color: #000000 !important;
+            }
+            
+            .border-bottom { 
+                border-bottom: 2px solid #000 !important;
+                border-bottom-color: #000000 !important;
+            }
+            
             .py-1 { padding-top: 3px !important; padding-bottom: 3px !important; }
             .my-1 { margin-top: 3px !important; margin-bottom: 3px !important; }
             .mt-1 { margin-top: 3px !important; }
             .mb-1 { margin-bottom: 3px !important; }
+            
+            /* Item row layout - improved for thermal printing */
             .item-row { 
                 display: flex !important;
                 justify-content: space-between !important;
-                margin-bottom: 2px !important;
+                margin-bottom: 3px !important;
                 width: 100% !important;
                 clear: both !important;
             }
+            
             .item-name { 
                 flex: 3 !important; 
                 word-break: break-word !important;
                 overflow-wrap: break-word !important;
-                padding-right: 2px !important;
-                white-space: nowrap !important;
+                padding-right: 4px !important;
+                white-space: normal !important; /* Changed from nowrap to normal */
                 overflow: hidden !important;
                 text-overflow: ellipsis !important;
+                max-width: 35mm !important;
+                font-weight: 400 !important;
             }
+            
             .item-qty { 
                 flex: 1 !important; 
                 text-align: center !important;
                 min-width: 35px !important;
+                font-weight: 400 !important;
             }
+            
             .item-price { 
-                flex: 2 !important; 
+                flex: 1.5 !important; 
+                text-align: right !important;
+                min-width: 40px !important;
+                padding-right: 3px !important;
+                font-weight: 400 !important;
+            }
+            
+            .item-total { 
+                flex: 1.5 !important; 
                 text-align: right !important;
                 min-width: 45px !important;
-                padding-right: 3px !important;
+                font-weight: 600 !important; /* Totals slightly bolder */
             }
-            .item-total { 
-                flex: 2 !important; 
-                text-align: right !important;
-                min-width: 50px !important;
-            }
+            
+            /* Lines - made thicker and darker */
             .dashed-line {
-                border-top: 1px dashed #000 !important;
-                margin: 3px 0 !important;
+                border-top: 1.5px dashed #000 !important;
+                margin: 4px 0 !important;
                 height: 0 !important;
                 clear: both !important;
+                border-color: #000000 !important;
             }
+            
             .solid-line {
-                border-top: 1px solid #000 !important;
-                margin: 3px 0 !important;
+                border-top: 1.5px solid #000 !important;
+                margin: 4px 0 !important;
                 height: 0 !important;
                 clear: both !important;
+                border-color: #000000 !important;
             }
+            
             .double-line {
                 border-top: 3px double #000 !important;
-                margin: 3px 0 !important;
+                margin: 4px 0 !important;
                 height: 0 !important;
                 clear: both !important;
+                border-color: #000000 !important;
             }
+            
+            /* Company info - enhanced */
             .company-info {
                 text-align: center !important;
-                margin-bottom: 5px !important;
+                margin-bottom: 8px !important;
                 width: 100% !important;
             }
+            
             .company-name {
-                font-size: 18px !important;
-                font-weight: bold !important;
-                margin-bottom: 2px !important;
+                font-size: 20px !important;
+                font-weight: 800 !important;
+                margin-bottom: 3px !important;
                 text-transform: uppercase !important;
-                letter-spacing: 0.5px !important;
+                letter-spacing: 0.8px !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+                padding: 2px 0 !important;
             }
+            
             .company-details {
-                font-size: 10px !important;
-                line-height: 1.2 !important;
+                font-size: 11px !important;
+                line-height: 1.3 !important;
+                color: #000000 !important;
+                font-weight: 400 !important;
             }
+            
             .receipt-header {
-                margin-bottom: 5px !important;
+                margin-bottom: 6px !important;
             }
+            
+            /* Discount info - improved */
             .discount-info {
                 font-size: 10px !important;
-                color: #333 !important;
-                font-style: italic !important;
-                margin-left: 5px !important;
+                color: #000000 !important;
+                margin-left: 8px !important;
                 padding: 1px 3px !important;
                 display: flex !important;
                 justify-content: space-between !important;
-                width: 100% !important;
+                width: calc(100% - 8px) !important;
+                border-left: 2px solid #666 !important;
             }
+            
+            /* Table fallback */
             table {
                 width: 100% !important;
                 border-collapse: collapse !important;
             }
+            
             td, th {
-                padding: 2px 1px !important;
+                padding: 2px 2px !important;
                 vertical-align: top !important;
+                border: none !important;
             }
+            
+            /* Total section - emphasized */
             .total-section {
-                margin-top: 5px !important;
+                margin-top: 6px !important;
             }
+            
+            /* Footer - enhanced */
             .footer {
-                margin-top: 8px !important;
+                margin-top: 10px !important;
                 text-align: center !important;
             }
+            
+            .footer .font-large {
+                font-size: 16px !important;
+                font-weight: 700 !important;
+                margin-bottom: 3px !important;
+            }
+            
+            /* Highlight - better contrast */
             .highlight {
                 background-color: #f0f0f0 !important;
-                padding: 2px 0 !important;
+                padding: 3px 0 !important;
+            }
+            
+            /* Ensure all text is black */
+            body, div, span, p, h1, h2, h3, h4, h5, h6 {
+                color: #000000 !important;
+            }
+            
+            /* Additional styles for totals */
+            .item-row:last-of-type .text-right {
+                font-weight: 700 !important;
+            }
+            
+            /* Better visibility for numbers */
+            .item-total, .text-right {
+                font-feature-settings: "tnum" !important;
+            }
+            
+            /* Ensure proper contrast for all elements */
+            .discount-info span {
+                color: #333333 !important;
+            }
+            
+            /* Receipt number emphasis */
+            .item-row .font-bold {
+                font-weight: 700 !important;
+                background: #ffffff !important;
             }
         }
         
-        /* Screen preview */
+        /* Screen preview styles */
         body {
-            font-family: "Arial Narrow", sans-serif !important;
-            font-size: 11px !important;
-            line-height: 1.2 !important;
+            font-family: 'Arial', sans-serif !important;
+            font-size: 12px !important;
+            line-height: 1.3 !important;
             width: 72mm !important;
-            margin: 10px auto !important;
-            padding: 2mm !important;
+            margin: 20px auto !important;
+            padding: 3mm !important;
             background: white !important;
-            border: 1px solid #ccc !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+            border: 1px solid #999 !important;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2) !important;
         }
+        
         .container {
             width: 100% !important;
             max-width: 68mm !important;
+            margin: 0 auto !important;
         }
+        
+        /* Copy print styles for screen preview */
+        .font-bold { font-weight: 700 !important; }
+        .font-large { font-size: 15px !important; font-weight: 700 !important; }
+        .font-xlarge { font-size: 18px !important; font-weight: 800 !important; }
+        .company-name { font-size: 20px !important; font-weight: 800 !important; }
+        .item-row { display: flex !important; justify-content: space-between !important; }
+        .item-name { flex: 3 !important; }
+        .item-qty { flex: 1 !important; text-align: center !important; }
+        .item-price { flex: 1.5 !important; text-align: right !important; }
+        .item-total { flex: 1.5 !important; text-align: right !important; font-weight: 600 !important; }
     </style>
 </head>
 <body>
@@ -223,10 +341,6 @@
         <div class="item-row">
             <span class="text-left">Tarehe:</span>
             <span class="text-right">{{ $date }}</span>
-        </div>
-        <div class="item-row">
-            <span class="text-left">Mfanyabiashara:</span>
-            <span class="text-right">{{ Auth::user()->name ?? 'Mjumbe' }}</span>
         </div>
         
         <div class="dashed-line"></div>
@@ -336,12 +450,11 @@
         <div class="text-center font-small mt-1">
             <div>{{ date('d/m/Y H:i:s') }}</div>
         </div>
- 
     </div>
     
     <script>
         window.onload = function() {
-            // Small delay to ensure rendering
+            // Ensure all content is loaded
             setTimeout(function() {
                 window.print();
             }, 300);
@@ -353,18 +466,12 @@
                 }, 300);
             };
             
-            // Handle before print (for some browsers)
-            window.onbeforeprint = function() {
-                // Ensure all content is loaded
-            };
-            
-            // Fallback close after 3 seconds
+            // Fallback close after 5 seconds
             setTimeout(function() {
-                // Check if window is still open and not printed
                 if (!window.closed) {
                     window.close();
                 }
-            }, 3000);
+            }, 5000);
         }
     </script>
 </body>
