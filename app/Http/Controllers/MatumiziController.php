@@ -7,6 +7,8 @@ use App\Models\Matumizi;
 use App\Models\AinaZaMatumizi;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class MatumiziController extends Controller
 {
@@ -295,22 +297,83 @@ class MatumiziController extends Controller
     }
 
     /**
-     * Export expenses as PDF
+     * Export all expenses as PDF
      */
     public function exportPDF(Request $request)
     {
         $companyId = $this->getCompanyId();
+        $company = $this->getCompany();
         
         $matumizi = Matumizi::where('company_id', $companyId)
             ->latest()
             ->get();
-
-        // Generate PDF using your preferred method
-        // This is a placeholder - implement with DomPDF, TCPDF, etc.
-        return response()->json([
-            'success' => true,
-            'data' => $matumizi,
-            'total' => $matumizi->sum('gharama')
-        ]);
+            
+        $total = $matumizi->sum('gharama');
+        $today = Carbon::now()->format('d/m/Y H:i:s');
+        
+        $pdf = Pdf::loadView('matumizi.pdf', compact('matumizi', 'total', 'company', 'today'));
+        
+        return $pdf->download('matumizi-' . date('Y-m-d') . '.pdf');
+    }
+    
+    /**
+     * Export filtered expenses as PDF (for report tab)
+     */
+    public function exportReportPDF(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        $company = $this->getCompany();
+        
+        $startDate = $request->start_date ?? now()->startOfMonth()->format('Y-m-d');
+        $endDate = $request->end_date ?? now()->format('Y-m-d');
+        $reportType = $request->report_type ?? 'all';
+        
+        $query = Matumizi::where('company_id', $companyId)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate);
+        
+        $matumizi = $query->orderBy('created_at', 'desc')->get();
+        
+        // Calculate statistics
+        $total = $matumizi->sum('gharama');
+        $count = $matumizi->count();
+        $average = $count > 0 ? $total / $count : 0;
+        $max = $matumizi->max('gharama') ?? 0;
+        
+        // Group by date for chart
+        $dailyData = [];
+        foreach ($matumizi as $item) {
+            $date = Carbon::parse($item->created_at)->format('d/m/Y');
+            if (!isset($dailyData[$date])) {
+                $dailyData[$date] = 0;
+            }
+            $dailyData[$date] += $item->gharama;
+        }
+        
+        // Group by category
+        $categoryData = [];
+        foreach ($matumizi as $item) {
+            if (!isset($categoryData[$item->aina])) {
+                $categoryData[$item->aina] = 0;
+            }
+            $categoryData[$item->aina] += $item->gharama;
+        }
+        
+        $pdf = Pdf::loadView('matumizi.report-pdf', compact(
+            'matumizi', 
+            'total', 
+            'count', 
+            'average', 
+            'max',
+            'dailyData',
+            'categoryData',
+            'startDate', 
+            'endDate', 
+            'reportType', 
+            'company'
+        ));
+        
+        $pdf->setPaper('A4', 'landscape');
+        return $pdf->download('matumizi-report-' . date('Y-m-d') . '.pdf');
     }
 }

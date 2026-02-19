@@ -36,7 +36,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Bidhaa Zilizonunuliwa</p>
-                    <p class="text-xl font-bold text-blue-700">{{ $totalItemsPurchased }}</p>
+                    <p class="text-xl font-bold text-blue-700">{{ number_format($totalItemsPurchased, 2) }}</p>
                 </div>
                 <i class="fas fa-boxes text-blue-500 text-lg"></i>
             </div>
@@ -45,7 +45,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Jumla ya Gharama</p>
-                    <p class="text-xl font-bold text-purple-700">{{ number_format($totalCost, 0) }}</p>
+                    <p class="text-xl font-bold text-purple-700">{{ number_format($totalCost, 2) }}</p>
                 </div>
                 <i class="fas fa-money-bill-wave text-purple-500 text-lg"></i>
             </div>
@@ -54,7 +54,7 @@
             <div class="flex justify-between items-center">
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Gharama Ya Leo</p>
-                    <p class="text-xl font-bold text-amber-700">{{ number_format($todayCost, 0) }}</p>
+                    <p class="text-xl font-bold text-amber-700">{{ number_format($todayCost, 2) }}</p>
                 </div>
                 <i class="fas fa-calendar-day text-amber-500 text-lg"></i>
             </div>
@@ -70,31 +70,64 @@
             <button data-tab="ingiza" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 text-gray-600 hover:bg-gray-50">
                 <i class="fas fa-plus mr-2"></i> Ingiza
             </button>
+            <button data-tab="ripoti" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-chart-bar mr-2"></i> Ripoti
+            </button>
         </div>
     </div>
 
     <!-- TAB 1: Orodha -->
     <div id="taarifa-tab-content" class="tab-content space-y-3">
-        <!-- Search Bar -->
+        <!-- Search and Filter Bar -->
         <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <div class="flex-1 relative">
-                    <input 
-                        type="text" 
-                        id="search-input"
-                        placeholder="Tafuta bidhaa, saplaya, simu..." 
-                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
-                        value="{{ request()->search }}"
-                    >
-                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            <div class="flex flex-col gap-3">
+                <!-- Search Input -->
+                <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                    <div class="flex-1 relative">
+                        <input 
+                            type="text" 
+                            id="search-input"
+                            placeholder="Tafuta bidhaa, saplaya, simu..." 
+                            class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                            value="{{ request()->search }}"
+                        >
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="printManunuzi()" class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                            <i class="fas fa-print mr-1"></i> Print
+                        </button>
+                        <button onclick="exportPDF()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                            <i class="fas fa-file-pdf mr-1"></i> PDF
+                        </button>
+                        <button onclick="exportExcel()" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
+                            <i class="fas fa-file-excel mr-1"></i> Excel
+                        </button>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="printManunuzi()" class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
-                        <i class="fas fa-print mr-1"></i> Print
-                    </button>
-                    <button onclick="exportPDF()" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">
-                        <i class="fas fa-file-pdf mr-1"></i> PDF
-                    </button>
+                
+                <!-- Date Range Filter -->
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
+                    <div class="sm:col-span-1">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Kuanzia Tarehe</label>
+                        <input type="date" id="start-date" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Mpaka Tarehe</label>
+                        <input type="date" id="end-date" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    </div>
+                    <div class="sm:col-span-2 flex gap-2">
+                        <button onclick="filterByDateRange()" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                            <i class="fas fa-filter mr-1"></i> Chuja
+                        </button>
+                        <button onclick="clearDateFilter()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">
+                            <i class="fas fa-times mr-1"></i> Ondoa
+                        </button>
+                        <span id="date-range-info" class="hidden text-sm text-gray-600 ml-2 self-center">
+                            <i class="fas fa-calendar-alt mr-1 text-emerald-600"></i>
+                            <span id="date-range-text"></span>
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -127,20 +160,26 @@
                                     <div class="text-xs text-emerald-600">{{ $item->bidhaa->kipimo }}</div>
                                 </td>
                                 <td class="px-4 py-2 text-center">
+                                    @php
+                                        $formattedIdadi = $item->idadi;
+                                        if (is_numeric($item->idadi)) {
+                                            $formattedIdadi = $item->idadi % 1 == 0 ? (string)(int)$item->idadi : number_format($item->idadi, 2);
+                                        }
+                                    @endphp
                                     <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
-                                        {{ $item->idadi }}
+                                        {{ $formattedIdadi }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-2 text-right">
                                     <!-- Show total purchase price -->
-                                    <div class="text-sm font-bold text-emerald-700">{{ number_format($item->bei, 0) }}</div>
+                                    <div class="text-sm font-bold text-emerald-700">{{ number_format($item->bei, 2) }}</div>
                                     <!-- Show unit cost per item -->
-                                    <div class="text-xs text-gray-500">@ {{ number_format($item->unit_cost, 0) }} / 1</div>
+                                    <div class="text-xs text-gray-500">@ {{ number_format($item->unit_cost, 2) }} / 1</div>
                                 </td>
                                 <td class="px-4 py-2 text-right">
                                     <!-- Show selling price per item -->
-                                    <div class="text-sm font-bold text-green-700">{{ number_format($item->bidhaa->bei_kuuza, 0) }}</div>
-                                    <div class="text-xs text-gray-500">@ {{ number_format($item->bidhaa->bei_kuuza, 0) }} / 1</div>
+                                    <div class="text-sm font-bold text-green-700">{{ number_format($item->bidhaa->bei_kuuza, 2) }}</div>
+                                    <div class="text-xs text-gray-500">@ {{ number_format($item->bidhaa->bei_kuuza, 2) }} / 1</div>
                                 </td>
                                 <td class="px-4 py-2 hidden lg:table-cell">
                                     <div class="text-xs text-gray-700">{{ $item->saplaya ?? '--' }}</div>
@@ -173,10 +212,18 @@
             
             <!-- Pagination -->
             @if($manunuzi->hasPages())
-            <div class="px-4 py-3 border-t border-gray-200">
+            <div id="pagination-container" class="px-4 py-3 border-t border-gray-200">
                 {{ $manunuzi->links() }}
             </div>
             @endif
+            
+            <!-- Table Summary -->
+            <div id="table-summary" class="hidden px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm">
+                <div class="flex justify-between items-center">
+                    <span class="font-medium text-gray-700">Jumla ya Manunuzi yaliyoonyeshwa:</span>
+                    <span class="font-bold text-emerald-700" id="displayed-total">0</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -218,9 +265,10 @@
                     <!-- Idadi -->
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
-                        <input type="number" name="idadi" id="idadi" min="1"
+                        <input type="number" name="idadi" id="idadi" min="0.01" step="0.01"
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               placeholder="Idadi" required oninput="calculateUnitCost()">
+                               placeholder="Idadi (mfano: 1.5, 2.75)" required oninput="calculateUnitCost()">
+                        <p class="text-xs text-gray-500 mt-1">Unaweza kuweka desimali (mfano: 1.5, 2.75)</p>
                     </div>
 
                     <!-- Aina ya Bei - Start with Rejareja -->
@@ -260,14 +308,15 @@
                     <!-- Expiry -->
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Tarehe ya Mwisho</label>
-                        <input type="date" name="expiry" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <input type="date" name="expiry" id="expiry"
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               value="{{ now()->format('Y-m-d') }}">
                     </div>
 
                     <!-- Saplaya -->
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Saplaya</label>
-                        <input type="text" name="saplaya" 
+                        <input type="text" name="saplaya" id="saplaya"
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                placeholder="Jina la msaplaya">
                     </div>
@@ -275,7 +324,7 @@
                     <!-- Simu -->
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Simu</label>
-                        <input type="text" name="simu" 
+                        <input type="text" name="simu" id="simu"
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                placeholder="Namba ya simu">
                     </div>
@@ -283,7 +332,7 @@
                     <!-- Maelezo -->
                     <div class="md:col-span-2">
                         <label class="block text-xs font-medium text-gray-700 mb-1">Maelezo</label>
-                        <textarea name="mengineyo" rows="2"
+                        <textarea name="mengineyo" id="mengineyo" rows="2"
                                   class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                                   placeholder="Maelezo ya ziada..."></textarea>
                     </div>
@@ -294,16 +343,16 @@
                     <div class="text-xs font-medium text-gray-700 mb-1">Muhtasari wa Bei:</div>
                     <div class="grid grid-cols-2 gap-2 text-xs">
                         <div class="text-gray-600">Bei ya Kununua (kwa 1):</div>
-                        <div class="text-right font-medium text-emerald-600" id="summary-unit-cost">0</div>
+                        <div class="text-right font-medium text-emerald-600" id="summary-unit-cost">0.00</div>
                         
                         <div class="text-gray-600">Jumla ya Kununua:</div>
-                        <div class="text-right font-bold text-emerald-700" id="summary-total-cost">0</div>
+                        <div class="text-right font-bold text-emerald-700" id="summary-total-cost">0.00</div>
                         
                         <div class="text-gray-600">Bei ya Kuuza (kwa 1):</div>
-                        <div class="text-right font-medium text-green-600" id="summary-sell-price">0</div>
+                        <div class="text-right font-medium text-green-600" id="summary-sell-price">0.00</div>
                         
                         <div class="text-gray-600">Faida (kwa 1):</div>
-                        <div class="text-right font-bold text-green-700" id="summary-profit">0</div>
+                        <div class="text-right font-bold" id="summary-profit">0.00</div>
                     </div>
                 </div>
 
@@ -316,12 +365,102 @@
                             class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium">
                         <i class="fas fa-save mr-1"></i> Hifadhi
                     </button>
-                    <button type="reset" onclick="clearManunuziForm()"
+                    <button type="button" onclick="clearManunuziForm()"
                             class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 text-sm">
                         <i class="fas fa-redo mr-1"></i> Safisha
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- TAB 3: Ripoti -->
+    <div id="ripoti-tab-content" class="tab-content hidden">
+        <div class="grid grid-cols-1 gap-4">
+            <!-- Report Filters -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                    <i class="fas fa-filter text-emerald-600 mr-2"></i>
+                    Chuja Ripoti
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Kuanzia Tarehe</label>
+                        <input type="date" id="report-start-date" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               value="{{ now()->startOfMonth()->format('Y-m-d') }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Mpaka Tarehe</label>
+                        <input type="date" id="report-end-date" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               value="{{ now()->format('Y-m-d') }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Aina ya Ripoti</label>
+                        <select id="report-type" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="summary">Muhtasari</option>
+                            <option value="detailed">Kina</option>
+                            <option value="by-supplier">Kwa Saplaya</option>
+                            <option value="by-product">Kwa Bidhaa</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="generateReport()" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                            <i class="fas fa-chart-bar mr-1"></i> Generate
+                        </button>
+                        <button onclick="exportReportPDF()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                            <i class="fas fa-file-pdf mr-1"></i> PDF
+                        </button>
+                        <button onclick="exportReportExcel()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
+                            <i class="fas fa-file-excel mr-1"></i> Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Results -->
+            <div id="report-results" class="hidden">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+                        <p class="text-xs text-gray-600 mb-1">Jumla ya Manunuzi</p>
+                        <p class="text-xl font-bold text-emerald-700" id="report-total-count">0</p>
+                    </div>
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        <p class="text-xs text-gray-600 mb-1">Jumla ya Bidhaa</p>
+                        <p class="text-xl font-bold text-blue-700" id="report-total-items">0.00</p>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded-lg border border-purple-200">
+                        <p class="text-xs text-gray-600 mb-1">Jumla ya Gharama</p>
+                        <p class="text-xl font-bold text-purple-700" id="report-total-cost">0.00</p>
+                    </div>
+                    <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                        <p class="text-xs text-gray-600 mb-1">Wastani wa Bei</p>
+                        <p class="text-xl font-bold text-amber-700" id="report-avg-cost">0.00</p>
+                    </div>
+                </div>
+
+                <!-- Report Table -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="report-table">
+                            <thead>
+                                <tr class="bg-emerald-50">
+                                    <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
+                                    <th class="px-4 py-2 text-left font-medium text-emerald-800">Bidhaa</th>
+                                    <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
+                                    <th class="px-4 py-2 text-right font-medium text-emerald-800">Bei Nunua</th>
+                                    <th class="px-4 py-2 text-right font-medium text-emerald-800">Bei Kuuza</th>
+                                    <th class="px-4 py-2 text-left font-medium text-emerald-800">Saplaya</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-tbody" class="divide-y divide-gray-100">
+                                <!-- Will be filled by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -349,7 +488,7 @@
                 <!-- Idadi -->
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
-                    <input type="number" name="idadi" id="edit-idadi" min="1"
+                    <input type="number" name="idadi" id="edit-idadi" min="0.01" step="0.01"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                            required oninput="calculateEditUnitCost()">
                 </div>
@@ -422,16 +561,16 @@
                 <div class="text-xs font-medium text-gray-700 mb-1">Muhtasari wa Bei:</div>
                 <div class="grid grid-cols-2 gap-2 text-xs">
                     <div class="text-gray-600">Bei ya Kununua (kwa 1):</div>
-                    <div class="text-right font-medium text-emerald-600" id="edit-summary-unit-cost">0</div>
+                    <div class="text-right font-medium text-emerald-600" id="edit-summary-unit-cost">0.00</div>
                     
                     <div class="text-gray-600">Jumla ya Kununua:</div>
-                    <div class="text-right font-bold text-emerald-700" id="edit-summary-total-cost">0</div>
+                    <div class="text-right font-bold text-emerald-700" id="edit-summary-total-cost">0.00</div>
                     
                     <div class="text-gray-600">Bei ya Kuuza (kwa 1):</div>
-                    <div class="text-right font-medium text-green-600" id="edit-summary-sell-price">0</div>
+                    <div class="text-right font-medium text-green-600" id="edit-summary-sell-price">0.00</div>
                     
                     <div class="text-gray-600">Faida (kwa 1):</div>
-                    <div class="text-right font-bold text-green-700" id="edit-summary-profit">0</div>
+                    <div class="text-right font-bold" id="edit-summary-profit">0.00</div>
                 </div>
             </div>
             
@@ -482,6 +621,43 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+#bidhaa-search-results {
+    z-index: 1000;
+}
+
+/* Responsive table */
+@media print {
+    .no-print, .tab-button, .modal, .print\:hidden {
+        display: none !important;
+    }
+    body {
+        background: white;
+    }
+    .border, .shadow-sm {
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
 class SmartManunuziManager {
@@ -489,6 +665,8 @@ class SmartManunuziManager {
         this.currentTab = this.getSavedTab() || 'taarifa';
         this.searchTimeout = null;
         this.bidhaaData = @json($bidhaa);
+        this.allManunuziData = @json($manunuzi->items());
+        this.filteredData = [];
         this.init();
     }
 
@@ -498,6 +676,7 @@ class SmartManunuziManager {
         this.setupAjaxForms();
         this.setupBidhaaSearch();
         this.updatePriceSummary();
+        this.setDefaultDates();
     }
 
     getSavedTab() {
@@ -506,6 +685,17 @@ class SmartManunuziManager {
 
     saveTab(tab) {
         sessionStorage.setItem('manunuzi_tab', tab);
+    }
+
+    setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        
+        const startDate = document.getElementById('start-date');
+        const endDate = document.getElementById('end-date');
+        
+        if (startDate) startDate.value = startOfMonth;
+        if (endDate) endDate.value = today;
     }
 
     bindEvents() {
@@ -559,7 +749,11 @@ class SmartManunuziManager {
             content.classList.add('hidden');
         });
         
-        document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
+        const tabContent = document.getElementById(`${tabName}-tab-content`);
+        if (tabContent) {
+            tabContent.classList.remove('hidden');
+        }
+        
         this.currentTab = tabName;
     }
 
@@ -635,6 +829,7 @@ class SmartManunuziManager {
                 if (!this.validatePrices()) {
                     e.preventDefault();
                     e.stopPropagation();
+                    this.showNotification('⚠️ Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja!', 'error');
                 }
             });
         }
@@ -645,7 +840,7 @@ class SmartManunuziManager {
                 if (!this.validateEditPrices()) {
                     e.preventDefault();
                     e.stopPropagation();
-                    this.showNotification('⚠️ Bei ya kuuza haiwezi kuwa chini ya bei ya kununua!', 'error');
+                    this.showNotification('⚠️ Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja!', 'error');
                 }
             });
         }
@@ -763,7 +958,7 @@ class SmartManunuziManager {
                     <div class="font-medium text-sm text-gray-900">${item.jina}</div>
                     <div class="text-xs text-gray-600">${item.aina} - ${item.kipimo}</div>
                     <div class="text-xs text-emerald-600 mt-1">
-                        Bei ya sasa: ${parseFloat(item.bei_nunua).toLocaleString()}
+                        Bei ya sasa: ${parseFloat(item.bei_nunua).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </div>
                 </div>
             `;
@@ -834,7 +1029,7 @@ class SmartManunuziManager {
     }
 
     calculateUnitCost() {
-        const idadi = parseInt(document.getElementById('idadi').value) || 1;
+        const idadi = parseFloat(document.getElementById('idadi').value) || 1;
         const beiNunua = parseFloat(document.getElementById('bei_nunua').value) || 0;
         const beiType = document.getElementById('bei_type').value;
         const display = document.getElementById('unit-cost-display');
@@ -863,7 +1058,7 @@ class SmartManunuziManager {
     }
 
     calculateEditUnitCost() {
-        const idadi = parseInt(document.getElementById('edit-idadi').value) || 1;
+        const idadi = parseFloat(document.getElementById('edit-idadi').value) || 1;
         const beiNunua = parseFloat(document.getElementById('edit-bei-nunua').value) || 0;
         const beiType = document.getElementById('edit-bei-type').value;
         const display = document.getElementById('edit-unit-cost-display');
@@ -892,7 +1087,7 @@ class SmartManunuziManager {
     }
     
     validateAndCalculate() {
-        const idadi = parseInt(document.getElementById('idadi').value) || 0;
+        const idadi = parseFloat(document.getElementById('idadi').value) || 0;
         const beiNunua = parseFloat(document.getElementById('bei_nunua').value) || 0;
         const beiKuuza = parseFloat(document.getElementById('bei_kuuza').value) || 0;
         const beiType = document.getElementById('bei_type').value;
@@ -917,7 +1112,7 @@ class SmartManunuziManager {
     }
     
     validateAndCalculateEdit() {
-        const idadi = parseInt(document.getElementById('edit-idadi').value) || 0;
+        const idadi = parseFloat(document.getElementById('edit-idadi').value) || 0;
         const beiNunua = parseFloat(document.getElementById('edit-bei-nunua').value) || 0;
         const beiKuuza = parseFloat(document.getElementById('edit-bei-kuuza').value) || 0;
         const beiType = document.getElementById('edit-bei-type').value;
@@ -989,14 +1184,14 @@ class SmartManunuziManager {
             document.getElementById('summary-sell-price').textContent = 
                 beiKuuza.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
+            const profitEl = document.getElementById('summary-profit');
             if (beiKuuza > unitCost) {
                 const profit = beiKuuza - unitCost;
-                document.getElementById('summary-profit').textContent = 
-                    profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                document.getElementById('summary-profit').style.color = '#059669';
+                profitEl.textContent = profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                profitEl.style.color = '#059669';
             } else {
-                document.getElementById('summary-profit').textContent = '0.00';
-                document.getElementById('summary-profit').style.color = '#dc2626';
+                profitEl.textContent = '0.00';
+                profitEl.style.color = '#dc2626';
             }
         } else {
             summaryDiv.classList.add('hidden');
@@ -1019,14 +1214,14 @@ class SmartManunuziManager {
             document.getElementById('edit-summary-sell-price').textContent = 
                 beiKuuza.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
+            const profitEl = document.getElementById('edit-summary-profit');
             if (beiKuuza > unitCost) {
                 const profit = beiKuuza - unitCost;
-                document.getElementById('edit-summary-profit').textContent = 
-                    profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                document.getElementById('edit-summary-profit').style.color = '#059669';
+                profitEl.textContent = profit.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                profitEl.style.color = '#059669';
             } else {
-                document.getElementById('edit-summary-profit').textContent = '0.00';
-                document.getElementById('edit-summary-profit').style.color = '#dc2626';
+                profitEl.textContent = '0.00';
+                profitEl.style.color = '#dc2626';
             }
         } else {
             summaryDiv.classList.add('hidden');
@@ -1057,6 +1252,199 @@ class SmartManunuziManager {
         if (!found && searchTerm) {
             this.showNotification('Hakuna manunuzi zinazolingana', 'info');
         }
+    }
+
+    filterByDateRange() {
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        
+        if (!startDate || !endDate) {
+            this.showNotification('Tafadhali chagua tarehe zote mbili', 'warning');
+            return;
+        }
+        
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        
+        const rows = document.querySelectorAll('.manunuzi-row');
+        let visibleCount = 0;
+        let totalCost = 0;
+        
+        rows.forEach(row => {
+            const manunuzi = JSON.parse(row.dataset.manunuzi);
+            const rowDate = new Date(manunuzi.created_at);
+            
+            if (rowDate >= start && rowDate <= end) {
+                row.classList.remove('hidden');
+                visibleCount++;
+                totalCost += parseFloat(manunuzi.bei);
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+        
+        // Show date range info
+        const dateRangeInfo = document.getElementById('date-range-info');
+        const dateRangeText = document.getElementById('date-range-text');
+        const tableSummary = document.getElementById('table-summary');
+        const displayedTotal = document.getElementById('displayed-total');
+        
+        if (visibleCount > 0) {
+            dateRangeInfo.classList.remove('hidden');
+            dateRangeText.textContent = `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()} (${visibleCount} manunuzi)`;
+            
+            tableSummary.classList.remove('hidden');
+            displayedTotal.textContent = totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        } else {
+            dateRangeInfo.classList.add('hidden');
+            tableSummary.classList.add('hidden');
+            this.showNotification('Hakuna manunuzi katika kipindi hiki', 'info');
+        }
+        
+        // Hide pagination when filtering
+        const pagination = document.getElementById('pagination-container');
+        if (pagination) pagination.classList.add('hidden');
+    }
+
+    clearDateFilter() {
+        const rows = document.querySelectorAll('.manunuzi-row');
+        rows.forEach(row => row.classList.remove('hidden'));
+        
+        document.getElementById('date-range-info').classList.add('hidden');
+        document.getElementById('table-summary').classList.add('hidden');
+        
+        const startDate = document.getElementById('start-date');
+        const endDate = document.getElementById('end-date');
+        startDate.value = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+        endDate.value = new Date().toISOString().split('T')[0];
+        
+        // Show pagination again
+        const pagination = document.getElementById('pagination-container');
+        if (pagination) pagination.classList.remove('hidden');
+    }
+
+    generateReport() {
+        const startDate = document.getElementById('report-start-date').value;
+        const endDate = document.getElementById('report-end-date').value;
+        const reportType = document.getElementById('report-type').value;
+        
+        if (!startDate || !endDate) {
+            this.showNotification('Tafadhali chagua tarehe zote mbili', 'warning');
+            return;
+        }
+        
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        
+        // Filter data by date range
+        const filteredData = this.allManunuziData.filter(item => {
+            const itemDate = new Date(item.created_at);
+            return itemDate >= start && itemDate <= end;
+        });
+        
+        if (filteredData.length === 0) {
+            this.showNotification('Hakuna data katika kipindi hiki', 'info');
+            return;
+        }
+        
+        // Calculate totals
+        const totalCount = filteredData.length;
+        const totalItems = filteredData.reduce((sum, item) => sum + parseFloat(item.idadi), 0);
+        const totalCost = filteredData.reduce((sum, item) => sum + parseFloat(item.bei), 0);
+        const avgCost = totalCount > 0 ? totalCost / totalCount : 0;
+        
+        // Update summary cards
+        document.getElementById('report-total-count').textContent = totalCount;
+        document.getElementById('report-total-items').textContent = totalItems.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('report-total-cost').textContent = totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('report-avg-cost').textContent = avgCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        // Generate table based on report type
+        let tableHtml = '';
+        
+        if (reportType === 'summary') {
+            // Group by date
+            const grouped = {};
+            filteredData.forEach(item => {
+                const date = new Date(item.created_at).toLocaleDateString();
+                if (!grouped[date]) {
+                    grouped[date] = {
+                        count: 0,
+                        items: 0,
+                        cost: 0
+                    };
+                }
+                grouped[date].count++;
+                grouped[date].items += parseFloat(item.idadi);
+                grouped[date].cost += parseFloat(item.bei);
+            });
+            
+            Object.keys(grouped).sort().forEach(date => {
+                tableHtml += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2">${date}</td>
+                        <td class="px-4 py-2">Manunuzi ${grouped[date].count}</td>
+                        <td class="px-4 py-2 text-center">${grouped[date].items.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="px-4 py-2 text-right">${grouped[date].cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="px-4 py-2 text-right">-</td>
+                        <td class="px-4 py-2">-</td>
+                    </tr>
+                `;
+            });
+        } else if (reportType === 'by-supplier') {
+            // Group by supplier
+            const grouped = {};
+            filteredData.forEach(item => {
+                const supplier = item.saplaya || 'Hakuna';
+                if (!grouped[supplier]) {
+                    grouped[supplier] = {
+                        count: 0,
+                        items: 0,
+                        cost: 0
+                    };
+                }
+                grouped[supplier].count++;
+                grouped[supplier].items += parseFloat(item.idadi);
+                grouped[supplier].cost += parseFloat(item.bei);
+            });
+            
+            Object.keys(grouped).sort().forEach(supplier => {
+                tableHtml += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2">-</td>
+                        <td class="px-4 py-2">${supplier}</td>
+                        <td class="px-4 py-2 text-center">${grouped[supplier].items.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="px-4 py-2 text-right">${grouped[supplier].cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="px-4 py-2 text-right">-</td>
+                        <td class="px-4 py-2">${supplier}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            // Detailed view
+            filteredData.forEach(item => {
+                const formattedIdadi = parseFloat(item.idadi).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                tableHtml += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2">${new Date(item.created_at).toLocaleDateString()}</td>
+                        <td class="px-4 py-2">${item.bidhaa?.jina || ''}</td>
+                        <td class="px-4 py-2 text-center">${formattedIdadi}</td>
+                        <td class="px-4 py-2 text-right">${parseFloat(item.bei).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="px-4 py-2 text-right">${parseFloat(item.bidhaa?.bei_kuuza || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td class="px-4 py-2">${item.saplaya || '--'}</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        document.getElementById('report-tbody').innerHTML = tableHtml;
+        document.getElementById('report-results').classList.remove('hidden');
     }
 
     editManunuzi(manunuzi) {
@@ -1117,7 +1505,7 @@ class SmartManunuziManager {
         if (editForm) {
             editForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await this.submitForm(editForm, 'Manunuzi imerekebishwa!');
+                await this.submitForm(editForm, 'Manunuzi yamebadilishwa!');
                 document.getElementById('edit-modal').classList.add('hidden');
             });
         }
@@ -1127,7 +1515,7 @@ class SmartManunuziManager {
         if (deleteForm) {
             deleteForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await this.submitForm(deleteForm, 'Manunuzi imefutwa!');
+                await this.submitForm(deleteForm, 'Manunuzi yamefutwa!');
                 document.getElementById('delete-modal').classList.add('hidden');
             });
         }
@@ -1209,7 +1597,7 @@ class SmartManunuziManager {
         
         // Set default expiry date to today
         const today = new Date().toISOString().split('T')[0];
-        const expiryInput = document.querySelector('#manunuzi-form input[name="expiry"]');
+        const expiryInput = document.getElementById('expiry');
         if (expiryInput) {
             expiryInput.value = today;
         }
@@ -1243,26 +1631,65 @@ class SmartManunuziManager {
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }
+
+    exportReportPDF() {
+        const startDate = document.getElementById('report-start-date').value;
+        const endDate = document.getElementById('report-end-date').value;
+        const reportType = document.getElementById('report-type').value;
+        
+        if (!startDate || !endDate) {
+            this.showNotification('Tafadhali chagua tarehe', 'warning');
+            return;
+        }
+        
+        const url = `${window.location.pathname}?export=pdf&start_date=${startDate}&end_date=${endDate}&report_type=${reportType}`;
+        window.open(url, '_blank');
+    }
+
+    exportReportExcel() {
+        const startDate = document.getElementById('report-start-date').value;
+        const endDate = document.getElementById('report-end-date').value;
+        const reportType = document.getElementById('report-type').value;
+        
+        if (!startDate || !endDate) {
+            this.showNotification('Tafadhali chagua tarehe', 'warning');
+            return;
+        }
+        
+        const url = `${window.location.pathname}?export=excel&start_date=${startDate}&end_date=${endDate}&report_type=${reportType}`;
+        window.location.href = url;
+    }
 }
 
 // Print function
 function printManunuzi() {
     const printWindow = window.open('', '_blank');
-    const rows = document.querySelectorAll('.manunuzi-row');
+    const rows = document.querySelectorAll('.manunuzi-row:not(.hidden)');
+    
+    if (rows.length === 0) {
+        window.manunuziManager.showNotification('Hakuna manunuzi ya kuchapisha', 'warning');
+        return;
+    }
     
     let tableRows = '';
     rows.forEach(row => {
         const manunuzi = JSON.parse(row.dataset.manunuzi);
+        const formattedIdadi = parseFloat(manunuzi.idadi).toFixed(2);
         tableRows += `
             <tr>
                 <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.created_at ? new Date(manunuzi.created_at).toLocaleDateString() : ''}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.bidhaa?.jina || ''}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${manunuzi.idadi}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(manunuzi.bei).toLocaleString()}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(manunuzi.bidhaa?.bei_kuuza || 0).toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${formattedIdadi}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(manunuzi.bei).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(manunuzi.bidhaa?.bei_kuuza || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.saplaya || '--'}</td>
             </tr>`;
     });
+    
+    // Get date range info if active
+    const dateRangeInfo = document.getElementById('date-range-info');
+    const dateRangeText = dateRangeInfo.classList.contains('hidden') ? '' : 
+        `<p>Kipindi: ${document.getElementById('date-range-text').textContent}</p>`;
     
     printWindow.document.write(`
         <!DOCTYPE html>
@@ -1287,6 +1714,7 @@ function printManunuzi() {
             <div class="header">
                 <h2>Orodha ya Manunuzi</h2>
                 <p>${new Date().toLocaleDateString()}</p>
+                ${dateRangeText}
             </div>
             <table>
                 <thead>
@@ -1317,6 +1745,23 @@ function exportPDF() {
     window.open(`${window.location.pathname}?${search.toString()}`, '_blank');
 }
 
+// Excel Export
+function exportExcel() {
+    const search = new URLSearchParams(window.location.search);
+    search.set('export', 'excel');
+    window.location.href = `${window.location.pathname}?${search.toString()}`;
+}
+
+// Filter by date range
+function filterByDateRange() {
+    window.manunuziManager.filterByDateRange();
+}
+
+// Clear date filter
+function clearDateFilter() {
+    window.manunuziManager.clearDateFilter();
+}
+
 // Helper functions for UI updates
 function handleBeiTypeChange() {
     window.manunuziManager.updatePlaceholderText();
@@ -1332,17 +1777,14 @@ function handleEditBeiTypeChange() {
     window.manunuziManager.validateEditPrices();
 }
 
-// Helper function to clear bidhaa selection
 function clearBidhaaSelection() {
     window.manunuziManager.clearManunuziForm();
 }
 
-// Helper function to clear form
 function clearManunuziForm() {
     window.manunuziManager.clearManunuziForm();
 }
 
-// Helper functions for unit cost calculations
 function calculateUnitCost() {
     window.manunuziManager.calculateUnitCost();
 }
@@ -1351,13 +1793,24 @@ function calculateEditUnitCost() {
     window.manunuziManager.calculateEditUnitCost();
 }
 
-// Validation functions
 function validatePrices() {
     return window.manunuziManager.validatePrices();
 }
 
 function validateEditPrices() {
     return window.manunuziManager.validateEditPrices();
+}
+
+function generateReport() {
+    window.manunuziManager.generateReport();
+}
+
+function exportReportPDF() {
+    window.manunuziManager.exportReportPDF();
+}
+
+function exportReportExcel() {
+    window.manunuziManager.exportReportExcel();
 }
 
 // Initialize

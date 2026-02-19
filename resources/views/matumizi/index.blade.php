@@ -70,8 +70,11 @@
             <button data-tab="ingiza" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 text-gray-600 hover:bg-gray-50">
                 <i class="fas fa-plus mr-2"></i> Ingiza
             </button>
-            <button data-tab="sajili" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+            <button data-tab="sajili" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 text-gray-600 hover:bg-gray-50">
                 <i class="fas fa-tags mr-2"></i> Sajili
+            </button>
+            <button data-tab="ripoti" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-chart-bar mr-2"></i> Ripoti
             </button>
         </div>
     </div>
@@ -108,7 +111,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="bg-emerald-50">
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe & Muda</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
                             <th class="px-4 py-2 text-left font-medium text-emerald-800">Aina</th>
                             <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Maelezo</th>
                             <th class="px-4 py-2 text-right font-medium text-emerald-800">Gharama</th>
@@ -328,6 +331,123 @@
             @endif
         </div>
     </div>
+
+    <!-- TAB 4: Ripoti -->
+    <div id="ripoti-tab-content" class="tab-content hidden">
+        <div class="space-y-4">
+            <!-- Report Filters -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                    <i class="fas fa-filter text-emerald-600 mr-2"></i>
+                    Chuja Ripoti
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Kuanzia Tarehe</label>
+                        <input type="date" id="report-start-date" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               value="{{ now()->startOfMonth()->format('Y-m-d') }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Mpaka Tarehe</label>
+                        <input type="date" id="report-end-date" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               value="{{ now()->format('Y-m-d') }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Aina ya Ripoti</label>
+                        <select id="report-type" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="all">Zote</option>
+                            <option value="daily">Kwa Siku</option>
+                            <option value="monthly">Kwa Mwezi</option>
+                            <option value="yearly">Kwa Mwaka</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="generateExpenseReport()" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                            <i class="fas fa-chart-bar mr-1"></i> Generate
+                        </button>
+                        <button onclick="exportExpensePDF()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Results Container - Initially Hidden -->
+            <div id="report-results-container" class="hidden space-y-4">
+                <!-- Report Summary Cards -->
+                <div id="report-summary" class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 p-3 rounded-lg border border-red-200">
+                        <p class="text-xs text-gray-600 mb-1">Jumla ya Matumizi</p>
+                        <p class="text-lg font-bold text-red-700" id="report-total">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200">
+                        <p class="text-xs text-gray-600 mb-1">Idadi ya Matumizi</p>
+                        <p class="text-lg font-bold text-blue-700" id="report-count">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-3 rounded-lg border border-purple-200">
+                        <p class="text-xs text-gray-600 mb-1">Wastani</p>
+                        <p class="text-lg font-bold text-purple-700" id="report-average">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-3 rounded-lg border border-amber-200">
+                        <p class="text-xs text-gray-600 mb-1">Ya Juu Zaidi</p>
+                        <p class="text-lg font-bold text-amber-700" id="report-max">0</p>
+                    </div>
+                </div>
+
+                <!-- Report Charts -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="report-charts">
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">Matumizi kwa Siku</h4>
+                        <div class="h-64">
+                            <canvas id="dailyExpenseChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3">Matumizi kwa Aina</h4>
+                        <div class="h-64">
+                            <canvas id="categoryExpenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Table -->
+                <div id="report-table-container">
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-emerald-50">
+                                        <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
+                                        <th class="px-4 py-2 text-left font-medium text-emerald-800">Aina</th>
+                                        <th class="px-4 py-2 text-left font-medium text-emerald-800">Maelezo</th>
+                                        <th class="px-4 py-2 text-right font-medium text-emerald-800">Gharama</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-tbody" class="divide-y divide-gray-100">
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-gray-50">
+                                        <td colspan="3" class="px-4 py-3 text-right text-sm font-semibold text-gray-700">Jumla:</td>
+                                        <td class="px-4 py-3 text-right text-sm font-bold text-red-700" id="report-footer-total">0</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Data Message -->
+            <div id="report-no-data" class="hidden">
+                <div class="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
+                    <i class="fas fa-chart-bar text-4xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500 text-sm">Hakuna data ya matumizi katika kipindi ulichochagua</p>
+                    <p class="text-gray-400 text-xs mt-2">Tafadhali chagua tarehe nyingine au ingiza matumizi mapya</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Edit Modal -->
@@ -452,12 +572,40 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@media print {
+    .print\:hidden {
+        display: none !important;
+    }
+}
+</style>
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 class SmartMatumiziManager {
     constructor() {
         this.currentTab = this.getSavedTab() || 'taarifa';
         this.searchTimeout = null;
+        this.charts = {};
+        this.allMatumiziData = @json($matumizi->items());
         this.init();
     }
 
@@ -708,7 +856,7 @@ class SmartMatumiziManager {
         });
 
         if (!found && searchTerm) {
-            this.showNotification('Hakuna matumizi zinazolingana', 'info');
+            this.showNotification('Hakuna matumizi yanayolingana', 'info');
         }
     }
 
@@ -764,7 +912,7 @@ class SmartMatumiziManager {
         if (editForm) {
             editForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await this.submitForm(editForm, 'Matumizi imerekebishwa!');
+                await this.submitForm(editForm, 'Matumizi yamerekebishwa!');
                 document.getElementById('edit-modal').classList.add('hidden');
             });
         }
@@ -774,7 +922,7 @@ class SmartMatumiziManager {
         if (deleteForm) {
             deleteForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await this.submitForm(deleteForm, 'Matumizi imefutwa!');
+                await this.submitForm(deleteForm, 'Matumizi yamefutwa!');
                 document.getElementById('delete-modal').classList.add('hidden');
             });
         }
@@ -864,8 +1012,152 @@ class SmartMatumiziManager {
         if (!deleteForm || !deleteModal || !deleteAinaName) return;
         
         deleteAinaName.textContent = ainaName;
-        deleteForm.action = `/matumizi/aina/${ainaId}/delete`;
+        deleteForm.action = `/matumizi/aina/${ainaId}`;
         deleteModal.classList.remove('hidden');
+    }
+
+    generateReport() {
+        const startDate = document.getElementById('report-start-date').value;
+        const endDate = document.getElementById('report-end-date').value;
+        const reportType = document.getElementById('report-type').value;
+        
+        if (!startDate || !endDate) {
+            this.showNotification('Tafadhali chagua tarehe zote mbili', 'warning');
+            return;
+        }
+        
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        
+        // Filter data
+        const filteredData = this.allMatumiziData.filter(item => {
+            const itemDate = new Date(item.created_at);
+            return itemDate >= start && itemDate <= end;
+        });
+        
+        // Hide results container initially
+        const resultsContainer = document.getElementById('report-results-container');
+        const noDataDiv = document.getElementById('report-no-data');
+        
+        if (filteredData.length === 0) {
+            resultsContainer.classList.add('hidden');
+            noDataDiv.classList.remove('hidden');
+            return;
+        }
+        
+        // Show results container and hide no data message
+        resultsContainer.classList.remove('hidden');
+        noDataDiv.classList.add('hidden');
+        
+        // Calculate totals
+        const total = filteredData.reduce((sum, item) => sum + parseFloat(item.gharama), 0);
+        const count = filteredData.length;
+        const average = count > 0 ? total / count : 0;
+        const max = Math.max(...filteredData.map(item => parseFloat(item.gharama)));
+        
+        // Update summary cards
+        document.getElementById('report-total').textContent = total.toLocaleString();
+        document.getElementById('report-count').textContent = count;
+        document.getElementById('report-average').textContent = Math.round(average).toLocaleString();
+        document.getElementById('report-max').textContent = max.toLocaleString();
+        document.getElementById('report-footer-total').textContent = total.toLocaleString();
+        
+        // Generate table
+        this.generateReportTable(filteredData);
+        
+        // Update charts
+        this.updateCharts(filteredData);
+    }
+    
+    generateReportTable(data) {
+        let html = '';
+        data.forEach(item => {
+            html += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">${new Date(item.created_at).toLocaleDateString('en-GB')}</td>
+                    <td class="px-4 py-2">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold
+                            ${item.aina === 'Mshahara' ? 'bg-green-100 text-green-800' : 
+                              item.aina === 'Bank' ? 'bg-blue-100 text-blue-800' : 
+                              item.aina === 'Kodi TRA' ? 'bg-red-100 text-red-800' : 
+                              item.aina === 'Kodi Pango' ? 'bg-yellow-100 text-yellow-800' : 
+                              'bg-gray-100 text-gray-800'}">
+                            ${item.aina}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2 text-sm text-gray-700">${item.maelezo || '--'}</td>
+                    <td class="px-4 py-2 text-right text-sm font-bold text-red-700">${parseFloat(item.gharama).toLocaleString()}</td>
+                </tr>
+            `;
+        });
+        document.getElementById('report-tbody').innerHTML = html;
+    }
+    
+    updateCharts(data) {
+        // Destroy existing charts
+        if (this.charts.daily) this.charts.daily.destroy();
+        if (this.charts.category) this.charts.category.destroy();
+        
+        // Group by date
+        const dailyData = {};
+        data.forEach(item => {
+            const date = new Date(item.created_at).toLocaleDateString('en-GB');
+            dailyData[date] = (dailyData[date] || 0) + parseFloat(item.gharama);
+        });
+        
+        // Group by category
+        const categoryData = {};
+        data.forEach(item => {
+            categoryData[item.aina] = (categoryData[item.aina] || 0) + parseFloat(item.gharama);
+        });
+        
+        // Daily chart
+        const dailyCtx = document.getElementById('dailyExpenseChart').getContext('2d');
+        this.charts.daily = new Chart(dailyCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(dailyData).slice(-7),
+                datasets: [{
+                    label: 'Matumizi (TZS)',
+                    data: Object.values(dailyData).slice(-7),
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+        
+        // Category chart
+        const categoryCtx = document.getElementById('categoryExpenseChart').getContext('2d');
+        this.charts.category = new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(categoryData),
+                datasets: [{
+                    data: Object.values(categoryData),
+                    backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#f59e0b', '#8b5cf6']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
     }
 
     showNotification(message, type = 'info') {
@@ -896,24 +1188,27 @@ class SmartMatumiziManager {
 // Print function
 function printMatumizi() {
     const printWindow = window.open('', '_blank');
-    const rows = document.querySelectorAll('.matumizi-row');
+    const rows = document.querySelectorAll('.matumizi-row:not(.hidden)');
+    
+    if (rows.length === 0) {
+        window.matumiziManager.showNotification('Hakuna matumizi ya kuchapisha', 'warning');
+        return;
+    }
     
     let tableRows = '';
+    let total = 0;
+    
     rows.forEach(row => {
         const matumizi = JSON.parse(row.dataset.matumizi);
+        total += parseFloat(matumizi.gharama);
         tableRows += `
             <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">${matumizi.created_at ? new Date(matumizi.created_at).toLocaleDateString('en-GB') : ''}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${new Date(matumizi.created_at).toLocaleDateString('en-GB')}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${matumizi.aina || ''}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${matumizi.maelezo || '--'}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(matumizi.gharama).toLocaleString()}</td>
             </tr>`;
     });
-    
-    const total = Array.from(rows).reduce((sum, row) => {
-        const matumizi = JSON.parse(row.dataset.matumizi);
-        return sum + parseFloat(matumizi.gharama);
-    }, 0);
     
     printWindow.document.write(`
         <!DOCTYPE html>
@@ -964,11 +1259,29 @@ function printMatumizi() {
     printWindow.print();
 }
 
-// PDF Export
+// Report functions
+function generateExpenseReport() {
+    window.matumiziManager.generateReport();
+}
+
+// PDF Export - All expenses
 function exportPDF() {
-    const search = new URLSearchParams(window.location.search);
-    search.set('export', 'pdf');
-    window.open(`${window.location.pathname}?${search.toString()}`, '_blank');
+    window.location.href = '/matumizi/export-pdf';
+}
+
+// Report PDF Export - Filtered expenses
+function exportExpensePDF() {
+    const startDate = document.getElementById('report-start-date').value;
+    const endDate = document.getElementById('report-end-date').value;
+    const reportType = document.getElementById('report-type').value;
+    
+    if (!startDate || !endDate) {
+        window.matumiziManager.showNotification('Tafadhali chagua tarehe zote mbili', 'warning');
+        return;
+    }
+    
+    const url = `/matumizi/export-report-pdf?start_date=${startDate}&end_date=${endDate}&report_type=${reportType}`;
+    window.open(url, '_blank');
 }
 
 // Helper function to clear form
@@ -978,9 +1291,7 @@ function clearMatumiziForm() {
 
 // Helper function to delete aina
 function deleteAina(ainaId, ainaName) {
-    if (window.matumiziManager) {
-        window.matumiziManager.deleteAina(ainaId, ainaName);
-    }
+    window.matumiziManager.deleteAina(ainaId, ainaName);
 }
 
 // Initialize

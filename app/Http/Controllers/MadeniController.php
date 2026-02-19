@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Madeni;
 use App\Models\Marejesho;
 use App\Models\Bidhaa;
@@ -41,7 +41,7 @@ class MadeniController extends Controller
         $paidDebts = Madeni::where('company_id', $companyId)->where('baki', '<=', 0)->count();
         $totalBorrowers = Madeni::where('company_id', $companyId)->distinct('jina_mkopaji')->count('jina_mkopaji');
         
-        // Get all products for dropdown
+        // Get all products for dropdown (for edit modal)
         $bidhaa = Bidhaa::where('company_id', $companyId)
                         ->where('idadi', '>', 0)
                         ->orderBy('jina')
@@ -101,10 +101,10 @@ class MadeniController extends Controller
             'jina_mkopaji' => 'required|string|max:255',
             'simu' => 'required|string|max:20',
             'bidhaa_id' => 'required|exists:bidhaas,id',
-            'idadi' => 'required|integer|min:1',
+            'idadi' => 'required|numeric|min:0.01',
             'bei' => 'required|numeric|min:0',
-            'punguzo' => 'nullable|numeric|min:0', // Add discount validation
-            'punguzo_aina' => 'nullable|in:bidhaa,jumla', // Add discount type validation
+            'punguzo' => 'nullable|numeric|min:0',
+            'punguzo_aina' => 'nullable|in:bidhaa,jumla',
             'jumla' => 'required|numeric|min:0',
             'tarehe_malipo' => 'required|date',
         ]);
@@ -167,7 +167,7 @@ class MadeniController extends Controller
         $request->validate([
             'kiasi' => 'required|numeric|min:0.01|max:' . $madeni->baki,
             'tarehe' => 'required|date',
-            'lipa_kwa' => 'required|in:cash,lipa_namba,bank', // Add payment method validation
+            'lipa_kwa' => 'required|in:cash,lipa_namba,bank',
         ]);
         
         return DB::transaction(function () use ($request, $madeni, $companyId) {
@@ -203,7 +203,7 @@ class MadeniController extends Controller
             'jina_mkopaji' => 'required|string|max:255',
             'simu' => 'nullable|string|max:20',
             'bidhaa_id' => 'required|exists:bidhaas,id',
-            'idadi' => 'required|integer|min:1',
+            'idadi' => 'required|numeric|min:0.01',
             'bei' => 'required|numeric|min:0',
             'punguzo' => 'nullable|numeric|min:0',
             'punguzo_aina' => 'nullable|in:bidhaa,jumla',
@@ -352,6 +352,147 @@ class MadeniController extends Controller
                     $debt->baki,
                     $status
                 ]);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
+    }
+    
+
+public function reportPdf(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    
+    // Get company info (adjust based on your actual model/structure)
+    $company = (object) [
+        'company_name' => auth()->user()->company_name ?? 'N/A',
+        'owner_name' => auth()->user()->name ?? 'N/A',
+        'location' => auth()->user()->location ?? 'N/A',
+        'region' => auth()->user()->region ?? 'N/A',
+        'phone' => auth()->user()->phone ?? 'N/A',
+        'email' => auth()->user()->email ?? 'N/A',
+    ];
+    
+    $startDate = $request->start_date ?? now()->startOfMonth();
+    $endDate = $request->end_date ?? now();
+    $reportType = $request->report_type ?? 'detailed';
+    $status = $request->status ?? 'all';
+    
+    $query = Madeni::with('bidhaa')
+        ->where('company_id', $companyId)
+        ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+    
+    if ($status === 'active') {
+        $query->where('baki', '>', 0);
+    } elseif ($status === 'paid') {
+        $query->where('baki', '<=', 0);
+    }
+    
+    $debts = $query->orderBy('created_at', 'desc')->get();
+    
+    $totalAmount = $debts->sum('jumla');
+    $totalPaid = $debts->sum(function($d) { 
+        return $d->jumla - $d->baki; 
+    });
+    $totalBalance = $totalAmount - $totalPaid;
+    
+    $pdf = Pdf::loadView('madeni.report-pdf', compact(
+        'debts', 'startDate', 'endDate', 'reportType', 
+        'totalAmount', 'totalPaid', 'totalBalance', 'status', 'company'
+    ));
+    
+    $pdf->setPaper('A4', 'landscape');
+    return $pdf->download('madeni-report-'.date('Y-m-d').'.pdf');
+}
+    
+    /**
+     * Export report to Excel
+     */
+    public function reportExcel(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+        $reportType = $request->report_type ?? 'detailed';
+        $status = $request->status ?? 'all';
+        
+        $query = Madeni::with('bidhaa')
+                        ->where('company_id', $companyId)
+                        ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        
+        if ($status === 'active') {
+            $query->where('baki', '>', 0);
+        } elseif ($status === 'paid') {
+            $query->where('baki', '<=', 0);
+        }
+        
+        $debts = $query->orderBy('created_at', 'desc')->get();
+        
+        // Create CSV
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=madeni_report_' . date('Y-m-d') . '.csv',
+        ];
+        
+        $callback = function() use ($debts, $reportType) {
+            $file = fopen('php://output', 'w');
+            
+            if ($reportType === 'summary') {
+                fputcsv($file, ['RIPOTI YA MUHTASARI WA MADENI']);
+                fputcsv($file, []);
+                
+                // Group by date
+                $grouped = [];
+                foreach ($debts as $debt) {
+                    $date = $debt->created_at->format('d/m/Y');
+                    if (!isset($grouped[$date])) {
+                        $grouped[$date] = [
+                            'count' => 0,
+                            'amount' => 0,
+                            'paid' => 0
+                        ];
+                    }
+                    $grouped[$date]['count']++;
+                    $grouped[$date]['amount'] += $debt->jumla;
+                    $grouped[$date]['paid'] += ($debt->jumla - $debt->baki);
+                }
+                
+                fputcsv($file, ['Tarehe', 'Idadi ya Madeni', 'Jumla ya Deni', 'Jumla ya Malipo', 'Baki']);
+                foreach ($grouped as $date => $data) {
+                    fputcsv($file, [
+                        $date,
+                        $data['count'],
+                        number_format($data['amount'], 2),
+                        number_format($data['paid'], 2),
+                        number_format($data['amount'] - $data['paid'], 2)
+                    ]);
+                }
+            } else {
+                fputcsv($file, ['RIPOTI YA MADENI KINA']);
+                fputcsv($file, []);
+                fputcsv($file, ['Tarehe', 'Mkopaji', 'Simu', 'Bidhaa', 'Idadi', 'Bei', 'Punguzo', 'Jumla ya Deni', 'Malipo', 'Baki', 'Hali']);
+                
+                foreach ($debts as $debt) {
+                    $paid = $debt->jumla - $debt->baki;
+                    $status = $debt->baki <= 0 ? 'Imelipwa' : 'Inayongoza';
+                    
+                    fputcsv($file, [
+                        $debt->created_at->format('d/m/Y'),
+                        $debt->jina_mkopaji,
+                        $debt->simu,
+                        $debt->bidhaa->jina ?? 'N/A',
+                        $debt->idadi,
+                        number_format($debt->bei, 2),
+                        number_format($debt->punguzo, 2),
+                        number_format($debt->jumla, 2),
+                        number_format($paid, 2),
+                        number_format($debt->baki, 2),
+                        $status
+                    ]);
+                }
             }
             
             fclose($file);

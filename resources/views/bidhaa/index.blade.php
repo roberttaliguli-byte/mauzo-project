@@ -81,7 +81,7 @@
             
             <!-- Download Buttons -->
             <div class="flex gap-2">
-                <button onclick="exportPDF()" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-red-green text-sm font-medium">
+                <button onclick="exportPDF()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                     <i class="fas fa-file-pdf mr-1"></i> PDF
                 </button>
                 <button onclick="exportExcel()" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
@@ -179,11 +179,17 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-2 text-center">
+                                    @php
+                                        $formattedIdadi = $item->idadi;
+                                        if (is_numeric($item->idadi)) {
+                                            $formattedIdadi = $item->idadi % 1 == 0 ? (string)(int)$item->idadi : number_format($item->idadi, 2);
+                                        }
+                                    @endphp
                                     <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
                                         @if($item->idadi < 10 && $item->idadi > 0) bg-amber-100 text-amber-800
                                         @elseif($item->idadi == 0) bg-gray-100 text-gray-800
                                         @else bg-emerald-100 text-emerald-800 @endif">
-                                        {{ $item->idadi }}
+                                        {{ $formattedIdadi }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-2 text-right">
@@ -280,9 +286,10 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
-                        <input type="number" name="idadi" min="0"
+                        <input type="number" name="idadi" min="0" step="0.01"
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               placeholder="Idadi" required>
+                               placeholder="Idadi (mfano: 1.5, 10.75)" required>
+                        <p class="text-xs text-gray-500 mt-1">Unaweza kuweka desimali (mfano: 1.5, 2.75)</p>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Bei Nunua (TZS) *</label>
@@ -323,182 +330,188 @@
         </div>
     </div>
 
-
-
-
-
-
-
-
-
-
-<!-- TAB 3: Excel Upload -->
-<div id="excel-tab-content" class="tab-content hidden">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <!-- Upload Card -->
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div class="mb-4">
-                <div class="flex items-center mb-3">
-                    <div class="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-upload text-emerald-600"></i>
+    <!-- TAB 3: Excel Upload -->
+    <div id="excel-tab-content" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Upload Card -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div class="mb-4">
+                    <div class="flex items-center mb-3">
+                        <div class="h-10 w-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-upload text-emerald-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-900">Pakia Excel</h3>
+                            <p class="text-xs text-gray-500">Pakia faili la Excel (XLSX, XLS)</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-900">Pakia Excel</h3>
-                        <p class="text-xs text-gray-500">Pakia faili la Excel (XLSX, XLS)</p>
+                    
+                    <form method="POST" action="{{ route('bidhaa.uploadExcel') }}" enctype="multipart/form-data" id="excel-upload-form" class="space-y-3">
+                        @csrf
+                        <div>
+                            <input type="file" name="excel_file" accept=".xlsx,.xls" 
+                                   class="block w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                   required id="excel-file-input">
+                            <p class="text-xs text-gray-500 mt-1">.xlsx, .xls (Max: 10MB)</p>
+                        </div>
+                        <button type="submit" 
+                                class="w-full bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium flex items-center justify-center">
+                            <i class="fas fa-upload mr-1"></i> Pakia & Hifadhi
+                        </button>
+                    </form>
+                    
+                    <!-- Upload Progress -->
+                    <div id="upload-progress" class="hidden mt-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-medium text-emerald-700">Inapakia...</span>
+                            <span class="text-xs text-emerald-700" id="progress-percentage">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                            <div id="progress-bar" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="upload-status">Inaanza upakiaji...</p>
                     </div>
                 </div>
-                
-                <form method="POST" action="{{ route('bidhaa.uploadExcel') }}" enctype="multipart/form-data" id="excel-upload-form" class="space-y-3">
-                    @csrf
-                    <div>
-                        <input type="file" name="excel_file" accept=".xlsx,.xls" 
-                               class="block w-full text-sm text-gray-700 border border-gray-300 rounded p-2 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               required id="excel-file-input">
-                        <p class="text-xs text-gray-500 mt-1">.xlsx, .xls (Max: 10MB)</p>
+            </div>
+
+            <!-- Download Sample Card -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div class="mb-4">
+                    <div class="flex items-center mb-3">
+                        <div class="h-10 w-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-download text-amber-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-900">Sampuli ya Faili</h3>
+                            <p class="text-xs text-gray-500">Pakua mfano wa faili la Excel</p>
+                        </div>
                     </div>
-                    <button type="submit" 
-                            class="w-full bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium flex items-center justify-center">
-                        <i class="fas fa-upload mr-1"></i> Pakia & Hifadhi
+                    
+                    <div class="space-y-4">
+                        <a href="{{ route('bidhaa.downloadSample') }}" 
+                           class="block w-full bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 text-sm font-medium text-center">
+                            <i class="fas fa-file-excel mr-1"></i> Pakua Sampuli (XLSX)
+                        </a>
+                        
+                        <!-- Format Info -->
+                        <div class="border border-emerald-200 rounded p-3 bg-emerald-50">
+                            <h4 class="text-xs font-medium text-emerald-800 mb-2 flex items-center">
+                                <i class="fas fa-info-circle mr-1"></i> 
+                                JINSI INAVYOFANYA KAZI:
+                            </h4>
+                            <div class="space-y-2 text-xs">
+                                <p class="flex items-start">
+                                    <span class="text-emerald-600 font-bold mr-2">✓</span>
+                                    <span><span class="font-bold">Kama bidhaa ipo</span> (Jina, Aina na Kipimo vinalingana) - ita<b>BADILISHA</b> (idadi itachukua nafasi ya ile iliyopo)</span>
+                                </p>
+                                <p class="flex items-start">
+                                    <span class="text-emerald-600 font-bold mr-2">✓</span>
+                                    <span><span class="font-bold">Kama bidhaa haipo</span> - ita<b>ONGEEWA</b> mpya</span>
+                                </p>
+                                <p class="flex items-start">
+                                    <span class="text-emerald-600 font-bold mr-2">✓</span>
+                                    <span><span class="font-bold">Idadi inakubali desimali</span> - mfano: 1.5, 2.75, 10.00</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Required Fields Info -->
+                        <div class="border border-blue-200 rounded p-3 bg-blue-50">
+                            <h4 class="text-xs font-medium text-blue-800 mb-2 flex items-center">
+                                <i class="fas fa-asterisk text-red-500 mr-1"></i> 
+                                SAFU ZINAZOHITAJIKA:
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border border-blue-200">
+                                    <thead>
+                                        <tr class="bg-blue-100">
+                                            <th class="px-2 py-1 border border-blue-200 text-left">Jina la Bidhaa *</th>
+                                            <th class="px-2 py-1 border border-blue-200 text-left">Aina *</th>
+                                            <th class="px-2 py-1 border border-blue-200 text-left">Kipimo</th>
+                                            <th class="px-2 py-1 border border-blue-200 text-left">Idadi *</th>
+                                            <th class="px-2 py-1 border border-blue-200 text-left">Bei Nunua *</th>
+                                            <th class="px-2 py-1 border border-blue-200 text-left">Bei Kuuza *</th>
+                                            <th class="px-2 py-1 border border-blue-200 text-left">Expiry</th>
+                                            <th class="px-2 py-1 border border-blue-200 text-left">Barcode</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="px-2 py-1 border border-blue-200">Soda</td>
+                                            <td class="px-2 py-1 border border-blue-200">Vinywaji</td>
+                                            <td class="px-2 py-1 border border-blue-200">500ml</td>
+                                            <td class="px-2 py-1 border border-blue-200">100</td>
+                                            <td class="px-2 py-1 border border-blue-200">600</td>
+                                            <td class="px-2 py-1 border border-blue-200">1000</td>
+                                            <td class="px-2 py-1 border border-blue-200">2025-12-31</td>
+                                            <td class="px-2 py-1 border border-blue-200">123456789</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-2 py-1 border border-blue-200">Unga</td>
+                                            <td class="px-2 py-1 border border-blue-200">Chakula</td>
+                                            <td class="px-2 py-1 border border-blue-200">2kg</td>
+                                            <td class="px-2 py-1 border border-blue-200">50.5</td>
+                                            <td class="px-2 py-1 border border-blue-200">2500</td>
+                                            <td class="px-2 py-1 border border-blue-200">3500</td>
+                                            <td class="px-2 py-1 border border-blue-200">2026-06-30</td>
+                                            <td class="px-2 py-1 border border-blue-200"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-xs text-gray-600 mt-2">
+                                <i class="fas fa-info-circle mr-1 text-blue-600"></i>
+                                <span class="font-bold">Idadi inaweza kuwa na desimali:</span> 1.5, 2.75, 100.00<br>
+                                <span class="font-bold">Expiry format:</span> <span class="font-mono">YYYY-MM-DD</span> (mfano: 2025-12-31)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upload Results -->
+        <div id="upload-results" class="hidden mt-4">
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-medium text-gray-900 flex items-center">
+                        <i class="fas fa-check-circle text-emerald-600 mr-2"></i>
+                        Matokeo ya Upakiaji
+                    </h3>
+                    <button onclick="document.getElementById('upload-results').classList.add('hidden')" 
+                            class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
                     </button>
-                </form>
-                
-                <!-- Upload Progress -->
-                <div id="upload-progress" class="hidden mt-3">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-xs font-medium text-emerald-700">Inapakia...</span>
-                        <span class="text-xs text-emerald-700" id="progress-percentage">0%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-1.5">
-                        <div id="progress-bar" class="bg-emerald-600 h-1.5 rounded-full" style="width: 0%"></div>
-                    </div>
-                    <p class="text-xs text-gray-500 mt-1" id="upload-status">Inaanza upakiaji...</p>
                 </div>
-            </div>
-        </div>
-
-        <!-- Download Sample Card -->
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div class="mb-4">
-                <div class="flex items-center mb-3">
-                    <div class="h-10 w-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
-                        <i class="fas fa-download text-amber-600"></i>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
+                    <div class="bg-emerald-50 p-2 rounded text-center">
+                        <p class="text-xs text-gray-600">Zilizofanikiwa</p>
+                        <p class="text-lg font-bold text-emerald-700" id="success-count">0</p>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-medium text-gray-900">Sampuli ya Faili</h3>
-                        <p class="text-xs text-gray-500">Pakua mfano wa faili la Excel</p>
+                    <div class="bg-green-50 p-2 rounded text-center">
+                        <p class="text-xs text-gray-600">Zilizoboreshwa</p>
+                        <p class="text-lg font-bold text-green-700" id="updated-count">0</p>
+                    </div>
+                    <div class="bg-blue-50 p-2 rounded text-center">
+                        <p class="text-xs text-gray-600">Zilizoongezwa</p>
+                        <p class="text-lg font-bold text-blue-700" id="created-count">0</p>
+                    </div>
+                    <div class="bg-red-50 p-2 rounded text-center">
+                        <p class="text-xs text-gray-600">Hitilafu</p>
+                        <p class="text-lg font-bold text-red-700" id="error-count">0</p>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded text-center">
+                        <p class="text-xs text-gray-600">Jumla</p>
+                        <p class="text-lg font-bold text-gray-700" id="total-count">0</p>
                     </div>
                 </div>
-                
-                <div class="space-y-4">
-                    <a href="{{ route('bidhaa.downloadSample') }}" 
-                       class="block w-full bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 text-sm font-medium text-center">
-                        <i class="fas fa-file-excel mr-1"></i> Pakua Sampuli (XLSX)
-                    </a>
-                    
-                    <!-- Format Info -->
-                    <div class="border border-emerald-200 rounded p-3 bg-emerald-50">
-                        <h4 class="text-xs font-medium text-emerald-800 mb-2 flex items-center">
-                            <i class="fas fa-info-circle mr-1"></i> 
-                            JINSI INAVYOFANYA KAZI:
-                        </h4>
-                        <div class="space-y-2 text-xs">
-                            <p class="flex items-start">
-                                <span class="text-emerald-600 font-bold mr-2">✓</span>
-                                <span><span class="font-bold">Kama bidhaa ipo</span> (Jina, Aina na Kipimo vinalingana) - ita<b>BORESHA</b> (idadi itaongezwa)</span>
-                            </p>
-                            <p class="flex items-start">
-                                <span class="text-emerald-600 font-bold mr-2">✓</span>
-                                <span><span class="font-bold">Kama bidhaa haipo</span> - ita<b>ONGEEWA</b> mpya</span>
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <!-- Required Fields Info -->
-                    <div class="border border-blue-200 rounded p-3 bg-blue-50">
-                        <h4 class="text-xs font-medium text-blue-800 mb-2 flex items-center">
-                            <i class="fas fa-asterisk text-red-500 mr-1"></i> 
-                            SAFU ZINAZOHITAJIKA:
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-xs border border-blue-200">
-                                <thead>
-                                    <tr class="bg-blue-100">
-                                        <th class="px-2 py-1 border border-blue-200 text-left">Jina la Bidhaa *</th>
-                                        <th class="px-2 py-1 border border-blue-200 text-left">Aina *</th>
-                                        <th class="px-2 py-1 border border-blue-200 text-left">Kipimo</th>
-                                        <th class="px-2 py-1 border border-blue-200 text-left">Idadi *</th>
-                                        <th class="px-2 py-1 border border-blue-200 text-left">Bei Nunua *</th>
-                                        <th class="px-2 py-1 border border-blue-200 text-left">Bei Kuuza *</th>
-                                        <th class="px-2 py-1 border border-blue-200 text-left">Expiry</th>
-                                        <th class="px-2 py-1 border border-blue-200 text-left">Barcode</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="px-2 py-1 border border-blue-200">Soda</td>
-                                        <td class="px-2 py-1 border border-blue-200">Vinywaji</td>
-                                        <td class="px-2 py-1 border border-blue-200">500ml</td>
-                                        <td class="px-2 py-1 border border-blue-200">100</td>
-                                        <td class="px-2 py-1 border border-blue-200">600</td>
-                                        <td class="px-2 py-1 border border-blue-200">1000</td>
-                                        <td class="px-2 py-1 border border-blue-200">2025-12-31</td>
-                                        <td class="px-2 py-1 border border-blue-200">123456789</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <p class="text-xs text-gray-600 mt-2">
-                            <i class="fas fa-info-circle mr-1 text-blue-600"></i>
-                            Expiry format: <span class="font-mono">YYYY-MM-DD</span> (mfano: 2025-12-31)
-                        </p>
-                    </div>
+                <div id="error-list" class="hidden">
+                    <p class="text-xs font-medium text-red-700 mb-1">Hitilafu:</p>
+                    <div id="error-items" class="text-xs text-red-600 max-h-40 overflow-y-auto bg-red-50 p-2 rounded"></div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Upload Results -->
-    <div id="upload-results" class="hidden mt-4">
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-medium text-gray-900 flex items-center">
-                    <i class="fas fa-check-circle text-emerald-600 mr-2"></i>
-                    Matokeo ya Upakiaji
-                </h3>
-                <button onclick="document.getElementById('upload-results').classList.add('hidden')" 
-                        class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
-                <div class="bg-emerald-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-600">Zilizofanikiwa</p>
-                    <p class="text-lg font-bold text-emerald-700" id="success-count">0</p>
-                </div>
-                <div class="bg-green-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-600">Zilizoboreshwa</p>
-                    <p class="text-lg font-bold text-green-700" id="updated-count">0</p>
-                </div>
-                <div class="bg-blue-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-600">Zilizoongezwa</p>
-                    <p class="text-lg font-bold text-blue-700" id="created-count">0</p>
-                </div>
-                <div class="bg-red-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-600">Hitilafu</p>
-                    <p class="text-lg font-bold text-red-700" id="error-count">0</p>
-                </div>
-                <div class="bg-gray-50 p-2 rounded text-center">
-                    <p class="text-xs text-gray-600">Jumla</p>
-                    <p class="text-lg font-bold text-gray-700" id="total-count">0</p>
-                </div>
-            </div>
-            <div id="error-list" class="hidden">
-                <p class="text-xs font-medium text-red-700 mb-1">Hitilafu:</p>
-                <div id="error-items" class="text-xs text-red-600 max-h-40 overflow-y-auto bg-red-50 p-2 rounded"></div>
-            </div>
-        </div>
-    </div>
-</div>
 </div>
 
 <!-- Edit Modal -->
@@ -531,7 +544,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Idadi *</label>
-                    <input type="number" name="idadi" id="edit-idadi" min="0"
+                    <input type="number" name="idadi" id="edit-idadi" min="0" step="0.01"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                            required>
                 </div>
@@ -846,12 +859,18 @@ function createProductRow(product) {
     row.className = 'product-row hover:bg-gray-50';
     row.dataset.product = JSON.stringify(product);
     
+    // Handle decimal idadi for stock status
+    const idadi = parseFloat(product.idadi || 0);
+    
     let stockClass = 'bg-emerald-100 text-emerald-800';
-    if (product.idadi == 0) {
+    if (idadi == 0) {
         stockClass = 'bg-gray-100 text-gray-800';
-    } else if (product.idadi < 10) {
+    } else if (idadi < 10) {
         stockClass = 'bg-amber-100 text-amber-800';
     }
+    
+    // Format idadi to show 2 decimal places if needed
+    const formattedIdadi = idadi % 1 === 0 ? idadi.toString() : idadi.toFixed(2);
     
     let expiryHtml = '<span class="text-xs text-gray-400">--</span>';
     if (product.expiry) {
@@ -920,7 +939,7 @@ function createProductRow(product) {
         </td>
         <td class="px-4 py-2 text-center">
             <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${stockClass}">
-                ${product.idadi || 0}
+                ${formattedIdadi}
             </span>
         </td>
         <td class="px-4 py-2 text-right">
@@ -1270,7 +1289,6 @@ function updateProgress(percent, status) {
     if (statusEl) statusEl.textContent = status;
 }
 
-
 // Show upload results
 function showUploadResults(data) {
     const resultsDiv = document.getElementById('upload-results');
@@ -1399,7 +1417,7 @@ function printCurrentView() {
                             <td>${p.jina || ''}</td>
                             <td>${p.aina || ''}</td>
                             <td>${p.kipimo || '--'}</td>
-                            <td class="text-center">${p.idadi || 0}</td>
+                            <td class="text-center">${parseFloat(p.idadi || 0).toFixed(2)}</td>
                             <td class="text-right">${parseFloat(p.bei_nunua || 0).toLocaleString()} TZS</td>
                             <td class="text-right">${parseFloat(p.bei_kuuza || 0).toLocaleString()} TZS</td>
                             <td>${p.barcode || '--'}</td>

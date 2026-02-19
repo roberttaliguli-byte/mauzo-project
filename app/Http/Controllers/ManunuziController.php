@@ -7,6 +7,7 @@ use App\Models\Bidhaa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ManunuziController extends Controller
@@ -89,9 +90,9 @@ class ManunuziController extends Controller
         $companyId = Auth::user()->company_id;
 
         // First validate basic fields
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'bidhaa_id' => 'required|exists:bidhaas,id',
-            'idadi' => 'required|integer|min:1',
+            'idadi' => 'required|numeric|min:0.01|regex:/^\d+(\.\d{1,2})?$/',
             'bei_nunua' => 'required|numeric|min:0',
             'bei_kuuza' => 'required|numeric|min:0',
             'bei_type' => 'required|in:kwa_zote,rejareja',
@@ -99,26 +100,35 @@ class ManunuziController extends Controller
             'saplaya' => 'nullable|string|max:255',
             'simu' => 'nullable|string|max:20',
             'mengineyo' => 'nullable|string|max:500',
+        ], [
+            'idadi.required' => 'Idadi inahitajika',
+            'idadi.numeric' => 'Idadi lazima iwe namba',
+            'idadi.min' => 'Idadi lazima iwe zaidi ya 0',
+            'idadi.regex' => 'Idadi inaweza kuwa na sehemu ya desimali hadi nafasi 2 (mfano: 1.5, 2.75)',
         ]);
 
         // Calculate unit cost based on price type
         $unitCost = 0;
         if ($request->bei_type === 'kwa_zote') {
             // User entered total price for all items
-            $unitCost = $request->bei_nunua / $request->idadi;
+            $unitCost = $request->idadi > 0 ? $request->bei_nunua / $request->idadi : 0;
         } else {
             // User entered price per single item
             $unitCost = $request->bei_nunua;
         }
 
         // Custom validation: Compare selling price with calculated unit cost
-        if ($request->bei_kuuza < $unitCost) {
+        $validator->after(function ($validator) use ($request, $unitCost) {
+            if ($request->bei_kuuza < $unitCost) {
+                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja');
+            }
+        });
+
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja',
-                'errors' => [
-                    'bei_kuuza' => ['Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja']
-                ]
+                'message' => 'Hitilafu katika uthibitishaji',
+                'errors' => $validator->errors()
             ], 422);
         }
 
@@ -157,7 +167,7 @@ class ManunuziController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Manunuzi yamehifadhiwa! Bei ya kununua: ' . number_format($unitCost, 0) . ' kwa 1',
+                'message' => 'Manunuzi yamehifadhiwa! Bei ya kununua: ' . number_format($unitCost, 2) . ' kwa 1',
                 'data' => [
                     'unit_cost' => $unitCost,
                     'total_cost' => $totalCost
@@ -177,9 +187,9 @@ class ManunuziController extends Controller
         abort_unless($manunuzi->company_id === $companyId, 403, 'Huna ruhusa ya kubadilisha manunuzi haya.');
 
         // First validate basic fields
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'bidhaa_id' => 'required|exists:bidhaas,id',
-            'idadi' => 'required|integer|min:1',
+            'idadi' => 'required|numeric|min:0.01|regex:/^\d+(\.\d{1,2})?$/',
             'bei_nunua' => 'required|numeric|min:0',
             'bei_kuuza' => 'required|numeric|min:0',
             'bei_type' => 'required|in:kwa_zote,rejareja',
@@ -187,26 +197,35 @@ class ManunuziController extends Controller
             'saplaya' => 'nullable|string|max:255',
             'simu' => 'nullable|string|max:20',
             'mengineyo' => 'nullable|string|max:500',
+        ], [
+            'idadi.required' => 'Idadi inahitajika',
+            'idadi.numeric' => 'Idadi lazima iwe namba',
+            'idadi.min' => 'Idadi lazima iwe zaidi ya 0',
+            'idadi.regex' => 'Idadi inaweza kuwa na sehemu ya desimali hadi nafasi 2 (mfano: 1.5, 2.75)',
         ]);
 
         // Calculate unit cost based on price type
         $unitCost = 0;
         if ($request->bei_type === 'kwa_zote') {
             // User entered total price for all items
-            $unitCost = $request->bei_nunua / $request->idadi;
+            $unitCost = $request->idadi > 0 ? $request->bei_nunua / $request->idadi : 0;
         } else {
             // User entered price per single item
             $unitCost = $request->bei_nunua;
         }
 
         // Custom validation: Compare selling price with calculated unit cost
-        if ($request->bei_kuuza < $unitCost) {
+        $validator->after(function ($validator) use ($request, $unitCost) {
+            if ($request->bei_kuuza < $unitCost) {
+                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja');
+            }
+        });
+
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja',
-                'errors' => [
-                    'bei_kuuza' => ['Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja']
-                ]
+                'message' => 'Hitilafu katika uthibitishaji',
+                'errors' => $validator->errors()
             ], 422);
         }
 

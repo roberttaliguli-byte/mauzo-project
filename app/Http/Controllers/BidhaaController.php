@@ -14,13 +14,11 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class BidhaaController extends Controller
 {
-    /**
-     * Get the current user (check both guards)
-     */
     private function getCurrentUser()
     {
         $user = Auth::guard('web')->user();
@@ -30,9 +28,6 @@ class BidhaaController extends Controller
         return $user;
     }
     
-    /**
-     * Get company ID from current user
-     */
     private function getCompanyId()
     {
         $user = $this->getCurrentUser();
@@ -42,17 +37,11 @@ class BidhaaController extends Controller
         return $user->company_id;
     }
     
-    /**
-     * Check if current user is boss/admin (not mfanyakazi)
-     */
     private function isBoss()
     {
         return Auth::guard('web')->check();
     }
     
-    /**
-     * Orodha ya bidhaa
-     */
     public function index(Request $request)
     {
         $companyId = $this->getCompanyId();
@@ -61,7 +50,6 @@ class BidhaaController extends Controller
 
         $query = Bidhaa::where('company_id', $companyId);
 
-        // Search functionality
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -72,7 +60,6 @@ class BidhaaController extends Controller
             });
         }
 
-        // Apply filters
         if ($request->has('filter')) {
             switch ($request->filter) {
                 case 'available':
@@ -94,37 +81,40 @@ class BidhaaController extends Controller
                        ->paginate($perPage)
                        ->appends($request->except('page'));
 
-        // Get stats for all products
         $totalProducts = Bidhaa::where('company_id', $companyId)->count();
         $availableProducts = Bidhaa::where('company_id', $companyId)->where('idadi', '>', 0)->count();
         $lowStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
         $expiredProducts = Bidhaa::where('company_id', $companyId)->where('expiry', '<', now())->count();
         $outOfStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', 0)->count();
 
-        // PDF Export - ALL PRODUCTS (not paginated)
-        if ($request->has('export') && $request->export === 'pdf') {
-            $allProducts = Bidhaa::where('company_id', $companyId)
-                               ->orderBy('jina')
-                               ->get();
-            
-            $data = [
-                'bidhaa' => $allProducts,
-                'title' => 'Orodha ya Bidhaa Zote',
-                'date' => now()->format('d/m/Y'),
-                'company' => $this->getCurrentUser()->company->name ?? 'Kampuni',
-                'total_count' => $allProducts->count()
-            ];
-            
-            $pdf = Pdf::loadView('bidhaa.pdf', $data);
-            return $pdf->download('bidhaa-zote-' . date('Y-m-d') . '.pdf');
-        }
+if ($request->has('export') && $request->export === 'pdf') {
 
-        // Excel Export - ALL PRODUCTS (not paginated)
+    $page = $request->input('page', 1);
+
+    $productsForPdf = $query
+        ->orderBy('created_at', 'desc')
+        ->paginate($perPage, ['*'], 'page', $page);
+
+    $data = [
+        'bidhaa' => $productsForPdf,
+        'title' => 'Orodha ya Bidhaa',
+        'date' => now()->format('d/m/Y'),
+        'company' => $this->getCurrentUser()->company,
+        'total_count' => $productsForPdf->total()
+    ];
+
+    $pdf = Pdf::loadView('bidhaa.pdf', $data)
+        ->setPaper('a4', 'portrait');
+
+    return $pdf->download(
+        'bidhaa-page-'.$productsForPdf->currentPage().'.pdf'
+    );
+}
+
         if ($request->has('export') && $request->export === 'excel') {
             return $this->exportExcel();
         }
 
-        // AJAX response for search
         if ($request->ajax() && !$request->has('export')) {
             return response()->json([
                 'success' => true,
@@ -143,9 +133,6 @@ class BidhaaController extends Controller
         ));
     }
     
-    /**
-     * Search all bidhaa (for AJAX search - searches across ALL products)
-     */
     public function searchAll(Request $request)
     {
         $companyId = $this->getCompanyId();
@@ -161,7 +148,6 @@ class BidhaaController extends Controller
         }
         
         try {
-            // NO PAGINATION - get ALL matching products
             $bidhaa = Bidhaa::where('company_id', $companyId)
                 ->where(function($query) use ($search) {
                     $query->where('jina', 'LIKE', "%{$search}%")
@@ -172,9 +158,7 @@ class BidhaaController extends Controller
                 ->orderBy('jina')
                 ->get();
             
-            // Map the results to ensure proper date formatting
             $mappedResults = $bidhaa->map(function($item) {
-                // Determine stock status
                 $stockStatus = 'in-stock';
                 if ($item->idadi == 0) {
                     $stockStatus = 'out-of-stock';
@@ -182,13 +166,11 @@ class BidhaaController extends Controller
                     $stockStatus = 'low-stock';
                 }
                 
-                // Handle expiry date safely - using the cast from model
                 $expiryDate = null;
                 if ($item->expiry) {
                     if ($item->expiry instanceof \Carbon\Carbon) {
                         $expiryDate = $item->expiry->format('Y-m-d');
                     } else {
-                        // Try to parse if it's a string
                         try {
                             $expiryDate = \Carbon\Carbon::parse($item->expiry)->format('Y-m-d');
                         } catch (\Exception $e) {
@@ -228,9 +210,6 @@ class BidhaaController extends Controller
         }
     }
     
-    /**
-     * Get product for editing (AJAX endpoint)
-     */
     public function editProduct($id)
     {
         try {
@@ -247,7 +226,6 @@ class BidhaaController extends Controller
                 ], 404);
             }
             
-            // Handle expiry date safely
             $expiryDate = null;
             if ($product->expiry) {
                 if ($product->expiry instanceof \Carbon\Carbon) {
@@ -284,16 +262,13 @@ class BidhaaController extends Controller
         }
     }
     
-    /**
-     * Hifadhi bidhaa mpya (normal form)
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'jina' => 'required|string|max:255',
             'aina' => 'required|string|max:255',
             'kipimo' => 'nullable|string|max:100',
-            'idadi' => 'required|integer|min:0',
+            'idadi' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
             'bei_nunua' => 'required|numeric|min:0',
             'bei_kuuza' => 'required|numeric|min:0',
             'expiry' => 'nullable|date',
@@ -309,7 +284,9 @@ class BidhaaController extends Controller
             'jina.required' => 'Jina la bidhaa linahitajika',
             'aina.required' => 'Aina ya bidhaa inahitajika',
             'idadi.required' => 'Idadi ya bidhaa inahitajika',
+            'idadi.numeric' => 'Idadi lazima iwe namba',
             'idadi.min' => 'Idadi haiwezi kuwa chini ya 0',
+            'idadi.regex' => 'Idadi inaweza kuwa na sehemu ya desimali hadi nafasi 2 (mfano: 1.5, 2.75)',
             'bei_nunua.required' => 'Bei ya kununua inahitajika',
             'bei_kuuza.required' => 'Bei ya kuuza inahitajika',
             'barcode.unique' => 'Barcode tayari ipo',
@@ -348,12 +325,8 @@ class BidhaaController extends Controller
             ->with('success', 'Bidhaa imeongezwa kikamilifu!');
     }
 
-    /**
-     * Rekebisha bidhaa
-     */
     public function update(Request $request, $id)
     {
-        // Check if user is boss - mfanyakazi cannot edit
         if (!$this->isBoss()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -374,7 +347,7 @@ class BidhaaController extends Controller
             'jina' => 'required|string|max:255',
             'aina' => 'required|string|max:255',
             'kipimo' => 'nullable|string|max:100',
-            'idadi' => 'required|integer|min:0',
+            'idadi' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
             'bei_nunua' => 'required|numeric|min:0',
             'bei_kuuza' => 'required|numeric|min:0',
             'expiry' => 'nullable|date',
@@ -421,12 +394,8 @@ class BidhaaController extends Controller
             ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
     }
 
-    /**
-     * Futa bidhaa
-     */
     public function destroy($id, Request $request)
     {
-        // Check if user is boss - mfanyakazi cannot delete
         if (!$this->isBoss()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
@@ -456,15 +425,11 @@ class BidhaaController extends Controller
             ->with('success', 'Bidhaa imefutwa kikamilifu!');
     }
 
-    /**
-     * Export ALL products to Excel (XLSX format)
-     */
     public function exportExcel()
     {
         $companyId = $this->getCompanyId();
         $company = $this->getCurrentUser()->company->name ?? 'Kampuni';
         
-        // Get ALL products - no pagination
         $products = Bidhaa::where('company_id', $companyId)
                          ->orderBy('jina')
                          ->get();
@@ -472,17 +437,15 @@ class BidhaaController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        // Set title and metadata
         $sheet->setTitle('Bidhaa Zote');
         
-        // Set headers with exact column names (NO ASTERISKS for easier matching)
         $headers = [
-            'A1' => 'Jina la Bidhaa', // Required
-            'B1' => 'Aina',           // Required
+            'A1' => 'Jina la Bidhaa',
+            'B1' => 'Aina',
             'C1' => 'Kipimo',
-            'D1' => 'Idadi',           // Required
-            'E1' => 'Bei Nunua',        // Required
-            'F1' => 'Bei Kuuza',        // Required
+            'D1' => 'Idadi',
+            'E1' => 'Bei Nunua',
+            'F1' => 'Bei Kuuza',
             'G1' => 'Expiry Date',
             'H1' => 'Barcode',
             'I1' => 'Faida',
@@ -494,7 +457,6 @@ class BidhaaController extends Controller
             $sheet->setCellValue($cell, $value);
         }
         
-        // Style headers
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -519,7 +481,14 @@ class BidhaaController extends Controller
         
         $sheet->getStyle('A1:K1')->applyFromArray($headerStyle);
         
-        // Add data rows
+        $sheet->getStyle('D2:D' . ($products->count() + 1))
+              ->getNumberFormat()
+              ->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        
+        $sheet->getStyle('E2:G' . ($products->count() + 1))
+              ->getNumberFormat()
+              ->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        
         $row = 2;
         foreach ($products as $product) {
             $faida = $product->bei_kuuza - $product->bei_nunua;
@@ -549,12 +518,10 @@ class BidhaaController extends Controller
             $row++;
         }
         
-        // Auto-size columns
         foreach (range('A', 'K') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Create file
         $writer = new Xlsx($spreadsheet);
         $filename = "bidhaa_zote_" . date('Y-m-d_His') . ".xlsx";
         
@@ -566,26 +533,20 @@ class BidhaaController extends Controller
         exit;
     }
 
-    /**
-     * Pakua mfano wa faili la Excel (XLSX format) - SIMPLIFIED VERSION
-     */
     public function downloadSample()
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        // Set title
         $sheet->setTitle('Sampuli');
         
-        // Set headers with EXACT column names (NO ASTERISKS, NO EXTRA TEXT)
-        // These exact names will be used to match the columns during upload
         $headers = [
-            'A1' => 'Jina la Bidhaa', // Required
-            'B1' => 'Aina',           // Required
+            'A1' => 'Jina la Bidhaa',
+            'B1' => 'Aina',
             'C1' => 'Kipimo',
-            'D1' => 'Idadi',           // Required
-            'E1' => 'Bei Nunua',        // Required
-            'F1' => 'Bei Kuuza',        // Required
+            'D1' => 'Idadi',
+            'E1' => 'Bei Nunua',
+            'F1' => 'Bei Kuuza',
             'G1' => 'Expiry Date',
             'H1' => 'Barcode'
         ];
@@ -594,7 +555,6 @@ class BidhaaController extends Controller
             $sheet->setCellValue($cell, $value);
         }
         
-        // Style headers
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -619,10 +579,17 @@ class BidhaaController extends Controller
         
         $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
         
-        // SIMPLE SAMPLE DATA - just 2 rows for testing
+        $sheet->getStyle('D2:D3')
+              ->getNumberFormat()
+              ->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        
+        $sheet->getStyle('E2:F3')
+              ->getNumberFormat()
+              ->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+        
         $sampleData = [
             ['Soda', 'Vinywaji', '500ml', 100, 600, 1000, '2025-12-31', '123456789'],
-            ['Mchele', 'Chakula', '1kg', 200, 2500, 3500, '2026-01-15', '']
+            ['Unga', 'Chakula', '2kg', 50.5, 2500, 3500, '2026-06-30', '']
         ];
         
         $row = 2;
@@ -638,7 +605,6 @@ class BidhaaController extends Controller
             $row++;
         }
         
-        // Style data rows
         $dataStyle = [
             'borders' => [
                 'allBorders' => [
@@ -651,12 +617,10 @@ class BidhaaController extends Controller
         $lastRow = $row - 1;
         $sheet->getStyle('A2:H' . $lastRow)->applyFromArray($dataStyle);
         
-        // Auto-size columns
         foreach (range('A', 'H') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Create file
         $writer = new Xlsx($spreadsheet);
         $filename = "sampuli_bidhaa_" . date('Y-m-d') . ".xlsx";
         
@@ -668,11 +632,6 @@ class BidhaaController extends Controller
         exit;
     }
 
-    /**
-     * Pakia Excel/CSV na hifadhi bidhaa
-     * If product with same jina, aina, and kipimo exists -> UPDATE (replace quantity with Excel value)
-     * Otherwise -> CREATE NEW
-     */
     public function uploadExcel(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -703,7 +662,6 @@ class BidhaaController extends Controller
         try {
             $file = $request->file('excel_file');
             
-            // Process the file
             $rows = $this->processExcelFile($file);
             
             if (empty($rows)) {
@@ -727,9 +685,8 @@ class BidhaaController extends Controller
             DB::beginTransaction();
             
             foreach ($rows as $index => $rowData) {
-                $lineNumber = $index + 2; // +2 because row 1 is header
+                $lineNumber = $index + 2;
                 
-                // Check if row is empty
                 $isEmpty = true;
                 foreach ($rowData as $value) {
                     if ($value !== null && trim($value) !== '') {
@@ -743,7 +700,6 @@ class BidhaaController extends Controller
                     continue;
                 }
                 
-                // Extract values using direct column names (case-insensitive)
                 $jina = $this->getExcelValue($rowData, ['Jina la Bidhaa', 'jina la bidhaa', 'Jina', 'jina']);
                 $aina = $this->getExcelValue($rowData, ['Aina', 'aina']);
                 $kipimo = $this->getExcelValue($rowData, ['Kipimo', 'kipimo']);
@@ -753,10 +709,6 @@ class BidhaaController extends Controller
                 $expiry = $this->getExcelValue($rowData, ['Expiry Date', 'expiry date', 'Expiry', 'expiry']);
                 $barcode = $this->getExcelValue($rowData, ['Barcode', 'barcode']);
                 
-                // Debug log
-                \Log::info("Row {$lineNumber}: jina={$jina}, aina={$aina}, idadi={$idadi}, beiNunua={$beiNunua}, beiKuuza={$beiKuuza}");
-                
-                // Validate required fields
                 if (empty($jina)) {
                     $errors[] = "Mstari {$lineNumber}: Jina la bidhaa linakosekana";
                     continue;
@@ -767,26 +719,22 @@ class BidhaaController extends Controller
                     continue;
                 }
                 
-                // Handle idadi (default to 0 if empty)
                 if ($idadi === '' || $idadi === null) {
                     $idadi = 0;
                 }
                 
-                // Validate bei nunua
                 if ($beiNunua === '' || $beiNunua === null) {
                     $errors[] = "Mstari {$lineNumber}: Bei ya kununua inakosekana";
                     continue;
                 }
                 
-                // Validate bei kuuza
                 if ($beiKuuza === '' || $beiKuuza === null) {
                     $errors[] = "Mstari {$lineNumber}: Bei ya kuuza inakosekana";
                     continue;
                 }
                 
-                // Validate numeric values
-                if (!is_numeric($idadi) || (int)$idadi < 0) {
-                    $errors[] = "Mstari {$lineNumber}: Idadi '{$idadi}' si sahihi";
+                if (!is_numeric($idadi) || (float)$idadi < 0) {
+                    $errors[] = "Mstari {$lineNumber}: Idadi '{$idadi}' si sahihi. Tumia namba (mfano: 1, 1.5, 2.75)";
                     continue;
                 }
                 
@@ -800,13 +748,11 @@ class BidhaaController extends Controller
                     continue;
                 }
                 
-                // Validate price logic
                 if ((float)$beiKuuza < (float)$beiNunua) {
                     $errors[] = "Mstari {$lineNumber}: Bei kuuza haiwezi kuwa chini ya bei nunua";
                     continue;
                 }
                 
-                // Parse expiry date if provided
                 $expiryDate = null;
                 if (!empty($expiry) && strtolower($expiry) !== 'n/a' && strtolower($expiry) !== 'na') {
                     $parsedDate = $this->parseDate($expiry);
@@ -817,12 +763,10 @@ class BidhaaController extends Controller
                     $expiryDate = $parsedDate;
                 }
                 
-                // Check if product exists with same jina, aina, and kipimo
                 $query = Bidhaa::where('company_id', $companyId)
                               ->where('jina', $jina)
                               ->where('aina', $aina);
                 
-                // Handle kipimo - if provided, match exactly; if not, match where kipimo is null or empty
                 if (!empty($kipimo)) {
                     $query->where('kipimo', $kipimo);
                 } else {
@@ -836,21 +780,17 @@ class BidhaaController extends Controller
                 
                 try {
                     if ($existingProduct) {
-                        // UPDATE existing product - REPLACE quantity with Excel value (NOT ADD)
                         $updateData = [
-                            'idadi' => (int)$idadi, // REPLACE, NOT ADD
+                            'idadi' => (float)$idadi,
                             'bei_nunua' => (float)$beiNunua,
                             'bei_kuuza' => (float)$beiKuuza,
                         ];
                         
-                        // Update expiry only if provided
                         if ($expiryDate) {
                             $updateData['expiry'] = $expiryDate;
                         }
                         
-                        // Update barcode only if provided and not empty
                         if (!empty($barcode)) {
-                            // Check if barcode already exists on another product
                             $barcodeExists = Bidhaa::where('barcode', $barcode)
                                                   ->where('company_id', $companyId)
                                                   ->where('id', '!=', $existingProduct->id)
@@ -868,19 +808,17 @@ class BidhaaController extends Controller
                         $updatedCount++;
                         
                     } else {
-                        // CREATE new product
                         $createData = [
                             'company_id' => $companyId,
                             'jina' => $jina,
                             'aina' => $aina,
                             'kipimo' => !empty($kipimo) ? $kipimo : null,
-                            'idadi' => (int)$idadi,
+                            'idadi' => (float)$idadi,
                             'bei_nunua' => (float)$beiNunua,
                             'bei_kuuza' => (float)$beiKuuza,
                             'expiry' => $expiryDate,
                         ];
                         
-                        // Add barcode if provided and not exists
                         if (!empty($barcode)) {
                             $barcodeExists = Bidhaa::where('barcode', $barcode)
                                                   ->where('company_id', $companyId)
@@ -949,9 +887,6 @@ class BidhaaController extends Controller
         }
     }
 
-    /**
-     * Helper to get value from Excel row with flexible matching
-     */
     private function getExcelValue($row, $possibleKeys)
     {
         foreach ($possibleKeys as $key) {
@@ -966,9 +901,6 @@ class BidhaaController extends Controller
         return '';
     }
     
-    /**
-     * Process Excel file (XLS, XLSX)
-     */
     private function processExcelFile($file)
     {
         $rows = [];
@@ -987,7 +919,6 @@ class BidhaaController extends Controller
             $highestColumn = $worksheet->getHighestColumn();
             $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
             
-            // Get headers from first row
             $headers = [];
             for ($col = 1; $col <= $highestColumnIndex; $col++) {
                 $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
@@ -998,7 +929,6 @@ class BidhaaController extends Controller
                 $headers[$col] = trim($cellValue ?? '');
             }
             
-            // Process data rows (starting from row 2)
             for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
                 
@@ -1016,7 +946,6 @@ class BidhaaController extends Controller
                     }
                 }
                 
-                // Only add non-empty rows
                 $hasData = false;
                 foreach ($rowData as $value) {
                     if (!empty($value)) {
@@ -1038,9 +967,6 @@ class BidhaaController extends Controller
         return $rows;
     }
     
-    /**
-     * Parse date from various formats
-     */
     private function parseDate($dateString)
     {
         if (empty($dateString)) {
@@ -1069,9 +995,6 @@ class BidhaaController extends Controller
         return null;
     }
     
-    /**
-     * Barcode operations
-     */
     public function storeBarcode(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -1079,7 +1002,7 @@ class BidhaaController extends Controller
             'jina' => 'required|string|max:255',
             'aina' => 'nullable|string|max:255',
             'kipimo' => 'nullable|string|max:100',
-            'idadi' => 'required|integer|min:1',
+            'idadi' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
             'bei_nunua' => 'required|numeric|min:0',
             'bei_kuuza' => 'required|numeric|min:0',
         ]);

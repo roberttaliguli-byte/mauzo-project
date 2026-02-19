@@ -29,10 +29,59 @@ class Bidhaa extends Model
      * @var array
      */
     protected $casts = [
+        'idadi' => 'decimal:2', // Add this line for decimal support
+        'bei_nunua' => 'decimal:2',
+        'bei_kuuza' => 'decimal:2',
         'expiry' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get formatted idadi with decimal places
+     */
+    public function getFormattedIdadiAttribute(): string
+    {
+        return number_format($this->idadi, 2);
+    }
+
+    /**
+     * Get idadi as float
+     */
+    public function getIdadiAsFloatAttribute(): float
+    {
+        return (float) $this->idadi;
+    }
+
+    /**
+     * Check if quantity is zero
+     */
+    public function getIsOutOfStockAttribute(): bool
+    {
+        return $this->idadi <= 0;
+    }
+
+    /**
+     * Check if quantity is low (less than 10)
+     */
+    public function getIsLowStockAttribute(): bool
+    {
+        return $this->idadi > 0 && $this->idadi < 10;
+    }
+
+    /**
+     * Get stock status
+     */
+    public function getStockStatusAttribute(): string
+    {
+        if ($this->idadi <= 0) {
+            return 'out_of_stock';
+        }
+        if ($this->idadi < 10) {
+            return 'low_stock';
+        }
+        return 'in_stock';
+    }
 
     /**
      * Uhusiano na Manunuzi

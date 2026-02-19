@@ -79,6 +79,17 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+
+/* Report table styles */
+.report-summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.report-chart-container {
+    height: 300px;
+    margin-bottom: 20px;
+}
 </style>
 @endpush
 
@@ -157,8 +168,8 @@
             <button data-tab="marejesho" class="tab-button flex-shrink-0 py-3 px-4 text-sm font-medium border-r border-gray-200 text-gray-600 hover:bg-gray-50 whitespace-nowrap">
                 <i class="fas fa-history mr-2"></i> Historia ya Marejesho
             </button>
-            <button data-tab="ingiza" class="tab-button flex-shrink-0 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50 whitespace-nowrap">
-                <i class="fas fa-plus mr-2"></i> Ingiza Deni
+            <button data-tab="ripoti" class="tab-button flex-shrink-0 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50 whitespace-nowrap">
+                <i class="fas fa-chart-bar mr-2"></i> Ripoti
             </button>
         </div>
     </div>
@@ -270,9 +281,7 @@
                                 <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                                     <i class="fas fa-hand-holding-usd text-3xl mb-2 text-gray-300"></i>
                                     <p>Hakuna madeni yaliyorekodiwa bado</p>
-                                    <a href="#ingiza" onclick="showTab('ingiza')" class="text-emerald-600 hover:text-emerald-700 text-sm mt-2 inline-block">
-                                        <i class="fas fa-plus mr-1"></i> Anza kuingiza deni
-                                    </a>
+                                    <p class="text-xs text-gray-500 mt-1">Anza kwa kuingiza deni jipya</p>
                                 </td>
                             </tr>
                         @endforelse
@@ -396,143 +405,121 @@
         </div>
     </div>
 
-    <!-- TAB 3: Ingiza Deni -->
-    <div id="ingiza-tab-content" class="tab-content hidden">
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <form method="POST" action="{{ route('madeni.store') }}" id="debt-form" class="space-y-4">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Customer Information -->
-                    <div class="md:col-span-2">
-                        <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <i class="fas fa-user mr-2 text-emerald-600"></i>
-                            Taarifa za Mkopaji
-                        </h3>
+    <!-- TAB 3: Ripoti -->
+    <div id="ripoti-tab-content" class="tab-content hidden">
+        <div class="grid grid-cols-1 gap-4">
+            <!-- Report Filters -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                <h3 class="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                    <i class="fas fa-filter text-emerald-600 mr-2"></i>
+                    Chuja Ripoti
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Kuanzia Tarehe</label>
+                        <input type="date" id="report-start-date" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               value="{{ now()->startOfMonth()->format('Y-m-d') }}">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
-                            <span class="text-red-500">*</span> Jina la Mkopaji
-                        </label>
-                        <input type="text" name="jina_mkopaji" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                               placeholder="Ingiza jina kamili la mkopaji" required>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Mpaka Tarehe</label>
+                        <input type="date" id="report-end-date" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               value="{{ now()->format('Y-m-d') }}">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
-                            <span class="text-red-500">*</span> Namba ya Simu
-                        </label>
-                        <input type="text" name="simu" 
-                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                               placeholder="+255 xxx xxx xxx" required>
-                    </div>
-
-                    <!-- Product Information -->
-                    <div class="md:col-span-2 mt-4">
-                        <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <i class="fas fa-box mr-2 text-emerald-600"></i>
-                            Taarifa za Bidhaa
-                        </h3>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
-                            <span class="text-red-500">*</span> Chagua Bidhaa
-                        </label>
-                        <select name="bidhaa_id" id="bidhaa-select"
-                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                                required>
-                            <option value="">-- Chagua bidhaa --</option>
-                            @foreach($bidhaa as $product)
-                                <option value="{{ $product->id }}" 
-                                        data-price="{{ $product->bei_kuuza }}"
-                                        data-stock="{{ $product->idadi }}"
-                                        data-buying-price="{{ $product->bei_nunua }}">
-                                    {{ $product->jina }} 
-                                    (Stock: {{ $product->idadi }} @ {{ number_format($product->bei_kuuza, 2) }})
-                                </option>
-                            @endforeach
-                        </select>
-                        <div class="mt-1 text-xs text-gray-500" id="stock-info"></div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
-                            <span class="text-red-500">*</span> Idadi
-                        </label>
-                        <input type="number" name="idadi" id="idadi-input" min="1"
-                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                               placeholder="Idadi" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
-                            <span class="text-red-500">*</span> Bei ya Kuuza (TZS)
-                        </label>
-                        <input type="number" step="0.01" name="bei" id="bei-input"
-                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                               placeholder="0.00" required>
-                    </div>
-
-                    <!-- Discount Section -->
-                    <div class="md:col-span-2 mt-4">
-                        <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <i class="fas fa-percentage mr-2 text-amber-600"></i>
-                            Punguzo (Ikiwepo)
-                        </h3>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Aina ya Punguzo</label>
-                        <select name="punguzo_aina" id="punguzo-aina" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition">
-                            <option value="bidhaa">Kwa Bidhaa (kwa kila kipande)</option>
-                            <option value="jumla">Jumla (kwa mauzo yote)</option>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Aina ya Ripoti</label>
+                        <select id="report-type" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="summary">Muhtasari</option>
+                            <option value="detailed">Kina</option>
+                            <option value="by_borrower">Kwa Mkopaji</option>
+                            <option value="by_product">Kwa Bidhaa</option>
+                            <option value="payment_methods">Njia za Malipo</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Kiasi cha Punguzo (TZS)</label>
-                        <input type="number" step="0.01" name="punguzo" id="punguzo-input" min="0"
-                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                               placeholder="0.00" value="0">
-                        <div class="mt-1 text-xs text-gray-500" id="discount-info"></div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Hali ya Deni</label>
+                        <select id="report-status" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <option value="all">Yote</option>
+                            <option value="active">Yanayongoza</option>
+                            <option value="paid">Yaliyolipwa</option>
+                        </select>
                     </div>
+                    <div class="flex items-end gap-2">
+                        <button onclick="generateDebtReport()" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                            <i class="fas fa-chart-bar mr-1"></i> Generate
+                        </button>
+                        <button onclick="exportDebtReportPDF()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                            <i class="fas fa-file-pdf mr-1"></i> PDF
+                        </button>
+                        <button onclick="exportDebtReportExcel()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
+                            <i class="fas fa-file-excel mr-1"></i> Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                    <!-- Totals and Payment Date -->
-                    <div class="md:col-span-2 mt-4">
-                        <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                            <i class="fas fa-calculator mr-2 text-blue-600"></i>
-                            Jumla na Tarehe
-                        </h3>
+            <!-- Report Results -->
+            <div id="report-results" class="hidden">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
+                    <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 p-3 rounded-lg shadow-sm">
+                        <p class="text-xs text-white opacity-90 mb-1">Jumla ya Madeni</p>
+                        <p class="text-xl font-bold text-white" id="report-total-debts">0</p>
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
-                            <span class="text-red-500">*</span> Jumla ya Deni (TZS)
-                        </label>
-                        <input type="number" step="0.01" name="jumla" id="jumla-input"
-                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                               placeholder="0.00" readonly required>
-                        <div class="mt-1 flex justify-between text-xs">
-                            <span id="base-total" class="text-gray-500"></span>
-                            <span id="total-discount" class="text-red-500"></span>
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-700 p-3 rounded-lg shadow-sm">
+                        <p class="text-xs text-white opacity-90 mb-1">Jumla ya Kiasi</p>
+                        <p class="text-xl font-bold text-white" id="report-total-amount">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-700 p-3 rounded-lg shadow-sm">
+                        <p class="text-xs text-white opacity-90 mb-1">Jumla ya Marejesho</p>
+                        <p class="text-xl font-bold text-white" id="report-total-repayments">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 to-amber-700 p-3 rounded-lg shadow-sm">
+                        <p class="text-xs text-white opacity-90 mb-1">Baki</p>
+                        <p class="text-xl font-bold text-white" id="report-remaining-balance">0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-red-500 to-red-700 p-3 rounded-lg shadow-sm">
+                        <p class="text-xs text-white opacity-90 mb-1">Wastani wa Malipo</p>
+                        <p class="text-xl font-bold text-white" id="report-avg-repayment">0</p>
+                    </div>
+                </div>
+
+                <!-- Chart Section -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">Muhtasari wa Grafu</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <canvas id="debtStatusChart" class="w-full h-64"></canvas>
+                        </div>
+                        <div>
+                            <canvas id="paymentMethodChart" class="w-full h-64"></canvas>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
-                            <span class="text-red-500">*</span> Tarehe ya Malipo
-                        </label>
-                        <input type="date" name="tarehe_malipo" id="tarehe-malipo"
-                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                               required>
+                </div>
+
+                <!-- Report Table -->
+                <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm" id="report-table">
+                            <thead>
+                                <tr class="bg-emerald-50">
+                                    <th class="px-4 py-2 text-left font-medium text-emerald-800">#</th>
+                                    <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
+                                    <th class="px-4 py-2 text-left font-medium text-emerald-800">Bidhaa</th>
+                                    <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
+                                    <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
+                                    <th class="px-4 py-2 text-right font-medium text-emerald-800">Malipo</th>
+                                    <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
+                                    <th class="px-4 py-2 text-center font-medium text-emerald-800">Hali</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-tbody" class="divide-y divide-gray-100">
+                                <!-- Will be filled by JavaScript -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                
-                <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
-                    <button type="submit" 
-                            class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 text-sm font-medium transition flex items-center justify-center">
-                        <i class="fas fa-save mr-2"></i> Hifadhi Deni
-                    </button>
-                    <button type="reset" 
-                            class="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 text-sm font-medium transition flex items-center justify-center">
-                        <i class="fas fa-redo mr-2"></i> Safisha Fomu
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
@@ -761,12 +748,14 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 class MadeniManager {
     constructor() {
         this.currentTab = this.getSavedTab() || 'madeni';
         this.searchTimeout = null;
         this.currentDebtId = null;
+        this.charts = {};
         this.init();
     }
 
@@ -836,52 +825,7 @@ class MadeniManager {
     }
 
     setupAutoCalculations() {
-        // New debt form calculations
-        const bidhaaSelect = document.getElementById('bidhaa-select');
-        const idadiInput = document.getElementById('idadi-input');
-        const beiInput = document.getElementById('bei-input');
-        const punguzoInput = document.getElementById('punguzo-input');
-        const punguzoAina = document.getElementById('punguzo-aina');
-        const jumlaInput = document.getElementById('jumla-input');
-
-        if (bidhaaSelect && idadiInput && beiInput && punguzoInput && punguzoAina && jumlaInput) {
-            // Auto-fill price when product is selected
-            bidhaaSelect.addEventListener('change', (e) => {
-                const selectedOption = e.target.options[e.target.selectedIndex];
-                if (selectedOption.value) {
-                    const price = selectedOption.getAttribute('data-price');
-                    const stock = selectedOption.getAttribute('data-stock');
-                    
-                    if (price) {
-                        beiInput.value = parseFloat(price);
-                    }
-                    
-                    // Update stock info
-                    const stockInfo = document.getElementById('stock-info');
-                    if (stockInfo) {
-                        stockInfo.innerHTML = `
-                            <span class="text-emerald-600">
-                                <i class="fas fa-box mr-1"></i>
-                                Stock: ${stock} kipande
-                            </span>
-                        `;
-                    }
-                    
-                    this.calculateTotal();
-                }
-            });
-
-            // Auto-calculate when inputs change
-            [idadiInput, beiInput, punguzoInput].forEach(input => {
-                input.addEventListener('input', () => this.calculateTotal());
-            });
-
-            punguzoAina.addEventListener('change', () => this.calculateTotal());
-            
-            // Initial calculation
-            this.calculateTotal();
-        }
-
+        // New debt form calculations (if you add the form back)
         // Edit form calculations
         const editIdadi = document.getElementById('edit-idadi');
         const editBei = document.getElementById('edit-bei');
@@ -890,82 +834,18 @@ class MadeniManager {
 
         if (editIdadi && editBei && editPunguzo && editPunguzoAina) {
             [editIdadi, editBei, editPunguzo].forEach(input => {
-                input.addEventListener('input', () => this.calculateEditTotal());
+                if (input) {
+                    input.addEventListener('input', () => this.calculateEditTotal());
+                }
             });
 
-            editPunguzoAina.addEventListener('change', () => this.calculateEditTotal());
-        }
-    }
-
-    calculateTotal() {
-        const idadiInput = document.getElementById('idadi-input');
-        const beiInput = document.getElementById('bei-input');
-        const punguzoInput = document.getElementById('punguzo-input');
-        const punguzoAina = document.getElementById('punguzo-aina');
-        const jumlaInput = document.getElementById('jumla-input');
-        const baseTotalSpan = document.getElementById('base-total');
-        const totalDiscountSpan = document.getElementById('total-discount');
-
-        if (!idadiInput || !beiInput || !punguzoInput || !jumlaInput) return;
-
-        const idadi = parseFloat(idadiInput.value) || 0;
-        const bei = parseFloat(beiInput.value) || 0;
-        const punguzo = parseFloat(punguzoInput.value) || 0;
-        const discountType = punguzoAina.value;
-
-        // Calculate base total
-        const baseTotal = idadi * bei;
-        
-        // Calculate actual discount
-        let actualDiscount = punguzo;
-        if (discountType === 'bidhaa') {
-            actualDiscount = punguzo * idadi;
-        }
-
-        // Validate discount doesn't exceed base total
-        if (actualDiscount > baseTotal) {
-            actualDiscount = baseTotal;
-            punguzoInput.value = discountType === 'bidhaa' ? (baseTotal / idadi).toFixed(2) : baseTotal.toFixed(2);
-        }
-
-        // Calculate final total
-        const finalTotal = Math.max(baseTotal - actualDiscount, 0);
-        
-        // Update display
-        jumlaInput.value = finalTotal.toFixed(2);
-        
-        if (baseTotalSpan) {
-            baseTotalSpan.textContent = `Jumla kabla ya punguzo: ${baseTotal.toLocaleString()} TZS`;
-        }
-        
-        if (totalDiscountSpan) {
-            totalDiscountSpan.textContent = `Punguzo: ${actualDiscount.toLocaleString()} TZS`;
-        }
-
-        // Update discount info
-        const discountInfo = document.getElementById('discount-info');
-        if (discountInfo) {
-            if (actualDiscount > 0) {
-                discountInfo.innerHTML = `
-                    <span class="text-emerald-600">
-                        <i class="fas fa-percentage mr-1"></i>
-                        Punguzo: ${actualDiscount.toLocaleString()} TZS
-                        ${discountType === 'bidhaa' ? '(kwa kila kipande)' : '(jumla)'}
-                    </span>
-                `;
-            } else {
-                discountInfo.innerHTML = `
-                    <span class="text-gray-500">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Hakuna punguzo limewekwa
-                    </span>
-                `;
+            if (editPunguzoAina) {
+                editPunguzoAina.addEventListener('change', () => this.calculateEditTotal());
             }
         }
     }
 
     calculateEditTotal() {
-        // Similar logic for edit form if needed
         const idadiInput = document.getElementById('edit-idadi');
         const beiInput = document.getElementById('edit-bei');
         const punguzoInput = document.getElementById('edit-punguzo');
@@ -976,7 +856,7 @@ class MadeniManager {
         const idadi = parseFloat(idadiInput.value) || 0;
         const bei = parseFloat(beiInput.value) || 0;
         const punguzo = parseFloat(punguzoInput.value) || 0;
-        const discountType = punguzoAina.value;
+        const discountType = punguzoAina ? punguzoAina.value : 'bidhaa';
 
         // Calculate base total
         const baseTotal = idadi * bei;
@@ -1214,15 +1094,6 @@ class MadeniManager {
     }
 
     setupAjaxForms() {
-        // Debt form
-        const debtForm = document.getElementById('debt-form');
-        if (debtForm) {
-            debtForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await this.submitForm(debtForm, 'Deni limehifadhiwa kikamilifu!');
-            });
-        }
-
         // Pay form
         const payForm = document.getElementById('pay-form');
         if (payForm) {
@@ -1313,16 +1184,6 @@ class MadeniManager {
     setTodayDate() {
         const today = new Date().toISOString().split('T')[0];
         
-        // Set today's date for payment date in new debt form
-        const tareheMalipo = document.getElementById('tarehe-malipo');
-        if (tareheMalipo && !tareheMalipo.value) {
-            // Set default to 30 days from now
-            const futureDate = new Date();
-            futureDate.setDate(futureDate.getDate() + 30);
-            const futureDateStr = futureDate.toISOString().split('T')[0];
-            tareheMalipo.value = futureDateStr;
-        }
-        
         // Set today's date for payment date in pay form
         const payDate = document.getElementById('pay-date');
         if (payDate) {
@@ -1375,6 +1236,306 @@ class MadeniManager {
     }
 }
 
+// Report Functions
+function generateDebtReport() {
+    const startDate = document.getElementById('report-start-date').value;
+    const endDate = document.getElementById('report-end-date').value;
+    const reportType = document.getElementById('report-type').value;
+    const status = document.getElementById('report-status').value;
+    
+    if (!startDate || !endDate) {
+        window.madeniManager.showNotification('Tafadhali chagua tarehe zote mbili', 'warning');
+        return;
+    }
+    
+    // Get all debt rows
+    const rows = document.querySelectorAll('.debt-row');
+    let filteredData = [];
+    
+    rows.forEach(row => {
+        const debt = JSON.parse(row.dataset.debt);
+        const debtDate = new Date(debt.created_at);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        
+        // Apply date filter
+        if (debtDate >= start && debtDate <= end) {
+            // Apply status filter
+            if (status === 'all' || 
+                (status === 'active' && debt.baki > 0) || 
+                (status === 'paid' && debt.baki <= 0)) {
+                filteredData.push(debt);
+            }
+        }
+    });
+    
+    if (filteredData.length === 0) {
+        window.madeniManager.showNotification('Hakuna data katika kipindi hiki', 'info');
+        return;
+    }
+    
+    // Calculate totals
+    const totalDebts = filteredData.length;
+    const totalAmount = filteredData.reduce((sum, debt) => sum + parseFloat(debt.jumla), 0);
+    
+    // Get repayments data (you might need to fetch this from server)
+    const totalRepayments = filteredData.reduce((sum, debt) => sum + (parseFloat(debt.jumla) - parseFloat(debt.baki)), 0);
+    const remainingBalance = totalAmount - totalRepayments;
+    const avgRepayment = totalDebts > 0 ? totalRepayments / totalDebts : 0;
+    
+    // Update summary cards
+    document.getElementById('report-total-debts').textContent = totalDebts;
+    document.getElementById('report-total-amount').textContent = totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TZS';
+    document.getElementById('report-total-repayments').textContent = totalRepayments.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TZS';
+    document.getElementById('report-remaining-balance').textContent = remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TZS';
+    document.getElementById('report-avg-repayment').textContent = avgRepayment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TZS';
+    
+    // Generate table based on report type
+    let tableHtml = '';
+    let counter = 1;
+    
+    if (reportType === 'summary') {
+        // Group by date
+        const grouped = {};
+        filteredData.forEach(debt => {
+            const date = new Date(debt.created_at).toLocaleDateString();
+            if (!grouped[date]) {
+                grouped[date] = {
+                    count: 0,
+                    amount: 0,
+                    repaid: 0
+                };
+            }
+            grouped[date].count++;
+            grouped[date].amount += parseFloat(debt.jumla);
+            grouped[date].repaid += (parseFloat(debt.jumla) - parseFloat(debt.baki));
+        });
+        
+        Object.keys(grouped).sort().forEach(date => {
+            const repaid = grouped[date].repaid;
+            const remaining = grouped[date].amount - repaid;
+            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : 
+                                            '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
+            
+            tableHtml += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">${counter++}</td>
+                    <td class="px-4 py-2">Madeni ${grouped[date].count} - ${date}</td>
+                    <td class="px-4 py-2">-</td>
+                    <td class="px-4 py-2 text-center">-</td>
+                    <td class="px-4 py-2 text-right">${grouped[date].amount.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-center">${status}</td>
+                </tr>
+            `;
+        });
+    } else if (reportType === 'by_borrower') {
+        // Group by borrower
+        const grouped = {};
+        filteredData.forEach(debt => {
+            const borrower = debt.jina_mkopaji;
+            if (!grouped[borrower]) {
+                grouped[borrower] = {
+                    count: 0,
+                    amount: 0,
+                    repaid: 0
+                };
+            }
+            grouped[borrower].count++;
+            grouped[borrower].amount += parseFloat(debt.jumla);
+            grouped[borrower].repaid += (parseFloat(debt.jumla) - parseFloat(debt.baki));
+        });
+        
+        Object.keys(grouped).sort().forEach(borrower => {
+            const repaid = grouped[borrower].repaid;
+            const remaining = grouped[borrower].amount - repaid;
+            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : 
+                                            '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
+            
+            tableHtml += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">${counter++}</td>
+                    <td class="px-4 py-2">${borrower}</td>
+                    <td class="px-4 py-2">Madeni ${grouped[borrower].count}</td>
+                    <td class="px-4 py-2 text-center">-</td>
+                    <td class="px-4 py-2 text-right">${grouped[borrower].amount.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-center">${status}</td>
+                </tr>
+            `;
+        });
+    } else if (reportType === 'by_product') {
+        // Group by product
+        const grouped = {};
+        filteredData.forEach(debt => {
+            const product = debt.bidhaa?.jina || 'N/A';
+            if (!grouped[product]) {
+                grouped[product] = {
+                    count: 0,
+                    amount: 0,
+                    repaid: 0
+                };
+            }
+            grouped[product].count++;
+            grouped[product].amount += parseFloat(debt.jumla);
+            grouped[product].repaid += (parseFloat(debt.jumla) - parseFloat(debt.baki));
+        });
+        
+        Object.keys(grouped).sort().forEach(product => {
+            const repaid = grouped[product].repaid;
+            const remaining = grouped[product].amount - repaid;
+            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : 
+                                            '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
+            
+            tableHtml += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">${counter++}</td>
+                    <td class="px-4 py-2">-</td>
+                    <td class="px-4 py-2">${product}</td>
+                    <td class="px-4 py-2 text-center">${grouped[product].count}</td>
+                    <td class="px-4 py-2 text-right">${grouped[product].amount.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-center">${status}</td>
+                </tr>
+            `;
+        });
+    } else if (reportType === 'payment_methods') {
+        // This would require fetching repayment data with payment methods
+        // For now, show a message
+        tableHtml += `
+            <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                    <i class="fas fa-info-circle text-2xl mb-2 text-gray-300"></i>
+                    <p>Ripoti ya njia za malipo inahitaji data ya marejesho</p>
+                </td>
+            </tr>
+        `;
+    } else {
+        // Detailed view
+        filteredData.forEach(debt => {
+            const paid = parseFloat(debt.jumla) - parseFloat(debt.baki);
+            const status = debt.baki <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : 
+                                            '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
+            
+            tableHtml += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">${counter++}</td>
+                    <td class="px-4 py-2">${debt.jina_mkopaji}</td>
+                    <td class="px-4 py-2">${debt.bidhaa?.jina || 'N/A'}</td>
+                    <td class="px-4 py-2 text-center">${debt.idadi}</td>
+                    <td class="px-4 py-2 text-right">${parseFloat(debt.jumla).toLocaleString()}</td>
+                    <td class="px-4 py-2 text-right">${paid.toLocaleString()}</td>
+                    <td class="px-4 py-2 text-right">${parseFloat(debt.baki).toLocaleString()}</td>
+                    <td class="px-4 py-2 text-center">${status}</td>
+                </tr>
+            `;
+        });
+    }
+    
+    document.getElementById('report-tbody').innerHTML = tableHtml;
+    document.getElementById('report-results').classList.remove('hidden');
+    
+    // Update charts
+    updateDebtCharts(filteredData);
+}
+
+function updateDebtCharts(data) {
+    // Destroy existing charts
+    if (window.madeniManager.charts.debtStatus) {
+        window.madeniManager.charts.debtStatus.destroy();
+    }
+    if (window.madeniManager.charts.paymentMethod) {
+        window.madeniManager.charts.paymentMethod.destroy();
+    }
+    
+    // Calculate status counts
+    const activeDebts = data.filter(d => d.baki > 0).length;
+    const paidDebts = data.filter(d => d.baki <= 0).length;
+    
+    // Debt Status Chart
+    const statusCtx = document.getElementById('debtStatusChart').getContext('2d');
+    window.madeniManager.charts.debtStatus = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Yanayongoza', 'Yaliyolipwa'],
+            datasets: [{
+                data: [activeDebts, paidDebts],
+                backgroundColor: ['#ef4444', '#10b981'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    
+    // For payment methods, you would need actual data
+    // This is a placeholder
+    const paymentCtx = document.getElementById('paymentMethodChart').getContext('2d');
+    window.madeniManager.charts.paymentMethod = new Chart(paymentCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Cash', 'Lipa Namba', 'Bank'],
+            datasets: [{
+                data: [60, 30, 10],
+                backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function exportDebtReportPDF() {
+    const startDate = document.getElementById('report-start-date').value;
+    const endDate = document.getElementById('report-end-date').value;
+    const reportType = document.getElementById('report-type').value;
+    const status = document.getElementById('report-status').value;
+    
+    if (!startDate || !endDate) {
+        window.madeniManager.showNotification('Tafadhali chagua tarehe', 'warning');
+        return;
+    }
+    
+    const url = `${window.location.pathname}/report/pdf?start_date=${startDate}&end_date=${endDate}&report_type=${reportType}&status=${status}`;
+    window.open(url, '_blank');
+}
+
+function exportDebtReportExcel() {
+    const startDate = document.getElementById('report-start-date').value;
+    const endDate = document.getElementById('report-end-date').value;
+    const reportType = document.getElementById('report-type').value;
+    const status = document.getElementById('report-status').value;
+    
+    if (!startDate || !endDate) {
+        window.madeniManager.showNotification('Tafadhali chagua tarehe', 'warning');
+        return;
+    }
+    
+    const url = `${window.location.pathname}/report/excel?start_date=${startDate}&end_date=${endDate}&report_type=${reportType}&status=${status}`;
+    window.location.href = url;
+}
+
 // Print function
 function printDebts() {
     const printWindow = window.open('', '_blank');
@@ -1410,8 +1571,6 @@ function printDebts() {
                 .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #047857; }
                 .header h2 { margin: 0; color: #047857; font-size: 24px; }
                 .header p { margin: 5px 0 0 0; color: #6b7280; font-size: 14px; }
-                .company-info { display: flex; justify-content: space-between; margin-bottom: 20px; }
-                .company-info div { flex: 1; }
                 @media print {
                     body { margin: 0; }
                     .no-print { display: none; }
@@ -1464,6 +1623,7 @@ function showTab(tabName) {
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     window.madeniManager = new MadeniManager();
+    window.madeniManager.charts = {};
     
     // Save tab state
     window.addEventListener('beforeunload', () => {

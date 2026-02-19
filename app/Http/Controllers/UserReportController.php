@@ -9,7 +9,7 @@ use App\Models\Manunuzi;
 use App\Models\Matumizi;
 use App\Models\Marejesho;
 use Carbon\Carbon;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -24,69 +24,96 @@ class UserReportController extends Controller
         return view('user.reports.select', compact('company'));
     }
 
-    // Handle PDF download
+    // Generate report preview
+    public function generate(Request $request)
+    {
+        $request->validate([
+            'report_type' => 'required|in:sales,manunuzi,matumizi,general,mapato_by_method',
+            'date_range' => 'required|in:today,yesterday,week,month,year,custom',
+            'from' => 'required_if:date_range,custom|date',
+            'to' => 'required_if:date_range,custom|date|after_or_equal:from',
+        ]);
+
+        $dateRange = $this->getDateRange($request->date_range, $request);
+        $user = Auth::user();
+        $company = $user->company;
+        $companyId = $company->id;
+        $reportType = $request->report_type;
+
+        // Get data based on report type
+        $data = $this->getReportData($reportType, $companyId, $dateRange);
+        
+        // Add common data
+        $data['reportType'] = $reportType;
+        $data['dateRange'] = $request->date_range;
+        $data['dateFrom'] = $dateRange['start'] ? $dateRange['start']->format('Y-m-d') : null;
+        $data['dateTo'] = $dateRange['end'] ? $dateRange['end']->format('Y-m-d') : null;
+        $data['companyName'] = $company->company_name ?? 'Biashara';
+        $data['generatedAt'] = Carbon::now()->format('d/m/Y H:i:s');
+        $data['displayFrom'] = $dateRange['start'] ? $dateRange['start']->format('d/m/Y') : null;
+        $data['displayTo'] = $dateRange['end'] ? $dateRange['end']->format('d/m/Y') : null;
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
+    }
+
+    // Download PDF report
     public function download(Request $request)
     {
         $request->validate([
             'report_type' => 'required|in:sales,manunuzi,matumizi,general,mapato_by_method',
-            'time_period' => 'required|in:today,yesterday,week,month,year,custom',
-            'from' => 'required_if:time_period,custom|date',
-            'to' => 'required_if:time_period,custom|date|after_or_equal:from',
+            'date_range' => 'required|in:today,yesterday,week,month,year,custom',
+            'from' => 'required_if:date_range,custom|date',
+            'to' => 'required_if:date_range,custom|date|after_or_equal:from',
         ]);
 
-        $timePeriod = $request->get('time_period');
-        $reportType = $request->get('report_type');
-        
-        // Get date range
-        $dateRange = $this->getDateRange($timePeriod, $request);
-        
-        // Get user and company
+        $dateRange = $this->getDateRange($request->date_range, $request);
         $user = Auth::user();
         $company = $user->company;
         $companyId = $company->id;
-
-        // Prepare base data
-        $data = [
-            'reportType' => $reportType,
-            'selectedPeriod' => $timePeriod,
-            'dateFrom' => $dateRange['start'] ? $dateRange['start']->format('Y-m-d') : null,
-            'dateTo' => $dateRange['end'] ? $dateRange['end']->format('Y-m-d') : null,
-            'companyName' => $company->company_name ?? 'Biashara',
-            'date' => Carbon::now()->format('d/m/Y'),
-            'currentTime' => Carbon::now()->format('H:i:s'),
-        ];
+        $reportType = $request->report_type;
 
         // Get data based on report type
-        switch ($reportType) {
-            case 'sales':
-                $salesData = $this->getSalesData($companyId, $dateRange);
-                $data = array_merge($data, $salesData);
-                break;
-            case 'manunuzi':
-                $purchasesData = $this->getPurchasesData($companyId, $dateRange);
-                $data = array_merge($data, $purchasesData);
-                break;
-            case 'matumizi':
-                $expensesData = $this->getExpensesData($companyId, $dateRange);
-                $data = array_merge($data, $expensesData);
-                break;
-            case 'general':
-                $generalData = $this->getGeneralData($companyId, $dateRange);
-                $data = array_merge($data, $generalData);
-                break;
-            case 'mapato_by_method':
-                $incomeData = $this->getIncomeByPaymentMethod($companyId, $dateRange);
-                $data = array_merge($data, $incomeData);
-                break;
-        }
+        $data = $this->getReportData($reportType, $companyId, $dateRange);
+        
+        // Add common data
+        $data['reportType'] = $reportType;
+        $data['dateRange'] = $request->date_range;
+        $data['dateFrom'] = $dateRange['start'] ? $dateRange['start']->format('Y-m-d') : null;
+        $data['dateTo'] = $dateRange['end'] ? $dateRange['end']->format('Y-m-d') : null;
+        $data['companyName'] = $company->company_name ?? 'Biashara';
+        $data['generatedAt'] = Carbon::now()->format('d/m/Y H:i:s');
+        $data['displayFrom'] = $dateRange['start'] ? $dateRange['start']->format('d/m/Y') : null;
+        $data['displayTo'] = $dateRange['end'] ? $dateRange['end']->format('d/m/Y') : null;
 
         // Generate PDF
         $pdf = PDF::loadView('user.reports.pdf', $data);
         $pdf->setPaper('A4', 'portrait');
         
-        $fileName = $this->generateFileName($reportType, $timePeriod, $request);
+        $fileName = $this->generateFileName($reportType, $request->date_range, $request);
         
         return $pdf->download($fileName);
+    }
+
+    // Get report data based on type
+    private function getReportData($reportType, $companyId, $dateRange)
+    {
+        switch ($reportType) {
+            case 'sales':
+                return $this->getSalesData($companyId, $dateRange);
+            case 'manunuzi':
+                return $this->getPurchasesData($companyId, $dateRange);
+            case 'matumizi':
+                return $this->getExpensesData($companyId, $dateRange);
+            case 'general':
+                return $this->getGeneralData($companyId, $dateRange);
+            case 'mapato_by_method':
+                return $this->getIncomeByPaymentMethod($companyId, $dateRange);
+            default:
+                return [];
+        }
     }
 
     // Get sales data
@@ -110,8 +137,6 @@ class UserReportController extends Controller
             $totalMobileSales = 0;
             $totalBankSales = 0;
             $totalSales = 0;
-            $totalProfit = 0;
-            $salesByMethod = [];
 
             foreach ($sales as $sale) {
                 if (!$sale->bidhaa) continue;
@@ -121,7 +146,6 @@ class UserReportController extends Controller
                 // Categorize by payment method
                 $paymentMethod = $sale->lipa_kwa ?? 'cash';
                 
-                // Also track in separate totals
                 switch($paymentMethod) {
                     case 'cash':
                         $totalCashSales += $sale->jumla;
@@ -154,10 +178,8 @@ class UserReportController extends Controller
             foreach ($debtRepayments as $repayment) {
                 $totalDebtRepayments += $repayment->kiasi;
                 
-                // Categorize by payment method
                 $paymentMethod = $repayment->lipa_kwa ?? 'cash';
                 
-                // Also track in separate totals
                 switch($paymentMethod) {
                     case 'cash':
                         $totalCashDebts += $repayment->kiasi;
@@ -176,14 +198,45 @@ class UserReportController extends Controller
             $totalMobileIncome = $totalMobileSales + $totalMobileDebts;
             $totalBankIncome = $totalBankSales + $totalBankDebts;
 
+            // Group sales by date for detailed view
+            $salesByDate = [];
+            foreach ($sales as $sale) {
+                $dateKey = $sale->created_at->format('Y-m-d');
+                if (!isset($salesByDate[$dateKey])) {
+                    $salesByDate[$dateKey] = [
+                        'date' => $sale->created_at->format('d/m/Y'),
+                        'sales' => [],
+                        'total' => 0,
+                        'cash' => 0,
+                        'mobile' => 0,
+                        'bank' => 0
+                    ];
+                }
+                
+                $salesByDate[$dateKey]['sales'][] = $sale;
+                $salesByDate[$dateKey]['total'] += $sale->jumla;
+                
+                $paymentMethod = $sale->lipa_kwa ?? 'cash';
+                switch($paymentMethod) {
+                    case 'cash':
+                        $salesByDate[$dateKey]['cash'] += $sale->jumla;
+                        break;
+                    case 'lipa_namba':
+                        $salesByDate[$dateKey]['mobile'] += $sale->jumla;
+                        break;
+                    case 'bank':
+                        $salesByDate[$dateKey]['bank'] += $sale->jumla;
+                        break;
+                }
+            }
+
             return [
                 'sales' => $sales,
+                'salesByDate' => $salesByDate,
                 'debtRepayments' => $debtRepayments,
                 'totalSales' => $totalSales,
                 'totalDebtRepayments' => $totalDebtRepayments,
                 'grandTotal' => $grandTotal,
-                
-                // Categorized totals
                 'totalCashSales' => $totalCashSales,
                 'totalMobileSales' => $totalMobileSales,
                 'totalBankSales' => $totalBankSales,
@@ -193,11 +246,14 @@ class UserReportController extends Controller
                 'totalCashIncome' => $totalCashIncome,
                 'totalMobileIncome' => $totalMobileIncome,
                 'totalBankIncome' => $totalBankIncome,
+                'reportTitle' => 'Ripoti ya Mauzo',
+                'reportSubtitle' => 'Mapato na mauzo kwa kipindi kilichochaguliwa'
             ];
 
         } catch (\Exception $e) {
             return [
                 'sales' => collect([]),
+                'salesByDate' => [],
                 'debtRepayments' => collect([]),
                 'totalSales' => 0,
                 'totalDebtRepayments' => 0,
@@ -211,11 +267,148 @@ class UserReportController extends Controller
                 'totalCashIncome' => 0,
                 'totalMobileIncome' => 0,
                 'totalBankIncome' => 0,
+                'reportTitle' => 'Ripoti ya Mauzo',
+                'reportSubtitle' => 'Mapato na mauzo kwa kipindi kilichochaguliwa'
             ];
         }
     }
 
-    // Get income categorized by payment method
+    // Get purchases data with decimal support
+    private function getPurchasesData($companyId, $dateRange)
+    {
+        try {
+            $manunuzi = Manunuzi::where('company_id', $companyId)
+                ->when($dateRange['start'], function($q) use ($dateRange) {
+                    $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
+                })
+                ->when($dateRange['end'], function($q) use ($dateRange) {
+                    $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
+                })
+                ->with('bidhaa')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $totalCost = 0;
+            $totalItems = 0;
+            $processedManunuzi = [];
+
+            foreach ($manunuzi as $purchase) {
+                // Format IDADI to handle decimals properly
+                $purchase->formatted_idadi = $this->formatDecimal($purchase->idadi);
+                $purchase->unit_cost = $purchase->idadi > 0 ? $purchase->bei / $purchase->idadi : 0;
+                
+                $processedManunuzi[] = $purchase;
+                $totalCost += $purchase->bei;
+                $totalItems += $purchase->idadi;
+            }
+
+            // Group by date
+            $purchasesByDate = [];
+            foreach ($processedManunuzi as $purchase) {
+                $dateKey = $purchase->created_at->format('Y-m-d');
+                if (!isset($purchasesByDate[$dateKey])) {
+                    $purchasesByDate[$dateKey] = [
+                        'date' => $purchase->created_at->format('d/m/Y'),
+                        'purchases' => [],
+                        'total' => 0,
+                        'items' => 0
+                    ];
+                }
+                
+                $purchasesByDate[$dateKey]['purchases'][] = $purchase;
+                $purchasesByDate[$dateKey]['total'] += $purchase->bei;
+                $purchasesByDate[$dateKey]['items'] += $purchase->idadi;
+            }
+
+            return [
+                'manunuzi' => $processedManunuzi,
+                'purchasesByDate' => $purchasesByDate,
+                'totalCost' => $totalCost,
+                'totalItems' => $totalItems,
+                'averageCost' => $totalItems > 0 ? $totalCost / $totalItems : 0,
+                'reportTitle' => 'Ripoti ya Manunuzi',
+                'reportSubtitle' => 'Manunuzi ya bidhaa kwa kipindi kilichochaguliwa'
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'manunuzi' => collect([]),
+                'purchasesByDate' => [],
+                'totalCost' => 0,
+                'totalItems' => 0,
+                'averageCost' => 0,
+                'reportTitle' => 'Ripoti ya Manunuzi',
+                'reportSubtitle' => 'Manunuzi ya bidhaa kwa kipindi kilichochaguliwa'
+            ];
+        }
+    }
+
+    // Get expenses data
+    private function getExpensesData($companyId, $dateRange)
+    {
+        try {
+            $matumizi = Matumizi::where('company_id', $companyId)
+                ->when($dateRange['start'], function($q) use ($dateRange) {
+                    $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
+                })
+                ->when($dateRange['end'], function($q) use ($dateRange) {
+                    $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Calculate totals by category
+            $totalsByCategory = [];
+            $totalExpenses = 0;
+
+            foreach ($matumizi as $expense) {
+                $category = $expense->aina ?: 'Zingine';
+                $totalExpenses += $expense->gharama;
+                
+                if (!isset($totalsByCategory[$category])) {
+                    $totalsByCategory[$category] = 0;
+                }
+                $totalsByCategory[$category] += $expense->gharama;
+            }
+
+            // Group by date
+            $expensesByDate = [];
+            foreach ($matumizi as $expense) {
+                $dateKey = $expense->created_at->format('Y-m-d');
+                if (!isset($expensesByDate[$dateKey])) {
+                    $expensesByDate[$dateKey] = [
+                        'date' => $expense->created_at->format('d/m/Y'),
+                        'expenses' => [],
+                        'total' => 0
+                    ];
+                }
+                
+                $expensesByDate[$dateKey]['expenses'][] = $expense;
+                $expensesByDate[$dateKey]['total'] += $expense->gharama;
+            }
+
+            return [
+                'matumizi' => $matumizi,
+                'expensesByDate' => $expensesByDate,
+                'totalExpenses' => $totalExpenses,
+                'totalsByCategory' => $totalsByCategory,
+                'reportTitle' => 'Ripoti ya Matumizi',
+                'reportSubtitle' => 'Matumizi ya fedha kwa kipindi kilichochaguliwa'
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'matumizi' => collect([]),
+                'expensesByDate' => [],
+                'totalExpenses' => 0,
+                'totalsByCategory' => [],
+                'reportTitle' => 'Ripoti ya Matumizi',
+                'reportSubtitle' => 'Matumizi ya fedha kwa kipindi kilichochaguliwa'
+            ];
+        }
+    }
+
+    // Get income by payment method
     private function getIncomeByPaymentMethod($companyId, $dateRange)
     {
         try {
@@ -229,12 +422,7 @@ class UserReportController extends Controller
                 })
                 ->select('lipa_kwa', DB::raw('COUNT(*) as count'), DB::raw('SUM(jumla) as total'))
                 ->groupBy('lipa_kwa')
-                ->get()
-                ->map(function($item) {
-                    $item->method_name = $this->getPaymentMethodName($item->lipa_kwa ?? 'cash');
-                    $item->type = 'mauzo';
-                    return $item;
-                });
+                ->get();
 
             // Get debt repayments by payment method
             $debtsByMethod = Marejesho::where('company_id', $companyId)
@@ -246,12 +434,7 @@ class UserReportController extends Controller
                 })
                 ->select('lipa_kwa', DB::raw('COUNT(*) as count'), DB::raw('SUM(kiasi) as total'))
                 ->groupBy('lipa_kwa')
-                ->get()
-                ->map(function($item) {
-                    $item->method_name = $this->getPaymentMethodName($item->lipa_kwa ?? 'cash');
-                    $item->type = 'madeni';
-                    return $item;
-                });
+                ->get();
 
             // Calculate totals
             $totalCash = 0;
@@ -259,7 +442,7 @@ class UserReportController extends Controller
             $totalBank = 0;
             
             foreach ($salesByMethod as $item) {
-                switch($item->lipa_kwa) {
+                switch($item->lipa_kwa ?? 'cash') {
                     case 'cash': $totalCash += $item->total; break;
                     case 'lipa_namba': $totalMobile += $item->total; break;
                     case 'bank': $totalBank += $item->total; break;
@@ -267,7 +450,7 @@ class UserReportController extends Controller
             }
             
             foreach ($debtsByMethod as $item) {
-                switch($item->lipa_kwa) {
+                switch($item->lipa_kwa ?? 'cash') {
                     case 'cash': $totalCash += $item->total; break;
                     case 'lipa_namba': $totalMobile += $item->total; break;
                     case 'bank': $totalBank += $item->total; break;
@@ -283,7 +466,8 @@ class UserReportController extends Controller
                 'totalMobile' => $totalMobile,
                 'totalBank' => $totalBank,
                 'grandTotal' => $grandTotal,
-                'reportSubtitle' => 'Ripoti ya Mapato Kulingana na Njia ya Malipo',
+                'reportTitle' => 'Ripoti ya Mapato kwa Njia ya Malipo',
+                'reportSubtitle' => 'Mapato kulingana na njia ya malipo'
             ];
 
         } catch (\Exception $e) {
@@ -294,62 +478,13 @@ class UserReportController extends Controller
                 'totalMobile' => 0,
                 'totalBank' => 0,
                 'grandTotal' => 0,
-                'reportSubtitle' => 'Ripoti ya Mapato Kulingana na Njia ya Malipo',
+                'reportTitle' => 'Ripoti ya Mapato kwa Njia ya Malipo',
+                'reportSubtitle' => 'Mapato kulingana na njia ya malipo'
             ];
         }
     }
 
-    // Get purchases data - FIXED: Calculate jumla properly
-// Get purchases data - FIXED: Calculate jumla properly
-private function getPurchasesData($companyId, $dateRange)
-{
-    try {
-        $manunuzi = Manunuzi::where('company_id', $companyId)
-            ->when($dateRange['start'], function($q) use ($dateRange) {
-                $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
-            })
-            ->when($dateRange['end'], function($q) use ($dateRange) {
-                $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
-            })
-            ->with('bidhaa')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Calculate total cost - Just use the bei field directly
-        // Based on your example: Ribbon has 2 items but no price listed,
-        // Calculator has 5 items at 30,000 each = 150,000
-        // Another calculator has 2 items at 20,000 each = 40,000
-        // Total should be: 30,000 + 30,000 + 20,000 = 80,000 (NOT 280,000)
-        
-        $totalCost = 0;
-        $processedManunuzi = [];
-
-        foreach ($manunuzi as $purchase) {
-     
-            // Add purchase to processed array
-            $processedManunuzi[] = $purchase;
-            
-            // Calculate line total for display
-            $purchase->line_total = $purchase->bei * $purchase->idadi;
-        }
-
-
-        $totalCost = $manunuzi->sum('bei');
-
-        return [
-            'manunuzi' => $processedManunuzi,
-            'totalCost' => $totalCost,
-        ];
-
-    } catch (\Exception $e) {
-        return [
-            'manunuzi' => collect([]),
-            'totalCost' => 0,
-        ];
-    }
-}
-
-    // Get general data - FIXED: Added fedha dukani calculation
+    // Get general data
     private function getGeneralData($companyId, $dateRange)
     {
         try {
@@ -456,7 +591,7 @@ private function getPurchasesData($companyId, $dateRange)
                 }
             }
 
-            // FIXED: Fedha Dukani calculation - Jumla Mapato minus Matumizi
+            // Fedha Dukani
             $fedhaDukani = $jumlaMapato - $jumlaMatumizi;
 
             // Faida Halisi
@@ -464,31 +599,25 @@ private function getPurchasesData($companyId, $dateRange)
             $faidaHalisi = $totalProfit - $jumlaMatumizi;
 
             return [
-                // Mapato by payment method
                 'mapatoCashMauzo' => $mapatoCashMauzo,
                 'mapatoMobileMauzo' => $mapatoMobileMauzo,
                 'mapatoBankMauzo' => $mapatoBankMauzo,
                 'mapatoMauzo' => $mapatoMauzo,
-                
                 'mapatoCashMadeni' => $mapatoCashMadeni,
                 'mapatoMobileMadeni' => $mapatoMobileMadeni,
                 'mapatoBankMadeni' => $mapatoBankMadeni,
                 'mapatoMadeni' => $mapatoMadeni,
-                
                 'jumlaMapatoCash' => $jumlaMapatoCash,
                 'jumlaMapatoMobile' => $jumlaMapatoMobile,
                 'jumlaMapatoBank' => $jumlaMapatoBank,
                 'jumlaMapato' => $jumlaMapato,
-                
-                // Other totals
                 'jumlaMatumizi' => $jumlaMatumizi,
                 'faidaMarejesho' => $faidaMarejesho,
                 'faidaMauzo' => $faidaMauzo,
-                
-                // FIXED: Fedha dukani calculation
                 'fedhaDukani' => $fedhaDukani,
-                
                 'faidaHalisi' => $faidaHalisi,
+                'reportTitle' => 'Ripoti ya Jumla ya Biashara',
+                'reportSubtitle' => 'Muhtasari wa shughuli zote za biashara'
             ];
 
         } catch (\Exception $e) {
@@ -501,20 +630,19 @@ private function getPurchasesData($companyId, $dateRange)
                 'faidaMauzo' => 0,
                 'fedhaDukani' => 0,
                 'faidaHalisi' => 0,
+                'reportTitle' => 'Ripoti ya Jumla ya Biashara',
+                'reportSubtitle' => 'Muhtasari wa shughuli zote za biashara'
             ];
         }
     }
 
-    // Helper method to get payment method name
-    private function getPaymentMethodName($method)
+    // Helper method to format decimals
+    private function formatDecimal($value)
     {
-        $methods = [
-            'cash' => 'Cash',
-            'lipa_namba' => 'Lipa Namba',
-            'bank' => 'Bank'
-        ];
-        
-        return $methods[$method] ?? 'Cash';
+        if (is_numeric($value)) {
+            return $value % 1 == 0 ? (string)(int)$value : number_format($value, 2);
+        }
+        return $value;
     }
 
     // Helper method to calculate actual discount
@@ -567,49 +695,6 @@ private function getPurchasesData($companyId, $dateRange)
         return $range;
     }
     
-    // Get expenses data
-    private function getExpensesData($companyId, $dateRange)
-    {
-        try {
-            $matumizi = Matumizi::where('company_id', $companyId)
-                ->when($dateRange['start'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
-                })
-                ->when($dateRange['end'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-            // Calculate totals by category
-            $totalsByCategory = [];
-            $totalExpenses = 0;
-
-            foreach ($matumizi as $expense) {
-                $category = $expense->aina ?: 'Zingine';
-                $totalExpenses += $expense->gharama;
-                
-                if (!isset($totalsByCategory[$category])) {
-                    $totalsByCategory[$category] = 0;
-                }
-                $totalsByCategory[$category] += $expense->gharama;
-            }
-
-            return [
-                'matumizi' => $matumizi,
-                'totalExpenses' => $totalExpenses,
-                'totalsByCategory' => $totalsByCategory,
-            ];
-
-        } catch (\Exception $e) {
-            return [
-                'matumizi' => collect([]),
-                'totalExpenses' => 0,
-                'totalsByCategory' => [],
-            ];
-        }
-    }
-
     // Generate file name
     private function generateFileName($reportType, $timePeriod, $request)
     {
@@ -643,62 +728,4 @@ private function getPurchasesData($companyId, $dateRange)
         
         return "{$type}_{$period}_{$date}.pdf";
     }
-    // Add this method to your UserReportController
-public function preview(Request $request)
-{
-    $request->validate([
-        'report_type' => 'required|in:sales,manunuzi,matumizi,general',
-        'time_period' => 'required|in:today,yesterday,week,month,year,custom',
-        'from' => 'required_if:time_period,custom|date',
-        'to' => 'required_if:time_period,custom|date|after_or_equal:from',
-    ]);
-
-    $timePeriod = $request->get('time_period');
-    $reportType = $request->get('report_type');
-    
-    // Get date range
-    $dateRange = $this->getDateRange($timePeriod, $request);
-    
-    // Get user and company
-    $user = Auth::user();
-    $company = $user->company;
-    $companyId = $company->id;
-
-    // Prepare base data
-    $data = [
-        'reportType' => $reportType,
-        'selectedPeriod' => $timePeriod,
-        'dateFrom' => $dateRange['start'] ? $dateRange['start']->format('Y-m-d') : null,
-        'dateTo' => $dateRange['end'] ? $dateRange['end']->format('Y-m-d') : null,
-        'companyName' => $company->company_name ?? 'Biashara',
-        'date' => Carbon::now()->format('d/m/Y'),
-        'currentTime' => Carbon::now()->format('H:i:s'),
-    ];
-
-    // Get data based on report type
-    switch ($reportType) {
-        case 'sales':
-            $salesData = $this->getSalesData($companyId, $dateRange);
-            $data = array_merge($data, $salesData);
-            break;
-        case 'manunuzi':
-            $purchasesData = $this->getPurchasesData($companyId, $dateRange);
-            $data = array_merge($data, $purchasesData);
-            break;
-        case 'matumizi':
-            $expensesData = $this->getExpensesData($companyId, $dateRange);
-            $data = array_merge($data, $expensesData);
-            break;
-        case 'general':
-            $generalData = $this->getGeneralData($companyId, $dateRange);
-            $data = array_merge($data, $generalData);
-            break;
-    }
-
-    // Generate PDF for preview
-    $pdf = PDF::loadView('user.reports.pdf', $data);
-    $pdf->setPaper('A4', 'portrait');
-    
-    return $pdf->stream('preview.pdf');
-}
 }

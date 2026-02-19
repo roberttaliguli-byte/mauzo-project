@@ -135,6 +135,7 @@ Route::middleware('auth')->group(function () {
 // Reports routes
 Route::middleware(['auth'])->prefix('reports')->group(function () {
     Route::get('/select', [UserReportController::class, 'select'])->name('user.reports.select');
+    Route::post('/generate', [UserReportController::class, 'generate'])->name('user.reports.generate');
     Route::post('/download', [UserReportController::class, 'download'])->name('user.reports.download');
 });
 
@@ -187,13 +188,18 @@ Route::put('/wateja/{mteja}', [MtejaController::class, 'update'])->name('wateja.
 Route::delete('/wateja/{mteja}', [MtejaController::class, 'destroy'])->name('wateja.destroy');
 
 // ================================
-// Use resource route - it automatically generates all standard CRUD routes
-Route::resource('matumizi', MatumiziController::class);
+// Matumizi Routes
+// ================================
+// Resource route - only include the methods you need
+Route::resource('matumizi', MatumiziController::class)->except(['show']);
 
-// Add your custom routes
+// Custom Matumizi routes
 Route::post('/matumizi/sajili-aina', [MatumiziController::class, 'sajiliAina'])->name('matumizi.sajili-aina');
 Route::delete('/matumizi/aina/{id}', [MatumiziController::class, 'destroyAina'])->name('matumizi.destroy-aina');
-// ================================
+
+// PDF Export Routes
+Route::get('/matumizi/export-pdf', [MatumiziController::class, 'exportPDF'])->name('matumizi.export.pdf');
+Route::get('/matumizi/export-report-pdf', [MatumiziController::class, 'exportReportPDF'])->name('matumizi.export.report.pdf');// ================================
 // Wafanyakazi Routes
 // ================================
 Route::get('/wafanyakazi', [WafanyakaziController::class, 'index'])->name('wafanyakazi.index');
@@ -285,7 +291,9 @@ Route::put('/madeni/{madeni}', [MadeniController::class, 'update'])->name('maden
 Route::post('/madeni/{madeni}/rejesha', [MadeniController::class, 'rejesha'])->name('madeni.rejesha');
 Route::delete('/madeni/{madeni}', [MadeniController::class, 'destroy'])->name('madeni.destroy');
 Route::get('/madeni/export', [MadeniController::class, 'export'])->name('madeni.export');
-
+// Add these new report routes
+Route::get('/madeni/report/pdf', [MadeniController::class, 'reportPdf'])->name('madeni.report.pdf');
+Route::get('/madeni/report/excel', [MadeniController::class, 'reportExcel'])->name('madeni.report.excel');
 // ================================
 // Uchambuzi Routes
 Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
