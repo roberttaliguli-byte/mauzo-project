@@ -407,7 +407,7 @@
         
         <div class="double-line"></div>
         
-        <div class="item-row font-xlarge">
+        <div class="item-row font-large">
             <span class="text-left">JUMLA KUU:</span>
             <span class="text-right">{{ number_format($total, 2) }}/=</span>
         </div>
