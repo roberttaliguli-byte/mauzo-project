@@ -25,7 +25,7 @@ class MtejaController extends Controller
         }
         
         // If neither guard is authenticated
-        abort(403, 'Unauthorized - Please login first');
+        abort(403, 'Unauthorized - Tafadhali ingia kwanza');
     }
     
     /**
@@ -70,7 +70,7 @@ class MtejaController extends Controller
                        ->appends($request->except('page'));
 
         // Get statistics
-        $totalWateja = $wateja->total();
+        $totalWateja = Mteja::where('company_id', $companyId)->count();
         $newThisMonth = Mteja::where('company_id', $companyId)
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
@@ -103,7 +103,7 @@ class MtejaController extends Controller
     }
 
     /**
-     * Store a new customer and record history.
+     * Store a new customer.
      */
     public function store(Request $request)
     {
@@ -116,7 +116,23 @@ class MtejaController extends Controller
         ]);
 
         $companyId = $this->getCompanyId();
-        $user = $this->getAuthUser();
+
+        // Check if phone number already exists for this company
+        $existingMteja = Mteja::where('company_id', $companyId)
+            ->where('simu', $request->simu)
+            ->first();
+
+        if ($existingMteja) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Namba ya simu tayari ipo kwenye mfumo'
+                ], 422);
+            }
+            return redirect()->back()
+                ->with('error', 'Namba ya simu tayari ipo kwenye mfumo')
+                ->withInput();
+        }
 
         $mteja = Mteja::create([
             'jina' => $request->jina,
@@ -130,8 +146,9 @@ class MtejaController extends Controller
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Mteja ameongezwa kikamilifu!'
-            ]);
+                'message' => 'Mteja ameongezwa kikamilifu!',
+                'data' => $mteja
+            ], 201);
         }
 
         return redirect()->route('wateja.index')
@@ -139,12 +156,11 @@ class MtejaController extends Controller
     }
 
     /**
-     * Update customer details and record changes in history.
+     * Update customer details.
      */
     public function update(Request $request, $id)
     {
         $companyId = $this->getCompanyId();
-        $user = $this->getAuthUser();
 
         $mteja = Mteja::where('company_id', $companyId)->findOrFail($id);
 
@@ -156,12 +172,33 @@ class MtejaController extends Controller
             'maelezo' => 'nullable|string',
         ]);
 
+        // Check if phone number already exists for another customer
+        if ($mteja->simu !== $request->simu) {
+            $existingMteja = Mteja::where('company_id', $companyId)
+                ->where('simu', $request->simu)
+                ->where('id', '!=', $id)
+                ->first();
+
+            if ($existingMteja) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Namba ya simu tayari ipo kwenye mfumo'
+                    ], 422);
+                }
+                return redirect()->back()
+                    ->with('error', 'Namba ya simu tayari ipo kwenye mfumo')
+                    ->withInput();
+            }
+        }
+
         $mteja->update($request->only('jina', 'simu', 'barua_pepe', 'anapoishi', 'maelezo'));
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Taarifa za mteja zimebadilishwa kikamilifu!'
+                'message' => 'Taarifa za mteja zimebadilishwa kikamilifu!',
+                'data' => $mteja
             ]);
         }
 
@@ -170,12 +207,11 @@ class MtejaController extends Controller
     }
 
     /**
-     * Delete a customer and record in history.
+     * Delete a customer.
      */
     public function destroy($id, Request $request)
     {
         $companyId = $this->getCompanyId();
-        $user = $this->getAuthUser();
 
         $mteja = Mteja::where('company_id', $companyId)->findOrFail($id);
         $mteja->delete();
@@ -197,7 +233,15 @@ class MtejaController extends Controller
     public function search(Request $request)
     {
         $companyId = $this->getCompanyId();
-        $query = $request->input('query');
+        $query = $request->input('query', '');
+
+        if (empty($query)) {
+            return response()->json([
+                'success' => true,
+                'wateja' => [],
+                'count' => 0
+            ]);
+        }
 
         $wateja = Mteja::where('company_id', $companyId)
             ->where(function($q) use ($query) {
@@ -206,12 +250,28 @@ class MtejaController extends Controller
                   ->orWhere('barua_pepe', 'LIKE', "%{$query}%")
                   ->orWhere('anapoishi', 'LIKE', "%{$query}%");
             })
+            ->limit(10)
             ->get();
 
         return response()->json([
             'success' => true,
             'wateja' => $wateja,
             'count' => $wateja->count(),
+        ]);
+    }
+
+    /**
+     * Get single customer details
+     */
+    public function show($id, Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        
+        $mteja = Mteja::where('company_id', $companyId)->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => $mteja
         ]);
     }
 }

@@ -15,5 +15,6 @@ class Mteja extends Model
         'barua_pepe',
         'anapoishi',
         'maelezo',
+        'company_id', // Add this line
     ];
 }
