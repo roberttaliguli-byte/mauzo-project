@@ -438,16 +438,17 @@
       </div>
     </div>
 
-    <!-- Navigation -->
-    @php
-      $navItems = [
-          ['route' => 'admin.dashboard', 'icon' => 'fas fa-building', 'label' => 'Makampuni'],
-          ['route' => 'admin.reports', 'icon' => 'fas fa-chart-bar', 'label' => 'Ripoti'],
-            ['route' => 'password.change', 'icon' => 'fas fa-key', 'label' => 'Badili Neno Siri'], // CHANGE
-          ['route' => 'logout', 'icon' => 'fas fa-sign-out-alt', 'label' => 'Toka', 'logout' => true],
-      ];
-      $currentRoute = request()->route()->getName();
-    @endphp
+{{-- resources/views/layouts/admin.blade.php --}}
+@php
+  $navItems = [
+      ['route' => 'admin.dashboard', 'icon' => 'fas fa-building', 'label' => 'Makampuni'],
+      ['route' => 'admin.company-activity', 'icon' => 'fas fa-chart-line', 'label' => 'Shughuli za Makampuni'], // NEW
+      ['route' => 'admin.reports', 'icon' => 'fas fa-chart-bar', 'label' => 'Ripoti'],
+      ['route' => 'password.change', 'icon' => 'fas fa-key', 'label' => 'Badili Neno Siri'],
+      ['route' => 'logout', 'icon' => 'fas fa-sign-out-alt', 'label' => 'Toka', 'logout' => true],
+  ];
+  $currentRoute = request()->route()->getName();
+@endphp
 
     <nav class="flex-1 py-4">
       @foreach($navItems as $item)

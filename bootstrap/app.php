@@ -11,6 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Add middleware to web group
+        $middleware->web(append: [
+            \App\Http\Middleware\UpdateUserActivity::class,
+        ]);
+        
+        // Keep your existing alias
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);

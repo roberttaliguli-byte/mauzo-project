@@ -168,100 +168,136 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    /**
-     * Handle login for all types
-     */
-/**
- * Handle login for all types
- */
-public function loginPost(Request $request)
-{
-    $credentials = $request->validate([
-        'username' => 'required|string',
-        'password' => 'required|string',
-    ]);
+    public function loginPost(Request $request)
+    {
+        $credentials = $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
-    // 1️⃣ Admin login (role = 'admin')
-    if (Auth::guard('web')->attempt([
-        'username' => $credentials['username'],
-        'password' => $credentials['password'],
-        'role' => 'admin',
-        'is_approved' => 1
-    ], $request->boolean('remember'))) {
+        // 1️⃣ Admin login (role = 'admin')
+        if (Auth::guard('web')->attempt([
+            'username' => $credentials['username'],
+            'password' => $credentials['password'],
+            'role' => 'admin',
+            'is_approved' => 1
+        ], $request->boolean('remember'))) {
 
-        $request->session()->regenerate();
-        return redirect()->route('admin.dashboard')
-            ->with('success', 'Umeingia kama Msimamizi!');
+            $user = Auth::guard('web')->user();
+            
+            // Update login tracking
+            $user->update([
+                'last_login_at' => now(),
+                'last_activity_at' => now(),
+                'login_count' => $user->login_count + 1
+            ]);
+
+            // Create login history for admin too (for analytics)
+            \App\Models\LoginHistory::create([
+                'user_id' => $user->id,
+                'company_id' => $user->company_id, // Admin may have null company_id
+                'login_at' => now(),
+                'ip_address' => $request->ip()
+            ]);
+
+            $request->session()->regenerate();
+            return redirect()->route('admin.dashboard')
+                ->with('success', 'Umeingia kama Msimamizi!');
+        }
+
+        // 2️⃣ Boss/Owner login (role = 'boss')
+        if (Auth::guard('web')->attempt([
+            'username' => $credentials['username'],
+            'password' => $credentials['password']
+        ], $request->boolean('remember'))) {
+
+            $user = Auth::guard('web')->user();
+
+            // Check if user is boss (not admin)
+            if ($user->role !== 'boss') {
+                Auth::guard('web')->logout();
+                return back()->withErrors(['login' => 'Huna ruhusa ya kuingia hapa.'])
+                    ->onlyInput('username');
+            }
+
+            if (!$user->company_id || !$user->company) {
+                Auth::guard('web')->logout();
+                return back()->withErrors(['login' => 'Akaunti yako haijaunganishwa na kampuni yoyote. Wasiliana na msimamizi.'])
+                    ->onlyInput('username');
+            }
+
+            if (!$user->company->is_user_approved) {
+                Auth::guard('web')->logout();
+                return back()->withErrors(['login' => 'Kampuni yako haijaidhinishwa bado.'])
+                    ->onlyInput('username');
+            }
+
+            if (!$user->is_approved) {
+                Auth::guard('web')->logout();
+                return back()->withErrors(['login' => 'Akaunti yako haijaidhinishwa bado.'])
+                    ->onlyInput('username');
+            }
+
+            // Update login tracking
+            $user->update([
+                'last_login_at' => now(),
+                'last_activity_at' => now(),
+                'login_count' => $user->login_count + 1
+            ]);
+
+            // Create login history
+            \App\Models\LoginHistory::create([
+                'user_id' => $user->id,
+                'company_id' => $user->company_id,
+                'login_at' => now(),
+                'ip_address' => $request->ip()
+            ]);
+
+            $request->session()->regenerate();
+            return redirect()->route('dashboard')
+                ->with('success', 'Umeingia kama Mmiliki!');
+        }
+
+        // 3️⃣ Employee login (role = 'mfanyakazi')
+        if (Auth::guard('mfanyakazi')->attempt([
+            'username' => $credentials['username'],
+            'password' => $credentials['password']
+        ], $request->boolean('remember'))) {
+
+            $mfanyakazi = Auth::guard('mfanyakazi')->user();
+
+            if ($mfanyakazi->getini !== 'ingia') {
+                Auth::guard('mfanyakazi')->logout();
+                return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
+                    ->onlyInput('username');
+            }
+
+            // Check if employee has company_id
+            if (!$mfanyakazi->company_id) {
+                Auth::guard('mfanyakazi')->logout();
+                return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
+                    ->onlyInput('username');
+            }
+
+            // Update employee login tracking in wafanyakazis table
+            $mfanyakazi->update([
+                'last_login_at' => now(),
+                'last_activity_at' => now(),
+                'login_count' => ($mfanyakazi->login_count ?? 0) + 1
+            ]);
+
+            // NOTE: We don't create login_history for employees because it references users table
+            // If you need employee login history, create a separate table
+
+            $request->session()->regenerate();
+            return redirect()->route('mauzo.index')
+                ->with('success', 'Umeingia kama Mfanyakazi!');
+        }
+
+        // 4️⃣ Login failed
+        return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
+            ->onlyInput('username');
     }
-
-    // 2️⃣ Boss/Owner login (role = 'boss')
-    if (Auth::guard('web')->attempt([
-        'username' => $credentials['username'],
-        'password' => $credentials['password']
-    ], $request->boolean('remember'))) {
-
-        $user = Auth::guard('web')->user();
-
-        // Check if user is boss (not admin)
-        if ($user->role !== 'boss') {
-            Auth::guard('web')->logout();
-            return back()->withErrors(['login' => 'Huna ruhusa ya kuingia hapa.'])
-                ->onlyInput('username');
-        }
-
-        if (!$user->company_id || !$user->company) {
-            Auth::guard('web')->logout();
-            return back()->withErrors(['login' => 'Akaunti yako haijaunganishwa na kampuni yoyote. Wasiliana na msimamizi.'])
-                ->onlyInput('username');
-        }
-
-        if (!$user->company->is_user_approved) {
-            Auth::guard('web')->logout();
-            return back()->withErrors(['login' => 'Kampuni yako haijaidhinishwa bado.'])
-                ->onlyInput('username');
-        }
-
-        if (!$user->is_approved) {
-            Auth::guard('web')->logout();
-            return back()->withErrors(['login' => 'Akaunti yako haijaidhinishwa bado.'])
-                ->onlyInput('username');
-        }
-
-        $request->session()->regenerate();
-        return redirect()->route('dashboard')
-            ->with('success', 'Umeingia kama Mmiliki!');
-    }
-
-    // 3️⃣ Employee login (role = 'mfanyakazi')
-    if (Auth::guard('mfanyakazi')->attempt([
-        'username' => $credentials['username'],
-        'password' => $credentials['password']
-    ], $request->boolean('remember'))) {
-
-        $mfanyakazi = Auth::guard('mfanyakazi')->user();
-
-        if ($mfanyakazi->getini !== 'ingia') {
-            Auth::guard('mfanyakazi')->logout();
-            return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
-                ->onlyInput('username');
-        }
-
-        // Check if employee has company_id
-        if (!$mfanyakazi->company_id) {
-            Auth::guard('mfanyakazi')->logout();
-            return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
-                ->onlyInput('username');
-        }
-
-        $request->session()->regenerate();
-        return redirect()->route('mauzo.index')
-            ->with('success', 'Umeingia kama Mfanyakazi!');
-    }
-
-    // 4️⃣ Login failed
-    return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
-        ->onlyInput('username');
-}
 
     /**
      * Show forgot password form
@@ -327,26 +363,48 @@ public function loginPost(Request $request)
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('dashboard') // redirect to dashboard directly
+            return redirect()->route('dashboard')
                             ->with('success', 'Neno la siri limebadilishwa kwa mafanikio! Unaingia sasa.');
         }
 
         return back()->withErrors(['email' => 'Link ya kubadilisha neno la siri si sahihi au imeisha muda wake.']);
     }
 
-    // logout
-public function logout(Request $request)
-{
-    // Check which guard is active and logout from it
-    if (Auth::guard('mfanyakazi')->check()) {
-        Auth::guard('mfanyakazi')->logout();
-    } elseif (Auth::guard('web')->check()) {
-        Auth::guard('web')->logout();
+    public function logout(Request $request)
+    {
+        // Update logout time if user was logged in
+        if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+            
+            // Update last activity before logout
+            $user->update(['last_activity_at' => now()]);
+            
+            // Update logout time in login history (only for users, not employees)
+            \App\Models\LoginHistory::where('user_id', $user->id)
+                ->whereNull('logout_at')
+                ->latest()
+                ->first()
+                ?->update(['logout_at' => now()]);
+            
+            Auth::guard('web')->logout();
+        } 
+        elseif (Auth::guard('mfanyakazi')->check()) {
+            $mfanyakazi = Auth::guard('mfanyakazi')->user();
+            
+            // Update employee last activity in wafanyakazis table
+            if (isset($mfanyakazi->last_activity_at)) {
+                $mfanyakazi->update(['last_activity_at' => now()]);
+            }
+            
+            // DO NOT update login_history for employees - it doesn't exist there
+            // Remove the LoginHistory query for employees
+            
+            Auth::guard('mfanyakazi')->logout();
+        }
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Umetoka kwenye mfumo kwa mafanikio.');
     }
-
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return redirect()->route('login')->with('success', 'Umetoka kwenye mfumo kwa mafanikio.');
-}
 }

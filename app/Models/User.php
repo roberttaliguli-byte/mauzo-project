@@ -58,4 +58,23 @@ public function company()
             'password' => 'hashed',
         ];
     }
+
+// Add relationship
+public function loginHistories()
+{
+    return $this->hasMany(LoginHistory::class);
+}
+
+// Check if user is active (within last 10 minutes)
+public function isActive()
+{
+    return $this->last_activity_at && $this->last_activity_at->gt(now()->subMinutes(10));
+}
+
+// Update last activity
+public function updateLastActivity()
+{
+    $this->update(['last_activity_at' => now()]);
+}
+
 }

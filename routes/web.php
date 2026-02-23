@@ -19,6 +19,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReportController as MainReportController;
 use App\Http\Controllers\UserReportController;
+use App\Http\Controllers\AdminCompanyActivityController;
 use App\Models\Bidhaa;
 use Illuminate\Http\Request;
 
@@ -163,6 +164,20 @@ Route::middleware(['auth', 'role:admin'])
                 ->name('reports.download');
             Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
                 ->name('reports.download-companies');
+
+                        // Company Activity Routes
+        Route::get('/company-activity', [App\Http\Controllers\AdminCompanyActivityController::class, 'index'])
+            ->name('company-activity');
+        
+        Route::get('/company-activity/stats', [App\Http\Controllers\AdminCompanyActivityController::class, 'getActivityStats'])
+            ->name('company-activity.stats');
+        
+        Route::get('/company-activity/{id}/details', [App\Http\Controllers\AdminCompanyActivityController::class, 'getCompanyDetails'])
+            ->name('company-activity.details');
+        
+        Route::get('/company-activity/chart/data', [App\Http\Controllers\AdminCompanyActivityController::class, 'getChartData'])
+            ->name('company-activity.chart');
+            
         });
 
         // Change Password
