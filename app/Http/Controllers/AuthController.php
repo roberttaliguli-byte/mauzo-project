@@ -7,6 +7,7 @@ use App\Mail\NewUserRegistrationNotification;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\Wafanyakazi;
+use App\Models\LoginHistory;
 use DateTime;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -168,6 +170,28 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    /**
+     * Helper method to get or create system company for admins
+     */
+    private function getSystemCompany()
+    {
+        return Company::firstOrCreate(
+            ['company_name' => 'Mauzo System'],
+            [
+                'owner_name' => 'System Administrator',
+                'owner_gender' => 'other',
+                'owner_dob' => now()->subYears(30)->format('Y-m-d'),
+                'location' => 'System',
+                'region' => 'System',
+                'phone' => '0000000000',
+                'email' => 'system@mauzosheetai.co.tz',
+                'is_verified' => 1,
+                'is_user_approved' => 1,
+                'package' => 'System Account',
+            ]
+        );
+    }
+
     public function loginPost(Request $request)
     {
         $credentials = $request->validate([
@@ -192,13 +216,29 @@ class AuthController extends Controller
                 'login_count' => $user->login_count + 1
             ]);
 
-            // Create login history for admin too (for analytics)
-            \App\Models\LoginHistory::create([
-                'user_id' => $user->id,
-                'company_id' => $user->company_id, // Admin may have null company_id
-                'login_at' => now(),
-                'ip_address' => $request->ip()
-            ]);
+            // Handle admin login history - use system company if no company_id
+            if ($user->company_id) {
+                // Admin has a company assigned
+                LoginHistory::create([
+                    'user_id' => $user->id,
+                    'company_id' => $user->company_id,
+                    'login_at' => now(),
+                    'ip_address' => $request->ip()
+                ]);
+            } else {
+                // Admin doesn't have a company - use system company
+                $systemCompany = $this->getSystemCompany();
+                
+                LoginHistory::create([
+                    'user_id' => $user->id,
+                    'company_id' => $systemCompany->id,
+                    'login_at' => now(),
+                    'ip_address' => $request->ip()
+                ]);
+                
+                // Optional: Assign system company to admin for future logins
+                // $user->update(['company_id' => $systemCompany->id]);
+            }
 
             $request->session()->regenerate();
             return redirect()->route('admin.dashboard')
@@ -245,8 +285,8 @@ class AuthController extends Controller
                 'login_count' => $user->login_count + 1
             ]);
 
-            // Create login history
-            \App\Models\LoginHistory::create([
+            // Create login history for boss
+            LoginHistory::create([
                 'user_id' => $user->id,
                 'company_id' => $user->company_id,
                 'login_at' => now(),
@@ -287,7 +327,7 @@ class AuthController extends Controller
             ]);
 
             // NOTE: We don't create login_history for employees because it references users table
-            // If you need employee login history, create a separate table
+            // If you need employee login history, create a separate table or use polymorphic relation
 
             $request->session()->regenerate();
             return redirect()->route('mauzo.index')
@@ -379,8 +419,8 @@ class AuthController extends Controller
             // Update last activity before logout
             $user->update(['last_activity_at' => now()]);
             
-            // Update logout time in login history (only for users, not employees)
-            \App\Models\LoginHistory::where('user_id', $user->id)
+            // Update logout time in login history
+            LoginHistory::where('user_id', $user->id)
                 ->whereNull('logout_at')
                 ->latest()
                 ->first()
@@ -395,9 +435,6 @@ class AuthController extends Controller
             if (isset($mfanyakazi->last_activity_at)) {
                 $mfanyakazi->update(['last_activity_at' => now()]);
             }
-            
-            // DO NOT update login_history for employees - it doesn't exist there
-            // Remove the LoginHistory query for employees
             
             Auth::guard('mfanyakazi')->logout();
         }
