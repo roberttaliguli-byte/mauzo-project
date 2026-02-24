@@ -166,18 +166,25 @@ Route::middleware(['auth', 'role:admin'])
                 ->name('reports.download-companies');
 
                         // Company Activity Routes
-        Route::get('/company-activity', [App\Http\Controllers\AdminCompanyActivityController::class, 'index'])
-            ->name('company-activity');
-        
-        Route::get('/company-activity/stats', [App\Http\Controllers\AdminCompanyActivityController::class, 'getActivityStats'])
-            ->name('company-activity.stats');
-        
-        Route::get('/company-activity/{id}/details', [App\Http\Controllers\AdminCompanyActivityController::class, 'getCompanyDetails'])
-            ->name('company-activity.details');
-        
-        Route::get('/company-activity/chart/data', [App\Http\Controllers\AdminCompanyActivityController::class, 'getChartData'])
-            ->name('company-activity.chart');
+            Route::get('/company-activity', [App\Http\Controllers\AdminCompanyActivityController::class, 'index'])
+                ->name('company-activity');
             
+            Route::get('/company-activity/stats', [App\Http\Controllers\AdminCompanyActivityController::class, 'getActivityStats'])
+                ->name('company-activity.stats');
+            
+            Route::get('/company-activity/{id}/details', [App\Http\Controllers\AdminCompanyActivityController::class, 'getCompanyDetails'])
+                ->name('company-activity.details');
+            
+            Route::get('/company-activity/chart/data', [App\Http\Controllers\AdminCompanyActivityController::class, 'getChartData'])
+                ->name('company-activity.chart');
+            
+            // Export routes
+            Route::get('/company-activity/export/pdf', [App\Http\Controllers\AdminCompanyActivityController::class, 'exportPDF'])
+                ->name('company-activity.export.pdf');
+            
+            Route::get('/company-activity/export/excel', [App\Http\Controllers\AdminCompanyActivityController::class, 'exportExcel'])
+                ->name('company-activity.export.excel');
+      
         });
 
         // Change Password
