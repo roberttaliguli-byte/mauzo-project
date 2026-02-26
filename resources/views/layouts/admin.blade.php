@@ -442,13 +442,15 @@
 @php
   $navItems = [
       ['route' => 'admin.dashboard', 'icon' => 'fas fa-building', 'label' => 'Makampuni'],
-      ['route' => 'admin.company-activity', 'icon' => 'fas fa-chart-line', 'label' => 'Shughuli za Makampuni'], // NEW
+      ['route' => 'admin.company-activity', 'icon' => 'fas fa-chart-line', 'label' => 'Shughuli za Makampuni'],
+      ['route' => 'admin.payments.index', 'icon' => 'fas fa-credit-card', 'label' => 'Malipo'], // NEW PAYMENT TAB
       ['route' => 'admin.reports', 'icon' => 'fas fa-chart-bar', 'label' => 'Ripoti'],
       ['route' => 'password.change', 'icon' => 'fas fa-key', 'label' => 'Badili Neno Siri'],
       ['route' => 'logout', 'icon' => 'fas fa-sign-out-alt', 'label' => 'Toka', 'logout' => true],
   ];
   $currentRoute = request()->route()->getName();
 @endphp
+
 
     <nav class="flex-1 py-4">
       @foreach($navItems as $item)
@@ -551,8 +553,7 @@
   @click.away="openNotifications = false" 
   x-cloak
   x-transition
-  class="dropdown-menu"
-  style="width: 350px; max-width: calc(100vw - 2rem);"
+class="dropdown-menu w-[90vw] sm:w-[420px] lg:w-[480px] max-w-[95vw]"
   x-bind:style="window.innerWidth <= 640 ? 'position: fixed; left: 50%; top: 4rem; transform: translateX(-50%); right: auto;' : ''"
 >
             <!-- Header -->
@@ -653,6 +654,7 @@
                   <i class="fas fa-check mr-1"></i> Weka Zote Zimesomwa
                 </button>
               </div>
+              
             </div>
           </div>
         </div>

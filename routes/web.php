@@ -57,7 +57,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])
     ->name('password.update');
 
 // =========================
-// Low Stock API Route - ADD THIS SECTION
+// Low Stock API Route
 // =========================
 Route::middleware(['auth'])->get('/api/low-stock-products', function(Request $request) {
     try {
@@ -143,6 +143,7 @@ Route::middleware(['auth'])->prefix('reports')->group(function () {
 // Make sure uchambuzi route exists
 Route::get('/uchambuzi', [DashboardController::class, 'index'])->name('uchambuzi.index');
 
+// =========================
 // Admin routes
 // =========================
 Route::middleware(['auth', 'role:admin'])
@@ -165,7 +166,7 @@ Route::middleware(['auth', 'role:admin'])
             Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
                 ->name('reports.download-companies');
 
-                        // Company Activity Routes
+            // Company Activity Routes
             Route::get('/company-activity', [App\Http\Controllers\AdminCompanyActivityController::class, 'index'])
                 ->name('company-activity');
             
@@ -184,7 +185,6 @@ Route::middleware(['auth', 'role:admin'])
             
             Route::get('/company-activity/export/excel', [App\Http\Controllers\AdminCompanyActivityController::class, 'exportExcel'])
                 ->name('company-activity.export.excel');
-      
         });
 
         // Change Password
@@ -199,7 +199,116 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/company/{id}', [AdminController::class, 'destroyCompany'])->name('destroyCompany');
 
         Route::post('/companies/{id}/set-package', [AdminController::class, 'setPackageTime'])->name('setPackageTime');
+        
+        // =========================
+        // Admin Payment Routes - MOVED INSIDE EXISTING ADMIN GROUP
+        // =========================
+        Route::resource('payments', App\Http\Controllers\Admin\PaymentController::class)
+            ->only(['index', 'show']);
+                Route::get('/company/{id}', [CompanyController::class, 'show'])
+        ->name('company.show');
+        
+        Route::post('/payments/{id}/verify', [App\Http\Controllers\Admin\PaymentController::class, 'verifyPayment'])
+            ->name('payments.verify');
+        
+        Route::get('/payments/export', [App\Http\Controllers\Admin\PaymentController::class, 'export'])
+            ->name('payments.export');
     });
+
+// =========================
+// API route for admin notifications (outside admin group but still protected)
+// =========================
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    // API for new companies notification
+    Route::get('/api/admin/new-companies', function() {
+        // Get companies registered in the last 7 days
+        $newCompanies = \App\Models\Company::with('user')
+            ->where('created_at', '>=', now()->subDays(7))
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get([
+                'id', 
+                'company_name', 
+                'owner_name', 
+                'phone', 
+                'email', 
+                'is_verified',
+                'is_user_approved',
+                'package',
+                'package_start',
+                'package_end',
+                'created_at'
+            ]);
+        
+        return response()->json([
+            'success' => true,
+            'count' => $newCompanies->count(),
+            'companies' => $newCompanies
+        ]);
+    })->name('api.admin.new-companies');
+});
+
+// =========================
+// Payment routes (protected by auth)
+// =========================
+Route::middleware(['auth'])->group(function () {
+    // Package selection and payment
+    Route::get('/package-selection', [App\Http\Controllers\PaymentController::class, 'showPackageSelection'])
+        ->name('payment.package.selection');
+    
+    Route::match(['get', 'post'], '/payment/form', [App\Http\Controllers\PaymentController::class, 'showPaymentForm'])
+        ->name('payment.form');
+    
+    Route::post('/payment/process', [App\Http\Controllers\PaymentController::class, 'processPayment'])
+        ->name('payment.process');
+    
+    Route::get('/payment/success/{reference}', [App\Http\Controllers\PaymentController::class, 'paymentSuccess'])
+        ->name('payment.success');
+    
+    Route::get('/payment/failed', [App\Http\Controllers\PaymentController::class, 'paymentFailed'])
+        ->name('payment.failed');
+    
+    Route::get('/payment/status/{reference}', [App\Http\Controllers\PaymentController::class, 'paymentStatus'])
+        ->name('payment.status');
+    
+    Route::get('/payment/retry/{id}', [App\Http\Controllers\PaymentController::class, 'retryPayment'])
+        ->name('payment.retry');
+});
+// Add this temporarily to debug - place it right after your other payment routes
+Route::get('/debug-payment-flow', function() {
+    $user = Auth::user();
+    if (!$user) {
+        return redirect()->route('login');
+    }
+    
+    // Log the referer
+    Log::info('Debug payment flow accessed', [
+        'url' => url()->previous(),
+        'referer' => request()->headers->get('referer'),
+        'user_id' => $user->id,
+        'company_id' => $user->company_id
+    ]);
+    
+    return response()->json([
+        'message' => 'Debug endpoint',
+        'previous_url' => url()->previous(),
+        'referer' => request()->headers->get('referer'),
+        'user' => $user->only(['id', 'name', 'email', 'role']),
+        'company' => $user->company ? $user->company->only(['id', 'company_name', 'package_end']) : null,
+        'session' => session()->all()
+    ]);
+})->name('debug.payment.flow');
+
+// =========================
+// PesaPal callbacks (public)
+// =========================
+Route::get('/pesapal/callback', [App\Http\Controllers\PaymentController::class, 'callback'])
+    ->name('pesapal.callback');
+
+Route::post('/pesapal/ipn', [App\Http\Controllers\PaymentController::class, 'ipn'])
+    ->name('pesapal.ipn');
+
+Route::get('/pesapal/ipn', [App\Http\Controllers\PaymentController::class, 'ipn']); // For GET requests
 
 // ================================
 // Wateja Routes
@@ -221,7 +330,9 @@ Route::delete('/matumizi/aina/{id}', [MatumiziController::class, 'destroyAina'])
 
 // PDF Export Routes
 Route::get('/matumizi/export-pdf', [MatumiziController::class, 'exportPDF'])->name('matumizi.export.pdf');
-Route::get('/matumizi/export-report-pdf', [MatumiziController::class, 'exportReportPDF'])->name('matumizi.export.report.pdf');// ================================
+Route::get('/matumizi/export-report-pdf', [MatumiziController::class, 'exportReportPDF'])->name('matumizi.export.report.pdf');
+
+// ================================
 // Wafanyakazi Routes
 // ================================
 Route::get('/wafanyakazi', [WafanyakaziController::class, 'index'])->name('wafanyakazi.index');
@@ -294,6 +405,7 @@ Route::get('/bidhaa/download-sample', [BidhaaController::class, 'downloadSample'
 // === BARCODE ROUTES ===
 Route::post('/bidhaa/barcode', [BidhaaController::class, 'storeBarcode'])->name('bidhaa.store.barcode');
 Route::get('/bidhaa/tafuta-barcode/{barcode}', [BidhaaController::class, 'tafutaBarcode'])->name('bidhaa.tafuta.barcode');
+
 // ================================
 // Manunuzi Routes
 // ================================
@@ -305,52 +417,32 @@ Route::delete('/manunuzi/{manunuzi}', [ManunuziController::class, 'destroy'])->n
 // ================================
 // Madeni Routes
 // ================================
-Route::get('/madeni', [MadeniController::class, 'index'])->name('madeni.index');
-Route::get('/madeni/{madeni}/data', [MadeniController::class, 'getDebtData'])->name('madeni.data');
-Route::post('/madeni', [MadeniController::class, 'store'])->name('madeni.store');
-Route::get('/madeni/{madeni}/edit', [MadeniController::class, 'edit'])->name('madeni.edit');
-Route::put('/madeni/{madeni}', [MadeniController::class, 'update'])->name('madeni.update');
-Route::post('/madeni/{madeni}/rejesha', [MadeniController::class, 'rejesha'])->name('madeni.rejesha');
-Route::delete('/madeni/{madeni}', [MadeniController::class, 'destroy'])->name('madeni.destroy');
-Route::get('/madeni/export', [MadeniController::class, 'export'])->name('madeni.export');
-// Add these new report routes
-Route::get('/madeni/report/pdf', [MadeniController::class, 'reportPdf'])->name('madeni.report.pdf');
-Route::get('/madeni/report/excel', [MadeniController::class, 'reportExcel'])->name('madeni.report.excel');
+Route::prefix('madeni')->group(function () {
+    Route::get('/', [MadeniController::class, 'index'])->name('madeni.index');
+    Route::post('/', [MadeniController::class, 'store'])->name('madeni.store');
+    Route::get('/search', [MadeniController::class, 'search'])->name('madeni.search');
+    Route::get('/borrower-debts', [MadeniController::class, 'borrowerDebts'])->name('madeni.borrower.debts');
+    Route::post('/{madeni}/rejesha', [MadeniController::class, 'rejesha'])->name('madeni.rejesha');
+    Route::put('/{madeni}', [MadeniController::class, 'update'])->name('madeni.update');
+    Route::delete('/{madeni}', [MadeniController::class, 'destroy'])->name('madeni.destroy');
+    Route::get('/export', [MadeniController::class, 'export'])->name('madeni.export');
+    Route::get('/report/pdf', [MadeniController::class, 'reportPdf'])->name('madeni.report.pdf');
+    Route::get('/report/excel', [MadeniController::class, 'reportExcel'])->name('madeni.report.excel');
+});
+
 // ================================
 // Uchambuzi Routes
+// ================================
 Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
 // Add this route for the custom date range
 Route::get('/uchambuzi/mwenendo', [UchambuziController::class, 'mwenendoRange'])->name('uchambuzi.mwenendo.range');
 
-// In routes/web.php (before or after the admin routes group)
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    // ... other admin routes ...
-    
-    // API for new companies notification
-    Route::get('/api/admin/new-companies', function() {
-        // Get companies registered in the last 7 days
-        $newCompanies = \App\Models\Company::with('user')
-            ->where('created_at', '>=', now()->subDays(7))
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get([
-                'id', 
-                'company_name', 
-                'owner_name', 
-                'phone', 
-                'email', 
-                'is_verified',
-                'is_user_approved',
-                'package',
-                'package_start',
-                'package_end',
-                'created_at'
-            ]);
-        
-        return response()->json([
-            'success' => true,
-            'count' => $newCompanies->count(),
-            'companies' => $newCompanies
-        ]);
-    })->name('api.admin.new-companies');
+// Add to routes/web.php temporarily
+Route::get('/ngrok-test', function() {
+    return response()->json([
+        'message' => 'ngrok is working with Laravel!',
+        'app_url' => config('app.url'),
+        'environment' => app()->environment(),
+        'time' => now()->toDateTimeString()
+    ]);
 });

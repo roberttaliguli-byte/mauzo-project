@@ -1268,8 +1268,21 @@
 }
 
 .tab-button.active {
-    border-bottom-color: white !important;
+    border-bottom: 2px solid white !important;
     color: white !important;
+    font-weight: 600 !important;
+}
+
+/* Ensure inactive tabs don't have the border */
+.tab-button:not(.active) {
+    border-bottom: 2px solid transparent !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Hover effect for inactive tabs */
+.tab-button:not(.active):hover {
+    color: white !important;
+    border-bottom-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .card-hover {

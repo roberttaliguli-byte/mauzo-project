@@ -467,18 +467,13 @@
         <form action="{{ route('admin.setPackageTime', $company->id) }}" method="POST" class="p-4 md:p-6 space-y-4 md:space-y-6">
             @csrf
             
-            <!-- Package Selection -->
-            <div class="space-y-2 md:space-y-3">
-                <label for="package" class="block text-xs md:text-sm font-semibold text-gray-900 flex items-center space-x-2">
-                    <i class="fas fa-box text-blue-600 text-xs md:text-sm"></i>
-                    <span>Chagua Kifurushi</span>
-                </label>
-                <select name="package" id="package" class="w-full border border-gray-300 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-xs md:text-sm">
-                    <option value="Free Trial 14 days">📅 Free Trial - Siku 14</option>
-                    <option value="180 days">🚀 Kifurushi cha Siku 180</option>
-                    <option value="366 days">⭐ Kifurushi cha Siku 366</option>
-                </select>
-            </div>
+<!-- Package Selection Dropdown - Update options -->
+<select name="package" id="package" class="w-full border border-gray-300 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-xs md:text-sm">
+    <option value="Free Trial 14 days">📅 Free Trial - Siku 14 (TZS 0)</option>
+    <option value="30 days">🚀 Siku 30 - TZS 15,000</option>
+    <option value="180 days">⭐ Siku 180 - TZS 75,000 (Punguzo: TZS 15,000)</option>
+    <option value="366 days">👑 Siku 366 - TZS 150,000 (Punguzo: TZS 30,000)</option>
+</select>
 
             <!-- Start Date -->
             <div class="space-y-2 md:space-y-3">

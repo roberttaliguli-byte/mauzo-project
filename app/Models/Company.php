@@ -3,17 +3,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Support\Carbon;
 class Company extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
+// In App\Models\Company.php - Add these to $fillable array
+protected $fillable = [
     'company_name', 'owner_name', 'owner_gender', 'owner_dob',
     'location', 'region', 'phone', 'email',
-    'is_verified', 'package', 'database_name'
+    'is_verified', 'package', 'database_name', 
+    'package_start', 'package_end', 'is_user_approved' // Add these
 ];
-
+protected $attributes = [
+    'subscription_status' => 'active',
+];
 
     public function users()
     {
@@ -171,4 +175,46 @@ public function getWeeklyActivity()
     }
     return $data;
 }
+// In app/Models/Company.php
+
+public function payments()
+{
+    return $this->hasMany(Payment::class);
+}
+
+// Helper method to check if company has active package
+public function hasActivePackage()
+{
+    return $this->package_end && Carbon::parse($this->package_end)->isFuture();
+}
+
+// Helper to get days left
+public function getDaysLeftAttribute()
+{
+    if (!$this->package_end) {
+        return 0;
+    }
+    
+    return Carbon::now()->diffInDays(Carbon::parse($this->package_end), false);
+}
+
+// In App\Models\Company.php - Add helper method
+public function getPackagePriceAttribute()
+{
+    $prices = [
+        'Free Trial 14 days' => 0,
+        '30 days' => 15000,
+        '180 days' => 75000,
+        '366 days' => 150000
+    ];
+    
+    return $prices[$this->package] ?? 0;
+}
+
+public function getPackagePriceFormattedAttribute()
+{
+    $price = $this->package_price;
+    return $price > 0 ? 'TZS ' . number_format($price) : 'Bure';
+}
+
 }

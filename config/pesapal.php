@@ -1,36 +1,18 @@
 <?php
+// config/pesapal.php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Environment
-    |--------------------------------------------------------------------------
-    | Set the environment you want to use.
-    | Available options: sandbox, live
-    */
-    'environment' => env('PESAPAL_ENVIRONMENT', 'sandbox'),
+    'env' => env('PESAPAL_ENV', 'sandbox'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Consumer Key
-    |--------------------------------------------------------------------------
-    | The consumer key obtained from the Pesapal dashboard.
-    */
     'consumer_key' => env('PESAPAL_CONSUMER_KEY'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Consumer Secret
-    |--------------------------------------------------------------------------
-    | The consumer secret obtained from the Pesapal dashboard.
-    */
     'consumer_secret' => env('PESAPAL_CONSUMER_SECRET'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Callback URL
-    |--------------------------------------------------------------------------
-    | The URL where Pesapal will redirect after payment.
-    */
-    'callback_url' => env('PESAPAL_CALLBACK_URL'),
+    'base_url' => env('PESAPAL_BASE_URL', 'https://cybqa.pesapal.com/pesapalv3'),
+
+    'callback_url' => env('PESAPAL_CALLBACK_URL', 'https://www.mauzosheetai.co.tz/pesapal/callback'),
+
+    'ipn_url' => env('PESAPAL_IPN_URL', 'https://www.mauzosheetai.co.tz/pesapal/ipn'),
+    
+    'live_ipn_id' => env('PESAPAL_LIVE_IPN_ID'), // Add this line
 ];

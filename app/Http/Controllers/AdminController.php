@@ -52,12 +52,12 @@ class AdminController extends Controller
 
 
 /**
- * Set package and time for a company.
+ * Set package and time for a company with pricing
  */
 public function setPackageTime(Request $request, $id)
 {
     $request->validate([
-        'package' => 'required|string',
+        'package' => 'required|string|in:Free Trial 14 days,30 days,180 days,366 days',
         'start_date' => 'required|date'
     ]);
 
@@ -66,10 +66,21 @@ public function setPackageTime(Request $request, $id)
     $package = $request->package;
     $start_date = Carbon::parse($request->start_date);
 
+    // Define package prices
+    $prices = [
+        'Free Trial 14 days' => 0,
+        '30 days' => 15000,
+        '180 days' => 75000,
+        '366 days' => 150000
+    ];
+
     // Determine end date based on package
     switch($package){
         case 'Free Trial 14 days':
             $end_date = $start_date->copy()->addDays(14);
+            break;
+        case '30 days':
+            $end_date = $start_date->copy()->addDays(30);
             break;
         case '180 days':
             $end_date = $start_date->copy()->addDays(180);
@@ -81,15 +92,34 @@ public function setPackageTime(Request $request, $id)
             $end_date = $start_date;
     }
 
-    // Save both start and end dates
+    // Save package details
     $company->package = $package;
     $company->package_start = $start_date;
-    $company->package_end = $end_date; // This is crucial!
+    $company->package_end = $end_date;
     $company->save();
 
-    return redirect()->back()->with('success', "Kifurushi cha {$company->company_name} kimewekwa!");
-}
+    // Calculate discount percentage
+    $discount = 0;
+    if ($package === '180 days') {
+        $monthlyPrice = 15000 * 6; // 6 months at monthly rate = 90,000
+        $discount = 15000; // 75,000 vs 90,000 = 15,000 discount (16.67%)
+    } elseif ($package === '366 days') {
+        $monthlyPrice = 15000 * 12; // 12 months at monthly rate = 180,000
+        $discount = 30000; // 150,000 vs 180,000 = 30,000 discount (16.67%)
+    }
 
+    $priceMessage = $package !== 'Free Trial 14 days' 
+        ? " (Bei: TZS " . number_format($prices[$package]) . ")" 
+        : "";
+    
+    $discountMessage = $discount > 0 
+        ? " Umepata punguzo la TZS " . number_format($discount) . "!" 
+        : "";
+
+    return redirect()->back()->with('success', 
+        "Kifurushi cha {$company->company_name} kimewekwa: {$package}{$priceMessage}.{$discountMessage}"
+    );
+}
     /**
      * Verify the company.
      */

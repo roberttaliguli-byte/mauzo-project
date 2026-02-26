@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Wafanyakazi;
 use App\Models\LoginHistory;
 use DateTime;
+use Carbon\Carbon; // Add this line
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,37 +67,45 @@ class AuthController extends Controller
     /**
      * Handle company + user registration
      */
-    public function registerPost(Request $request)
-    {
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
-            'owner_name'   => 'required|string|max:255',
-            'owner_gender' => ['required', Rule::in(['male', 'female', 'other'])],
-            'owner_dob'    => 'required|date',
-            'location'     => 'required|string|max:255',
-            'region'       => 'required|string|max:255',
-            'phone'        => 'required|string|max:50',
-            'company_email' => 'required|email|max:255|unique:users,email',
+// After creating the company, add package_start and package_end
+public function registerPost(Request $request)
+{
+    $validated = $request->validate([
+        'company_name' => 'required|string|max:255',
+        'owner_name'   => 'required|string|max:255',
+        'owner_gender' => ['required', Rule::in(['male', 'female', 'other'])],
+        'owner_dob'    => 'required|date',
+        'location'     => 'required|string|max:255',
+        'region'       => 'required|string|max:255',
+        'phone'        => 'required|string|max:50',
+        'company_email' => 'required|email|max:255|unique:users,email',
+        'username'     => 'required|string|max:50|unique:users,username',
+        'password'     => 'required|string|min:6|confirmed',
+    ], [
+        'company_email.unique' => 'Barua pepe hii tayari imesajiliwa.',
+        'username.unique' => 'Jina la mtumiaji tayari limetumika.',
+    ]);
 
-            'username'     => 'required|string|max:50|unique:users,username',
-            'password'     => 'required|string|min:6|confirmed',
-        ], [
-            'company_email.unique' => 'Barua pepe hii tayari imesajiliwa.',
-            'username.unique' => 'Jina la mtumiaji tayari limetumika.',
-        ]);
+    // Set default package dates for free trial
+    $now = Carbon::now();
+    $packageEnd = $now->copy()->addDays(14); // 14 days free trial
 
-        // Create the company
-        $company = Company::create([
-            'company_name' => $validated['company_name'],
-            'owner_name'   => $validated['owner_name'],
-            'owner_gender' => $validated['owner_gender'],
-            'owner_dob'    => $validated['owner_dob'],
-            'location'     => $validated['location'],
-            'region'       => $validated['region'],
-            'phone'        => $validated['phone'],
-            'email'        => $validated['company_email'],
-            'is_user_approved' => 0,
-        ]);
+    // Create the company with default package
+    $company = Company::create([
+        'company_name' => $validated['company_name'],
+        'owner_name'   => $validated['owner_name'],
+        'owner_gender' => $validated['owner_gender'],
+        'owner_dob'    => $validated['owner_dob'],
+        'location'     => $validated['location'],
+        'region'       => $validated['region'],
+        'phone'        => $validated['phone'],
+        'email'        => $validated['company_email'],
+        'is_user_approved' => 0,
+        'package' => 'Free Trial 14 days', // Set default package
+        'package_start' => $now,
+        'package_end' => $packageEnd,
+    ]);
+
 
         // Generate email verification token
         $token = Str::random(40);
@@ -171,27 +180,8 @@ class AuthController extends Controller
     }
 
     /**
-     * Helper method to get or create system company for admins
+     * Handle login attempts
      */
-    private function getSystemCompany()
-    {
-        return Company::firstOrCreate(
-            ['company_name' => 'Mauzo System'],
-            [
-                'owner_name' => 'System Administrator',
-                'owner_gender' => 'other',
-                'owner_dob' => now()->subYears(30)->format('Y-m-d'),
-                'location' => 'System',
-                'region' => 'System',
-                'phone' => '0000000000',
-                'email' => 'system@mauzosheetai.co.tz',
-                'is_verified' => 1,
-                'is_user_approved' => 1,
-                'package' => 'System Account',
-            ]
-        );
-    }
-
     public function loginPost(Request $request)
     {
         $credentials = $request->validate([
@@ -199,7 +189,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // 1️⃣ Admin login (role = 'admin')
+        // 1️⃣ Admin login (role = 'admin') - NO TRACKING
         if (Auth::guard('web')->attempt([
             'username' => $credentials['username'],
             'password' => $credentials['password'],
@@ -209,43 +199,19 @@ class AuthController extends Controller
 
             $user = Auth::guard('web')->user();
             
-            // Update login tracking
+            // Update login tracking (only basic fields, no login history)
             $user->update([
                 'last_login_at' => now(),
                 'last_activity_at' => now(),
                 'login_count' => $user->login_count + 1
             ]);
 
-            // Handle admin login history - use system company if no company_id
-            if ($user->company_id) {
-                // Admin has a company assigned
-                LoginHistory::create([
-                    'user_id' => $user->id,
-                    'company_id' => $user->company_id,
-                    'login_at' => now(),
-                    'ip_address' => $request->ip()
-                ]);
-            } else {
-                // Admin doesn't have a company - use system company
-                $systemCompany = $this->getSystemCompany();
-                
-                LoginHistory::create([
-                    'user_id' => $user->id,
-                    'company_id' => $systemCompany->id,
-                    'login_at' => now(),
-                    'ip_address' => $request->ip()
-                ]);
-                
-                // Optional: Assign system company to admin for future logins
-                // $user->update(['company_id' => $systemCompany->id]);
-            }
-
             $request->session()->regenerate();
             return redirect()->route('admin.dashboard')
                 ->with('success', 'Umeingia kama Msimamizi!');
         }
 
-        // 2️⃣ Boss/Owner login (role = 'boss')
+        // 2️⃣ Boss/Owner login (role = 'boss') - WITH TRACKING
         if (Auth::guard('web')->attempt([
             'username' => $credentials['username'],
             'password' => $credentials['password']
@@ -260,6 +226,7 @@ class AuthController extends Controller
                     ->onlyInput('username');
             }
 
+            // Validate boss has company and is approved
             if (!$user->company_id || !$user->company) {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Akaunti yako haijaunganishwa na kampuni yoyote. Wasiliana na msimamizi.'])
@@ -298,41 +265,56 @@ class AuthController extends Controller
                 ->with('success', 'Umeingia kama Mmiliki!');
         }
 
-        // 3️⃣ Employee login (role = 'mfanyakazi')
-        if (Auth::guard('mfanyakazi')->attempt([
-            'username' => $credentials['username'],
-            'password' => $credentials['password']
-        ], $request->boolean('remember'))) {
+// 3️⃣ Employee login (role = 'mfanyakazi') - WITH TRACKING AND PACKAGE CHECK
+if (Auth::guard('mfanyakazi')->attempt([
+    'username' => $credentials['username'],
+    'password' => $credentials['password']
+], $request->boolean('remember'))) {
 
-            $mfanyakazi = Auth::guard('mfanyakazi')->user();
+    $mfanyakazi = Auth::guard('mfanyakazi')->user();
 
-            if ($mfanyakazi->getini !== 'ingia') {
-                Auth::guard('mfanyakazi')->logout();
-                return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
-                    ->onlyInput('username');
-            }
+    if ($mfanyakazi->getini !== 'ingia') {
+        Auth::guard('mfanyakazi')->logout();
+        return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
+            ->onlyInput('username');
+    }
 
-            // Check if employee has company_id
-            if (!$mfanyakazi->company_id) {
-                Auth::guard('mfanyakazi')->logout();
-                return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
-                    ->onlyInput('username');
-            }
+    // Check if employee has company_id
+    if (!$mfanyakazi->company_id) {
+        Auth::guard('mfanyakazi')->logout();
+        return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
+            ->onlyInput('username');
+    }
 
-            // Update employee login tracking in wafanyakazis table
-            $mfanyakazi->update([
-                'last_login_at' => now(),
-                'last_activity_at' => now(),
-                'login_count' => ($mfanyakazi->login_count ?? 0) + 1
-            ]);
+    // ✅ CHECK COMPANY PACKAGE EXPIRY
+    $company = $mfanyakazi->company;
+    
+    // Check if package_end is null or expired
+    if (!$company || is_null($company->package_end) || \Carbon\Carbon::parse($company->package_end)->isPast()) {
+        Auth::guard('mfanyakazi')->logout();
+        
+        return back()->withErrors([
+            'login' => 'Samahani, kifurushi cha kampuni kimeisha muda. Wasiliana na mwajiri wako.'
+        ])->onlyInput('username');
+    }
 
-            // NOTE: We don't create login_history for employees because it references users table
-            // If you need employee login history, create a separate table or use polymorphic relation
+    // Update employee login tracking in wafanyakazis table
+    $mfanyakazi->update([
+        'last_login_at' => now(),
+        'last_activity_at' => now(),
+        'login_count' => ($mfanyakazi->login_count ?? 0) + 1
+    ]);
 
-            $request->session()->regenerate();
-            return redirect()->route('mauzo.index')
-                ->with('success', 'Umeingia kama Mfanyakazi!');
-        }
+    // Optional: Show warning if package expires soon
+    $daysLeft = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false);
+    if ($daysLeft <= 7 && $daysLeft > 0) {
+        session()->flash('warning', "Tahadhari: Kifurushi cha kampuni kitaisha muda baada ya siku {$daysLeft}. Tafadhali mjulishe mwajiri wako.");
+    }
+
+    $request->session()->regenerate();
+    return redirect()->route('mauzo.index')
+        ->with('success', 'Umeingia kama Mfanyakazi!');
+}
 
         // 4️⃣ Login failed
         return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
@@ -396,45 +378,49 @@ class AuthController extends Controller
                 $user->save();
 
                 event(new PasswordReset($user));
-
-                // Optional: auto-login after reset
-                Auth::login($user);
             }
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('dashboard')
-                            ->with('success', 'Neno la siri limebadilishwa kwa mafanikio! Unaingia sasa.');
+            return redirect()->route('login')
+                ->with('success', 'Neno la siri limebadilishwa kwa mafanikio! Tafadhali ingia tena.');
         }
 
         return back()->withErrors(['email' => 'Link ya kubadilisha neno la siri si sahihi au imeisha muda wake.']);
     }
 
+    /**
+     * Handle logout
+     */
     public function logout(Request $request)
     {
-        // Update logout time if user was logged in
+        // Update logout time for boss if logged in
         if (Auth::guard('web')->check()) {
             $user = Auth::guard('web')->user();
             
-            // Update last activity before logout
-            $user->update(['last_activity_at' => now()]);
-            
-            // Update logout time in login history
-            LoginHistory::where('user_id', $user->id)
-                ->whereNull('logout_at')
-                ->latest()
-                ->first()
-                ?->update(['logout_at' => now()]);
+            // Only update login history for bosses (not admins)
+            if ($user->role === 'boss') {
+                $user->update(['last_activity_at' => now()]);
+                
+                // Update logout time in login history
+                LoginHistory::where('user_id', $user->id)
+                    ->whereNull('logout_at')
+                    ->latest()
+                    ->first()
+                    ?->update(['logout_at' => now()]);
+            } else {
+                // Admin - just update basic tracking
+                $user->update(['last_activity_at' => now()]);
+            }
             
             Auth::guard('web')->logout();
         } 
+        // Update logout time for employee if logged in
         elseif (Auth::guard('mfanyakazi')->check()) {
             $mfanyakazi = Auth::guard('mfanyakazi')->user();
             
-            // Update employee last activity in wafanyakazis table
-            if (isset($mfanyakazi->last_activity_at)) {
-                $mfanyakazi->update(['last_activity_at' => now()]);
-            }
+            // Update employee last activity
+            $mfanyakazi->update(['last_activity_at' => now()]);
             
             Auth::guard('mfanyakazi')->logout();
         }

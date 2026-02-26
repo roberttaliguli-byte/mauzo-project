@@ -1,4 +1,5 @@
 <?php
+// bootstrap/app.php
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,11 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Add middleware to web group
         $middleware->web(append: [
             \App\Http\Middleware\UpdateUserActivity::class,
+            \App\Http\Middleware\CheckPackageExpiry::class, // Add this line
         ]);
         
-        // Keep your existing alias
+        // Register middleware aliases
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'check.package' => \App\Http\Middleware\CheckPackageExpiry::class, // Optional alias
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
