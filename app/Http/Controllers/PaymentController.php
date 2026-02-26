@@ -42,7 +42,6 @@ class PaymentController extends Controller
             return redirect()->route('dashboard')->with('info', 'Your package is still active');
         }
 
-        // Updated packages with correct pricing
         $packages = [
             '30 days' => [
                 'price' => 15000,
@@ -76,26 +75,24 @@ class PaymentController extends Controller
         if ($request->isMethod('get')) {
             $package = $request->query('package');
             
-            // If no package in query string, check session
             if (!$package) {
                 $package = session('selected_package');
             }
             
-            // If still no package, redirect to package selection
             if (!$package) {
                 return redirect()->route('payment.package.selection')
-                    ->with('error', 'Tafadhali chagua kifurushi kwanza.');
+                    ->with('error', 'Tafadhali chagua kifurushi kwanza.')
+                    ->header('ngrok-skip-browser-warning', 'true');
             }
             
-            // Validate package - REMOVED FREE TRIAL FROM VALIDATION
             if (!in_array($package, ['30 days', '180 days', '366 days'])) {
                 return redirect()->route('payment.package.selection')
-                    ->with('error', 'Kifurushi si sahihi.');
+                    ->with('error', 'Kifurushi si sahihi.')
+                    ->header('ngrok-skip-browser-warning', 'true');
             }
         } else {
-            // Handle POST request (normal flow)
             $request->validate([
-                'package' => 'required|in:30 days,180 days,366 days' // Removed Free Trial
+                'package' => 'required|in:30 days,180 days,366 days'
             ]);
             $package = $request->package;
         }
@@ -104,7 +101,6 @@ class PaymentController extends Controller
         $company = $user->company;
         $amount = Payment::getPackageAmount($package);
 
-        // Store package in session for GET requests
         session(['selected_package' => $package]);
 
         return view('payments.payment-form', compact('company', 'package', 'amount'));
@@ -122,7 +118,7 @@ class PaymentController extends Controller
         ]);
 
         $request->validate([
-            'package' => 'required|in:30 days,180 days,366 days', // Updated validation
+            'package' => 'required|in:30 days,180 days,366 days',
             'phone_number' => 'required|string|max:15',
             'payment_method' => 'required|in:TIGO,VODACOM,AIRTEL'
         ]);
@@ -141,7 +137,6 @@ class PaymentController extends Controller
         DB::beginTransaction();
 
         try {
-            // Create payment record
             $payment = Payment::create([
                 'company_id' => $company->id,
                 'transaction_reference' => Payment::generateTransactionReference(),
@@ -156,8 +151,6 @@ class PaymentController extends Controller
 
             Log::info('Payment record created', ['payment_id' => $payment->id]);
 
-            // Get PesaPal token
-            Log::info('Requesting PesaPal token...');
             $token = $this->pesapalService->getAccessToken();
             
             if (!$token) {
@@ -166,21 +159,16 @@ class PaymentController extends Controller
 
             Log::info('PesaPal token received');
 
-            // Register IPN if needed
-            Log::info('Registering IPN...');
             $ipnResponse = $this->pesapalService->registerIPN($token);
             Log::info('IPN response', ['ipn_response' => $ipnResponse]);
             
-            // Prepare order data
             $orderData = $this->pesapalService->prepareOrderData($payment, $company, $user);
             
-            // Update with actual notification ID if you got it from registerIPN
             if ($ipnResponse && isset($ipnResponse['ipn_id'])) {
                 $orderData['notification_id'] = $ipnResponse['ipn_id'];
             }
 
             Log::info('Submitting order to PesaPal...');
-            // Submit order to PesaPal
             $orderResponse = $this->pesapalService->submitOrder($token, $orderData);
 
             Log::info('PesaPal order response', ['response' => $orderResponse]);
@@ -189,7 +177,6 @@ class PaymentController extends Controller
                 throw new \Exception('Failed to submit order to PesaPal: ' . json_encode($orderResponse));
             }
 
-            // Update payment with tracking ID
             $payment->update([
                 'pesapal_transaction_tracking_id' => $orderResponse['order_tracking_id'],
                 'payment_response_data' => $orderResponse
@@ -201,7 +188,6 @@ class PaymentController extends Controller
                 'tracking_id' => $orderResponse['order_tracking_id']
             ]);
 
-            // For mobile money, show PIN prompt instructions with ngrok header
             return response()
                 ->view('payments.payment-prompt', [
                     'payment' => $payment,
@@ -235,7 +221,6 @@ class PaymentController extends Controller
                 ->header('ngrok-skip-browser-warning', 'true');
         }
 
-        // Find payment
         $payment = Payment::where('pesapal_transaction_tracking_id', $orderTrackingId)
             ->orWhere('merchant_reference', $orderMerchantReference)
             ->first();
@@ -247,7 +232,6 @@ class PaymentController extends Controller
                 ->header('ngrok-skip-browser-warning', 'true');
         }
 
-        // Get transaction status
         $token = $this->pesapalService->getAccessToken();
         $statusResponse = $this->pesapalService->getTransactionStatus($token, $orderTrackingId);
 
@@ -274,17 +258,19 @@ class PaymentController extends Controller
     }
 
     /**
-     * IPN (Instant Payment Notification) handler
+     * IPN (Instant Payment Notification) handler - FIXED with proper response format
      */
     public function ipn(Request $request)
     {
-        Log::info('PesaPal IPN received', $request->all());
+        Log::info('🔔 PesaPal IPN received', $request->all());
 
         $orderTrackingId = $request->input('OrderTrackingId');
         $orderMerchantReference = $request->input('OrderMerchantReference');
+        $pesapalNotification = $request->input('pesapal_notification_type');
 
         if (!$orderTrackingId) {
-            return response()->json(['error' => 'Invalid request'], 400);
+            Log::error('Invalid IPN - missing tracking ID');
+            return response('Invalid request', 400);
         }
 
         $payment = Payment::where('pesapal_transaction_tracking_id', $orderTrackingId)
@@ -292,8 +278,11 @@ class PaymentController extends Controller
             ->first();
 
         if (!$payment) {
-            Log::error('Payment not found for IPN', $request->all());
-            return response()->json(['error' => 'Payment not found'], 404);
+            Log::error('Payment not found for IPN', [
+                'tracking_id' => $orderTrackingId,
+                'merchant_ref' => $orderMerchantReference
+            ]);
+            return response('Payment not found', 404);
         }
 
         // Get transaction status
@@ -301,21 +290,30 @@ class PaymentController extends Controller
         $statusResponse = $this->pesapalService->getTransactionStatus($token, $orderTrackingId);
 
         if ($statusResponse && isset($statusResponse['status_code'])) {
+            $newStatus = $this->mapPesaPalStatus($statusResponse['status_code']);
+            
             $payment->update([
                 'ipn_data' => $request->all(),
                 'payment_response_data' => array_merge($payment->payment_response_data ?? [], [
                     'ipn_status' => $statusResponse
                 ]),
-                'status' => $this->mapPesaPalStatus($statusResponse['status_code'])
+                'status' => $newStatus
             ]);
 
-            // If payment completed, activate package
-            if ($payment->status === 'completed') {
+            if ($newStatus === 'completed') {
                 $this->activatePackage($payment);
             }
         }
 
-        return response()->json(['status' => 'received']);
+        // CRITICAL: PesaPal requires this EXACT response format
+        $responseString = "pesapal_notification_type=$pesapal_notification&"
+            . "pesapal_transaction_tracking_id=$orderTrackingId&"
+            . "pesapal_merchant_reference=$orderMerchantReference";
+        
+        Log::info('📤 Sending IPN response', ['response' => $responseString]);
+        
+        return response($responseString)
+            ->header('Content-Type', 'text/plain');
     }
 
     /**
@@ -374,13 +372,11 @@ class PaymentController extends Controller
                 $end_date = $start_date->copy()->addDays(30);
         }
 
-        // Update company package
         $company->package = $payment->package_type;
         $company->package_start = $start_date;
         $company->package_end = $end_date;
         $company->save();
 
-        // Update payment with expiry date
         $payment->update([
             'payment_date' => now(),
             'expiry_date' => $end_date
@@ -398,18 +394,24 @@ class PaymentController extends Controller
      */
     protected function formatPhoneNumber($phone)
     {
-        // Remove any non-numeric characters
         $phone = preg_replace('/[^0-9]/', '', $phone);
         
-        // If starts with 0, replace with 255
         if (substr($phone, 0, 1) === '0') {
             $phone = '255' . substr($phone, 1);
         }
         
-        // If doesn't start with 255, add it
         if (substr($phone, 0, 3) !== '255') {
             $phone = '255' . $phone;
         }
+        
+        // Ensure it's exactly 12 digits for Tanzania
+        $phone = substr($phone, 0, 12);
+        
+        Log::info('Phone formatted', [
+            'original' => request()->phone_number,
+            'formatted' => $phone,
+            'length' => strlen($phone)
+        ]);
         
         return $phone;
     }
@@ -423,9 +425,9 @@ class PaymentController extends Controller
             '0' => 'pending',
             '1' => 'completed',
             '2' => 'failed',
-            '3' => 'pending', // Revoked
-            '4' => 'failed',   // Failed
-            '5' => 'cancelled' // Cancelled
+            '3' => 'pending',
+            '4' => 'failed',
+            '5' => 'cancelled'
         ];
 
         return $statusMap[$statusCode] ?? 'pending';

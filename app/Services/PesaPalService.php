@@ -104,6 +104,7 @@ class PesaPalService
             $url = $this->baseUrl . '/v3/api/Transactions/SubmitOrderRequest';
             
             Log::info('Submitting order to: ' . $url);
+            Log::info('Order data being sent', $orderData);
             
             $response = Http::withOptions([
                 'verify' => false,
@@ -117,6 +118,11 @@ class PesaPalService
             if ($response->successful()) {
                 $data = $response->json();
                 Log::info('Order submitted successfully', $data);
+                
+                if (isset($data['stk_status'])) {
+                    Log::info('STK push status', ['stk' => $data['stk_status']]);
+                }
+                
                 return $data;
             }
 
@@ -158,15 +164,26 @@ class PesaPalService
 
     public function prepareOrderData($payment, $company, $user)
     {
-        // Use live IPN ID for production, fallback to sandbox ID for testing
-        $notificationId = $this->environment === 'production' 
+        // Accept both 'production' and 'live' as production environments
+        $isProduction = in_array($this->environment, ['production', 'live']);
+        
+        $notificationId = $isProduction 
             ? $this->liveIpnId 
             : config('pesapal.ipn_id', '3ac40066-bd8c-4613-963b-dab051899923');
-            
-        return [
+        
+        // CRITICAL DEBUG - Remove after confirming
+        Log::info('🔴 IPN ID Selection Debug', [
+            'environment' => $this->environment,
+            'is_production' => $isProduction,
+            'notification_id_used' => $notificationId,
+            'live_ipn_id' => $this->liveIpnId,
+            'payment_id' => $payment->id
+        ]);
+        
+        $orderData = [
             'id' => $payment->merchant_reference,
             'currency' => 'TZS',
-            'amount' => $payment->amount,
+            'amount' => (int)$payment->amount, // Ensure it's integer
             'description' => 'Package Payment: ' . $payment->package_type . ' for ' . $company->company_name,
             'callback_url' => $this->callbackUrl,
             'notification_id' => $notificationId,
@@ -186,5 +203,20 @@ class PesaPalService
                 'zip_code' => '00000'
             ]
         ];
+        
+        // CRITICAL: Add payment method for STK push
+        if ($payment->payment_method) {
+            $orderData['payment_method'] = $payment->payment_method;
+            $orderData['phone_number'] = $payment->phone_number; // Explicit phone for STK
+        }
+        
+        Log::info('Final order data prepared', [
+            'has_payment_method' => isset($orderData['payment_method']),
+            'payment_method' => $orderData['payment_method'] ?? 'none',
+            'phone' => $orderData['billing_address']['phone_number'],
+            'amount' => $orderData['amount']
+        ]);
+        
+        return $orderData;
     }
 }
