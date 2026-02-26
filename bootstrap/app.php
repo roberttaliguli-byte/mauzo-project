@@ -15,13 +15,21 @@ return Application::configure(basePath: dirname(__DIR__))
         // Add middleware to web group
         $middleware->web(append: [
             \App\Http\Middleware\UpdateUserActivity::class,
-            \App\Http\Middleware\CheckPackageExpiry::class, // Add this line
+            \App\Http\Middleware\CheckPackageExpiry::class,
         ]);
         
         // Register middleware aliases
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'check.package' => \App\Http\Middleware\CheckPackageExpiry::class, // Optional alias
+            'check.package' => \App\Http\Middleware\CheckPackageExpiry::class,
+        ]);
+        
+        // 🔴🔴🔴 CRITICAL: Exclude PesaPal routes from CSRF protection
+        $middleware->validateCsrfTokens(except: [
+            'pesapal/ipn',
+            'pesapal/callback',
+            'payment/ipn',
+            'payment/callback',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
