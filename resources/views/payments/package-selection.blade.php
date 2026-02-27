@@ -147,7 +147,7 @@
                                 <td class="py-2">30 days</td>
                                 <td class="text-center">Mwezi 1</td>
                                 <td class="text-center font-medium">TZS 15,000</td>
-                                <td class="text-center">TZS 100</td>
+                                <td class="text-center">TZS 15000</td>
                                 <td class="text-center">-</td>
                             </tr>
                             <tr class="border-b border-gray-200">
