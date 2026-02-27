@@ -615,83 +615,94 @@
                             <th class="border px-3 py-2 text-left text-gray-700">Vitendo</th>
                         </tr>
                     </thead>
-                    <tbody id="sales-tbody">
-                        @php 
-                            $today = \Carbon\Carbon::today()->format('Y-m-d'); 
-                            
-                            function actualDiscount($sale) {
-                                return $sale->punguzo_aina === 'bidhaa'
-                                    ? $sale->punguzo * $sale->idadi
-                                    : $sale->punguzo;
-                            }
-                        @endphp
-                        
-                        @forelse($mauzos as $item)
-                            @php 
-                                $itemDate = $item->created_at->format('Y-m-d');
-                                $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
-                                $actualDiscount = actualDiscount($item);
-                                $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
-                                $total = $item->jumla;
-                                
-                                $paymentMethod = '';
-                                switch($item->lipa_kwa) {
-                                    case 'cash':
-                                        $paymentMethod = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>';
-                                        break;
-                                    case 'lipa_namba':
-                                        $paymentMethod = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>';
-                                        break;
-                                    case 'bank':
-                                        $paymentMethod = '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>';
-                                        break;
-                                    default:
-                                        $paymentMethod = '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>';
-                                }
-                            @endphp
-                            <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
-                                <td class="border px-3 py-2">
-                                    @if($itemDate === $today)
-                                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
-                                    @else
-                                        {{ $item->created_at->format('d/m/Y') }}
-                                    @endif
-                                </td>
-                                <td class="border px-3 py-2 font-mono">
-                                    @if($item->receipt_no)
-                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
-                                    @else
-                                        <span class="text-gray-400 text-xs">-</span>
-                                    @endif
-                                </td>
-                                <td class="border px-3 py-2">{{ $item->bidhaa->jina }}</td>
-                                <td class="border px-3 py-2 text-center">{{ number_format($item->idadi, 2) }}</td>
-                                <td class="border px-3 py-2 text-right">{{ number_format($item->bei, 2) }}</td>
-                                <td class="border px-3 py-2 text-right">{{ number_format($actualDiscount, 2) }}</td>
-                                @unless($isMfanyakazi)
-                                <td class="border px-3 py-2 text-right">{{ number_format($faida, 2) }}</td>
-                                @endunless
-                                <td class="border px-3 py-2 text-center">{!! $paymentMethod !!}</td>
-                                <td class="border px-3 py-2 text-right">{{ number_format($total, 2) }}</td>
-                                <td class="border px-3 py-2 text-center">
-                                    <div class="flex gap-1 justify-center">
-                                        @if($item->receipt_no)
-                                        <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
-                                            <i class="fas fa-print mr-1"></i>
-                                        </button>
-                                        @endif
-                                        <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
-                                            <i class="fas fa-trash mr-1"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="{{ $isMfanyakazi ? '9' : '10' }}" class="text-center py-4 text-gray-500">Hakuna mauzo yaliyorekodiwa bado.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+<!-- In the Taarifa tab content, update the table body section -->
+<tbody id="sales-tbody">
+    @php 
+        $today = \Carbon\Carbon::today()->format('Y-m-d'); 
+        
+        function actualDiscount($sale) {
+            return $sale->punguzo_aina === 'bidhaa'
+                ? $sale->punguzo * $sale->idadi
+                : $sale->punguzo;
+        }
+    @endphp
+    
+    @forelse($mauzos as $item)
+        @php 
+            $itemDate = $item->created_at->format('Y-m-d');
+            $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
+            $actualDiscount = actualDiscount($item);
+            $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
+            $total = $item->jumla;
+            
+            $paymentMethod = '';
+            switch($item->lipa_kwa) {
+                case 'cash':
+                    $paymentMethod = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>';
+                    break;
+                case 'lipa_namba':
+                    $paymentMethod = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>';
+                    break;
+                case 'bank':
+                    $paymentMethod = '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>';
+                    break;
+                default:
+                    $paymentMethod = '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>';
+            }
+        @endphp
+        <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
+            <td class="border px-3 py-2">
+                @if($itemDate === $today)
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
+                @else
+                    {{ $item->created_at->format('d/m/Y') }}
+                @endif
+            </td>
+            <td class="border px-3 py-2 font-mono">
+                @if($item->receipt_no)
+                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>
+                @else
+                    <span class="text-gray-400 text-xs">-</span>
+                @endif
+            </td>
+            <td class="border px-3 py-2">
+                <!-- MODIFIED: Now includes aina in the same column with bidhaa -->
+                <div class="flex items-center gap-2">
+                    <span class="font-medium">{{ $item->bidhaa->jina }}</span>
+                    @if($item->bidhaa->aina)
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
+                        {{ $item->bidhaa->aina }}
+                    </span>
+                    @endif
+                </div>
+            </td>
+            <td class="border px-3 py-2 text-center">{{ number_format($item->idadi, 2) }}</td>
+            <td class="border px-3 py-2 text-right">{{ number_format($item->bei, 2) }}</td>
+            <td class="border px-3 py-2 text-right">{{ number_format($actualDiscount, 2) }}</td>
+            @unless($isMfanyakazi)
+            <td class="border px-3 py-2 text-right">{{ number_format($faida, 2) }}</td>
+            @endunless
+            <td class="border px-3 py-2 text-center">{!! $paymentMethod !!}</td>
+            <td class="border px-3 py-2 text-right">{{ number_format($total, 2) }}</td>
+            <td class="border px-3 py-2 text-center">
+                <div class="flex gap-1 justify-center">
+                    @if($item->receipt_no)
+                    <button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-receipt-no="{{ $item->receipt_no }}">
+                        <i class="fas fa-print mr-1"></i>
+                    </button>
+                    @endif
+                    <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
+                        <i class="fas fa-trash mr-1"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="{{ $isMfanyakazi ? '9' : '10' }}" class="text-center py-4 text-gray-500">Hakuna mauzo yaliyorekodiwa bado.</td>
+        </tr>
+    @endforelse
+</tbody>
                 </table>
             </div>
 
@@ -774,50 +785,63 @@
                             @endunless
                         </tr>
                     </thead>
-                    <tbody id="grouped-sales-tbody">
-                        @php
-                            $groupedSales = [];
-                            foreach($allMauzos as $sale) {
-                                $date = $sale->created_at->format('Y-m-d');
-                                $product = $sale->bidhaa->jina;
-                                $key = $date . '|' . $product;
-                                
-                                if (!isset($groupedSales[$key])) {
-                                    $groupedSales[$key] = [
-                                        'tarehe' => $date,
-                                        'jina' => $product,
-                                        'idadi' => 0,
-                                        'punguzo' => 0,
-                                        'jumla' => 0,
-                                        'faida' => 0
-                                    ];
-                                }
-                                
-                                $groupedSales[$key]['idadi'] += $sale->idadi;
-                                $saleActualDiscount = $sale->punguzo_aina === 'bidhaa'
-                                    ? $sale->punguzo * $sale->idadi
-                                    : $sale->punguzo;
-                                $groupedSales[$key]['punguzo'] += $saleActualDiscount;
-                                $groupedSales[$key]['jumla'] += $sale->jumla;
-                                $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
-                                $saleProfit = (($sale->bei - $buyingPrice) * $sale->idadi) - $saleActualDiscount;
-                                $groupedSales[$key]['faida'] += $saleProfit;
-                            }
-                        @endphp
-                        
-                        @foreach($groupedSales as $sale)
-                        <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
-                            <td class="border px-3 py-2 text-sm">{{ $sale['tarehe'] }}</td>
-                            <td class="border px-3 py-2 text-sm">{{ $sale['jina'] }}</td>
-                            <td class="border px-3 py-2 text-center text-sm">{{ number_format($sale['idadi'], 2) }}</td>
-                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['punguzo'], 2) }}</td>
-                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['jumla'], 2) }}</td>
-                            @unless($isMfanyakazi)
-                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['faida'], 2) }}</td>
-                            @endunless
-                        </tr>
-                        @endforeach
-                    </tbody>
+
+<!-- In the Jumla tab content, update the table body section -->
+<tbody id="grouped-sales-tbody">
+    @php
+        $groupedSales = [];
+        foreach($allMauzos as $sale) {
+            $date = $sale->created_at->format('Y-m-d');
+            $product = $sale->bidhaa->jina;
+            $key = $date . '|' . $product;
+            
+            if (!isset($groupedSales[$key])) {
+                $groupedSales[$key] = [
+                    'tarehe' => $date,
+                    'jina' => $product,
+                    'aina' => $sale->bidhaa->aina ?? '',
+                    'idadi' => 0,
+                    'punguzo' => 0,
+                    'jumla' => 0,
+                    'faida' => 0
+                ];
+            }
+            
+            $groupedSales[$key]['idadi'] += $sale->idadi;
+            $saleActualDiscount = $sale->punguzo_aina === 'bidhaa'
+                ? $sale->punguzo * $sale->idadi
+                : $sale->punguzo;
+            $groupedSales[$key]['punguzo'] += $saleActualDiscount;
+            $groupedSales[$key]['jumla'] += $sale->jumla;
+            $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
+            $saleProfit = (($sale->bei - $buyingPrice) * $sale->idadi) - $saleActualDiscount;
+            $groupedSales[$key]['faida'] += $saleProfit;
+        }
+    @endphp
+    
+    @foreach($groupedSales as $sale)
+    <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
+        <td class="border px-3 py-2 text-sm">{{ $sale['tarehe'] }}</td>
+        <td class="border px-3 py-2 text-sm">
+            <!-- MODIFIED: Now includes aina in the same column with bidhaa -->
+            <div class="flex items-center gap-2">
+                <span class="font-medium">{{ $sale['jina'] }}</span>
+                @if($sale['aina'])
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
+                    {{ $sale['aina'] }}
+                </span>
+                @endif
+            </div>
+        </td>
+        <td class="border px-3 py-2 text-center text-sm">{{ number_format($sale['idadi'], 2) }}</td>
+        <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['punguzo'], 2) }}</td>
+        <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['jumla'], 2) }}</td>
+        @unless($isMfanyakazi)
+        <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['faida'], 2) }}</td>
+        @endunless
+    </tr>
+    @endforeach
+</tbody>
                 </table>
             </div>
         </div>

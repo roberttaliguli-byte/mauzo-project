@@ -252,45 +252,55 @@ Here is the black and white HTML report code. All summary data is now presented 
             </tr>
         </table>
 
-        <!-- Sales details table (already B&W compatible) -->
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Tarehe</th>
-                    <th>Bidhaa</th>
-                    <th class="text-center">Idadi</th>
-                    <th class="text-center">Njia ya Malipo</th>
-                    <th class="text-right">Jumla (TZS)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($sales ?? [] as $index => $sale)
-                    @if(!$sale->bidhaa) @continue @endif
-                    @php
-                        $paymentMethod = $sale->lipa_kwa ?? 'cash';
-                        $methodName = $paymentMethod === 'cash' ? 'Cash' : 
-                                     ($paymentMethod === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
-                        $idadi = $sale->idadi;
-                        $formattedIdadi = is_numeric($idadi) ? 
-                            ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
-                            $idadi;
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $sale->created_at ? date('d/m/Y', strtotime($sale->created_at)) : '' }}</td>
-                        <td>{{ $sale->bidhaa->jina ?? 'N/A' }}</td>
-                        <td class="text-center">{{ $formattedIdadi }}</td>
-                        <td class="text-center">{{ $methodName }}</td>
-                        <td class="text-right">{{ number_format($sale->jumla, 2) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="text-center no-data">Hakuna mauzo katika kipindi hiki</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+   <!-- Sales details table (already B&W compatible) -->
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Tarehe</th>
+            <th>Bidhaa</th>
+            <th class="text-center">Idadi</th>
+            <th class="text-center">Njia ya Malipo</th>
+            <th class="text-right">Jumla (TZS)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($sales ?? [] as $index => $sale)
+            @if(!$sale->bidhaa) @continue @endif
+            @php
+                $paymentMethod = $sale->lipa_kwa ?? 'cash';
+                $methodName = $paymentMethod === 'cash' ? 'Cash' : 
+                             ($paymentMethod === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
+                $idadi = $sale->idadi;
+                $formattedIdadi = is_numeric($idadi) ? 
+                    ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
+                    $idadi;
+            @endphp
+            <tr>
+                <td class="text-center">{{ $index + 1 }}</td>
+                <td>{{ $sale->created_at ? date('d/m/Y', strtotime($sale->created_at)) : '' }}</td>
+                <td>
+                    <!-- MODIFIED: Now includes aina in the same column -->
+                    <div class="flex flex-col">
+                        <span>{{ $sale->bidhaa->jina ?? 'N/A' }}</span>
+                        @if($sale->bidhaa && $sale->bidhaa->aina)
+                        <span class="inline-flex items-center mt-1 text-xs text-gray-600">
+                            <i class="fas fa-tag mr-1" style="font-size: 10px;"></i>{{ $sale->bidhaa->aina }}
+                        </span>
+                        @endif
+                    </div>
+                </td>
+                <td class="text-center">{{ $formattedIdadi }}</td>
+                <td class="text-center">{{ $methodName }}</td>
+                <td class="text-right">{{ number_format($sale->jumla, 2) }}</td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="6" class="text-center no-data">Hakuna mauzo katika kipindi hiki</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
 
         <div class="grand-total page-break-avoid">
             JUMLA YA MAPATO YOTE: {{ number_format($grandTotal ?? 0, 2) }} TZS
