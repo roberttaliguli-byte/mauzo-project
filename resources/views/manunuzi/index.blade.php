@@ -483,6 +483,7 @@
                         <span id="edit-bidhaa-jina"></span> - 
                         <span id="edit-bidhaa-aina"></span>
                     </div>
+                    <input type="hidden" name="bidhaa_id" id="edit-bidhaa_id">
                 </div>
 
                 <!-- Idadi -->
@@ -1456,6 +1457,7 @@ class SmartManunuziManager {
         
         document.getElementById('edit-bidhaa-jina').textContent = manunuzi.bidhaa?.jina || '';
         document.getElementById('edit-bidhaa-aina').textContent = manunuzi.bidhaa?.aina || '';
+        document.getElementById('edit-bidhaa_id').value = manunuzi.bidhaa_id; // ADD THIS LINE
         document.getElementById('edit-idadi').value = manunuzi.idadi || '';
         document.getElementById('edit-bei-type').value = wasKwaZote ? 'kwa_zote' : 'rejareja';
         document.getElementById('edit-bei-nunua').value = wasKwaZote ? manunuzi.bei : manunuzi.unit_cost;
