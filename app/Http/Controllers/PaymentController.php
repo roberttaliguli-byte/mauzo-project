@@ -109,6 +109,7 @@ class PaymentController extends Controller
 /**
  * Process payment with PesaPal
  */
+
 public function processPayment(Request $request)
 {
     $user = Auth::user();
@@ -147,11 +148,10 @@ public function processPayment(Request $request)
             'existing_payment_id' => $existingPending->id
         ]);
 
-        // Redirect user to existing payment prompt
-        return redirect()->away(
-            $existingPending->payment_response_data['redirect_url'] 
-            ?? route('payment.status', ['reference' => $existingPending->transaction_reference])
-        );
+        // Redirect user to existing payment status page
+        return redirect()->route('payment.status', [
+            'reference' => $existingPending->transaction_reference
+        ]);
     }
 
     DB::beginTransaction();
@@ -219,13 +219,10 @@ public function processPayment(Request $request)
             'tracking_id' => $orderResponse['order_tracking_id']
         ]);
 
-        // Show payment prompt
-        return response()
-            ->view('payments.payment-prompt', [
-                'payment' => $payment,
-                'orderResponse' => $orderResponse
-            ])
-            ->header('ngrok-skip-browser-warning', 'true');
+        // ✅ Redirect user to the status page instead of showing payment-prompt
+        return redirect()->route('payment.status', [
+            'reference' => $payment->transaction_reference
+        ]);
 
     } catch (\Exception $e) {
         DB::rollBack();
@@ -236,7 +233,6 @@ public function processPayment(Request $request)
         return back()->with('error', 'Payment processing failed: ' . $e->getMessage())->withInput();
     }
 }
-
     /**
      * PesaPal callback URL
      */
