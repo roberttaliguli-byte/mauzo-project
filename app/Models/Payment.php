@@ -58,7 +58,7 @@ class Payment extends Model
     {
         $amounts = [
             'Free Trial 14 days' => 0,
-            '30 days' => 15000,    // 15,000 TZS for 1 month
+            '30 days' => 1000,    // 15,000 TZS for 1 month
             '180 days' => 75000,   // 75,000 TZS for 6 months
             '366 days' => 150000    // 150,000 TZS for 1 year
         ];

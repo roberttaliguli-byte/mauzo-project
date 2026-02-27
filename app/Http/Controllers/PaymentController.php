@@ -44,7 +44,7 @@ class PaymentController extends Controller
 
         $packages = [
             '30 days' => [
-                'price' => 15000,
+                'price' => 1000,
                 'days' => 30,
                 'description' => 'Monthly subscription - TZS 15,000',
                 'badge' => null
@@ -106,104 +106,136 @@ class PaymentController extends Controller
         return view('payments.payment-form', compact('company', 'package', 'amount'));
     }
 
-    /**
-     * Process payment with PesaPal
-     */
-    public function processPayment(Request $request)
-    {
-        Log::info('Payment process started', [
-            'user_id' => Auth::id(),
-            'package' => $request->package,
-            'phone' => $request->phone_number
+/**
+ * Process payment with PesaPal
+ */
+public function processPayment(Request $request)
+{
+    $user = Auth::user();
+    $company = $user->company;
+
+    Log::info('Payment process started', [
+        'user_id' => $user->id,
+        'package' => $request->package,
+        'phone' => $request->phone_number
+    ]);
+
+    // Validate input
+    $request->validate([
+        'package' => 'required|in:30 days,180 days,366 days',
+        'phone_number' => 'required|string|max:15',
+        'payment_method' => 'required|in:MIXBY_YAS,AIRTEL,VISA,MASTERCARD'
+    ]);
+
+    $package = $request->package;
+    $amount = Payment::getPackageAmount($package);
+    $phoneNumber = $this->formatPhoneNumber($request->phone_number);
+
+    Log::info('Payment validation passed', [
+        'amount' => $amount,
+        'formatted_phone' => $phoneNumber
+    ]);
+
+    // 🔹 Prevent duplicate payment submissions within last 2 minutes
+    $existingPending = Payment::where('company_id', $company->id)
+        ->where('status', 'pending')
+        ->where('created_at', '>=', now()->subMinutes(2))
+        ->first();
+
+    if ($existingPending) {
+        Log::warning('Duplicate payment attempt detected', [
+            'existing_payment_id' => $existingPending->id
         ]);
 
-        $request->validate([
-            'package' => 'required|in:30 days,180 days,366 days',
-            'phone_number' => 'required|string|max:15',
-            'payment_method' => 'required|in:TIGO,VODACOM,AIRTEL'
-        ]);
-
-        $user = Auth::user();
-        $company = $user->company;
-        $package = $request->package;
-        $amount = Payment::getPackageAmount($package);
-        $phoneNumber = $this->formatPhoneNumber($request->phone_number);
-
-        Log::info('Payment validation passed', [
-            'amount' => $amount,
-            'formatted_phone' => $phoneNumber
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            $payment = Payment::create([
-                'company_id' => $company->id,
-                'transaction_reference' => Payment::generateTransactionReference(),
-                'merchant_reference' => Payment::generateMerchantReference(),
-                'package_type' => $package,
-                'amount' => $amount,
-                'currency' => 'TZS',
-                'phone_number' => $phoneNumber,
-                'payment_method' => $request->payment_method,
-                'status' => 'pending'
-            ]);
-
-            Log::info('Payment record created', ['payment_id' => $payment->id]);
-
-            $token = $this->pesapalService->getAccessToken();
-            
-            if (!$token) {
-                throw new \Exception('Failed to get payment token');
-            }
-
-            Log::info('PesaPal token received');
-
-            $ipnResponse = $this->pesapalService->registerIPN($token);
-            Log::info('IPN response', ['ipn_response' => $ipnResponse]);
-            
-            $orderData = $this->pesapalService->prepareOrderData($payment, $company, $user);
-            
-            if ($ipnResponse && isset($ipnResponse['ipn_id'])) {
-                $orderData['notification_id'] = $ipnResponse['ipn_id'];
-            }
-
-            Log::info('Submitting order to PesaPal...');
-            $orderResponse = $this->pesapalService->submitOrder($token, $orderData);
-
-            Log::info('PesaPal order response', ['response' => $orderResponse]);
-
-            if (!$orderResponse || !isset($orderResponse['order_tracking_id'])) {
-                throw new \Exception('Failed to submit order to PesaPal: ' . json_encode($orderResponse));
-            }
-
-            $payment->update([
-                'pesapal_transaction_tracking_id' => $orderResponse['order_tracking_id'],
-                'payment_response_data' => $orderResponse
-            ]);
-
-            DB::commit();
-
-            Log::info('Payment process completed successfully', [
-                'tracking_id' => $orderResponse['order_tracking_id']
-            ]);
-
-            return response()
-                ->view('payments.payment-prompt', [
-                    'payment' => $payment,
-                    'orderResponse' => $orderResponse
-                ])
-                ->header('ngrok-skip-browser-warning', 'true');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Payment processing error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            return back()->with('error', 'Payment processing failed: ' . $e->getMessage())->withInput();
-        }
+        // Redirect user to existing payment prompt
+        return redirect()->away(
+            $existingPending->payment_response_data['redirect_url'] 
+            ?? route('payment.status', ['reference' => $existingPending->transaction_reference])
+        );
     }
+
+    DB::beginTransaction();
+
+    try {
+        // Create new payment record
+        $payment = Payment::create([
+            'company_id' => $company->id,
+            'transaction_reference' => Payment::generateTransactionReference(),
+            'merchant_reference' => Payment::generateMerchantReference(),
+            'package_type' => $package,
+            'amount' => $amount,
+            'currency' => 'TZS',
+            'phone_number' => $phoneNumber,
+            'payment_method' => $request->payment_method,
+            'status' => 'pending'
+        ]);
+
+        Log::info('Payment record created', ['payment_id' => $payment->id]);
+
+        // Get Pesapal token
+        $token = $this->pesapalService->getAccessToken();
+        if (!$token) {
+            throw new \Exception('Failed to get Pesapal access token');
+        }
+
+        Log::info('PesaPal token received');
+
+        // Register IPN (if not already configured)
+        $notificationId = config('pesapal.notification_id');
+        if (!$notificationId) {
+            $ipnResponse = $this->pesapalService->registerIPN($token);
+            if (!$ipnResponse || !isset($ipnResponse['ipn_id'])) {
+                throw new \Exception('Failed to register IPN');
+            }
+            $notificationId = $ipnResponse['ipn_id'];
+        }
+
+        // Prepare order data
+        $orderData = $this->pesapalService->prepareOrderData(
+            $payment,
+            $company,
+            $user,
+            $notificationId
+        );
+
+        Log::info('Submitting order to PesaPal...');
+        $orderResponse = $this->pesapalService->submitOrder($token, $orderData);
+
+        Log::info('PesaPal order response', ['response' => $orderResponse]);
+
+        if (!$orderResponse || !isset($orderResponse['order_tracking_id'])) {
+            throw new \Exception('Failed to submit order to PesaPal: ' . json_encode($orderResponse));
+        }
+
+        // Update payment with Pesapal order info
+        $payment->update([
+            'pesapal_transaction_tracking_id' => $orderResponse['order_tracking_id'],
+            'payment_response_data' => $orderResponse
+        ]);
+
+        DB::commit();
+
+        Log::info('Payment process completed successfully', [
+            'tracking_id' => $orderResponse['order_tracking_id']
+        ]);
+
+        // Show payment prompt
+        return response()
+            ->view('payments.payment-prompt', [
+                'payment' => $payment,
+                'orderResponse' => $orderResponse
+            ])
+            ->header('ngrok-skip-browser-warning', 'true');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Payment processing error: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return back()->with('error', 'Payment processing failed: ' . $e->getMessage())->withInput();
+    }
+}
 
     /**
      * PesaPal callback URL
@@ -257,64 +289,55 @@ class PaymentController extends Controller
             ->header('ngrok-skip-browser-warning', 'true');
     }
 
-    /**
-     * IPN (Instant Payment Notification) handler - FIXED with proper response format
-     */
-    public function ipn(Request $request)
-    {
-        Log::info('🔔 PesaPal IPN received', $request->all());
+public function ipn(Request $request)
+{
+    Log::info('🔔 IPN received', $request->all());
 
-        $orderTrackingId = $request->input('OrderTrackingId');
-        $orderMerchantReference = $request->input('OrderMerchantReference');
-        $pesapalNotification = $request->input('pesapal_notification_type');
+    $trackingId = $request->input('OrderTrackingId');
+    $merchantRef = $request->input('OrderMerchantReference');
+    $notificationType = $request->input('pesapal_notification_type');
 
-        if (!$orderTrackingId) {
-            Log::error('Invalid IPN - missing tracking ID');
-            return response('Invalid request', 400);
-        }
-
-        $payment = Payment::where('pesapal_transaction_tracking_id', $orderTrackingId)
-            ->orWhere('merchant_reference', $orderMerchantReference)
-            ->first();
-
-        if (!$payment) {
-            Log::error('Payment not found for IPN', [
-                'tracking_id' => $orderTrackingId,
-                'merchant_ref' => $orderMerchantReference
-            ]);
-            return response('Payment not found', 404);
-        }
-
-        // Get transaction status
-        $token = $this->pesapalService->getAccessToken();
-        $statusResponse = $this->pesapalService->getTransactionStatus($token, $orderTrackingId);
-
-        if ($statusResponse && isset($statusResponse['status_code'])) {
-            $newStatus = $this->mapPesaPalStatus($statusResponse['status_code']);
-            
-            $payment->update([
-                'ipn_data' => $request->all(),
-                'payment_response_data' => array_merge($payment->payment_response_data ?? [], [
-                    'ipn_status' => $statusResponse
-                ]),
-                'status' => $newStatus
-            ]);
-
-            if ($newStatus === 'completed') {
-                $this->activatePackage($payment);
-            }
-        }
-
-        // CRITICAL: PesaPal requires this EXACT response format
-        $responseString = "pesapal_notification_type=$pesapal_notification&"
-            . "pesapal_transaction_tracking_id=$orderTrackingId&"
-            . "pesapal_merchant_reference=$orderMerchantReference";
-        
-        Log::info('📤 Sending IPN response', ['response' => $responseString]);
-        
-        return response($responseString)
-            ->header('Content-Type', 'text/plain');
+    if (!$trackingId) {
+        return response('Invalid Request', 400);
     }
+
+    $payment = Payment::where('pesapal_transaction_tracking_id', $trackingId)
+        ->orWhere('merchant_reference', $merchantRef)
+        ->first();
+
+    if (!$payment) {
+        return response('Payment Not Found', 404);
+    }
+
+    // 🚫 Prevent double processing
+    if ($payment->status === 'completed') {
+        return response("pesapal_notification_type=$notificationType&pesapal_transaction_tracking_id=$trackingId&pesapal_merchant_reference=$merchantRef");
+    }
+
+    $token = $this->pesapalService->getAccessToken();
+    $statusResponse = $this->pesapalService->getTransactionStatus($token, $trackingId);
+
+    if ($statusResponse && isset($statusResponse['status_code'])) {
+
+        $newStatus = $this->mapPesaPalStatus($statusResponse['status_code']);
+
+        $payment->update([
+            'ipn_data' => $request->all(),
+            'status' => $newStatus,
+            'payment_response_data' => array_merge(
+                $payment->payment_response_data ?? [],
+                ['ipn_status' => $statusResponse]
+            )
+        ]);
+
+        if ($newStatus === 'completed') {
+            $this->activatePackage($payment);
+        }
+    }
+
+    return response("pesapal_notification_type=$notificationType&pesapal_transaction_tracking_id=$trackingId&pesapal_merchant_reference=$merchantRef")
+        ->header('Content-Type', 'text/plain');
+}
 
     /**
      * Show payment success page

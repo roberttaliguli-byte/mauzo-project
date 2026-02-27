@@ -1,29 +1,13 @@
-```php
 @extends('layouts.admin')
 
-@section('title', 'Transactions - Payment Management')
+@section('title', 'Transactions - malipo')
 
-@section('page-title', 'Payment Transactions')
-@section('page-subtitle', 'Monitor and Manage All Payment Activities')
+@section('page-title', 'Miamala ya malipo')
+@section('page-subtitle', 'simamia malipo ya miamala')
 
 @section('content')
 <div class="min-h-screen bg-gray-50/30">
-    <!-- Header Section -->
-    <div class="mb-4 md:mb-8 px-4 md:px-0">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div class="mb-3 md:mb-0">
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900">💰 Payment Transactions</h1>
-                <p class="text-gray-600 text-xs md:text-base mt-1">Complete overview of all payment activities and transaction statuses</p>
-            </div>
-            <div class="flex items-center space-x-2 md:space-x-4">
-                <a href="{{ route('admin.payments.export') }}?{{ http_build_query(request()->all()) }}" 
-                   class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-lg md:rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center space-x-2 text-sm md:text-base font-medium">
-                    <i class="fas fa-download text-xs md:text-sm"></i>
-                    <span>Export Data</span>
-                </a>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Statistics Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 md:gap-4 mb-4 md:mb-6 px-4 md:px-0">

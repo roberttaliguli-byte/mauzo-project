@@ -248,6 +248,16 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     })->name('api.admin.new-companies');
 });
 
+
+
+
+
+
+
+
+
+
+
 // =========================
 // Payment routes (protected by auth)
 // =========================
@@ -308,7 +318,7 @@ Route::get('/pesapal/callback', [App\Http\Controllers\PaymentController::class, 
 Route::post('/pesapal/ipn', [App\Http\Controllers\PaymentController::class, 'ipn'])
     ->name('pesapal.ipn');
 
-Route::get('/pesapal/ipn', [App\Http\Controllers\PaymentController::class, 'ipn']); // For GET requests
+Route::get('/pesapal/ipn', [App\Http\Controllers\PaymentController::class, 'ipn']); 
 
 // ================================
 // Wateja Routes
@@ -437,12 +447,3 @@ Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi
 // Add this route for the custom date range
 Route::get('/uchambuzi/mwenendo', [UchambuziController::class, 'mwenendoRange'])->name('uchambuzi.mwenendo.range');
 
-// Add to routes/web.php temporarily
-Route::get('/ngrok-test', function() {
-    return response()->json([
-        'message' => 'ngrok is working with Laravel!',
-        'app_url' => config('app.url'),
-        'environment' => app()->environment(),
-        'time' => now()->toDateTimeString()
-    ]);
-});
