@@ -44,7 +44,7 @@ class PaymentController extends Controller
 
         $packages = [
             '30 days' => [
-                'price' => 1000,
+                'price' => 15000,
                 'days' => 30,
                 'description' => 'Monthly subscription - TZS 15,000',
                 'badge' => null

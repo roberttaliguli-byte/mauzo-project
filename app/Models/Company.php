@@ -15,9 +15,6 @@ protected $fillable = [
     'is_verified', 'package', 'database_name', 
     'package_start', 'package_end', 'is_user_approved' // Add these
 ];
-protected $attributes = [
-    'subscription_status' => 'active',
-];
 
     public function users()
     {
