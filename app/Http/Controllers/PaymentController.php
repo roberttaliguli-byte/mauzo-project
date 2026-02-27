@@ -137,27 +137,20 @@ public function processPayment(Request $request)
         'formatted_phone' => $phoneNumber
     ]);
 
-    // 🔹 Prevent duplicate payment submissions within last 2 minutes
+    // Prevent duplicate payment within 2 minutes
     $existingPending = Payment::where('company_id', $company->id)
         ->where('status', 'pending')
         ->where('created_at', '>=', now()->subMinutes(2))
         ->first();
 
-    if ($existingPending) {
-        Log::warning('Duplicate payment attempt detected', [
-            'existing_payment_id' => $existingPending->id
-        ]);
-
-        // Redirect user to existing payment status page
-        return redirect()->route('payment.status', [
-            'reference' => $existingPending->transaction_reference
-        ]);
+    if ($existingPending && isset($existingPending->payment_response_data['redirect_url'])) {
+        return redirect()->away($existingPending->payment_response_data['redirect_url']);
     }
 
     DB::beginTransaction();
 
     try {
-        // Create new payment record
+
         $payment = Payment::create([
             'company_id' => $company->id,
             'transaction_reference' => Payment::generateTransactionReference(),
@@ -172,15 +165,13 @@ public function processPayment(Request $request)
 
         Log::info('Payment record created', ['payment_id' => $payment->id]);
 
-        // Get Pesapal token
+        // Get token
         $token = $this->pesapalService->getAccessToken();
         if (!$token) {
             throw new \Exception('Failed to get Pesapal access token');
         }
 
-        Log::info('PesaPal token received');
-
-        // Register IPN (if not already configured)
+        // Register IPN
         $notificationId = config('pesapal.notification_id');
         if (!$notificationId) {
             $ipnResponse = $this->pesapalService->registerIPN($token);
@@ -190,7 +181,7 @@ public function processPayment(Request $request)
             $notificationId = $ipnResponse['ipn_id'];
         }
 
-        // Prepare order data
+        // Prepare order
         $orderData = $this->pesapalService->prepareOrderData(
             $payment,
             $company,
@@ -198,16 +189,12 @@ public function processPayment(Request $request)
             $notificationId
         );
 
-        Log::info('Submitting order to PesaPal...');
         $orderResponse = $this->pesapalService->submitOrder($token, $orderData);
 
-        Log::info('PesaPal order response', ['response' => $orderResponse]);
-
-        if (!$orderResponse || !isset($orderResponse['order_tracking_id'])) {
-            throw new \Exception('Failed to submit order to PesaPal: ' . json_encode($orderResponse));
+        if (!$orderResponse || !isset($orderResponse['order_tracking_id']) || !isset($orderResponse['redirect_url'])) {
+            throw new \Exception('Invalid response from PesaPal: ' . json_encode($orderResponse));
         }
 
-        // Update payment with Pesapal order info
         $payment->update([
             'pesapal_transaction_tracking_id' => $orderResponse['order_tracking_id'],
             'payment_response_data' => $orderResponse
@@ -215,17 +202,17 @@ public function processPayment(Request $request)
 
         DB::commit();
 
-        Log::info('Payment process completed successfully', [
-            'tracking_id' => $orderResponse['order_tracking_id']
+        Log::info('Redirecting user to PesaPal', [
+            'redirect_url' => $orderResponse['redirect_url']
         ]);
 
-        // ✅ Redirect user to the status page instead of showing payment-prompt
-        return redirect()->route('payment.status', [
-            'reference' => $payment->transaction_reference
-        ]);
+        // ✅ THIS IS THE IMPORTANT PART
+        return redirect()->away($orderResponse['redirect_url']);
 
     } catch (\Exception $e) {
+
         DB::rollBack();
+
         Log::error('Payment processing error: ' . $e->getMessage(), [
             'trace' => $e->getTraceAsString()
         ]);
