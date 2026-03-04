@@ -248,16 +248,6 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     })->name('api.admin.new-companies');
 });
 
-
-
-
-
-
-
-
-
-
-
 // =========================
 // Payment routes (protected by auth)
 // =========================
@@ -396,9 +386,7 @@ Route::post('/masaplaya', [MasaplayaController::class, 'store'])->name('masaplay
 Route::put('/masaplaya/{masaplaya}', [MasaplayaController::class, 'update'])->name('masaplaya.update');
 Route::delete('/masaplaya/{masaplaya}', [MasaplayaController::class, 'destroy'])->name('masaplaya.destroy');
 
-// ================================
 // Bidhaa Routes
-// ================================
 Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
 Route::post('/bidhaa', [BidhaaController::class, 'store'])->name('bidhaa.store');
 Route::put('/bidhaa/{id}', [BidhaaController::class, 'update'])->name('bidhaa.update');
@@ -415,6 +403,12 @@ Route::get('/bidhaa/download-sample', [BidhaaController::class, 'downloadSample'
 // === BARCODE ROUTES ===
 Route::post('/bidhaa/barcode', [BidhaaController::class, 'storeBarcode'])->name('bidhaa.store.barcode');
 Route::get('/bidhaa/tafuta-barcode/{barcode}', [BidhaaController::class, 'tafutaBarcode'])->name('bidhaa.tafuta.barcode');
+
+// === TAARIFA ROUTES (NEW) ===
+Route::get('/bidhaa/taarifa', [BidhaaController::class, 'taarifa'])->name('bidhaa.taarifa');
+Route::get('/bidhaa/export-details/{id}', [BidhaaController::class, 'exportProductDetails'])->name('bidhaa.export-details');
+
+Route::get('/bidhaa/search-products', [BidhaaController::class, 'searchProducts'])->name('bidhaa.search-products');
 
 // ================================
 // Manunuzi Routes

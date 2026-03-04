@@ -103,4 +103,58 @@ class Bidhaa extends Model
     {
         return $this->belongsTo(\App\Models\Company::class);
     }
+
+// Add this relationship
+public function histories()
+{
+    return $this->hasMany(\App\Models\BidhaaHistory::class)->orderBy('created_at', 'desc');
+}
+
+// Add this method to track history when product is created/updated
+public static function boot()
+{
+    parent::boot();
+    
+    static::created(function ($bidhaa) {
+        $bidhaa->recordHistory('ingizo', $bidhaa->idadi, 'Bidhaa mpya imeingizwa');
+    });
+    
+    static::updated(function ($bidhaa) {
+        // Only track if quantity changed significantly
+        if ($bidhaa->wasChanged('idadi')) {
+            $oldIdadi = $bidhaa->getOriginal('idadi');
+            $newIdadi = $bidhaa->idadi;
+            
+            if ($newIdadi > $oldIdadi) {
+                $bidhaa->recordHistory(
+                    'ingizo', 
+                    $newIdadi - $oldIdadi, 
+                    'Idadi imeongezwa'
+                );
+            } elseif ($newIdadi < $oldIdadi) {
+                $bidhaa->recordHistory(
+                    'mauzo', 
+                    $oldIdadi - $newIdadi, 
+                    'Idadi imepungua (mauzo/marekebisho)'
+                );
+            }
+        }
+    });
+}
+
+public function recordHistory($type, $quantity, $description = null)
+{
+    return $this->histories()->create([
+        'company_id' => $this->company_id,
+        'idadi_iliyoingizwa' => $type === 'ingizo' ? $quantity : 0,
+        'idadi_iliyouzwa' => $type === 'mauzo' ? $quantity : 0,
+        'idadi_iliyobaki' => $this->idadi,
+        'bei_nunua' => $this->bei_nunua,
+        'bei_kuuza' => $this->bei_kuuza,
+        'aina_ya_shughuli' => $type,
+        'maelezo' => $description,
+        'mtumiaji_id' => auth()->id(),
+    ]);
+}
+
 }

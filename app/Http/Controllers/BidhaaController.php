@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Bidhaa;
+use App\Models\Manunuzi;
+use App\Models\Mauzo;
+use App\Models\Madeni;
+use App\Models\Marejesho;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -16,6 +20,7 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Str;
 
 class BidhaaController extends Controller
 {
@@ -42,6 +47,9 @@ class BidhaaController extends Controller
         return Auth::guard('web')->check();
     }
     
+    /**
+     * Display a listing of the products with pagination
+     */
     public function index(Request $request)
     {
         $companyId = $this->getCompanyId();
@@ -87,29 +95,27 @@ class BidhaaController extends Controller
         $expiredProducts = Bidhaa::where('company_id', $companyId)->where('expiry', '<', now())->count();
         $outOfStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', 0)->count();
 
-if ($request->has('export') && $request->export === 'pdf') {
+        if ($request->has('export') && $request->export === 'pdf') {
+            $page = $request->input('page', 1);
+            $productsForPdf = $query
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage, ['*'], 'page', $page);
 
-    $page = $request->input('page', 1);
+            $data = [
+                'bidhaa' => $productsForPdf,
+                'title' => 'Orodha ya Bidhaa',
+                'date' => now()->format('d/m/Y'),
+                'company' => $this->getCurrentUser()->company,
+                'total_count' => $productsForPdf->total()
+            ];
 
-    $productsForPdf = $query
-        ->orderBy('created_at', 'desc')
-        ->paginate($perPage, ['*'], 'page', $page);
+            $pdf = Pdf::loadView('bidhaa.pdf', $data)
+                ->setPaper('a4', 'portrait');
 
-    $data = [
-        'bidhaa' => $productsForPdf,
-        'title' => 'Orodha ya Bidhaa',
-        'date' => now()->format('d/m/Y'),
-        'company' => $this->getCurrentUser()->company,
-        'total_count' => $productsForPdf->total()
-    ];
-
-    $pdf = Pdf::loadView('bidhaa.pdf', $data)
-        ->setPaper('a4', 'portrait');
-
-    return $pdf->download(
-        'bidhaa-page-'.$productsForPdf->currentPage().'.pdf'
-    );
-}
+            return $pdf->download(
+                'bidhaa-page-'.$productsForPdf->currentPage().'.pdf'
+            );
+        }
 
         if ($request->has('export') && $request->export === 'excel') {
             return $this->exportExcel();
@@ -133,6 +139,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         ));
     }
     
+    /**
+     * Search all products (returns ALL results, no pagination)
+     */
     public function searchAll(Request $request)
     {
         $companyId = $this->getCompanyId();
@@ -148,6 +157,7 @@ if ($request->has('export') && $request->export === 'pdf') {
         }
         
         try {
+            // Get ALL products matching search (no pagination)
             $bidhaa = Bidhaa::where('company_id', $companyId)
                 ->where(function($query) use ($search) {
                     $query->where('jina', 'LIKE', "%{$search}%")
@@ -210,6 +220,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         }
     }
     
+    /**
+     * Get product for editing
+     */
     public function editProduct($id)
     {
         try {
@@ -262,6 +275,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         }
     }
     
+    /**
+     * Store a newly created product
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -325,6 +341,9 @@ if ($request->has('export') && $request->export === 'pdf') {
             ->with('success', 'Bidhaa imeongezwa kikamilifu!');
     }
 
+    /**
+     * Update the specified product
+     */
     public function update(Request $request, $id)
     {
         if (!$this->isBoss()) {
@@ -394,6 +413,9 @@ if ($request->has('export') && $request->export === 'pdf') {
             ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
     }
 
+    /**
+     * Remove the specified product
+     */
     public function destroy($id, Request $request)
     {
         if (!$this->isBoss()) {
@@ -425,6 +447,9 @@ if ($request->has('export') && $request->export === 'pdf') {
             ->with('success', 'Bidhaa imefutwa kikamilifu!');
     }
 
+    /**
+     * Export all products to Excel
+     */
     public function exportExcel()
     {
         $companyId = $this->getCompanyId();
@@ -533,6 +558,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         exit;
     }
 
+    /**
+     * Download sample Excel file
+     */
     public function downloadSample()
     {
         $spreadsheet = new Spreadsheet();
@@ -632,6 +660,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         exit;
     }
 
+    /**
+     * Upload Excel file and process products
+     */
     public function uploadExcel(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -887,6 +918,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         }
     }
 
+    /**
+     * Get value from Excel row by possible keys
+     */
     private function getExcelValue($row, $possibleKeys)
     {
         foreach ($possibleKeys as $key) {
@@ -901,6 +935,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         return '';
     }
     
+    /**
+     * Process Excel file and extract rows
+     */
     private function processExcelFile($file)
     {
         $rows = [];
@@ -967,6 +1004,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         return $rows;
     }
     
+    /**
+     * Parse date string to Y-m-d format
+     */
     private function parseDate($dateString)
     {
         if (empty($dateString)) {
@@ -995,6 +1035,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         return null;
     }
     
+    /**
+     * Store product with barcode
+     */
     public function storeBarcode(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -1049,6 +1092,9 @@ if ($request->has('export') && $request->export === 'pdf') {
         ]);
     }
 
+    /**
+     * Search product by barcode
+     */
     public function tafutaBarcode($barcode)
     {
         $companyId = $this->getCompanyId();
@@ -1068,5 +1114,380 @@ if ($request->has('export') && $request->export === 'pdf') {
             'success' => true,
             'data' => $bidhaa
         ]);
+    }
+
+ /**
+ * Get detailed information for a specific product with stock management
+ */
+public function taarifa(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    
+    $validator = Validator::make($request->all(), [
+        'bidhaa_id' => 'required|exists:bidhaas,id,company_id,' . $companyId,
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date|after_or_equal:start_date',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Bidhaa haijachaguliwa',
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    $bidhaa = Bidhaa::where('id', $request->bidhaa_id)
+        ->where('company_id', $companyId)
+        ->first();
+
+    if (!$bidhaa) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Bidhaa haijapatikana'
+        ], 404);
+    }
+
+    // Get current stock
+    $currentStock = (float)$bidhaa->idadi;
+
+    // Get date range filters
+    $startDate = $request->start_date ? \Carbon\Carbon::parse($request->start_date)->startOfDay() : null;
+    $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date)->endOfDay() : null;
+
+    // Initialize counters
+    $totalIngizo = 0;
+    $totalMauzoCash = 0;
+    $totalMauzoCredit = 0;
+    $totalMarejeshoAmount = 0;
+    $histories = [];
+
+    // 1. Get purchases (manunuzi) - ADDS to stock
+    if (class_exists('App\Models\Manunuzi')) {
+        $manunuziQuery = Manunuzi::where('bidhaa_id', $bidhaa->id)
+            ->where('company_id', $companyId);
+        
+        if ($startDate && $endDate) {
+            $manunuziQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        $manunuzi = $manunuziQuery->orderBy('created_at', 'asc')->get();
+        
+        foreach ($manunuzi as $m) {
+            $totalIngizo += $m->idadi;
+            $histories[] = [
+                'tarehe' => $m->created_at->format('d/m/Y H:i'),
+                'aina' => 'manunuzi',
+                'idadi_iliyoingizwa' => (float)$m->idadi,
+                'idadi_iliyouzwa' => 0,
+                'kiasi_cha_fedha' => 0,
+                'maelezo' => $m->maelezo ?? 'Manunuzi',
+                'timestamp' => $m->created_at->timestamp,
+                'unique_id' => 'manunuzi_' . $m->id
+            ];
+        }
+    }
+
+    // 2. Get ALL sales (mauzo) from Mauzo table - SUBTRACTS from stock
+    if (class_exists('App\Models\Mauzo')) {
+        $mauzoQuery = Mauzo::where('bidhaa_id', $bidhaa->id)
+            ->where('company_id', $companyId);
+        
+        if ($startDate && $endDate) {
+            $mauzoQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        $mauzo = $mauzoQuery->orderBy('created_at', 'asc')->get();
+        
+        foreach ($mauzo as $m) {
+            // Check if this is a credit sale (has madeni_id)
+            $isCredit = !empty($m->madeni_id);
+            
+            if ($isCredit) {
+                $totalMauzoCredit += $m->idadi;
+                $histories[] = [
+                    'tarehe' => $m->created_at->format('d/m/Y H:i'),
+                    'aina' => 'kopesha',
+                    'idadi_iliyoingizwa' => 0,
+                    'idadi_iliyouzwa' => (float)$m->idadi,
+                    'kiasi_cha_fedha' => (float)$m->jumla,
+                    'maelezo' => 'Kopesha - ' . ($m->lipa_kwa ?? 'Malipo') . ': ' . number_format($m->jumla, 0) . ' TZS',
+                    'timestamp' => $m->created_at->timestamp,
+                    'unique_id' => 'kopesha_' . $m->id
+                ];
+            } else {
+                $totalMauzoCash += $m->idadi;
+                $histories[] = [
+                    'tarehe' => $m->created_at->format('d/m/Y H:i'),
+                    'aina' => 'mauzo',
+                    'idadi_iliyoingizwa' => 0,
+                    'idadi_iliyouzwa' => (float)$m->idadi,
+                    'kiasi_cha_fedha' => (float)$m->jumla,
+                    'maelezo' => 'Mauzo - ' . ($m->lipa_kwa ?? 'Cash') . ': ' . number_format($m->jumla, 0) . ' TZS',
+                    'timestamp' => $m->created_at->timestamp,
+                    'unique_id' => 'mauzo_' . $m->id
+                ];
+            }
+        }
+    }
+
+    // 3. ALSO get credit sales from Madeni table (in case they're not in Mauzo)
+    if (class_exists('App\Models\Madeni')) {
+        $madeniQuery = Madeni::where('bidhaa_id', $bidhaa->id)
+            ->where('company_id', $companyId);
+        
+        if ($startDate && $endDate) {
+            $madeniQuery->whereBetween('created_at', [$startDate, $endDate]);
+        }
+        
+        $madeni = $madeniQuery->orderBy('created_at', 'asc')->get();
+        
+        foreach ($madeni as $m) {
+            // Check if this credit sale is already recorded in histories
+            $exists = false;
+            foreach ($histories as $h) {
+                if ($h['aina'] == 'kopesha' && 
+                    abs($h['idadi_iliyouzwa'] - $m->idadi) < 0.01 && 
+                    abs($h['timestamp'] - $m->created_at->timestamp) < 60) { // Within 1 minute
+                    $exists = true;
+                    break;
+                }
+            }
+            
+            if (!$exists) {
+                $totalMauzoCredit += $m->idadi;
+                $histories[] = [
+                    'tarehe' => $m->created_at->format('d/m/Y H:i'),
+                    'aina' => 'kopesha',
+                    'idadi_iliyoingizwa' => 0,
+                    'idadi_iliyouzwa' => (float)$m->idadi,
+                    'kiasi_cha_fedha' => (float)$m->jumla,
+                    'maelezo' => 'Kopesha - ' . ($m->jina_mkopaji ?? 'Mteja') . ', Deni: ' . number_format($m->jumla, 0) . ' TZS',
+                    'timestamp' => $m->created_at->timestamp,
+                    'unique_id' => 'madeni_' . $m->id
+                ];
+            }
+        }
+    }
+
+    // 4. Get returns/payments (marejesho) - payments ONLY, no stock impact
+    if (class_exists('App\Models\Marejesho')) {
+        // Get through madeni relationship
+        $madeniIds = Madeni::where('bidhaa_id', $bidhaa->id)
+            ->where('company_id', $companyId)
+            ->pluck('id');
+        
+        if ($madeniIds->isNotEmpty()) {
+            $marejeshoQuery = Marejesho::whereIn('madeni_id', $madeniIds)
+                ->where('company_id', $companyId);
+            
+            if ($startDate && $endDate) {
+                $marejeshoQuery->whereBetween('created_at', [$startDate, $endDate]);
+            }
+            
+            $marejesho = $marejeshoQuery->orderBy('created_at', 'asc')->get();
+            
+            foreach ($marejesho as $m) {
+                $totalMarejeshoAmount += $m->kiasi;
+                
+                // Marejesho are payments - they DON'T affect stock
+                $histories[] = [
+                    'tarehe' => $m->created_at->format('d/m/Y H:i'),
+                    'aina' => 'marejesho',
+                    'idadi_iliyoingizwa' => 0, // No stock added
+                    'idadi_iliyouzwa' => 0,     // No stock removed
+                    'kiasi_cha_fedha' => (float)$m->kiasi,
+                    'maelezo' => 'Marejesho ya deni - ' . ($m->lipa_kwa ?? 'Malipo') . ': ' . number_format($m->kiasi, 0) . ' TZS',
+                    'timestamp' => $m->created_at->timestamp,
+                    'unique_id' => 'marejesho_' . $m->id
+                ];
+            }
+        }
+    }
+
+    // 5. Remove duplicates by unique_id
+    $uniqueHistories = [];
+    foreach ($histories as $history) {
+        $uniqueHistories[$history['unique_id']] = $history;
+    }
+    $histories = array_values($uniqueHistories);
+
+    // 6. Sort histories by timestamp (OLDEST first for calculation)
+    usort($histories, function($a, $b) {
+        return $a['timestamp'] - $b['timestamp'];
+    });
+
+    // 7. Calculate running balance FORWARD from zero
+    $runningBalance = 0;
+    $balances = [];
+    
+    foreach ($histories as $index => $history) {
+        if ($history['aina'] == 'manunuzi') {
+            $runningBalance += $history['idadi_iliyoingizwa'];
+        } elseif (in_array($history['aina'], ['mauzo', 'kopesha'])) {
+            $runningBalance -= $history['idadi_iliyouzwa'];
+        }
+        // Marejesho does NOT affect stock balance
+        
+        $balances[$index] = $runningBalance;
+    }
+
+    // 8. Calculate the adjustment factor to make final balance match current stock
+    // Final running balance should equal current stock
+    $finalCalculatedBalance = $runningBalance;
+    $adjustmentFactor = $currentStock - $finalCalculatedBalance;
+    
+    // 9. Apply adjustment to all balances to make them relative to current stock
+    $historiesWithBalance = [];
+    foreach ($histories as $index => $history) {
+        // Adjust the balance to show stock after each transaction
+        // This makes the last transaction show current stock
+        $adjustedBalance = $balances[$index] + $adjustmentFactor;
+        
+        $history['idadi_iliyobaki'] = $adjustedBalance;
+        $historiesWithBalance[] = $history;
+    }
+
+    // 10. Sort back to NEWEST first for display
+    usort($historiesWithBalance, function($a, $b) {
+        return $b['timestamp'] - $a['timestamp'];
+    });
+
+    $histories = $historiesWithBalance;
+
+    // 11. Calculate totals correctly
+    $totalMauzoJumla = $totalMauzoCash + $totalMauzoCredit; // All sales (cash + credit)
+    $iliyobakiKwaHisabati = $totalIngizo - $totalMauzoJumla;
+    $tofauti = $currentStock - $iliyobakiKwaHisabati;
+
+    // 12. Prepare response data
+    $data = [
+        'bidhaa' => [
+            'id' => $bidhaa->id,
+            'jina' => $bidhaa->jina,
+            'aina' => $bidhaa->aina,
+            'kipimo' => $bidhaa->kipimo,
+            'barcode' => $bidhaa->barcode,
+            'idadi_sasa' => $currentStock,
+            'idadi_format' => number_format($currentStock, 2),
+            'expiry' => $bidhaa->expiry ? $bidhaa->expiry->format('Y-m-d') : null,
+            'expiry_status' => $bidhaa->expiry ? (
+                $bidhaa->expiry < now() ? 'expired' : 
+                ($bidhaa->expiry <= now()->addDays(30) ? 'near_expiry' : 'good')
+            ) : 'none',
+            'imeundwa' => $bidhaa->created_at->format('d/m/Y H:i'),
+        ],
+        'statistics' => [
+            'tarehe_ya_kwanza' => $bidhaa->created_at->format('d/m/Y'),
+            'idadi_ya_kwanza' => $currentStock,
+            'jumlah_iliyoingizwa' => $totalIngizo,
+            'jumlah_mauzo_cash' => $totalMauzoCash,
+            'jumlah_kopesha' => $totalMauzoCredit,
+            'jumlah_mauzo_jumla' => $totalMauzoJumla, // This shows 5 (2+3)
+            'jumlah_marejesho_fedha' => $totalMarejeshoAmount,
+            'jumlah_iliyobaki_kwa_hisabati' => $iliyobakiKwaHisabati,
+            'jumlah_iliyobaki_halisi' => $currentStock,
+            'tofauti_ya_hisabati' => $tofauti,
+        ],
+        'histories' => $histories,
+        'total_transactions' => count($histories),
+        'date_range' => [
+            'start' => $startDate ? $startDate->format('Y-m-d') : null,
+            'end' => $endDate ? $endDate->format('Y-m-d') : null,
+        ],
+    ];
+
+    return response()->json([
+        'success' => true,
+        'data' => $data
+    ]);
+}
+
+    /**
+     * Search products for dropdown (returns ALL matching products, no pagination)
+     */
+    public function searchProducts(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        $search = $request->get('q', '');
+        $id = $request->get('id', null);
+        
+        $query = Bidhaa::where('company_id', $companyId);
+        
+        // If specific ID is requested
+        if ($id) {
+            $query->where('id', $id);
+        }
+        // Otherwise search by term
+        else if (strlen($search) >= 1) {
+            $query->where(function($q) use ($search) {
+                $q->where('jina', 'LIKE', "%{$search}%")
+                  ->orWhere('aina', 'LIKE', "%{$search}%")
+                  ->orWhere('barcode', 'LIKE', "%{$search}%");
+            });
+        } else {
+            // Return empty result if no search term
+            return response()->json([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+        
+        // Get ALL matching products (no pagination, no limit)
+        $products = $query->orderBy('jina')->get(['id', 'jina', 'aina', 'barcode', 'idadi']);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $products
+        ]);
+    }
+
+    /**
+     * Export product details as PDF
+     */
+    public function exportProductDetails($id)
+    {
+        $companyId = $this->getCompanyId();
+        
+        $bidhaa = Bidhaa::where('id', $id)
+          ->where('company_id', $companyId)
+          ->firstOrFail();
+        
+        // Get statistics
+        $totalIngizo = 0;
+        $totalMauzo = 0;
+        
+        if (class_exists('App\Models\Manunuzi')) {
+            $totalIngizo = Manunuzi::where('bidhaa_id', $bidhaa->id)
+                ->where('company_id', $companyId)
+                ->sum('idadi');
+        }
+        
+        if (class_exists('App\Models\Mauzo')) {
+            $totalMauzo = Mauzo::where('bidhaa_id', $bidhaa->id)
+                ->where('company_id', $companyId)
+                ->sum('idadi');
+        }
+        
+        // Calculate statistics
+        $data = [
+            'bidhaa' => $bidhaa,
+            'totalIngizo' => $totalIngizo,
+            'totalMauzo' => $totalMauzo,
+            'statistics' => [
+                'thamani_hisa' => $bidhaa->idadi * $bidhaa->bei_nunua,
+                'thamani_mauzo' => $bidhaa->idadi * $bidhaa->bei_kuuza,
+                'faida_tarajiwa' => $bidhaa->idadi * ($bidhaa->bei_kuuza - $bidhaa->bei_nunua),
+            ],
+            'company' => $this->getCurrentUser()->company,
+            'date' => now()->format('d/m/Y H:i'),
+        ];
+        
+        $pdf = Pdf::loadView('bidhaa.details-pdf', $data)
+            ->setPaper('a4', 'portrait');
+        
+        return $pdf->download(
+            'taarifa-' . Str::slug($bidhaa->jina) . '-' . date('Y-m-d') . '.pdf'
+        );
     }
 }
