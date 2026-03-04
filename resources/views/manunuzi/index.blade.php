@@ -658,7 +658,6 @@
 }
 </style>
 @endpush
-
 @push('scripts')
 <script>
 class SmartManunuziManager {
@@ -942,6 +941,17 @@ class SmartManunuziManager {
         });
     }
 
+    // Helper method to escape HTML special characters
+    escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     displaySearchResults(bidhaa) {
         const searchResults = document.getElementById('bidhaa-search-results');
         
@@ -953,11 +963,19 @@ class SmartManunuziManager {
 
         let html = '';
         bidhaa.forEach(item => {
+            // Convert entire item to JSON and escape for HTML attribute
+            const itemJson = JSON.stringify(item)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            
             html += `
                 <div class="p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                     onclick="window.manunuziManager.selectBidhaa(${item.id}, '${item.jina.replace(/'/g, "\\'")}', '${item.aina.replace(/'/g, "\\'")}', '${item.kipimo.replace(/'/g, "\\'")}', ${item.bei_nunua}, ${item.bei_kuuza})">
-                    <div class="font-medium text-sm text-gray-900">${item.jina}</div>
-                    <div class="text-xs text-gray-600">${item.aina} - ${item.kipimo}</div>
+                     onclick='window.manunuziManager.selectBidhaaFromJson(${itemJson})'>
+                    <div class="font-medium text-sm text-gray-900">${this.escapeHtml(item.jina)}</div>
+                    <div class="text-xs text-gray-600">${this.escapeHtml(item.aina)} - ${this.escapeHtml(item.kipimo)}</div>
                     <div class="text-xs text-emerald-600 mt-1">
                         Bei ya sasa: ${parseFloat(item.bei_nunua).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                     </div>
@@ -967,6 +985,17 @@ class SmartManunuziManager {
 
         searchResults.innerHTML = html;
         searchResults.classList.remove('hidden');
+    }
+
+    selectBidhaaFromJson(item) {
+        this.selectBidhaa(
+            item.id,
+            item.jina,
+            item.aina,
+            item.kipimo,
+            item.bei_nunua,
+            item.bei_kuuza
+        );
     }
 
     selectBidhaa(id, jina, aina, kipimo, bei_nunua, bei_kuuza) {
@@ -1419,11 +1448,11 @@ class SmartManunuziManager {
                 tableHtml += `
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-2">-</td>
-                        <td class="px-4 py-2">${supplier}</td>
+                        <td class="px-4 py-2">${this.escapeHtml(supplier)}</td>
                         <td class="px-4 py-2 text-center">${grouped[supplier].items.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td class="px-4 py-2 text-right">${grouped[supplier].cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td class="px-4 py-2 text-right">-</td>
-                        <td class="px-4 py-2">${supplier}</td>
+                        <td class="px-4 py-2">${this.escapeHtml(supplier)}</td>
                     </tr>
                 `;
             });
@@ -1434,11 +1463,11 @@ class SmartManunuziManager {
                 tableHtml += `
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-2">${new Date(item.created_at).toLocaleDateString()}</td>
-                        <td class="px-4 py-2">${item.bidhaa?.jina || ''}</td>
+                        <td class="px-4 py-2">${this.escapeHtml(item.bidhaa?.jina || '')}</td>
                         <td class="px-4 py-2 text-center">${formattedIdadi}</td>
                         <td class="px-4 py-2 text-right">${parseFloat(item.bei).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         <td class="px-4 py-2 text-right">${parseFloat(item.bidhaa?.bei_kuuza || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td class="px-4 py-2">${item.saplaya || '--'}</td>
+                        <td class="px-4 py-2">${this.escapeHtml(item.saplaya || '--')}</td>
                     </tr>
                 `;
             });
@@ -1457,7 +1486,7 @@ class SmartManunuziManager {
         
         document.getElementById('edit-bidhaa-jina').textContent = manunuzi.bidhaa?.jina || '';
         document.getElementById('edit-bidhaa-aina').textContent = manunuzi.bidhaa?.aina || '';
-        document.getElementById('edit-bidhaa_id').value = manunuzi.bidhaa_id; // ADD THIS LINE
+        document.getElementById('edit-bidhaa_id').value = manunuzi.bidhaa_id;
         document.getElementById('edit-idadi').value = manunuzi.idadi || '';
         document.getElementById('edit-bei-type').value = wasKwaZote ? 'kwa_zote' : 'rejareja';
         document.getElementById('edit-bei-nunua').value = wasKwaZote ? manunuzi.bei : manunuzi.unit_cost;
@@ -1680,11 +1709,11 @@ function printManunuzi() {
         tableRows += `
             <tr>
                 <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.created_at ? new Date(manunuzi.created_at).toLocaleDateString() : ''}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.bidhaa?.jina || ''}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.bidhaa?.jina ? window.manunuziManager.escapeHtml(manunuzi.bidhaa.jina) : ''}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${formattedIdadi}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(manunuzi.bei).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(manunuzi.bidhaa?.bei_kuuza || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.saplaya || '--'}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.saplaya ? window.manunuziManager.escapeHtml(manunuzi.saplaya) : '--'}</td>
             </tr>`;
     });
     
