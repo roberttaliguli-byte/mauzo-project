@@ -574,27 +574,29 @@
                 Taarifa Fupi ya Mauzo
             </h2>
 
-            <!-- Search and Filter - UPDATED WITH DATE RANGE -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 mb-4">
-                <div class="relative lg:col-span-2">
-                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                    <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa, risiti, malipo..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
-                </div>
-                
-                <div class="relative">
-                    <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
-                    <input type="date" id="filter-start-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Toka">
-                </div>
-                
-                <div class="relative">
-                    <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
-                    <input type="date" id="filter-end-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Mpaka">
-                </div>
-                
-                <button id="reset-filters" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-2">
-                    <i class="fas fa-redo"></i> Safisha Filter
-                </button>
-            </div>
+<!-- Search and Filter - UPDATED WITH DATE RANGE AND SMALLER FILTER BUTTON -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-4">
+    <div class="relative lg:col-span-2">
+        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+        <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa, risiti, malipo..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
+    </div>
+    
+    <div class="relative">
+        <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
+        <input type="date" id="filter-start-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Toka">
+    </div>
+    
+    <div class="relative">
+        <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
+        <input type="date" id="filter-end-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Mpaka">
+    </div>
+    
+    <div>
+        <button id="reset-filters" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-2 transition">
+            <i class="fas fa-redo-alt"></i> Safisha
+        </button>
+    </div>
+</div>
 
             <!-- Sales Table -->
             <div class="overflow-x-auto rounded-lg border border-gray-200">
@@ -615,6 +617,7 @@
                             <th class="border px-3 py-2 text-left text-gray-700">Vitendo</th>
                         </tr>
                     </thead>
+
 <!-- In the Taarifa tab content, update the table body section -->
 <tbody id="sales-tbody">
     @php 
@@ -666,14 +669,21 @@
                 @endif
             </td>
             <td class="border px-3 py-2">
-                <!-- MODIFIED: Now includes aina in the same column with bidhaa -->
-                <div class="flex items-center gap-2">
+                <!-- MODIFIED: Now includes aina and kipimo with bidhaa -->
+                <div class="flex flex-col">
                     <span class="font-medium">{{ $item->bidhaa->jina }}</span>
-                    @if($item->bidhaa->aina)
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
-                        {{ $item->bidhaa->aina }}
-                    </span>
-                    @endif
+                    <div class="flex flex-wrap gap-1 mt-1">
+                        @if($item->bidhaa->aina)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
+                            <i class="fas fa-tag mr-1"></i>{{ $item->bidhaa->aina }}
+                        </span>
+                        @endif
+                        @if($item->bidhaa->kipimo)
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
+                            <i class="fas fa-ruler mr-1"></i>{{ $item->bidhaa->kipimo }}
+                        </span>
+                        @endif
+                    </div>
                 </div>
             </td>
             <td class="border px-3 py-2 text-center">{{ number_format($item->idadi, 2) }}</td>
@@ -785,7 +795,6 @@
                             @endunless
                         </tr>
                     </thead>
-
 <!-- In the Jumla tab content, update the table body section -->
 <tbody id="grouped-sales-tbody">
     @php
@@ -793,13 +802,16 @@
         foreach($allMauzos as $sale) {
             $date = $sale->created_at->format('Y-m-d');
             $product = $sale->bidhaa->jina;
-            $key = $date . '|' . $product;
+            $aina = $sale->bidhaa->aina ?? '';
+            $kipimo = $sale->bidhaa->kipimo ?? '';
+            $key = $date . '|' . $product . '|' . $aina . '|' . $kipimo;
             
             if (!isset($groupedSales[$key])) {
                 $groupedSales[$key] = [
                     'tarehe' => $date,
                     'jina' => $product,
-                    'aina' => $sale->bidhaa->aina ?? '',
+                    'aina' => $aina,
+                    'kipimo' => $kipimo,
                     'idadi' => 0,
                     'punguzo' => 0,
                     'jumla' => 0,
@@ -817,20 +829,30 @@
             $saleProfit = (($sale->bei - $buyingPrice) * $sale->idadi) - $saleActualDiscount;
             $groupedSales[$key]['faida'] += $saleProfit;
         }
+        
+        // Sort by date (newest first)
+        krsort($groupedSales);
     @endphp
     
     @foreach($groupedSales as $sale)
     <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
         <td class="border px-3 py-2 text-sm">{{ $sale['tarehe'] }}</td>
         <td class="border px-3 py-2 text-sm">
-            <!-- MODIFIED: Now includes aina in the same column with bidhaa -->
-            <div class="flex items-center gap-2">
+            <!-- MODIFIED: Now includes aina and kipimo with bidhaa -->
+            <div class="flex flex-col">
                 <span class="font-medium">{{ $sale['jina'] }}</span>
-                @if($sale['aina'])
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
-                    {{ $sale['aina'] }}
-                </span>
-                @endif
+                <div class="flex flex-wrap gap-1 mt-1">
+                    @if($sale['aina'])
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
+                        <i class="fas fa-tag mr-1"></i>{{ $sale['aina'] }}
+                    </span>
+                    @endif
+                    @if($sale['kipimo'])
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
+                        <i class="fas fa-ruler mr-1"></i>{{ $sale['kipimo'] }}
+                    </span>
+                    @endif
+                </div>
             </div>
         </td>
         <td class="border px-3 py-2 text-center text-sm">{{ number_format($sale['idadi'], 2) }}</td>
