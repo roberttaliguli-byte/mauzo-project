@@ -9,7 +9,7 @@ use App\Models\User;
 use App\Models\Wafanyakazi;
 use App\Models\LoginHistory;
 use DateTime;
-use Carbon\Carbon; // Add this line
+use Carbon\Carbon;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -67,45 +69,43 @@ class AuthController extends Controller
     /**
      * Handle company + user registration
      */
-// After creating the company, add package_start and package_end
-public function registerPost(Request $request)
-{
-    $validated = $request->validate([
-        'company_name' => 'required|string|max:255',
-        'owner_name'   => 'required|string|max:255',
-        'owner_gender' => ['required', Rule::in(['male', 'female', 'other'])],
-        'owner_dob'    => 'required|date',
-        'location'     => 'required|string|max:255',
-        'region'       => 'required|string|max:255',
-        'phone'        => 'required|string|max:50',
-        'company_email' => 'required|email|max:255|unique:users,email',
-        'username'     => 'required|string|max:50|unique:users,username',
-        'password'     => 'required|string|min:6|confirmed',
-    ], [
-        'company_email.unique' => 'Barua pepe hii tayari imesajiliwa.',
-        'username.unique' => 'Jina la mtumiaji tayari limetumika.',
-    ]);
+    public function registerPost(Request $request)
+    {
+        $validated = $request->validate([
+            'company_name' => 'required|string|max:255',
+            'owner_name'   => 'required|string|max:255',
+            'owner_gender' => ['required', Rule::in(['male', 'female', 'other'])],
+            'owner_dob'    => 'required|date',
+            'location'     => 'required|string|max:255',
+            'region'       => 'required|string|max:255',
+            'phone'        => 'required|string|max:50',
+            'company_email' => 'required|email|max:255|unique:users,email',
+            'username'     => 'required|string|max:50|unique:users,username',
+            'password'     => 'required|string|min:6|confirmed',
+        ], [
+            'company_email.unique' => 'Barua pepe hii tayari imesajiliwa.',
+            'username.unique' => 'Jina la mtumiaji tayari limetumika.',
+        ]);
 
-    // Set default package dates for free trial
-    $now = Carbon::now();
-    $packageEnd = $now->copy()->addDays(14); // 14 days free trial
+        // Set default package dates for free trial
+        $now = Carbon::now();
+        $packageEnd = $now->copy()->addDays(14); // 14 days free trial
 
-    // Create the company with default package
-    $company = Company::create([
-        'company_name' => $validated['company_name'],
-        'owner_name'   => $validated['owner_name'],
-        'owner_gender' => $validated['owner_gender'],
-        'owner_dob'    => $validated['owner_dob'],
-        'location'     => $validated['location'],
-        'region'       => $validated['region'],
-        'phone'        => $validated['phone'],
-        'email'        => $validated['company_email'],
-        'is_user_approved' => 0,
-        'package' => 'Free Trial 14 days', // Set default package
-        'package_start' => $now,
-        'package_end' => $packageEnd,
-    ]);
-
+        // Create the company with default package
+        $company = Company::create([
+            'company_name' => $validated['company_name'],
+            'owner_name'   => $validated['owner_name'],
+            'owner_gender' => $validated['owner_gender'],
+            'owner_dob'    => $validated['owner_dob'],
+            'location'     => $validated['location'],
+            'region'       => $validated['region'],
+            'phone'        => $validated['phone'],
+            'email'        => $validated['company_email'],
+            'is_user_approved' => 0,
+            'package' => 'Free Trial 14 days',
+            'package_start' => $now,
+            'package_end' => $packageEnd,
+        ]);
 
         // Generate email verification token
         $token = Str::random(40);
@@ -172,10 +172,13 @@ public function registerPost(Request $request)
     }
 
     /**
-     * Show login form
+     * Show login form - Don't clear session to preserve flash messages
      */
     public function showLogin()
     {
+        // Don't clear session here - this preserves success messages from registration
+        // Session clearing happens only during login/logout
+        
         return view('auth.login');
     }
 
@@ -184,6 +187,10 @@ public function registerPost(Request $request)
      */
     public function loginPost(Request $request)
     {
+        // Clear session before login attempt to prevent data leakage
+        // This is safe because we're about to create a new session anyway
+        $this->forceClearSession($request);
+        
         $credentials = $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
@@ -198,6 +205,9 @@ public function registerPost(Request $request)
         ], $request->boolean('remember'))) {
 
             $user = Auth::guard('web')->user();
+            
+            // Clear any company-specific cache
+            $this->clearAllCompanyCaches();
             
             // Update login tracking (only basic fields, no login history)
             $user->update([
@@ -245,6 +255,9 @@ public function registerPost(Request $request)
                     ->onlyInput('username');
             }
 
+            // Clear company-specific cache for this new login
+            $this->clearCompanyCache($user->company_id);
+            
             // Update login tracking
             $user->update([
                 'last_login_at' => now(),
@@ -265,56 +278,59 @@ public function registerPost(Request $request)
                 ->with('success', 'Umeingia kama Mmiliki!');
         }
 
-// 3️⃣ Employee login (role = 'mfanyakazi') - WITH TRACKING AND PACKAGE CHECK
-if (Auth::guard('mfanyakazi')->attempt([
-    'username' => $credentials['username'],
-    'password' => $credentials['password']
-], $request->boolean('remember'))) {
+        // 3️⃣ Employee login (role = 'mfanyakazi') - WITH TRACKING AND PACKAGE CHECK
+        if (Auth::guard('mfanyakazi')->attempt([
+            'username' => $credentials['username'],
+            'password' => $credentials['password']
+        ], $request->boolean('remember'))) {
 
-    $mfanyakazi = Auth::guard('mfanyakazi')->user();
+            $mfanyakazi = Auth::guard('mfanyakazi')->user();
 
-    if ($mfanyakazi->getini !== 'ingia') {
-        Auth::guard('mfanyakazi')->logout();
-        return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
-            ->onlyInput('username');
-    }
+            if ($mfanyakazi->getini !== 'ingia') {
+                Auth::guard('mfanyakazi')->logout();
+                return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
+                    ->onlyInput('username');
+            }
 
-    // Check if employee has company_id
-    if (!$mfanyakazi->company_id) {
-        Auth::guard('mfanyakazi')->logout();
-        return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
-            ->onlyInput('username');
-    }
+            // Check if employee has company_id
+            if (!$mfanyakazi->company_id) {
+                Auth::guard('mfanyakazi')->logout();
+                return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
+                    ->onlyInput('username');
+            }
 
-    // ✅ CHECK COMPANY PACKAGE EXPIRY
-    $company = $mfanyakazi->company;
-    
-    // Check if package_end is null or expired
-    if (!$company || is_null($company->package_end) || \Carbon\Carbon::parse($company->package_end)->isPast()) {
-        Auth::guard('mfanyakazi')->logout();
-        
-        return back()->withErrors([
-            'login' => 'Samahani, kifurushi cha kampuni kimeisha muda. Wasiliana na mwajiri wako.'
-        ])->onlyInput('username');
-    }
+            // ✅ CHECK COMPANY PACKAGE EXPIRY
+            $company = $mfanyakazi->company;
+            
+            // Check if package_end is null or expired
+            if (!$company || is_null($company->package_end) || \Carbon\Carbon::parse($company->package_end)->isPast()) {
+                Auth::guard('mfanyakazi')->logout();
+                
+                return back()->withErrors([
+                    'login' => 'Samahani, kifurushi cha kampuni kimeisha muda. Wasiliana na mwajiri wako.'
+                ])->onlyInput('username');
+            }
 
-    // Update employee login tracking in wafanyakazis table
-    $mfanyakazi->update([
-        'last_login_at' => now(),
-        'last_activity_at' => now(),
-        'login_count' => ($mfanyakazi->login_count ?? 0) + 1
-    ]);
+            // Clear company-specific cache for this new login
+            $this->clearCompanyCache($company->id);
 
-    // Optional: Show warning if package expires soon
-    $daysLeft = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false);
-    if ($daysLeft <= 7 && $daysLeft > 0) {
-        session()->flash('warning', "Tahadhari: Kifurushi cha kampuni kitaisha muda baada ya siku {$daysLeft}. Tafadhali mjulishe mwajiri wako.");
-    }
+            // Update employee login tracking in wafanyakazis table
+            $mfanyakazi->update([
+                'last_login_at' => now(),
+                'last_activity_at' => now(),
+                'login_count' => ($mfanyakazi->login_count ?? 0) + 1
+            ]);
 
-    $request->session()->regenerate();
-    return redirect()->route('mauzo.index')
-        ->with('success', 'Umeingia kama Mfanyakazi!');
-}
+            // Optional: Show warning if package expires soon
+            $daysLeft = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false);
+            if ($daysLeft <= 7 && $daysLeft > 0) {
+                session()->flash('warning', "Tahadhari: Kifurushi cha kampuni kitaisha muda baada ya siku {$daysLeft}. Tafadhali mjulishe mwajiri wako.");
+            }
+
+            $request->session()->regenerate();
+            return redirect()->route('mauzo.index')
+                ->with('success', 'Umeingia kama Mfanyakazi!');
+        }
 
         // 4️⃣ Login failed
         return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
@@ -390,13 +406,20 @@ if (Auth::guard('mfanyakazi')->attempt([
     }
 
     /**
-     * Handle logout
+     * Handle logout - COMPLETE session and cache clearing
      */
     public function logout(Request $request)
     {
-        // Update logout time for boss if logged in
+        $companyId = null;
+        $userId = null;
+        $userRole = null;
+        
+        // Get user info before logout for cache clearing
         if (Auth::guard('web')->check()) {
             $user = Auth::guard('web')->user();
+            $userId = $user->id;
+            $userRole = $user->role;
+            $companyId = $user->company_id;
             
             // Only update login history for bosses (not admins)
             if ($user->role === 'boss') {
@@ -418,6 +441,9 @@ if (Auth::guard('mfanyakazi')->attempt([
         // Update logout time for employee if logged in
         elseif (Auth::guard('mfanyakazi')->check()) {
             $mfanyakazi = Auth::guard('mfanyakazi')->user();
+            $companyId = $mfanyakazi->company_id;
+            $userId = $mfanyakazi->id;
+            $userRole = 'mfanyakazi';
             
             // Update employee last activity
             $mfanyakazi->update(['last_activity_at' => now()]);
@@ -425,9 +451,148 @@ if (Auth::guard('mfanyakazi')->attempt([
             Auth::guard('mfanyakazi')->logout();
         }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // COMPLETE session cleanup
+        $this->completeSessionCleanup($request, $companyId, $userId);
+        
+        // Clear company-specific cache
+        if ($companyId) {
+            $this->clearCompanyCache($companyId);
+        }
+        
+        // Clear all user-specific cache
+        if ($userId) {
+            Cache::forget("user_{$userId}_*");
+            Cache::forget("user_permissions_{$userId}");
+        }
 
         return redirect()->route('login')->with('success', 'Umetoka kwenye mfumo kwa mafanikio.');
+    }
+
+    /**
+     * Force clear all session data - used during login and logout
+     */
+    private function forceClearSession(Request $request)
+    {
+        // Logout from all guards if somehow still authenticated
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        }
+        if (Auth::guard('mfanyakazi')->check()) {
+            Auth::guard('mfanyakazi')->logout();
+        }
+        
+        // Clear all session data
+        Session::flush();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        // Clear all cookies except essential Laravel cookies
+        foreach ($_COOKIE as $key => $value) {
+            if (!in_array($key, ['XSRF-TOKEN', 'laravel_session'])) {
+                setcookie($key, '', time() - 3600, '/');
+            }
+        }
+    }
+
+    /**
+     * Complete session cleanup for logout
+     */
+    private function completeSessionCleanup(Request $request, $companyId = null, $userId = null)
+    {
+        // Get all session keys
+        $session = $request->session();
+        
+        // System keys to keep (minimal)
+        $keepKeys = ['_token'];
+        
+        // Get all session keys
+        $allKeys = $session->all();
+        
+        // Remove all user/company-specific data
+        foreach (array_keys($allKeys) as $key) {
+            if (!in_array($key, $keepKeys) && !str_starts_with($key, '_')) {
+                $session->forget($key);
+            }
+        }
+        
+        // Clear specific session keys that might contain company data
+        $keysToClear = [
+            'company_name', 'company_id', 'user_role', 'permissions',
+            'cart', 'kikapu', 'temp_data', 'last_activity',
+            'url', 'previous_url', 'intended'
+        ];
+        
+        foreach ($keysToClear as $key) {
+            if ($session->has($key)) {
+                $session->forget($key);
+            }
+        }
+        
+        // Clear any company-specific flash data
+        $session->flash('company_data', null);
+    }
+
+    /**
+     * Clear company-specific cache
+     */
+    private function clearCompanyCache($companyId)
+    {
+        if (!$companyId) return;
+        
+        // Clear common company cache keys
+        $cachePatterns = [
+            "company_{$companyId}_*",
+            "company_data_{$companyId}",
+            "company_products_{$companyId}",
+            "company_customers_{$companyId}",
+            "company_sales_{$companyId}",
+            "company_expenses_{$companyId}",
+            "company_reports_{$companyId}",
+            "company_dashboard_{$companyId}"
+        ];
+        
+        foreach ($cachePatterns as $pattern) {
+            Cache::forget($pattern);
+        }
+        
+        // If using cache tags (Redis), you can do:
+        // Cache::tags(["company_{$companyId}"])->flush();
+    }
+
+    /**
+     * Clear all company caches (for admin login)
+     */
+    private function clearAllCompanyCaches()
+    {
+        // Don't clear everything, just admin-related caches
+        Cache::forget('admin_dashboard_stats');
+        Cache::forget('admin_companies_list');
+        Cache::forget('admin_reports_data');
+    }
+
+    /**
+     * Check session status (AJAX endpoint)
+     */
+    public function checkSession(Request $request)
+    {
+        return response()->json([
+            'authenticated' => Auth::check() || Auth::guard('mfanyakazi')->check(),
+            'timestamp' => now()->toIso8601String()
+        ]);
+    }
+
+    /**
+     * Cleanup session (AJAX endpoint for beforeunload)
+     */
+    public function cleanupSession(Request $request)
+    {
+        // This is called via beacon on page unload
+        // Just log or do minimal cleanup
+        if (Auth::check()) {
+            $user = Auth::user();
+            $user->update(['last_activity_at' => now()]);
+        }
+        
+        return response()->json(['success' => true]);
     }
 }

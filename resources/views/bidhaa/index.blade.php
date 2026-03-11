@@ -80,14 +80,15 @@
             </div>
             
             <!-- Download Buttons -->
-            <div class="flex gap-2">
-                <button onclick="exportPDF()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-                    <i class="fas fa-file-pdf mr-1"></i> PDF
-                </button>
-                <button onclick="exportExcel()" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
-                    <i class="fas fa-file-excel mr-1"></i> Excel 
-                </button>
-            </div>
+<!-- Download Buttons -->
+        <div class="flex gap-2">
+            <button onclick="exportPDF()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                <i class="fas fa-file-pdf mr-1"></i> PDF
+            </button>
+            <button onclick="exportExcel()" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">
+                <i class="fas fa-file-excel mr-1"></i> Excel 
+            </button>
+        </div>
         </div>
     </div>
 
@@ -1694,14 +1695,37 @@ function printCurrentView() {
     printWindow.document.close();
     printWindow.print();
 }
-
 // Export functions
 function exportPDF() {
-    window.location.href = `${window.location.pathname}?export=pdf`;
+    // Get current URL parameters
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    
+    // Remove pagination parameters
+    params.delete('page');
+    params.delete('per_page');
+    
+    // Add export parameter
+    params.set('export', 'pdf');
+    
+    // Redirect to export URL
+    window.location.href = `${url.pathname}?${params.toString()}`;
 }
 
 function exportExcel() {
-    window.location.href = `${window.location.pathname}?export=excel`;
+    // Get current URL parameters
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    
+    // Remove pagination parameters
+    params.delete('page');
+    params.delete('per_page');
+    
+    // Add export parameter
+    params.set('export', 'excel');
+    
+    // Redirect to export URL
+    window.location.href = `${url.pathname}?${params.toString()}`;
 }
 
 // Tab handling - FIXED: Updated to use correct tab IDs

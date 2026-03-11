@@ -204,6 +204,14 @@
             </form>
         </div>
 
+
+
+
+
+
+
+
+
         <!-- Financial Overview - Modified for mfanyakazi -->
         <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
             <h2 class="text-base font-bold text-gray-800 mb-3">
@@ -241,7 +249,7 @@
                 </div>
             @else
                 <!-- Full view for boss/admin -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="financial-overview">
+                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="financial-overview">
                     <!-- Mapato -->
                     <div class="bg-gradient-to-br from-amber-500 to-amber-600 p-3 rounded-lg shadow">
                         <div class="flex justify-between items-start mb-2">
@@ -453,6 +461,10 @@
                 </div>
             @endif
         </div>
+
+
+
+        
     </div>
 
     <!-- TAB 2: Barcode Sales -->

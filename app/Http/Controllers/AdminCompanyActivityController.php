@@ -24,80 +24,219 @@ class AdminCompanyActivityController extends Controller
     /**
      * Display the company activity dashboard
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            // Get companies with users and employee count
-            $companies = Company::with(['users' => function($q) {
-                $q->select('id', 'company_id', 'name', 'username', 'last_activity_at', 'last_login_at', 'login_count', 'role');
-            }])->withCount('wafanyakazi')->paginate(10);
-
+            $search = $request->input('search');
+            $status = $request->input('status'); // 'active' or 'inactive' or null
+            
             // Get today's date in East African Time
             $today = Carbon::now('Africa/Nairobi')->startOfDay();
-            $todayStr = $today->format('Y-m-d');
-
-            // Add today's login information to each company
-            foreach ($companies as $company) {
-                // Count today's logins for this company from login_histories
-                $company->today_login_count = DB::table('login_histories')
-                    ->where('company_id', $company->id)
-                    ->whereDate('login_at', $today)
-                    ->count();
-
-                // Check if company has any login today
-                $company->has_today_login = $company->today_login_count > 0;
-
-                // Get unique users who logged in today
-                $company->today_unique_users = DB::table('login_histories')
-                    ->where('company_id', $company->id)
-                    ->whereDate('login_at', $today)
-                    ->distinct('user_id')
-                    ->count('user_id');
-
-                // Get last login date
-                $company->last_login_date = DB::table('login_histories')
-                    ->where('company_id', $company->id)
-                    ->max('login_at');
-
-                // Check if company is currently active (any user active in last 10 minutes)
-                $company->is_active = $company->users()
-                    ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
-                    ->exists();
-
-                // Get active users count
-                $company->get_active_users_count = $company->users()
-                    ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
-                    ->count();
-
-                // Get total login count
-                $company->get_total_login_count = DB::table('login_histories')
-                    ->where('company_id', $company->id)
-                    ->count();
+            
+            // Base query for companies - get ALL companies first for stats
+            $allCompaniesQuery = Company::query();
+            
+            // Get ALL companies for statistics (not filtered by pagination)
+            $allCompanies = $allCompaniesQuery->get();
+            
+            // Calculate summary statistics from ALL companies
+            $stats = $this->calculateStats($allCompanies, $today);
+            
+            // Now build the paginated query with filters
+            $companiesQuery = Company::with(['users' => function($q) {
+                $q->select('id', 'company_id', 'name', 'username', 'last_activity_at', 'last_login_at', 'login_count', 'role');
+            }])->withCount('wafanyakazi');
+            
+            // Apply search filter if provided - searches across ALL records before pagination
+            if ($search) {
+                $companiesQuery->where(function($q) use ($search) {
+                    $q->where('company_name', 'LIKE', "%{$search}%")
+                      ->orWhere('owner_name', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%")
+                      ->orWhere('phone', 'LIKE', "%{$search}%")
+                      ->orWhere('package', 'LIKE', "%{$search}%");
+                });
             }
+            
+            // Get all companies (without pagination first) to apply status filter
+            $allFilteredCompanies = $companiesQuery->get();
+            
+            // Add activity data to each company for filtering
+            foreach ($allFilteredCompanies as $company) {
+                $this->enrichCompanyWithActivityData($company, $today);
+            }
+            
+            // Apply status filter if provided
+            if ($status === 'active') {
+                $filteredIds = $allFilteredCompanies->filter(function($company) {
+                    return $company->is_active;
+                })->pluck('id')->toArray();
+                $companiesQuery->whereIn('id', $filteredIds);
+            } elseif ($status === 'inactive') {
+                $filteredIds = $allFilteredCompanies->filter(function($company) {
+                    return !$company->is_active;
+                })->pluck('id')->toArray();
+                $companiesQuery->whereIn('id', $filteredIds);
+            }
+            
+            // Get paginated results
+            $companies = $companiesQuery->paginate(10)->withQueryString();
+            
+            // Enrich the paginated companies with activity data
+            foreach ($companies as $company) {
+                $this->enrichCompanyWithActivityData($company, $today);
+            }
+            
+            // Get today's active companies for the report tab
+            $todayActiveCompanies = $allCompanies->filter(function($company) use ($today) {
+                $this->enrichCompanyWithActivityData($company, $today);
+                return ($company->today_login_count ?? 0) > 0;
+            })->values();
 
-            // Get dashboard statistics
-            $stats = $this->activityService->getDashboardStats();
-
-            return view('admin.company-activity', compact('companies', 'stats'));
+            return view('admin.company-activity', compact(
+                'companies', 
+                'stats', 
+                'search', 
+                'status',
+                'todayActiveCompanies',
+                'allCompanies'
+            ));
 
         } catch (\Exception $e) {
             Log::error('Error in company activity index: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
             // Return empty data on error
             $companies = collect([]);
-            $stats = [
-                'active_companies' => 0,
-                'inactive_companies' => 0,
-                'total_companies' => 0,
-                'active_users_now' => 0,
-                'today_logins' => 0,
-                'today_unique_users' => 0,
-                'active_percentage' => 0
-            ];
+            $stats = $this->getEmptyStats();
+            $search = $request->input('search');
+            $status = $request->input('status');
+            $todayActiveCompanies = collect([]);
+            $allCompanies = collect([]);
             
-            return view('admin.company-activity', compact('companies', 'stats'))
-                ->with('error', 'Hitilafu katika kupakia data. Tafadhali jaribu tena.');
+            return view('admin.company-activity', compact(
+                'companies', 
+                'stats', 
+                'search', 
+                'status',
+                'todayActiveCompanies',
+                'allCompanies'
+            ))->with('error', 'Hitilafu katika kupakia data. Tafadhali jaribu tena.');
         }
+    }
+
+    /**
+     * Enrich company with activity data
+     */
+    private function enrichCompanyWithActivityData($company, $today)
+    {
+        // Count today's logins for this company from login_histories
+        $company->today_login_count = DB::table('login_histories')
+            ->where('company_id', $company->id)
+            ->whereDate('login_at', $today)
+            ->count();
+
+        // Check if company has any login today
+        $company->has_today_login = $company->today_login_count > 0;
+
+        // Get unique users who logged in today
+        $company->today_unique_users = DB::table('login_histories')
+            ->where('company_id', $company->id)
+            ->whereDate('login_at', $today)
+            ->distinct('user_id')
+            ->count('user_id');
+
+        // Get last login date
+        $company->last_login_date = DB::table('login_histories')
+            ->where('company_id', $company->id)
+            ->max('login_at');
+
+        // Check if company is currently active (any user active in last 10 minutes)
+        $company->is_active = $company->users()
+            ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+            ->exists();
+
+        // Get active users count
+        $company->active_users_count = $company->users()
+            ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+            ->count();
+
+        // Get total login count
+        $company->total_login_count = DB::table('login_histories')
+            ->where('company_id', $company->id)
+            ->count();
+
+        return $company;
+    }
+
+    /**
+     * Calculate statistics from all companies
+     */
+    private function calculateStats($companies, $today)
+    {
+        $activeCompanies = 0;
+        $todayLogins = 0;
+        $todayUniqueUsers = 0;
+        $activeUsersNow = 0;
+        
+        foreach ($companies as $company) {
+            // Check if company is active
+            $isActive = $company->users()
+                ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+                ->exists();
+            
+            if ($isActive) {
+                $activeCompanies++;
+            }
+            
+            // Count active users now
+            $activeUsersNow += $company->users()
+                ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+                ->count();
+            
+            // Count today's logins
+            $todayLogins += DB::table('login_histories')
+                ->where('company_id', $company->id)
+                ->whereDate('login_at', $today)
+                ->count();
+            
+            // Count today's unique users
+            $todayUniqueUsers += DB::table('login_histories')
+                ->where('company_id', $company->id)
+                ->whereDate('login_at', $today)
+                ->distinct('user_id')
+                ->count('user_id');
+        }
+        
+        $totalCompanies = $companies->count();
+        $inactiveCompanies = $totalCompanies - $activeCompanies;
+        $activePercentage = $totalCompanies > 0 ? round(($activeCompanies / $totalCompanies) * 100) : 0;
+        
+        return [
+            'active_companies' => $activeCompanies,
+            'inactive_companies' => $inactiveCompanies,
+            'total_companies' => $totalCompanies,
+            'active_users_now' => $activeUsersNow,
+            'today_logins' => $todayLogins,
+            'today_unique_users' => $todayUniqueUsers,
+            'active_percentage' => $activePercentage
+        ];
+    }
+
+    /**
+     * Get empty stats for error state
+     */
+    private function getEmptyStats()
+    {
+        return [
+            'active_companies' => 0,
+            'inactive_companies' => 0,
+            'total_companies' => 0,
+            'active_users_now' => 0,
+            'today_logins' => 0,
+            'today_unique_users' => 0,
+            'active_percentage' => 0
+        ];
     }
 
     /**
@@ -279,7 +418,9 @@ class AdminCompanyActivityController extends Controller
     public function getActivityStats()
     {
         try {
-            $stats = $this->activityService->getDashboardStats();
+            $companies = Company::all();
+            $today = Carbon::now('Africa/Nairobi')->startOfDay();
+            $stats = $this->calculateStats($companies, $today);
             return response()->json($stats);
         } catch (\Exception $e) {
             Log::error('Error getting activity stats: ' . $e->getMessage());

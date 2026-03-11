@@ -1,9 +1,15 @@
 <!DOCTYPE html>
 <html lang="sw">
 <head>
-    <!-- Add these meta tags in your head section (outside this tab) -->
-    <meta name="company-id" content="{{ auth()->user()->company_id ?? 'default' }}">
-    <meta name="company-name" content="{{ auth()->user()->company->company_name ?? 'Default Company' }}">
+    <!-- Meta Tags - Updated to handle both guards -->
+    <meta name="company-id" content="{{ 
+        (Auth::check() ? Auth::user()->company_id : 
+        (Auth::guard('mfanyakazi')->check() ? Auth::guard('mfanyakazi')->user()->company_id : 'default')) 
+    }}">
+    <meta name="company-name" content="{{ 
+        (Auth::check() && Auth::user()->company ? Auth::user()->company->company_name : 
+        (Auth::guard('mfanyakazi')->check() && Auth::guard('mfanyakazi')->user()->company ? Auth::guard('mfanyakazi')->user()->company->company_name : 'Default Company')) 
+    }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>@yield('title', 'MAUZO SHEET')</title>
@@ -21,7 +27,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
 <style>
-    /* Custom Styles */
+    /* Custom Styles - keep your existing styles */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
     * {
@@ -37,7 +43,7 @@
     
     body {
         font-family: 'Inter', sans-serif;
-        transition: all 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease;
         overflow-x: hidden;
         width: 100vw;
         min-height: 100vh;
@@ -59,54 +65,62 @@
         }
     }
     
-    /* Color Modes - Only Light and Dark */
+    /* Color Modes */
     .color-mode-light {
         --bg-primary: #ffffff;
         --bg-secondary: #f8fafc;
         --text-primary: #1e293b;
         --text-secondary: #64748b;
+        --text-muted: #6b7280;
         --border-color: #e2e8f0;
         --sidebar-bg: #065f46;
         --sidebar-text: #ffffff;
+        --hover-bg: #f3f4f6;
+        --card-bg: #ffffff;
+        --header-bg: #ffffff;
+        --input-bg: #ffffff;
+        --input-border: #d1d5db;
     }
     
     .color-mode-dark {
-        --bg-primary: #1f2937;
-        --bg-secondary: #374151;
+        --bg-primary: #111827;
+        --bg-secondary: #1f2937;
         --text-primary: #f9fafb;
         --text-secondary: #d1d5db;
-        --border-color: #4b5563;
+        --text-muted: #9ca3af;
+        --border-color: #374151;
         --sidebar-bg: #065f46;
         --sidebar-text: #ffffff;
+        --hover-bg: #374151;
+        --card-bg: #1f2937;
+        --header-bg: #1f2937;
+        --input-bg: #374151;
+        --input-border: #4b5563;
     }
     
     /* Apply color variables */
-    .color-mode-light {
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
-    }
-    
+    .color-mode-light,
     .color-mode-dark {
         background-color: var(--bg-primary);
         color: var(--text-primary);
     }
     
-    /* Sidebar Styles - Mobile Optimized (Half screen) */
+    /* Sidebar Styles */
     .sidebar {
         position: fixed;
         top: 0;
         left: 0;
         height: 100vh;
         width: 280px;
-        max-width: 50vw; /* Changed to half screen on mobile */
+        max-width: 80vw;
         z-index: 1000;
         transform: translateX(-100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        background: linear-gradient(135deg, var(--sidebar-bg) 0%, #047857 100%);
-        color: var(--sidebar-text);
+        background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+        color: white;
     }
     
     .sidebar.open {
@@ -121,13 +135,13 @@
         transition: all 0.3s ease;
     }
     
-    /* When sidebar is open on desktop */
+    /* Desktop sidebar open */
     .sidebar-open .main-container {
         margin-left: 280px;
         width: calc(100% - 280px);
     }
     
-    /* Ensure content fits within viewport */
+    /* Main content */
     .main-content {
         width: 100%;
         min-height: 100vh;
@@ -135,20 +149,19 @@
         padding: 0.5rem;
     }
     
-    /* Mobile specific adjustments (Half screen sidebar) */
+    /* Mobile specific */
     @media (max-width: 1023px) {
         .sidebar {
-            width: 200px; /* Reduced width for half screen */
-            max-width: 50vw;
+            width: 280px;
+            max-width: 85vw;
         }
         
         .sidebar-open .main-container {
             margin-left: 0 !important;
             width: 100% !important;
-            transform: translateX(50vw); /* Move content by half screen */
+            transform: translateX(280px);
         }
         
-        /* On mobile, overlay content when sidebar is open (lighter for half screen) */
         .sidebar-open .main-container::before {
             content: '';
             position: fixed;
@@ -156,13 +169,12 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.3); /* Lighter overlay */
-            backdrop-filter: blur(2px); /* Slight blur effect */
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(3px);
             z-index: 999;
             pointer-events: auto;
         }
         
-        /* Prevent body scroll when sidebar is open on mobile */
         body.sidebar-open {
             overflow: hidden;
         }
@@ -170,86 +182,39 @@
         .main-content {
             padding: 0.5rem;
         }
-        
-        /* Compact sidebar items for half screen */
-        .sidebar-item {
-            padding: 0.4rem 0.75rem !important;
-            margin: 0.125rem 0;
-            border-radius: 0.375rem;
-            min-height: 36px; /* Smaller touch target for compact sidebar */
+    }
+    
+    /* Animation */
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
         }
-        
-        /* Reduce logo size for half screen */
-        .logo-img {
-            width: 28px !important;
-            height: 28px !important;
-        }
-        
-        .logo-text {
-            font-size: 0.875rem !important;
-        }
-        
-        .logo-subtext {
-            font-size: 0.5rem !important;
-        }
-        
-        /* Adjust sidebar footer for mobile */
-        .sidebar .border-t {
-            padding: 0.5rem;
-        }
-        
-        .sidebar .text-xs {
-            font-size: 0.625rem;
-        }
-        
-        /* Smaller active dot for mobile */
-        .active-nav-item::after {
-            width: 2px !important;
+        to {
+            transform: translateX(0);
+            opacity: 1;
         }
     }
     
-    /* Tablet adjustments (Full sidebar) */
-    @media (min-width: 641px) and (max-width: 1023px) {
-        .sidebar {
-            width: 280px;
-            max-width: 300px;
-        }
-        
-        .sidebar-open .main-container {
-            transform: translateX(280px);
-        }
-        
-        /* Restore normal sidebar items on tablet */
-        .sidebar-item {
-            padding: 0.75rem 1rem !important;
-            min-height: 44px;
-        }
-        
-        .logo-img {
-            width: 32px !important;
-            height: 32px !important;
-        }
-        
-        .logo-text {
-            font-size: 1rem !important;
-        }
-        
-        .logo-subtext {
-            font-size: 0.625rem !important;
-        }
+    .notification-slide {
+        animation: slideInRight 0.3s ease-out;
     }
     
-    @media (min-width: 768px) and (max-width: 1023px) {
-        .main-content {
-            padding: 1rem;
-        }
+    /* Form input focus effects */
+    input:focus, select:focus, textarea:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
     }
     
-    /* Desktop specific adjustments */
+    /* Smooth transitions */
+    .tab-content {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    /* Desktop */
     @media (min-width: 1024px) {
         .sidebar {
             transform: translateX(0);
-            max-width: 280px;
             width: 280px;
         }
         
@@ -265,129 +230,12 @@
         .main-content {
             padding: 1rem 1.5rem;
         }
-        
-        /* Hide close button on desktop */
-        .sidebar .fa-times {
-            display: none;
-        }
     }
     
-    /* Large desktop */
-    @media (min-width: 1536px) {
-        .main-content {
-            max-width: 1536px;
-            margin: 0 auto;
-        }
-    }
-    
-    /* Extra small mobile devices (very small phones) */
-    @media (max-width: 360px) {
-        .sidebar {
-            width: 180px; /* Even narrower for very small phones */
-            max-width: 50vw;
-        }
-        
-        .sidebar-open .main-container {
-            transform: translateX(50vw);
-        }
-        
-        .header-left {
-            gap: 0.5rem;
-        }
-        
-        .sidebar-item {
-            padding: 0.35rem 0.5rem !important;
-            font-size: 0.75rem;
-            min-height: 32px;
-        }
-        
-        .color-mode-btn {
-            width: 40px;
-            height: 40px;
-            font-size: 0.9rem;
-        }
-        
-        .color-mode-menu {
-            min-width: 120px;
-            font-size: 0.75rem;
-        }
-        
-        /* Hide logo subtext on very small screens */
-        .logo-subtext {
-            display: none;
-        }
-    }
-    
-    /* Table responsive styles */
-    .table-responsive {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        font-size: 0.875rem;
-    }
-    
-    /* Mobile table adjustments */
-    @media (max-width: 640px) {
-        .table-responsive {
-            font-size: 0.75rem;
-        }
-        
-        .table-responsive td,
-        .table-responsive th {
-            padding: 0.25rem 0.5rem !important;
-        }
-    }
-    
-    /* Card responsive styles */
-    .responsive-card {
-        width: 100%;
-        margin-bottom: 0.75rem;
-        padding: 0.75rem;
-    }
-    
-    @media (min-width: 640px) {
-        .responsive-card {
-            margin-bottom: 1rem;
-            padding: 1rem;
-        }
-    }
-    
-    @media (min-width: 768px) {
-        .responsive-card {
-            margin-bottom: 1.5rem;
-            padding: 1.5rem;
-        }
-    }
-    
-    /* Form responsive styles */
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-    
-    @media (min-width: 640px) {
-        .form-grid {
-            gap: 1rem;
-        }
-    }
-    
-    @media (min-width: 768px) {
-        .form-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
-    @media (min-width: 1024px) {
-        .form-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-    
-    /* Hamburger Menu - Mobile optimized */
+    /* Hamburger Menu - FIXED */
     .hamburger-menu {
-        width: 24px;
-        height: 18px;
+        width: 30px;
+        height: 24px;
         position: relative;
         cursor: pointer;
         display: flex;
@@ -396,25 +244,21 @@
         padding: 0;
         background: none;
         border: none;
-    }
-    
-    @media (min-width: 1024px) {
-        .hamburger-menu {
-            display: none;
-        }
+        margin: 0;
     }
     
     .hamburger-menu span {
         display: block;
-        height: 2px;
+        height: 3px;
         width: 100%;
         background: currentColor;
         border-radius: 3px;
         transition: all 0.3s ease;
+        margin: 0;
     }
     
     .hamburger-menu.active span:nth-child(1) {
-        transform: translateY(8px) rotate(45deg);
+        transform: translateY(10px) rotate(45deg);
     }
     
     .hamburger-menu.active span:nth-child(2) {
@@ -422,10 +266,47 @@
     }
     
     .hamburger-menu.active span:nth-child(3) {
-        transform: translateY(-8px) rotate(-45deg);
+        transform: translateY(-11px) rotate(-45deg);
     }
     
-    /* Sidebar items - Mobile optimized */
+    /* Sidebar Header - FIXED close button position */
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .close-sidebar-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        color: white;
+        transition: all 0.2s ease;
+    }
+    
+    .close-sidebar-btn:hover {
+        background: rgba(255,255,255,0.2);
+    }
+    
+    @media (min-width: 1024px) {
+        .close-sidebar-btn {
+            display: none;
+        }
+    }
+    
+    /* Sidebar items */
     .sidebar-item {
         position: relative;
         overflow: hidden;
@@ -435,35 +316,18 @@
         border-radius: 0.5rem;
         font-size: 0.875rem;
         color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
     
-    @media (min-width: 768px) {
-        .sidebar-item {
-            padding: 0.875rem 1rem;
-            font-size: 0.9rem;
-        }
+    .sidebar-item i {
+        width: 20px;
+        text-align: center;
     }
     
-    @media (min-width: 1024px) {
-        .sidebar-item {
-            padding: 1rem 1.25rem;
-            font-size: 0.95rem;
-        }
-    }
-    
-    .sidebar-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s;
-    }
-    
-    .sidebar-item:hover::before {
-        left: 100%;
+    .sidebar-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
     }
     
     /* Active navigation item */
@@ -482,366 +346,147 @@
         background: white;
     }
     
-    /* Scrollbar */
-    .scrollbar-thin::-webkit-scrollbar {
-        width: 3px;
+    /* Blinking animation for package expiry */
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
     }
     
-    .scrollbar-thin::-webkit-scrollbar-track {
-        background: transparent;
+    .blink-warning {
+        animation: blink 1.5s infinite;
     }
     
-    .scrollbar-thin::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 2px;
+    .blink-critical {
+        animation: blink 0.8s infinite;
     }
     
-    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.5);
-    }
-    
-    /* Ensure no horizontal scroll */
-    .no-scroll-x {
-        overflow-x: hidden !important;
-    }
-    
-    /* Color Mode Toggle - Mobile optimized */
-    .color-mode-toggle {
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        z-index: 50;
-    }
-    
-    @media (min-width: 768px) {
-        .color-mode-toggle {
-            bottom: 20px;
-            right: 20px;
-        }
-    }
-    
-    .color-mode-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        display: flex;
+    /* Package indicator */
+    .package-indicator {
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: 2px solid;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        background: white;
-        color: #065f46;
-        font-size: 1rem;
-    }
-    
-    @media (min-width: 768px) {
-        .color-mode-btn {
-            width: 50px;
-            height: 50px;
-            font-size: 1.1rem;
-        }
-    }
-    
-    .color-mode-menu {
-        position: absolute;
-        bottom: 52px;
-        right: 0;
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        padding: 10px;
-        min-width: 140px;
-        z-index: 51;
-        font-size: 0.875rem;
-    }
-    
-    /* Header adjustments - Mobile optimized */
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    /* Page title adjustments */
-    .page-title {
-        font-size: 1.125rem;
-        font-weight: 700;
-        line-height: 1.2;
-    }
-    
-    .page-subtitle {
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
         font-size: 0.75rem;
-        line-height: 1.2;
-        margin-top: 0.125rem;
-    }
-    
-    @media (min-width: 640px) {
-        .page-title {
-            font-size: 1.25rem;
-        }
-        
-        .page-subtitle {
-            font-size: 0.875rem;
-        }
-    }
-    
-    @media (min-width: 768px) {
-        .page-title {
-            font-size: 1.5rem;
-        }
-        
-        .page-subtitle {
-            font-size: 0.9rem;
-        }
-    }
-    
-    @media (min-width: 1024px) {
-        .page-title {
-            font-size: 1.75rem;
-        }
-        
-        .page-subtitle {
-            font-size: 1rem;
-        }
-    }
-    
-    /* Content width adjustment */
-    .content-inner {
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-    
-    /* Button sizes for mobile */
-    .btn-mobile {
-        padding: 0.375rem 0.75rem;
-        font-size: 0.75rem;
-    }
-    
-    @media (min-width: 640px) {
-        .btn-mobile {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-        }
-    }
-    
-    /* Alert notification */
-    .alert-dot {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        width: 6px;
-        height: 6px;
-        background-color: #ef4444;
-        border-radius: 50%;
-    }
-    
-    @media (min-width: 640px) {
-        .alert-dot {
-            top: 4px;
-            right: 4px;
-            width: 8px;
-            height: 8px;
-        }
-    }
-    
-    /* Profile image size */
-    .profile-img {
-        width: 32px;
-        height: 32px;
-        font-size: 0.75rem;
-    }
-    
-    @media (min-width: 640px) {
-        .profile-img {
-            width: 40px;
-            height: 40px;
-            font-size: 0.875rem;
-        }
-    }
-    
-    /* Logo size adjustments */
-    .logo-img {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .logo-text {
-        font-size: 1rem;
-    }
-    
-    .logo-subtext {
-        font-size: 0.625rem;
-    }
-    
-    @media (min-width: 640px) {
-        .logo-img {
-            width: 40px;
-            height: 40px;
-        }
-        
-        .logo-text {
-            font-size: 1.25rem;
-        }
-        
-        .logo-subtext {
-            font-size: 0.75rem;
-        }
-    }
-    
-    /* Input field sizes */
-    input, select, textarea {
-        font-size: 0.875rem !important;
-        padding: 0.5rem 0.75rem !important;
-    }
-    
-    @media (min-width: 640px) {
-        input, select, textarea {
-            font-size: 0.9rem !important;
-            padding: 0.625rem 0.875rem !important;
-        }
-    }
-    
-    /* Icon sizes */
-    .icon-sm {
-        font-size: 0.875rem;
-    }
-    
-    .icon-md {
-        font-size: 1rem;
-    }
-    
-    .icon-lg {
-        font-size: 1.125rem;
-    }
-    
-    /* Hide elements on very small screens */
-    @media (max-width: 400px) {
-        .hide-xs {
-            display: none !important;
-        }
-    }
-    
-    /* Better touch targets */
-    button, 
-    a, 
-    input[type="submit"],
-    input[type="button"] {
-        min-height: 44px;
-        min-width: 44px;
-    }
-    
-    /* Prevent text selection on interactive elements */
-    button, 
-    a {
-        user-select: none;
-        -webkit-user-select: none;
-    }
-    
-    /* Smooth transitions for all interactive elements */
-    * {
-        transition: background-color 0.2s ease, 
-                   color 0.2s ease, 
-                   border-color 0.2s ease, 
-                   transform 0.2s ease,
-                   opacity 0.2s ease;
-    }
-    
-    /* Additional improvements for mobile */
-    @media (max-width: 640px) {
-        /* Ensure sidebar items fit in half screen */
-        .sidebar-item {
-            max-width: 100%;
-            overflow: hidden;
-        }
-        
-        /* Prevent horizontal overflow */
-        .sidebar {
-            overflow-x: hidden;
-        }
-        
-        /* Better touch targets for mobile */
-        button.sidebar-item,
-        a.sidebar-item {
-            min-height: 36px; /* Slightly smaller for compact sidebar */
-        }
-    }
-    
-    /* Tablet specific adjustments */
-    @media (min-width: 641px) and (max-width: 768px) {
-        .sidebar {
-            width: 250px; /* Slightly narrower on small tablets */
-        }
-        
-        .sidebar-open .main-container {
-            transform: translateX(250px);
-        }
-    }
-    
-    /* Alert Styles */
-    .alert-low-stock {
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    
-    .low-stock-item {
-        padding: 0.5rem;
-        border-bottom: 1px solid #e5e7eb;
-        transition: background-color 0.2s ease;
-    }
-    
-    .low-stock-item:hover {
-        background-color: #f9fafb;
-    }
-    
-    .low-stock-item.dark:hover {
-        background-color: #374151;
-    }
-    
-    .stock-critical {
-        color: #dc2626;
-        font-weight: 600;
-    }
-    
-    .stock-warning {
-        color: #d97706;
         font-weight: 500;
     }
     
-    .no-alerts {
-        padding: 1rem;
-        text-align: center;
-        color: #6b7280;
-        font-style: italic;
+    .package-critical {
+        background-color: #fee2e2;
+        color: #b91c1c;
+    }
+    
+    .package-warning {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .package-good {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .color-mode-dark .package-critical {
+        background-color: #7f1d1d;
+        color: #fecaca;
+    }
+    
+    .color-mode-dark .package-warning {
+        background-color: #78350f;
+        color: #fde68a;
+    }
+    
+    .color-mode-dark .package-good {
+        background-color: #064e3b;
+        color: #a7f3d0;
     }
 </style>
     @stack('styles')
 </head>
 
-<body class="color-mode-light no-scroll-x" x-data="app()" :class="[colorMode, sidebarOpen ? 'sidebar-open' : '']" x-init="init()">
+@php
+    // Helper function to get current user from any guard
+    function getCurrentUser() {
+        if (Auth::check()) {
+            return Auth::user();
+        }
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user();
+        }
+        return null;
+    }
+    
+    // Helper function to get current company
+    function getCurrentCompany() {
+        $user = getCurrentUser();
+        if ($user && method_exists($user, 'company')) {
+            return $user->company;
+        }
+        return null;
+    }
+    
+    // Helper function to get package days left
+    function getPackageDaysLeft() {
+        $company = getCurrentCompany();
+        if (!$company || !$company->package_end) {
+            return 0;
+        }
+        $daysLeft = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false);
+        return max(0, ceil($daysLeft));
+    }
+    
+    // Helper function to get package name
+    function getPackageName() {
+        $company = getCurrentCompany();
+        return $company ? ($company->package ?? 'Free Trial') : 'Free Trial';
+    }
+    
+    // Helper function to get package end date
+    function getPackageEndDate() {
+        $company = getCurrentCompany();
+        if ($company && $company->package_end) {
+            return \Carbon\Carbon::parse($company->package_end)->format('d/m/Y');
+        }
+        return 'N/A';
+    }
+    
+    // Get current user and company
+    $currentUser = getCurrentUser();
+    $currentCompany = getCurrentCompany();
+    $daysLeft = getPackageDaysLeft();
+    $packageName = getPackageName();
+    $packageEndDate = getPackageEndDate();
+    $userName = $currentUser ? $currentUser->name : 'Boss';
+    $userRole = $currentUser ? ($currentUser->role ?? 'Mfanyakazi') : 'Meneja';
+    $userInitial = $userName ? substr($userName, 0, 1) : 'B';
+    $companyId = $currentCompany ? $currentCompany->id : 'default';
+    $companyName = $currentCompany ? $currentCompany->company_name : 'Default Company';
+@endphp
+
+<body class="no-scroll-x" 
+      :class="[colorMode, sidebarOpen ? 'sidebar-open' : '']" 
+      x-data="app()" 
+      x-init="init()">
     
     <!-- Sidebar -->
     <aside class="sidebar flex flex-col shadow-xl"
            :class="{'open': sidebarOpen}">
-        <!-- Logo Section -->
-        <div class="p-3 sm:p-4 text-center border-b border-green-700">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" 
-                         alt="Mauzo Logo" 
-                         class="logo-img rounded-lg">
-                    <div>
-                        <div class="logo-text font-bold text-left">MAUZO</div>
-                        <div class="logo-subtext text-green-200 text-left">Boss System</div>
-                    </div>
+        <!-- Logo Section - FIXED -->
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" 
+                     alt="Mauzo Logo" 
+                     class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg">
+                <div>
+                    <div class="font-bold text-base sm:text-lg">MAUZO</div>
+                    <div class="text-xs text-green-200">Boss System</div>
                 </div>
-                <button @click="closeSidebar()" 
-                        class="text-green-200 hover:text-white transition p-1 lg:hidden">
-                    <i class="fas fa-times icon-lg"></i>
-                </button>
             </div>
+            <button @click="closeSidebar()" 
+                    class="close-sidebar-btn lg:hidden">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
 
         <!-- Navigation Menu -->
@@ -854,68 +499,112 @@
             <div class="text-xs text-green-200 text-center">
                 {{ now()->format('d/m/Y H:i') }}
             </div>
-            <div class="mt-1 text-center lg:hidden">
-                <button @click="closeSidebar()" 
-                        class="text-green-200 hover:text-white text-xs transition px-2 py-1">
-                    <i class="fas fa-chevron-left mr-1"></i> Funga Menu
-                </button>
-            </div>
         </div>
     </aside>
 
     <!-- Main Content Container -->
     <div class="main-container">
         <div class="main-content flex flex-col min-h-screen">
-            <!-- Header with Hamburger Menu -->
-            <header class="sticky top-0 z-30 shadow-sm border-b px-3 sm:px-4 py-2 sm:py-3" :class="{
-                'bg-white border-gray-200': colorMode === 'color-mode-light',
-                'bg-gray-800 border-gray-700': colorMode === 'color-mode-dark'
-            }">
+            <!-- Header with Hamburger Menu - FIXED -->
+            <header class="sticky top-0 z-30 shadow-sm border-b px-3 sm:px-4 py-3 header-bg border-color">
                 <div class="flex justify-between items-center">
-                    <div class="header-left">
-                        <!-- Hamburger Menu - Visible only on mobile/tablet -->
+                    <div class="flex items-center gap-3">
+                        <!-- Hamburger Menu - FIXED lines -->
                         <button class="hamburger-menu lg:hidden" 
-                             :class="{'active': sidebarOpen}"
-                             @click="toggleSidebar()"
-                             aria-label="Toggle Menu">
-                            <span :class="{
-                                'bg-gray-800': colorMode === 'color-mode-light',
-                                'bg-white': colorMode === 'color-mode-dark'
-                            }"></span>
-                            <span :class="{
-                                'bg-gray-800': colorMode === 'color-mode-light',
-                                'bg-white': colorMode === 'color-mode-dark'
-                            }"></span>
-                            <span :class="{
-                                'bg-gray-800': colorMode === 'color-mode-light',
-                                'bg-white': colorMode === 'color-mode-dark'
-                            }"></span>
+                                :class="{'active': sidebarOpen}"
+                                @click="toggleSidebar()"
+                                aria-label="Toggle Menu">
+                            <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
+                            <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
+                            <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
                         </button>
                         
                         <!-- Page Title -->
                         <div>
-                            <h1 class="page-title">@yield('page-title', 'Dashboard')</h1>
-                            <p class="page-subtitle" :class="{
-                                'text-gray-600': colorMode === 'color-mode-light',
-                                'text-gray-300': colorMode === 'color-mode-dark'
-                            }">@yield('page-subtitle', 'Karibu tena, Meneja!')</p>
+                            <h1 class="text-lg sm:text-xl font-bold text-primary">@yield('page-title', 'Dashboard')</h1>
+                            <p class="text-xs sm:text-sm text-secondary">@yield('page-subtitle', 'Karibu tena, Meneja!')</p>
                         </div>
                     </div>
                     
-                    <div class="flex items-center space-x-1 sm:space-x-2">
+                    <div class="flex items-center gap-1 sm:gap-2">
+                        <!-- Package Days Remaining with Email Icon -->
+                        <div x-data="packageRemaining()" x-init="initPackageRemaining()" class="relative">
+                            <button @click="fetchPackageInfo()" 
+                                    class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    :class="{
+                                        'blink-critical': daysLeft <= 5 && daysLeft > 0,
+                                        'blink-warning': daysLeft > 5 && daysLeft <= 10
+                                    }"
+                                    aria-label="Package Days Remaining">
+                                <!-- Email Icon -->
+                                <i class="fas fa-envelope text-lg"></i>
+                                <template x-if="daysLeft <= 5 && daysLeft > 0">
+                                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                                </template>
+                            </button>
+
+                            <!-- Package Info Tooltip -->
+                            <div x-show="showPackageInfo"
+                                 @click.away="showPackageInfo = false"
+                                 x-cloak
+                                 x-transition
+                                 class="absolute right-0 mt-2 w-64 rounded-lg shadow-lg p-3 z-40 card-bg border border-color">
+                                <div class="text-center">
+                                    <div class="text-sm font-medium text-primary mb-2">Taarifa ya Package</div>
+                                    <div class="mb-2">
+                                        <span class="text-xs text-secondary">Package:</span>
+                                        <span class="ml-1 text-sm font-semibold text-primary" x-text="packageName"></span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <span class="text-xs text-secondary">Siku Zilizobaki:</span>
+                                        <div class="mt-1">
+                                            <span class="text-2xl font-bold" 
+                                                  :class="{
+                                                      'text-red-600': daysLeft <= 5,
+                                                      'text-amber-600': daysLeft > 5 && daysLeft <= 10,
+                                                      'text-green-600': daysLeft > 10
+                                                  }" 
+                                                  x-text="daysLeft"></span>
+                                            <span class="text-xs text-secondary ml-1">siku</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs p-2 rounded mb-2" 
+                                         :class="{
+                                             'package-critical': daysLeft <= 5,
+                                             'package-warning': daysLeft > 5 && daysLeft <= 10,
+                                             'package-good': daysLeft > 10
+                                         }">
+                                        <i class="fas mr-1" :class="{
+                                            'fa-exclamation-triangle': daysLeft <= 5,
+                                            'fa-clock': daysLeft > 5 && daysLeft <= 10,
+                                            'fa-check-circle': daysLeft > 10
+                                        }"></i>
+                                        <span x-text="getPackageMessage()"></span>
+                                    </div>
+                                    <div class="text-xs text-secondary border-t border-color pt-2">
+                                        Itaisha: <span class="font-medium" x-text="packageEndDate"></span>
+                                    </div>
+                                    <template x-if="daysLeft <= 5 && daysLeft > 0">
+                                        <div class="mt-2 pt-2 border-t border-color">
+                                            <a href="{{ route('payment.package.selection') }}" 
+                                               class="block w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium py-2 px-3 rounded hover:from-amber-600 hover:to-orange-600 transition">
+                                                <i class="fas fa-shopping-cart mr-1"></i>
+                                                Lipa Sasa
+                                            </a>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Alert Dropdown -->
-                        <div x-data="alertDropdown()" x-init="init()" class="relative">
+                        <div x-data="alertDropdown()" x-init="initAlert()" class="relative">
                             <button @click="toggleAlert()"
-                                class="relative p-1 sm:p-2 transition"
-                                :class="{
-                                    'text-gray-600 hover:text-green-600': colorMode === 'color-mode-light',
-                                    'text-gray-300 hover:text-green-400': colorMode === 'color-mode-dark'
-                                }"
+                                class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
                                 aria-label="Notifications">
-                                <i class="fas fa-bell icon-md"></i>
-                                <!-- Show dot if there are low stock products -->
+                                <i class="fas fa-bell text-lg"></i>
                                 <template x-if="lowStockCount > 0">
-                                    <span class="alert-dot"></span>
+                                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                                 </template>
                             </button>
 
@@ -923,11 +612,7 @@
                                  @click.away="openPro = false"
                                  x-cloak
                                  x-transition
-                                 class="absolute right-0 mt-2 w-72 sm:w-80 rounded-lg shadow-lg p-0 overflow-hidden z-40"
-                                 :class="{
-                                    'bg-white border border-gray-200': colorMode === 'color-mode-light',
-                                    'bg-gray-800 border border-gray-700': colorMode === 'color-mode-dark'
-                                 }">
+                                 class="absolute right-0 mt-2 w-72 sm:w-80 rounded-lg shadow-lg p-0 overflow-hidden z-40 card-bg border border-color">
                                 <!-- Alert header -->
                                 <div class="px-3 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white font-medium">
                                     <div class="flex justify-between items-center">
@@ -937,40 +622,27 @@
                                 </div>
                                 
                                 <!-- Low stock products list -->
-                                <div class="alert-low-stock max-h-64 overflow-y-auto">
+                                <div class="max-h-64 overflow-y-auto">
                                     <template x-if="lowStockProducts.length > 0">
                                         <div>
                                             <template x-for="product in lowStockProducts" :key="product.id">
-                                                <div class="low-stock-item px-3 py-2 border-b"
-                                                     :class="{
-                                                        'border-gray-100 hover:bg-gray-50': colorMode === 'color-mode-light',
-                                                        'border-gray-700 hover:bg-gray-700': colorMode === 'color-mode-dark'
-                                                     }">
+                                                <div class="p-3 border-b border-color hover-bg">
                                                     <div class="flex justify-between items-start">
-                                                        <div class="flex-1">
-                                                            <div class="font-medium" x-text="product.jina"></div>
-                                                            <div class="text-xs opacity-75 mt-1">
-                                                                <span x-text="product.aina"></span> • 
-                                                                <span x-text="product.kipimo"></span>
+                                                        <div>
+                                                            <div class="font-medium text-primary" x-text="product.jina"></div>
+                                                            <div class="text-xs text-secondary mt-1">
+                                                                <span x-text="product.aina"></span>
+                                                                <span x-show="product.kipimo" class="ml-1">• <span x-text="product.kipimo"></span></span>
                                                             </div>
                                                         </div>
-                                                        <div class="ml-2 text-right">
+                                                        <div class="text-right">
                                                             <div class="text-sm font-bold"
-                                                                 :class="{
-                                                                    'stock-critical': product.idadi <= 3,
-                                                                    'stock-warning': product.idadi > 3 && product.idadi <= 5
-                                                                 }"
-                                                                 x-text="product.idadi + ' ' + (product.kipimo || '')"></div>
-                                                            <div class="text-xs opacity-75 mt-1">
-                                                                Imebaki: <span x-text="product.idadi"></span>
-                                                            </div>
+                                                                 :class="product.idadi <= 3 ? 'text-red-600' : 'text-amber-600'"
+                                                                 x-text="product.idadi"></div>
                                                         </div>
                                                     </div>
                                                     <div class="mt-1 text-xs" 
-                                                         :class="{
-                                                            'text-red-600': product.idadi <= 3,
-                                                            'text-amber-600': product.idadi > 3 && product.idadi <= 5
-                                                         }">
+                                                         :class="product.idadi <= 3 ? 'text-red-600' : 'text-amber-600'">
                                                         <i class="fas fa-exclamation-triangle mr-1"></i>
                                                         <span x-text="getStockMessage(product.idadi)"></span>
                                                     </div>
@@ -979,26 +651,18 @@
                                         </div>
                                     </template>
                                     <template x-if="lowStockProducts.length === 0">
-                                        <div class="no-alerts py-4 text-center">
-                                            <i class="fas fa-check-circle text-green-500 text-xl mb-2"></i>
-                                            <p class="text-sm">Hakuna bidhaa zinazokaribia kuisha</p>
-                                            <p class="text-xs opacity-75 mt-1">Bidhaa zote zina idadi ya kutosha</p>
+                                        <div class="py-6 text-center">
+                                            <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                                            <p class="text-sm text-primary">Hakuna bidhaa zinazokaribia kuisha</p>
+                                            <p class="text-xs text-secondary mt-1">Bidhaa zote zina idadi ya kutosha</p>
                                         </div>
                                     </template>
                                 </div>
                                 
-                                <!-- Footer with view all link -->
-                                <div class="px-3 py-2 border-t"
-                                     :class="{
-                                        'border-gray-100 bg-gray-50': colorMode === 'color-mode-light',
-                                        'border-gray-700 bg-gray-800': colorMode === 'color-mode-dark'
-                                     }">
+                                <!-- Footer -->
+                                <div class="px-3 py-2 border-t border-color bg-secondary">
                                     <a href="{{ route('bidhaa.index') }}" 
-                                       class="block text-center text-sm font-medium transition-colors"
-                                       :class="{
-                                        'text-green-600 hover:text-green-700': colorMode === 'color-mode-light',
-                                        'text-green-400 hover:text-green-300': colorMode === 'color-mode-dark'
-                                       }">
+                                       class="block text-center text-sm font-medium text-green-600 hover:text-green-700">
                                         <i class="fas fa-list mr-1"></i> Angalia Bidhaa Zote
                                     </a>
                                 </div>
@@ -1008,21 +672,15 @@
                         <!-- User Profile -->
                         <div class="relative" x-data="{ profileOpen: false }">
                             <button @click="profileOpen = !profileOpen" 
-                                    class="flex items-center space-x-1 sm:space-x-2 focus:outline-none">
-                                <div class="profile-img bg-gradient-to-r from-green-600 to-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-                                    B
+                                    class="flex items-center gap-2 focus:outline-none">
+                                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-600 to-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                                    {{ $userInitial }}
                                 </div>
                                 <div class="hidden sm:block text-left">
-                                    <div class="text-sm font-medium" :class="{
-                                        'text-gray-700': colorMode === 'color-mode-light',
-                                        'text-gray-200': colorMode === 'color-mode-dark'
-                                    }">Boss</div>
-                                    <div class="text-xs" :class="{
-                                        'text-gray-500': colorMode === 'color-mode-light',
-                                        'text-gray-400': colorMode === 'color-mode-dark'
-                                    }">Meneja</div>
+                                    <div class="text-sm font-medium text-primary">{{ $userName }}</div>
+                                    <div class="text-xs text-secondary">{{ $userRole }}</div>
                                 </div>
-                                <i class="fas fa-chevron-down text-xs sm:text-sm hidden sm:block"></i>
+                                <i class="fas fa-chevron-down text-xs text-secondary hidden sm:block"></i>
                             </button>
                             
                             <!-- Profile Dropdown -->
@@ -1030,36 +688,21 @@
                                  @click.away="profileOpen = false" 
                                  x-cloak
                                  x-transition
-                                 class="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-1" :class="{
-                                    'bg-white border border-gray-200': colorMode === 'color-mode-light',
-                                    'bg-gray-800 border border-gray-700': colorMode === 'color-mode-dark'
-                                 }">
+                                 class="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-1 card-bg border border-color">
                                 <a href="{{ route('password.change') }}" 
-                                   class="block px-3 py-1.5 text-xs sm:text-sm transition-colors" :class="{
-                                    'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-light',
-                                    'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark'
-                                   }">
-                                    <i class="fas fa-key mr-1 sm:mr-2 icon-sm"></i>Badili Neno Siri
+                                   class="block px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
+                                    <i class="fas fa-key mr-2 w-4"></i>Badili Neno Siri
                                 </a>
                                 <a href="{{ route('company.info') }}" 
-                                   class="block px-3 py-1.5 text-xs sm:text-sm transition-colors" :class="{
-                                    'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-light',
-                                    'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark'
-                                   }">
-                                    <i class="fas fa-building mr-1 sm:mr-2 icon-sm"></i>Taarifa ya Kampuni
+                                   class="block px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
+                                    <i class="fas fa-building mr-2 w-4"></i>Taarifa ya Kampuni
                                 </a>
-                                <div class="border-t my-1" :class="{
-                                    'border-gray-100': colorMode === 'color-mode-light',
-                                    'border-gray-700': colorMode === 'color-mode-dark'
-                                }"></div>
+                                <div class="border-t my-1 border-color"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit" 
-                                            class="w-full text-left px-3 py-1.5 text-xs sm:text-sm transition-colors" :class="{
-                                            'text-gray-700 hover:bg-green-50 hover:text-green-700': colorMode === 'color-mode-light',
-                                            'text-gray-200 hover:bg-gray-700 hover:text-green-400': colorMode === 'color-mode-dark'
-                                           }">
-                                        <i class="fas fa-sign-out-alt mr-1 sm:mr-2 icon-sm"></i>Toka
+                                            class="w-full text-left px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
+                                        <i class="fas fa-sign-out-alt mr-2 w-4"></i>Toka
                                     </button>
                                 </form>
                             </div>
@@ -1069,11 +712,7 @@
             </header>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto p-2 sm:p-4 scrollbar-thin content-inner" :class="{
-                'bg-gray-50': colorMode === 'color-mode-light',
-                'bg-gray-900': colorMode === 'color-mode-dark'
-            }">
-                <!-- Responsive wrapper for content -->
+            <main class="flex-1 overflow-y-auto p-2 sm:p-4 scrollbar-thin content-inner bg-secondary">
                 <div class="max-w-full overflow-x-hidden">
                     @yield('content')
                 </div>
@@ -1089,7 +728,7 @@
             title="Badili Mwonekano"
             aria-label="Change Appearance"
         >
-            <i class="fas fa-palette"></i>
+            <i class="fas" :class="colorMode === 'color-mode-light' ? 'fa-sun' : 'fa-moon'"></i>
         </button>
         
         <div 
@@ -1100,18 +739,20 @@
             class="color-mode-menu"
         >
             <div 
-                class="color-mode-option flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                class="color-mode-option"
                 @click="changeColorMode('light'); colorMenuOpen = false"
             >
-                <div class="w-5 h-5 rounded-full bg-white border border-gray-300"></div>
-                <span class="text-xs sm:text-sm">Mwanga</span>
+                <div class="w-5 h-5 rounded-full bg-white border-2 border-gray-300"></div>
+                <span>Mwanga</span>
+                <i x-show="colorMode === 'color-mode-light'" class="fas fa-check ml-auto text-green-600"></i>
             </div>
             <div 
-                class="color-mode-option flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg cursor-pointer"
+                class="color-mode-option"
                 @click="changeColorMode('dark'); colorMenuOpen = false"
             >
-                <div class="w-5 h-5 rounded-full bg-gray-800"></div>
-                <span class="text-xs sm:text-sm">Giza</span>
+                <div class="w-5 h-5 rounded-full bg-gray-800 border-2 border-gray-600"></div>
+                <span>Giza</span>
+                <i x-show="colorMode === 'color-mode-dark'" class="fas fa-check ml-auto text-green-600"></i>
             </div>
         </div>
     </div>
@@ -1120,7 +761,7 @@
     function app() {
         return {
             sidebarOpen: false,
-            colorMode: 'color-mode-light', // Default to light mode only
+            colorMode: 'color-mode-light',
             
             init() {
                 // Load saved color mode
@@ -1128,74 +769,40 @@
                 if (savedMode && (savedMode === 'color-mode-light' || savedMode === 'color-mode-dark')) {
                     this.colorMode = savedMode;
                 } else {
-                    // Default to light mode if no valid mode saved
                     this.colorMode = 'color-mode-light';
                     localStorage.setItem('colorMode', this.colorMode);
                 }
                 
-                // Auto-detect if mobile/desktop and set sidebar state
+                // Apply color mode to body
+                document.body.className = document.body.className
+                    .replace(/color-mode-(light|dark)/g, '')
+                    .trim();
+                document.body.classList.add(this.colorMode);
+                
+                // Set sidebar state based on screen size
                 const isMobile = window.innerWidth < 1024;
-                if (isMobile) {
-                    this.sidebarOpen = false;
-                } else {
-                    // On desktop, sidebar is open by default
-                    this.sidebarOpen = true;
-                    
-                    // Load saved sidebar state only on desktop
-                    const savedSidebarState = localStorage.getItem('sidebarOpen');
-                    if (savedSidebarState !== null) {
-                        this.sidebarOpen = JSON.parse(savedSidebarState);
-                    }
-                }
+                this.sidebarOpen = !isMobile;
                 
-                // Save sidebar state when changed (desktop only)
-                this.$watch('sidebarOpen', (value) => {
-                    if (!isMobile) {
-                        localStorage.setItem('sidebarOpen', value);
-                    }
-                    
-                    // Ensure no horizontal scroll when sidebar opens
-                    if (value && isMobile) {
-                        document.body.classList.add('no-scroll-x');
-                        document.body.style.overflow = 'hidden';
-                    } else {
-                        document.body.classList.remove('no-scroll-x');
-                        document.body.style.overflow = '';
-                    }
-                });
-                
-                // Close sidebar when clicking escape key
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.sidebarOpen) {
-                        this.closeSidebar();
-                    }
-                });
-                
-                // Handle window resize
+                // Handle resize
                 window.addEventListener('resize', () => {
                     const newIsMobile = window.innerWidth < 1024;
                     if (!newIsMobile && !this.sidebarOpen) {
-                        // On desktop resize, ensure sidebar is open
                         this.sidebarOpen = true;
                     } else if (newIsMobile && this.sidebarOpen) {
-                        // On mobile resize, close sidebar
                         this.sidebarOpen = false;
                     }
                 });
                 
-                // Initial scroll prevention if sidebar is open on mobile
-                if (this.sidebarOpen && isMobile) {
-                    document.body.classList.add('no-scroll-x');
-                    document.body.style.overflow = 'hidden';
-                }
+                // Close sidebar with Escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.sidebarOpen && window.innerWidth < 1024) {
+                        this.closeSidebar();
+                    }
+                });
             },
             
             toggleSidebar() {
                 this.sidebarOpen = !this.sidebarOpen;
-            },
-            
-            openSidebar() {
-                this.sidebarOpen = true;
             },
             
             closeSidebar() {
@@ -1203,39 +810,141 @@
             },
             
             changeColorMode(mode) {
-                // Only allow 'light' or 'dark' modes
-                if (mode === 'light' || mode === 'dark') {
-                    this.colorMode = `color-mode-${mode}`;
-                    localStorage.setItem('colorMode', this.colorMode);
-                }
+                const newMode = `color-mode-${mode}`;
+                this.colorMode = newMode;
+                localStorage.setItem('colorMode', newMode);
+                
+                // Update body class
+                document.body.className = document.body.className
+                    .replace(/color-mode-(light|dark)/g, '')
+                    .trim();
+                document.body.classList.add(newMode);
             }
         }
     }
     
-    // Separate function for alert dropdown with low stock functionality
+    // Package remaining functionality with email notifications
+    function packageRemaining() {
+        return {
+            showPackageInfo: false,
+            daysLeft: {{ $daysLeft }},
+            packageName: '{{ $packageName }}',
+            packageEndDate: '{{ $packageEndDate }}',
+            notificationsSent: false,
+            companyId: '{{ $companyId }}',
+            
+            initPackageRemaining() {
+                this.calculateDaysLeft();
+                
+                // Check if we need to send email notification
+                if (this.daysLeft <= 5 && this.daysLeft > 0 && !this.notificationsSent) {
+                    // Check if we haven't sent notification in last 24 hours
+                    this.sendEmailNotification();
+                }
+                
+                // Refresh every hour
+                setInterval(() => {
+                    this.calculateDaysLeft();
+                }, 60 * 60 * 1000);
+            },
+            
+            calculateDaysLeft() {
+                // Days left is already calculated from PHP
+                // This method is kept for future real-time updates
+            },
+            
+            fetchPackageInfo() {
+                fetch('/api/package-info')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.daysLeft = data.days_left;
+                            this.packageName = data.package_name;
+                            this.packageEndDate = data.end_date;
+                        }
+                        this.showPackageInfo = true;
+                        
+                        // Auto-hide after 5 seconds
+                        setTimeout(() => {
+                            this.showPackageInfo = false;
+                        }, 5000);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching package info:', error);
+                        this.showPackageInfo = true;
+                    });
+            },
+            
+            sendEmailNotification() {
+                fetch('/api/send-package-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        days_left: this.daysLeft,
+                        package_name: this.packageName,
+                        company_id: this.companyId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Email notification sent successfully');
+                        this.notificationsSent = true;
+                        
+                        // Show success message in tooltip
+                        this.showNotification('Email imetumwa!', 'success');
+                    }
+                })
+                .catch(error => console.error('Error sending email:', error));
+            },
+            
+            getPackageMessage() {
+                if (this.daysLeft <= 0) {
+                    return 'Package imekwisha! Bonyeza kulipa.';
+                } else if (this.daysLeft <= 5) {
+                    return `Siku ${this.daysLeft} zimesalia! Lipa sasa.`;
+                } else if (this.daysLeft <= 10) {
+                    return `Siku ${this.daysLeft} zimesalia.`;
+                } else {
+                    return 'Package inafanya kazi vizuri.';
+                }
+            },
+            
+            showNotification(message, type) {
+                // You can implement a toast notification here
+                console.log(message, type);
+            }
+        }
+    }
+    
+    // Alert dropdown functionality
     function alertDropdown() {
         return {
             openPro: false,
             lowStockProducts: [],
             lowStockCount: 0,
+            companyId: '{{ $companyId }}',
             
-            init() {
-                // Fetch low stock products on initialization
+            initAlert() {
                 this.fetchLowStockProducts();
                 
-                // Set up periodic refresh (every 5 minutes)
+                // Refresh every 5 minutes
                 setInterval(() => {
                     this.fetchLowStockProducts();
                 }, 5 * 60 * 1000);
             },
             
             fetchLowStockProducts() {
-                // Fetch products with low stock (idadi <= 5)
-                fetch(`/api/low-stock-products?company_id={{ auth()->user()->company_id ?? '' }}`)
+                fetch(`/api/low-stock-products?company_id=${this.companyId}`)
                     .then(response => response.json())
                     .then(data => {
-                        this.lowStockProducts = data.products || [];
-                        this.lowStockCount = data.count || 0;
+                        if (data.success) {
+                            this.lowStockProducts = data.products || [];
+                            this.lowStockCount = data.count || 0;
+                        }
                     })
                     .catch(error => {
                         console.error('Error fetching low stock products:', error);
@@ -1246,7 +955,6 @@
             
             toggleAlert() {
                 this.openPro = !this.openPro;
-                // Refresh data when opening alert
                 if (this.openPro) {
                     this.fetchLowStockProducts();
                 }

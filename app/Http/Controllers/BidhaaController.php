@@ -47,20 +47,53 @@ class BidhaaController extends Controller
         return Auth::guard('web')->check();
     }
     
-    /**
-     * Display a listing of the products with pagination
-     */
-    public function index(Request $request)
-    {
-        $companyId = $this->getCompanyId();
-        $perPage = $request->input('per_page', 10);
-        $isBoss = $this->isBoss();
+/**
+ * Display a listing of the products with pagination
+ */
+public function index(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    $perPage = $request->input('per_page', 10);
+    $isBoss = $this->isBoss();
 
-        $query = Bidhaa::where('company_id', $companyId);
+    $query = Bidhaa::where('company_id', $companyId);
 
+    if ($request->has('search') && !empty($request->search)) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('jina', 'LIKE', "%{$search}%")
+              ->orWhere('aina', 'LIKE', "%{$search}%")
+              ->orWhere('barcode', 'LIKE', "%{$search}%")
+              ->orWhere('kipimo', 'LIKE', "%{$search}%");
+        });
+    }
+
+    if ($request->has('filter')) {
+        switch ($request->filter) {
+            case 'available':
+                $query->where('idadi', '>', 0);
+                break;
+            case 'low_stock':
+                $query->where('idadi', '<', 10)->where('idadi', '>', 0);
+                break;
+            case 'expired':
+                $query->where('expiry', '<', now());
+                break;
+            case 'out_of_stock':
+                $query->where('idadi', 0);
+                break;
+        }
+    }
+
+    // Handle PDF Export - GET ALL PRODUCTS (no pagination)
+    if ($request->has('export') && $request->export === 'pdf') {
+        // Clone the query to get ALL products based on filters (but no pagination)
+        $exportQuery = Bidhaa::where('company_id', $companyId);
+
+        // Apply search if present
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $exportQuery->where(function($q) use ($search) {
                 $q->where('jina', 'LIKE', "%{$search}%")
                   ->orWhere('aina', 'LIKE', "%{$search}%")
                   ->orWhere('barcode', 'LIKE', "%{$search}%")
@@ -68,77 +101,98 @@ class BidhaaController extends Controller
             });
         }
 
+        // Apply filter if present
         if ($request->has('filter')) {
             switch ($request->filter) {
                 case 'available':
-                    $query->where('idadi', '>', 0);
+                    $exportQuery->where('idadi', '>', 0);
                     break;
                 case 'low_stock':
-                    $query->where('idadi', '<', 10)->where('idadi', '>', 0);
+                    $exportQuery->where('idadi', '<', 10)->where('idadi', '>', 0);
                     break;
                 case 'expired':
-                    $query->where('expiry', '<', now());
+                    $exportQuery->where('expiry', '<', now());
                     break;
                 case 'out_of_stock':
-                    $query->where('idadi', 0);
+                    $exportQuery->where('idadi', 0);
                     break;
+                // No filter = all products including out of stock
             }
         }
 
-        $bidhaa = $query->orderBy('created_at', 'desc')
-                       ->paginate($perPage)
-                       ->appends($request->except('page'));
+        // GET ALL - no pagination
+        $productsForPdf = $exportQuery->orderBy('jina')->get();
 
-        $totalProducts = Bidhaa::where('company_id', $companyId)->count();
-        $availableProducts = Bidhaa::where('company_id', $companyId)->where('idadi', '>', 0)->count();
-        $lowStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
-        $expiredProducts = Bidhaa::where('company_id', $companyId)->where('expiry', '<', now())->count();
-        $outOfStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', 0)->count();
+        // Calculate statistics
+        $outOfStockCount = $productsForPdf->where('idadi', 0)->count();
+        $inStockCount = $productsForPdf->where('idadi', '>', 0)->count();
+        $lowStockCount = $productsForPdf->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
+        $expiredCount = $productsForPdf->filter(function($product) {
+            if (!$product->expiry) return false;
+            return \Carbon\Carbon::parse($product->expiry) < now();
+        })->count();
 
-        if ($request->has('export') && $request->export === 'pdf') {
-            $page = $request->input('page', 1);
-            $productsForPdf = $query
-                ->orderBy('created_at', 'desc')
-                ->paginate($perPage, ['*'], 'page', $page);
+        $data = [
+            'bidhaa' => $productsForPdf,
+            'title' => 'Orodha ya Bidhaa',
+            'date' => now()->format('d/m/Y'),
+            'company' => $this->getCurrentUser()->company,
+            'total_count' => $productsForPdf->count(),
+            'outOfStockCount' => $outOfStockCount,
+            'inStockCount' => $inStockCount,
+            'lowStockCount' => $lowStockCount,
+            'expiredCount' => $expiredCount,
+            'filter' => $request->filter,
+            'search' => $request->search
+        ];
 
-            $data = [
-                'bidhaa' => $productsForPdf,
-                'title' => 'Orodha ya Bidhaa',
-                'date' => now()->format('d/m/Y'),
-                'company' => $this->getCurrentUser()->company,
-                'total_count' => $productsForPdf->total()
-            ];
+        $pdf = Pdf::loadView('bidhaa.pdf', $data)
+            ->setPaper('a4', 'portrait');
 
-            $pdf = Pdf::loadView('bidhaa.pdf', $data)
-                ->setPaper('a4', 'portrait');
-
-            return $pdf->download(
-                'bidhaa-page-'.$productsForPdf->currentPage().'.pdf'
-            );
+        $filename = "bidhaa_zote_" . date('Y-m-d') . ".pdf";
+        if ($request->filter) {
+            $filename = "bidhaa_" . $request->filter . "_" . date('Y-m-d') . ".pdf";
+        }
+        if ($request->search) {
+            $filename = "bidhaa_search_" . date('Y-m-d') . ".pdf";
         }
 
-        if ($request->has('export') && $request->export === 'excel') {
-            return $this->exportExcel();
-        }
-
-        if ($request->ajax() && !$request->has('export')) {
-            return response()->json([
-                'success' => true,
-                'html' => view('bidhaa.partials.table', compact('bidhaa'))->render()
-            ]);
-        }
-
-        return view('bidhaa.index', compact(
-            'bidhaa', 
-            'totalProducts', 
-            'availableProducts', 
-            'lowStockProducts', 
-            'expiredProducts',
-            'outOfStockProducts',
-            'isBoss'
-        ));
+        return $pdf->download($filename);
     }
-    
+
+    // Handle Excel Export - Pass to dedicated method
+    if ($request->has('export') && $request->export === 'excel') {
+        return $this->exportExcel($request);
+    }
+
+    // Regular paginated results for normal view
+    $bidhaa = $query->orderBy('created_at', 'desc')
+                   ->paginate($perPage)
+                   ->appends($request->except('page'));
+
+    $totalProducts = Bidhaa::where('company_id', $companyId)->count();
+    $availableProducts = Bidhaa::where('company_id', $companyId)->where('idadi', '>', 0)->count();
+    $lowStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
+    $expiredProducts = Bidhaa::where('company_id', $companyId)->where('expiry', '<', now())->count();
+    $outOfStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', 0)->count();
+
+    if ($request->ajax() && !$request->has('export')) {
+        return response()->json([
+            'success' => true,
+            'html' => view('bidhaa.partials.table', compact('bidhaa'))->render()
+        ]);
+    }
+
+    return view('bidhaa.index', compact(
+        'bidhaa', 
+        'totalProducts', 
+        'availableProducts', 
+        'lowStockProducts', 
+        'expiredProducts',
+        'outOfStockProducts',
+        'isBoss'
+    ));
+}
     /**
      * Search all products (returns ALL results, no pagination)
      */
@@ -447,117 +501,155 @@ class BidhaaController extends Controller
             ->with('success', 'Bidhaa imefutwa kikamilifu!');
     }
 
-    /**
-     * Export all products to Excel
-     */
-    public function exportExcel()
-    {
-        $companyId = $this->getCompanyId();
-        $company = $this->getCurrentUser()->company->name ?? 'Kampuni';
-        
-        $products = Bidhaa::where('company_id', $companyId)
-                         ->orderBy('jina')
-                         ->get();
-        
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        
-        $sheet->setTitle('Bidhaa Zote');
-        
-        $headers = [
-            'A1' => 'Jina la Bidhaa',
-            'B1' => 'Aina',
-            'C1' => 'Kipimo',
-            'D1' => 'Idadi',
-            'E1' => 'Bei Nunua',
-            'F1' => 'Bei Kuuza',
-            'G1' => 'Expiry Date',
-            'H1' => 'Barcode',
-            'I1' => 'Faida',
-            'J1' => 'Asilimia',
-            'K1' => 'Hali ya Hisa'
-        ];
-        
-        foreach ($headers as $cell => $value) {
-            $sheet->setCellValue($cell, $value);
-        }
-        
-        $headerStyle = [
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => '047857'],
-                'size' => 12
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'D1FAE5']
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color' => ['rgb' => '10B981']
-                ]
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER
-            ]
-        ];
-        
-        $sheet->getStyle('A1:K1')->applyFromArray($headerStyle);
-        
-        $sheet->getStyle('D2:D' . ($products->count() + 1))
-              ->getNumberFormat()
-              ->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        
-        $sheet->getStyle('E2:G' . ($products->count() + 1))
-              ->getNumberFormat()
-              ->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-        
-        $row = 2;
-        foreach ($products as $product) {
-            $faida = $product->bei_kuuza - $product->bei_nunua;
-            $asilimia = $product->bei_nunua > 0 
-                ? round(($faida / $product->bei_nunua) * 100, 2) . '%' 
-                : '0%';
-            
-            $hali = 'Inapatikana';
-            if ($product->idadi == 0) {
-                $hali = 'Imeisha';
-            } elseif ($product->idadi < 10) {
-                $hali = 'Inakaribia kuisha';
-            }
-            
-            $sheet->setCellValue('A' . $row, $product->jina);
-            $sheet->setCellValue('B' . $row, $product->aina);
-            $sheet->setCellValue('C' . $row, $product->kipimo ?? '');
-            $sheet->setCellValue('D' . $row, $product->idadi);
-            $sheet->setCellValue('E' . $row, $product->bei_nunua);
-            $sheet->setCellValue('F' . $row, $product->bei_kuuza);
-            $sheet->setCellValue('G' . $row, $product->expiry ? \Carbon\Carbon::parse($product->expiry)->format('Y-m-d') : '');
-            $sheet->setCellValue('H' . $row, $product->barcode ?? '');
-            $sheet->setCellValue('I' . $row, $faida . ' TZS');
-            $sheet->setCellValue('J' . $row, $asilimia);
-            $sheet->setCellValue('K' . $row, $hali);
-            
-            $row++;
-        }
-        
-        foreach (range('A', 'K') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-        
-        $writer = new Xlsx($spreadsheet);
-        $filename = "bidhaa_zote_" . date('Y-m-d_His') . ".xlsx";
-        
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-        
-        $writer->save('php://output');
-        exit;
+/**
+ * Export all products to Excel (including out of stock)
+ */
+public function exportExcel(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    $company = $this->getCurrentUser()->company->name ?? 'Kampuni';
+    
+    // Get ALL products based on filters (but no pagination)
+    $query = Bidhaa::where('company_id', $companyId);
+
+    // Apply search if present
+    if ($request->has('search') && !empty($request->search)) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->where('jina', 'LIKE', "%{$search}%")
+              ->orWhere('aina', 'LIKE', "%{$search}%")
+              ->orWhere('barcode', 'LIKE', "%{$search}%")
+              ->orWhere('kipimo', 'LIKE', "%{$search}%");
+        });
     }
 
+    // Apply filter if present
+    if ($request->has('filter')) {
+        switch ($request->filter) {
+            case 'available':
+                $query->where('idadi', '>', 0);
+                break;
+            case 'low_stock':
+                $query->where('idadi', '<', 10)->where('idadi', '>', 0);
+                break;
+            case 'expired':
+                $query->where('expiry', '<', now());
+                break;
+            case 'out_of_stock':
+                $query->where('idadi', 0);
+                break;
+            // No filter = all products including out of stock
+        }
+    }
+
+    // GET ALL - no pagination
+    $products = $query->orderBy('jina')->get();
+    
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    
+    $sheet->setTitle('Bidhaa Zote');
+    
+    $headers = [
+        'A1' => 'Jina la Bidhaa',
+        'B1' => 'Aina',
+        'C1' => 'Kipimo',
+        'D1' => 'Idadi',
+        'E1' => 'Bei Nunua',
+        'F1' => 'Bei Kuuza',
+        'G1' => 'Expiry Date',
+        'H1' => 'Barcode',
+        'I1' => 'Faida',
+        'J1' => 'Asilimia',
+        'K1' => 'Hali ya Hisa'
+    ];
+    
+    foreach ($headers as $cell => $value) {
+        $sheet->setCellValue($cell, $value);
+    }
+    
+    $headerStyle = [
+        'font' => [
+            'bold' => true,
+            'color' => ['rgb' => '047857'],
+            'size' => 12
+        ],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['rgb' => 'D1FAE5']
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => Border::BORDER_THIN,
+                'color' => ['rgb' => '10B981']
+            ]
+        ],
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+            'vertical' => Alignment::VERTICAL_CENTER
+        ]
+    ];
+    
+    $sheet->getStyle('A1:K1')->applyFromArray($headerStyle);
+    
+    $sheet->getStyle('D2:D' . ($products->count() + 1))
+          ->getNumberFormat()
+          ->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+    
+    $sheet->getStyle('E2:G' . ($products->count() + 1))
+          ->getNumberFormat()
+          ->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
+    
+    $row = 2;
+    foreach ($products as $product) {
+        $faida = $product->bei_kuuza - $product->bei_nunua;
+        $asilimia = $product->bei_nunua > 0 
+            ? round(($faida / $product->bei_nunua) * 100, 2) . '%' 
+            : '0%';
+        
+        $hali = 'Inapatikana';
+        if ($product->idadi == 0) {
+            $hali = 'Imeisha';
+        } elseif ($product->idadi < 10) {
+            $hali = 'Inakaribia kuisha';
+        }
+        
+        $sheet->setCellValue('A' . $row, $product->jina);
+        $sheet->setCellValue('B' . $row, $product->aina);
+        $sheet->setCellValue('C' . $row, $product->kipimo ?? '');
+        $sheet->setCellValue('D' . $row, $product->idadi);
+        $sheet->setCellValue('E' . $row, $product->bei_nunua);
+        $sheet->setCellValue('F' . $row, $product->bei_kuuza);
+        $sheet->setCellValue('G' . $row, $product->expiry ? \Carbon\Carbon::parse($product->expiry)->format('Y-m-d') : '');
+        $sheet->setCellValue('H' . $row, $product->barcode ?? '');
+        $sheet->setCellValue('I' . $row, $faida . ' TZS');
+        $sheet->setCellValue('J' . $row, $asilimia);
+        $sheet->setCellValue('K' . $row, $hali);
+        
+        $row++;
+    }
+    
+    foreach (range('A', 'K') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+    
+    $writer = new Xlsx($spreadsheet);
+    
+    $filename = "bidhaa_zote_" . date('Y-m-d_His') . ".xlsx";
+    if ($request->filter) {
+        $filename = "bidhaa_" . $request->filter . "_" . date('Y-m-d') . ".xlsx";
+    }
+    if ($request->search) {
+        $filename = "bidhaa_search_" . date('Y-m-d') . ".xlsx";
+    }
+    
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Cache-Control: max-age=0');
+    
+    $writer->save('php://output');
+    exit;
+}
     /**
      * Download sample Excel file
      */

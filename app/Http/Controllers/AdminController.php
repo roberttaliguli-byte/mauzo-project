@@ -14,19 +14,55 @@ class AdminController extends Controller
     /**
      * Show admin dashboard with all registered companies.
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        $companies = Company::latest()->paginate(10);
-        $total = Company::count();
+        // Get search query
+        $search = $request->input('search');
+        
+        // Base query
+        $query = Company::query();
+        
+        // Apply search if provided - search across all companies (not just paginated)
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('company_name', 'LIKE', "%{$search}%")
+                  ->orWhere('owner_name', 'LIKE', "%{$search}%")
+                  ->orWhere('email', 'LIKE', "%{$search}%")
+                  ->orWhere('phone', 'LIKE', "%{$search}%")
+                  ->orWhere('package', 'LIKE', "%{$search}%");
+            });
+        }
+        
+        // Get paginated results
+        $companies = $query->latest()->paginate(10);
+        
+        // Calculate summary statistics from ALL companies (not filtered by search)
+        $totalCompanies = Company::count();
+        $verifiedCompanies = Company::where('is_verified', true)->count();
+        $approvedUsers = Company::where('is_user_approved', true)->count();
+        $activePackages = Company::whereNotNull('package_end')
+            ->where('package_end', '>=', Carbon::now())
+            ->count();
+        $expiredPackages = Company::whereNotNull('package_end')
+            ->where('package_end', '<', Carbon::now())
+            ->count();
+        $freeTrialCompanies = Company::where('package', 'Free Trial 14 days')->count();
 
-        return view('admin.dashboard', compact('companies', 'total'));
+        return view('admin.dashboard', compact(
+            'companies', 
+            'totalCompanies',
+            'verifiedCompanies',
+            'approvedUsers',
+            'activePackages',
+            'expiredPackages',
+            'freeTrialCompanies',
+            'search'
+        ));
     }
 
-    public function makampuni()
+    public function makampuni(Request $request)
     {
-        $companies = Company::all();
-        $total = Company::count(); // ADD THIS LINE
-        return view('admin.dashboard', compact('companies', 'total')); // ADD $total here
+        return $this->dashboard($request);
     }
 
     /**
@@ -50,76 +86,76 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Mtumiaji ameidhinishwa kikamilifu!');
     }
 
+    /**
+     * Set package and time for a company with pricing
+     */
+    public function setPackageTime(Request $request, $id)
+    {
+        $request->validate([
+            'package' => 'required|string|in:Free Trial 14 days,30 days,180 days,366 days',
+            'start_date' => 'required|date'
+        ]);
 
-/**
- * Set package and time for a company with pricing
- */
-public function setPackageTime(Request $request, $id)
-{
-    $request->validate([
-        'package' => 'required|string|in:Free Trial 14 days,30 days,180 days,366 days',
-        'start_date' => 'required|date'
-    ]);
+        $company = Company::findOrFail($id);
+        
+        $package = $request->package;
+        $start_date = Carbon::parse($request->start_date);
 
-    $company = Company::findOrFail($id);
-    
-    $package = $request->package;
-    $start_date = Carbon::parse($request->start_date);
+        // Define package prices
+        $prices = [
+            'Free Trial 14 days' => 0,
+            '30 days' => 15000,
+            '180 days' => 75000,
+            '366 days' => 150000
+        ];
 
-    // Define package prices
-    $prices = [
-        'Free Trial 14 days' => 0,
-        '30 days' => 15000,
-        '180 days' => 75000,
-        '366 days' => 150000
-    ];
+        // Determine end date based on package
+        switch($package){
+            case 'Free Trial 14 days':
+                $end_date = $start_date->copy()->addDays(14);
+                break;
+            case '30 days':
+                $end_date = $start_date->copy()->addDays(30);
+                break;
+            case '180 days':
+                $end_date = $start_date->copy()->addDays(180);
+                break;
+            case '366 days':
+                $end_date = $start_date->copy()->addDays(366);
+                break;
+            default:
+                $end_date = $start_date;
+        }
 
-    // Determine end date based on package
-    switch($package){
-        case 'Free Trial 14 days':
-            $end_date = $start_date->copy()->addDays(14);
-            break;
-        case '30 days':
-            $end_date = $start_date->copy()->addDays(30);
-            break;
-        case '180 days':
-            $end_date = $start_date->copy()->addDays(180);
-            break;
-        case '366 days':
-            $end_date = $start_date->copy()->addDays(366);
-            break;
-        default:
-            $end_date = $start_date;
+        // Save package details
+        $company->package = $package;
+        $company->package_start = $start_date;
+        $company->package_end = $end_date;
+        $company->save();
+
+        // Calculate discount percentage
+        $discount = 0;
+        if ($package === '180 days') {
+            $monthlyPrice = 15000 * 6;
+            $discount = 15000;
+        } elseif ($package === '366 days') {
+            $monthlyPrice = 15000 * 12;
+            $discount = 30000;
+        }
+
+        $priceMessage = $package !== 'Free Trial 14 days' 
+            ? " (Bei: TZS " . number_format($prices[$package]) . ")" 
+            : "";
+        
+        $discountMessage = $discount > 0 
+            ? " Umepata punguzo la TZS " . number_format($discount) . "!" 
+            : "";
+
+        return redirect()->back()->with('success', 
+            "Kifurushi cha {$company->company_name} kimewekwa: {$package}{$priceMessage}.{$discountMessage}"
+        );
     }
-
-    // Save package details
-    $company->package = $package;
-    $company->package_start = $start_date;
-    $company->package_end = $end_date;
-    $company->save();
-
-    // Calculate discount percentage
-    $discount = 0;
-    if ($package === '180 days') {
-        $monthlyPrice = 15000 * 6; // 6 months at monthly rate = 90,000
-        $discount = 15000; // 75,000 vs 90,000 = 15,000 discount (16.67%)
-    } elseif ($package === '366 days') {
-        $monthlyPrice = 15000 * 12; // 12 months at monthly rate = 180,000
-        $discount = 30000; // 150,000 vs 180,000 = 30,000 discount (16.67%)
-    }
-
-    $priceMessage = $package !== 'Free Trial 14 days' 
-        ? " (Bei: TZS " . number_format($prices[$package]) . ")" 
-        : "";
     
-    $discountMessage = $discount > 0 
-        ? " Umepata punguzo la TZS " . number_format($discount) . "!" 
-        : "";
-
-    return redirect()->back()->with('success', 
-        "Kifurushi cha {$company->company_name} kimewekwa: {$package}{$priceMessage}.{$discountMessage}"
-    );
-}
     /**
      * Verify the company.
      */
@@ -221,7 +257,7 @@ public function setPackageTime(Request $request, $id)
      */
     public function expiredPackages()
     {
-        $expiredCompanies = Company::where('package_end_date', '<', Carbon::now())
+        $expiredCompanies = Company::where('package_end', '<', Carbon::now())
             ->latest()
             ->paginate(10);
 
@@ -233,7 +269,7 @@ public function setPackageTime(Request $request, $id)
      */
     public function activePackages()
     {
-        $activeCompanies = Company::where('package_end_date', '>=', Carbon::now())
+        $activeCompanies = Company::where('package_end', '>=', Carbon::now())
             ->latest()
             ->paginate(10);
 

@@ -4,6 +4,12 @@
 
 @section('content')
 <div class="max-w-sm mx-auto">
+  
+  <!-- Add meta tags to prevent caching -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  
   <!-- Header Section -->
   <div class="text-center mb-6">
     <div class="flex justify-center mb-3">
@@ -20,7 +26,7 @@
     <p class="text-gray-300 text-sm">Ingia kwenye mfumo</p>
   </div>
 
-  <form method="POST" action="{{ route('login.post') }}" class="space-y-4">
+  <form method="POST" action="{{ route('login.post') }}" class="space-y-4" autocomplete="off">
     @csrf
 
     {{-- Success Alert --}}
@@ -68,6 +74,22 @@
     </div>
     @endif
 
+    {{-- Page Expired Error --}}
+    @if(session('error'))
+    <div class="relative p-3 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg animate-fade-in">
+      <div class="flex items-center gap-2">
+        <div class="flex-shrink-0">
+          <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
+            <i class="fas fa-clock text-white text-xs"></i>
+          </div>
+        </div>
+        <div class="flex-1">
+          <p class="text-xs font-medium">{{ session('error') }}</p>
+        </div>
+      </div>
+    </div>
+    @endif
+
     <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
       <div class="space-y-4">
         <!-- Username Field -->
@@ -79,7 +101,8 @@
           <div class="relative">
             <input id="username" name="username" value="{{ old('username') }}" required autofocus
                    placeholder="Weka jina la kuingia"
-                   class="w-full rounded-lg py-3 px-10 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 group-hover:border-yellow-400 text-sm">
+                   class="w-full rounded-lg py-3 px-10 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 group-hover:border-yellow-400 text-sm"
+                   autocomplete="off">
             <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-yellow-400 transition-colors text-sm">
               <i class="fas fa-user"></i>
             </div>
@@ -109,7 +132,8 @@
           <div class="relative">
             <input id="password" name="password" type="password" required
                    placeholder="Weka neno la siri"
-                   class="w-full rounded-lg py-3 px-10 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 group-hover:border-yellow-400 text-sm">
+                   class="w-full rounded-lg py-3 px-10 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 group-hover:border-yellow-400 text-sm"
+                   autocomplete="new-password">
             <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-yellow-400 transition-colors text-sm">
               <i class="fas fa-key"></i>
             </div>
@@ -160,6 +184,39 @@
     </a>
   </div>
 </div>
+
+<!-- JavaScript for Session Handling -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clear form fields on page load
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    
+    // Prevent form resubmission on page refresh
+    if (window.history.replaceState) {
+        window.history.replaceState(null, null, window.location.href);
+    }
+    
+    // Check if page was loaded from cache (user pressed back button after logout)
+    if (performance.navigation.type === 2) {
+        // User came via back button, force a fresh page load
+        location.reload(true);
+    }
+    
+    // Add beforeunload event to clean up
+    window.addEventListener('beforeunload', function() {
+        // Send a beacon to clean up session data
+        navigator.sendBeacon('/cleanup-session');
+    });
+});
+
+// Prevent back button after logout
+window.onpageshow = function(event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+};
+</script>
 
 <style>
   .animate-fade-in {

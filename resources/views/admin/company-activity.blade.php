@@ -4,7 +4,6 @@
 @section('title', 'Shughuli za Makampuni')
 @section('page-title', 'Shughuli za Makampuni')
 
-
 @section('content')
 <div class="min-h-screen bg-gray-50/30">
     <!-- Header -->
@@ -12,7 +11,7 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
             <div class="mb-3 md:mb-0">
                 <h1 class="text-lg md:text-2xl font-bold text-gray-900">📊 Shughuli za Makampuni</h1>
-                <p class="text-gray-600 text-xs md:text-base mt-1">Fuatilia shughuli na hali ya makampuni kwa wakati halisi</p>
+                <p class="text-gray-600 text-xs md:text-base mt-1">Fuatilia shughuli na hali ya makampuni yote kwa wakati halisi</p>
             </div>
             <div class="flex items-center space-x-2 md:space-x-4">
                 <div class="bg-white px-3 py-2 md:px-4 md:py-2 rounded-lg shadow-sm border">
@@ -25,7 +24,7 @@
         </div>
     </div>
 
-    <!-- Success Notification -->
+    <!-- Success/Error Notification -->
     @if(session('success'))
     <div id="success-notification" class="fixed top-4 md:top-6 left-1/2 transform -translate-x-1/2 z-50 animate-slide-down w-[95%] md:max-w-md">
         <div class="bg-white border border-emerald-200 rounded-xl shadow-xl md:shadow-2xl px-4 py-3 md:px-6 md:py-4">
@@ -47,7 +46,28 @@
     </div>
     @endif
 
-    <!-- Statistics Cards -->
+    @if(session('error') || isset($error))
+    <div id="error-notification" class="fixed top-4 md:top-6 left-1/2 transform -translate-x-1/2 z-50 animate-slide-down w-[95%] md:max-w-md">
+        <div class="bg-white border border-red-200 rounded-xl shadow-xl md:shadow-2xl px-4 py-3 md:px-6 md:py-4">
+            <div class="flex items-center space-x-2 md:space-x-3">
+                <div class="flex-shrink-0">
+                    <div class="w-6 h-6 md:w-8 md:h-8 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xs md:text-sm"></i>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 text-sm md:text-base">Hitilafu!</p>
+                    <p class="text-xs md:text-sm text-gray-600 truncate">{{ session('error') ?? $error }}</p>
+                </div>
+                <button onclick="closeNotification('error-notification')" class="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">
+                    <i class="fas fa-times text-sm md:text-base"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Statistics Cards - Based on ALL companies -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6 px-4 md:px-0">
         <!-- Active Companies -->
         <div class="bg-white rounded-lg md:rounded-2xl shadow-sm border border-gray-100 p-3 md:p-6 hover-lift transition-all duration-200">
@@ -131,10 +151,10 @@
     <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm mx-4 md:mx-0 mb-4">
         <div class="flex">
             <button data-tab="taarifa" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 bg-emerald-50 text-emerald-700">
-                <i class="fas fa-table mr-2"></i> Hali ya Kampuni
+                <i class="fas fa-table mr-2"></i> Hali ya Kampuni ({{ $stats['total_companies'] ?? 0 }})
             </button>
             <button data-tab="ripoti" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
-                <i class="fas fa-calendar-check mr-2"></i> Kampuni Active Leo
+                <i class="fas fa-calendar-check mr-2"></i> Kampuni Active Leo ({{ $todayActiveCompanies->count() ?? 0 }})
             </button>
         </div>
     </div>
@@ -143,7 +163,7 @@
     <div id="taarifa-tab-content" class="tab-content">
         <!-- Companies Table -->
         <div class="bg-white rounded-lg md:rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-4 md:mx-0">
-            <!-- Table Header with Search -->
+            <!-- Table Header with Search and Filters -->
             <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <h3 class="text-base md:text-lg font-semibold text-gray-900 flex items-center">
@@ -151,26 +171,45 @@
                         Hali ya Makampuni kwa Wakati Halisi
                     </h3>
                     
-                    <!-- Search Bar -->
-                    <div class="flex items-center space-x-2 w-full md:w-auto">
-                        <div class="relative flex-1 md:flex-none md:w-64">
+                    <!-- Search and Filter Bar -->
+                    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto">
+                        <!-- Status Filter Dropdown -->
+                        <select id="statusFilter" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                            <option value="">Hali Zote ({{ $stats['total_companies'] ?? 0 }})</option>
+                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active Sasa ({{ $stats['active_companies'] ?? 0 }})</option>
+                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive ({{ $stats['inactive_companies'] ?? 0 }})</option>
+                        </select>
+                        
+                        <!-- Search Input -->
+                        <div class="relative flex-1 md:w-64">
                             <input type="text" 
                                    id="searchInput" 
+                                   value="{{ request('search') }}"
                                    placeholder="Tafuta kwa jina la kampuni au mmiliki..." 
                                    class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all">
                             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
                         </div>
-                        <button onclick="location.reload()" class="text-emerald-600 hover:text-emerald-700 text-xs md:text-sm flex items-center space-x-1 bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-200 whitespace-nowrap">
-                            <i class="fas fa-sync-alt"></i>
-                            <span class="hidden md:inline">Fanya upya</span>
-                        </button>
+                        
+                        <!-- Filter Buttons -->
+                        <div class="flex gap-2">
+                            <button onclick="applyFilters()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm transition-colors flex items-center space-x-1">
+                                <i class="fas fa-filter text-xs"></i>
+                                <span>Chuja</span>
+                            </button>
+                            <a href="{{ route('admin.reports.company-activity') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm transition-colors flex items-center space-x-1">
+                                <i class="fas fa-times text-xs"></i>
+                                <span>Ondoa</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- Search Stats -->
-                <div id="searchStats" class="text-xs text-gray-500 mt-2 hidden">
-                    <span id="searchCount"></span> matokeo yamepatikana
+                @if(request('search'))
+                <div class="text-xs text-gray-500 mt-2">
+                    <span class="font-medium">{{ $companies->total() }}</span> matokeo kwa tafuta "{{ request('search') }}"
                 </div>
+                @endif
             </div>
 
             <!-- Mobile Cards View -->
@@ -191,8 +230,8 @@
                             </div>
                         </div>
                         <div class="flex flex-col items-end">
-                            <div class="text-xs text-gray-500 mb-1">#{{ $index + 1 }}</div>
-                            @if($company->isActive())
+                            <div class="text-xs text-gray-500 mb-1">#{{ $companies->firstItem() + $index }}</div>
+                            @if($company->is_active)
                                 <span class="badge bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
                                     <i class="fas fa-circle text-2xs mr-1"></i>Active Sasa
                                 </span>
@@ -208,7 +247,7 @@
                     <div class="grid grid-cols-2 gap-2 mb-3">
                         <div class="bg-gray-50 rounded-lg p-2">
                             <div class="text-2xs text-gray-500">Active Sasa</div>
-                            <div class="text-sm font-bold text-emerald-600">{{ $company->getActiveUsersCount() }}</div>
+                            <div class="text-sm font-bold text-emerald-600">{{ $company->active_users_count ?? 0 }}</div>
                         </div>
                         <div class="bg-gray-50 rounded-lg p-2">
                             <div class="text-2xs text-gray-500">Jumla Watumiaji</div>
@@ -220,16 +259,16 @@
                         </div>
                         <div class="bg-gray-50 rounded-lg p-2">
                             <div class="text-2xs text-gray-500">Jumla Walioingia</div>
-                            <div class="text-sm font-bold text-gray-900">{{ $company->getTotalLoginCount() }}</div>
+                            <div class="text-sm font-bold text-gray-900">{{ $company->total_login_count ?? 0 }}</div>
                         </div>
                     </div>
 
                     <!-- Last Login Info -->
                     <div class="mb-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg">
                         <i class="fas fa-clock mr-1 text-emerald-600"></i>
-                        @if($lastLogin = $company->getLastLoginDate())
+                        @if($company->last_login_date)
                             @php
-                                $lastLoginDate = \Carbon\Carbon::parse($lastLogin)->setTimezone('Africa/Nairobi');
+                                $lastLoginDate = \Carbon\Carbon::parse($company->last_login_date)->setTimezone('Africa/Nairobi');
                             @endphp
                             @if($lastLoginDate->isToday())
                                 <span class="text-green-600 font-medium">Leo, {{ $lastLoginDate->format('H:i:s') }}</span>
@@ -258,14 +297,6 @@
                     <p class="text-gray-500 text-sm">Hakuna makampuni yaliyopatikana</p>
                 </div>
                 @endforelse
-                
-                <!-- No results message for search -->
-                <div id="mobileNoResults" class="text-center py-8 hidden">
-                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-search text-gray-400 text-xl"></i>
-                    </div>
-                    <p class="text-gray-500 text-sm">Hakuna kampuni inayolingana na tafuta yako</p>
-                </div>
             </div>
 
             <!-- Desktop Table View -->
@@ -281,15 +312,14 @@
                             <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Leo</th>
                             <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Jumla</th>
                             <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mara ya Mwisho Kuingia</th>
+                            <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Kitendo</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100" id="tableBody">
                         @forelse($companies as $index => $company)
-                        <tr class="hover:bg-gray-50/50 transition-all duration-200 group company-row" 
-                            data-name="{{ strtolower($company->company_name) }}"
-                            data-owner="{{ strtolower($company->owner_name) }}">
+                        <tr class="hover:bg-gray-50/50 transition-all duration-200 group company-row">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 font-medium">{{ $index + 1 }}</div>
+                                <div class="text-sm text-gray-600 font-medium">{{ $companies->firstItem() + $index }}</div>
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -298,20 +328,19 @@
                                         <i class="fas fa-building text-emerald-600 text-sm"></i>
                                     </div>
                                     <div>
-                                        <button onclick="showCompanyDetails({{ $company->id }}, '{{ $company->company_name }}')" 
-                                                class="text-sm font-semibold text-gray-900 company-name hover:text-emerald-600 hover:underline text-left">
-                                            {{ $company->company_name }}
-                                        </button>
+                                        <div class="text-sm font-semibold text-gray-900 company-name">{{ $company->company_name }}</div>
+                                        <div class="text-xs text-gray-500">{{ $company->email }}</div>
                                     </div>
                                 </div>
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-700">{{ $company->owner_name }}</div>
+                                <div class="text-xs text-gray-500">{{ $company->phone }}</div>
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                @if($company->isActive())
+                                @if($company->is_active)
                                     <span class="inline-flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-xs font-medium border border-green-200">
                                         <i class="fas fa-circle text-2xs"></i>
                                         <span>Active</span>
@@ -326,7 +355,7 @@
 
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 <span class="inline-flex items-center justify-center px-2.5 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium">
-                                    {{ $company->getActiveUsersCount() }}
+                                    {{ $company->active_users_count ?? 0 }}
                                 </span>
                             </td>
 
@@ -337,13 +366,13 @@
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <span class="text-sm text-gray-900">{{ $company->getTotalLoginCount() }}</span>
+                                <span class="text-sm text-gray-900">{{ $company->total_login_count ?? 0 }}</span>
                             </td>
 
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($lastLogin = $company->getLastLoginDate())
+                                @if($company->last_login_date)
                                     @php
-                                        $lastLoginDate = \Carbon\Carbon::parse($lastLogin)->setTimezone('Africa/Nairobi');
+                                        $lastLoginDate = \Carbon\Carbon::parse($company->last_login_date)->setTimezone('Africa/Nairobi');
                                     @endphp
                                     <div class="text-sm" title="{{ $lastLoginDate->format('d/m/Y H:i:s') }}">
                                         @if($lastLoginDate->isToday())
@@ -358,42 +387,49 @@
                                     <span class="text-sm text-gray-500">-</span>
                                 @endif
                             </td>
+
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <button onclick="showCompanyDetails({{ $company->id }}, '{{ $company->company_name }}')" 
+                                        class="text-emerald-600 hover:text-emerald-800 hover:underline text-xs font-medium"
+                                        title="Angalia shughuli za kina">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span class="hidden lg:inline ml-1">Shughuli</span>
+                                </button>
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="9" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center">
                                     <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                         <i class="fas fa-building text-gray-400 text-xl"></i>
                                     </div>
                                     <p class="text-gray-500 text-sm">Hakuna makampuni yaliyopatikana</p>
+                                    @if(request('search') || request('status'))
+                                    <a href="{{ route('admin.reports.company-activity') }}" class="mt-2 text-emerald-600 hover:text-emerald-800 text-sm">
+                                        <i class="fas fa-times mr-1"></i> Ondoa vichujio
+                                    </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
-                
-                <!-- Desktop no results -->
-                <div id="desktopNoResults" class="text-center py-12 hidden">
-                    <div class="flex flex-col items-center">
-                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-search text-gray-400 text-xl"></i>
-                        </div>
-                        <p class="text-gray-500 text-sm">Hakuna kampuni inayolingana na tafuta yako</p>
-                    </div>
-                </div>
             </div>
 
-            <!-- Table Footer -->
+            <!-- Table Footer with Pagination -->
             @if(method_exists($companies, 'hasPages') && $companies->hasPages())
             <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-100 bg-gray-50/50">
                 <div class="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
                     <div class="text-sm text-gray-600">
                         {{ $companies->firstItem() }} - {{ $companies->lastItem() }} ya {{ $companies->total() }}
+                        @if(request('search') || request('status'))
+                        <span class="text-gray-400 ml-1">(imechujwa)</span>
+                        @endif
                     </div>
                     <div class="flex space-x-2 overflow-x-auto pb-1 md:pb-0">
-                        {{ $companies->onEachSide(1)->links('vendor.pagination.tailwind') }}
+                        {{ $companies->onEachSide(1)->withQueryString()->links('vendor.pagination.tailwind') }}
                     </div>
                 </div>
             </div>
@@ -418,20 +454,20 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                         <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
                             <p class="text-xs text-gray-600 mb-1">Kampuni Zilizoingia Leo</p>
-                            <p class="text-2xl font-bold text-emerald-700" id="today-active-companies">0</p>
+                            <p class="text-2xl font-bold text-emerald-700" id="today-active-companies">{{ $todayActiveCompanies->count() }}</p>
                         </div>
                         <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                             <p class="text-xs text-gray-600 mb-1">Watumiaji Walioingia Leo</p>
-                            <p class="text-2xl font-bold text-blue-700" id="today-active-users">{{ $stats['today_unique_users'] ?? 0 }}</p>
+                            <p class="text-2xl font-bold text-blue-700">{{ $stats['today_unique_users'] ?? 0 }}</p>
                         </div>
                         <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
                             <p class="text-xs text-gray-600 mb-1">Jumla ya Kuingia Leo</p>
-                            <p class="text-2xl font-bold text-purple-700" id="today-total-logins">{{ $stats['today_logins'] ?? 0 }}</p>
+                            <p class="text-2xl font-bold text-purple-700">{{ $stats['today_logins'] ?? 0 }}</p>
                         </div>
                     </div>
 
                     <!-- Companies that logged in today -->
-                    <h4 class="text-sm font-medium text-gray-700 mb-3">Orodha ya Kampuni Zilizoingia Leo</h4>
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">Orodha ya Kampuni Zilizoingia Leo ({{ $todayActiveCompanies->count() }})</h4>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm" id="today-companies-table">
                             <thead class="bg-emerald-50">
@@ -445,7 +481,46 @@
                                 </tr>
                             </thead>
                             <tbody id="today-companies-tbody" class="divide-y divide-gray-100">
-                                <!-- Will be filled by JavaScript -->
+                                @forelse($todayActiveCompanies as $index => $company)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-2">{{ $index + 1 }}</td>
+                                    <td class="px-4 py-2 font-medium">
+                                        <button onclick="showCompanyDetails({{ $company->id }}, '{{ $company->company_name }}')" 
+                                                class="text-emerald-600 hover:text-emerald-800 hover:underline text-left">
+                                            {{ $company->company_name }}
+                                        </button>
+                                    </td>
+                                    <td class="px-4 py-2">{{ $company->owner_name ?? '-' }}</td>
+                                    <td class="px-4 py-2 text-center font-bold text-emerald-700">{{ $company->today_login_count ?? 0 }}</td>
+                                    <td class="px-4 py-2 text-center">
+                                        @if($company->is_active)
+                                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                                                <i class="fas fa-circle text-2xs mr-1"></i>Active
+                                            </span>
+                                        @else
+                                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">
+                                                <i class="fas fa-circle text-2xs mr-1"></i>Inactive
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        @if($company->last_login_date)
+                                            @php
+                                                $lastLoginDate = \Carbon\Carbon::parse($company->last_login_date)->setTimezone('Africa/Nairobi');
+                                            @endphp
+                                            {{ $lastLoginDate->format('H:i:s') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                        Hakuna kampuni zilizoingia leo
+                                    </td>
+                                </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -584,10 +659,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-hide success notification
-    const notification = document.getElementById('success-notification');
-    if (notification) {
-        setTimeout(closeNotification, 5000);
+    // Auto-hide success/error notification
+    const successNotification = document.getElementById('success-notification');
+    if (successNotification) {
+        setTimeout(() => closeNotification('success-notification'), 5000);
+    }
+    
+    const errorNotification = document.getElementById('error-notification');
+    if (errorNotification) {
+        setTimeout(() => closeNotification('error-notification'), 5000);
     }
     
     // Update East African time every second
@@ -597,11 +677,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tab functionality
     initializeTabs();
     
-    // Search functionality
-    initializeSearch();
+    // Search and filter functionality
+    initializeSearchAndFilter();
     
-    // Load today's active companies
-    loadTodayActiveCompanies();
+    // Set up enter key for search
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+    }
 });
 
 function updateEastAfricanTime() {
@@ -642,11 +729,6 @@ function initializeTabs() {
             });
             document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
             
-            // If switching to reports tab, refresh data
-            if (tabName === 'ripoti') {
-                loadTodayActiveCompanies();
-            }
-            
             // Save to session
             sessionStorage.setItem('company_activity_tab', tabName);
         });
@@ -659,171 +741,25 @@ function initializeTabs() {
     }
 }
 
-function initializeSearch() {
-    const searchInput = document.getElementById('searchInput');
-    if (!searchInput) return;
-    
-    const mobileCards = document.querySelectorAll('.company-card');
-    const tableRows = document.querySelectorAll('.company-row');
-    const mobileNoResults = document.getElementById('mobileNoResults');
-    const desktopNoResults = document.getElementById('desktopNoResults');
-    const searchStats = document.getElementById('searchStats');
-    const searchCount = document.getElementById('searchCount');
-    
-    let searchTimeout;
-    
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            const searchTerm = this.value.toLowerCase().trim();
-            
-            if (searchTerm === '') {
-                // Show all
-                mobileCards.forEach(card => card.style.display = 'block');
-                tableRows.forEach(row => row.style.display = '');
-                if (mobileNoResults) mobileNoResults.classList.add('hidden');
-                if (desktopNoResults) desktopNoResults.classList.add('hidden');
-                if (searchStats) searchStats.classList.add('hidden');
-                return;
-            }
-            
-            let mobileMatchCount = 0;
-            let desktopMatchCount = 0;
-            
-            // Filter mobile cards
-            mobileCards.forEach(card => {
-                const companyName = card.getAttribute('data-name') || '';
-                const ownerName = card.getAttribute('data-owner') || '';
-                
-                if (companyName.includes(searchTerm) || ownerName.includes(searchTerm)) {
-                    card.style.display = 'block';
-                    mobileMatchCount++;
-                    highlightText(card.querySelector('.company-name'), searchTerm);
-                    highlightText(card.querySelector('.owner-name'), searchTerm);
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-            
-            // Filter table rows
-            tableRows.forEach(row => {
-                const companyName = row.getAttribute('data-name') || '';
-                const ownerName = row.getAttribute('data-owner') || '';
-                
-                if (companyName.includes(searchTerm) || ownerName.includes(searchTerm)) {
-                    row.style.display = '';
-                    desktopMatchCount++;
-                    highlightText(row.querySelector('.company-name'), searchTerm);
-                    highlightText(row.querySelector('.owner-name'), searchTerm);
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            
-            // Show/hide no results messages
-            if (mobileMatchCount === 0 && mobileNoResults) {
-                mobileNoResults.classList.remove('hidden');
-            } else if (mobileNoResults) {
-                mobileNoResults.classList.add('hidden');
-            }
-            
-            if (desktopMatchCount === 0 && desktopNoResults) {
-                desktopNoResults.classList.remove('hidden');
-            } else if (desktopNoResults) {
-                desktopNoResults.classList.add('hidden');
-            }
-            
-            // Update search stats
-            if (searchStats && searchCount) {
-                const totalMatches = Math.max(mobileMatchCount, desktopMatchCount);
-                if (totalMatches > 0) {
-                    searchCount.textContent = totalMatches;
-                    searchStats.classList.remove('hidden');
-                } else {
-                    searchStats.classList.add('hidden');
-                }
-            }
-        }, 300);
-    });
+function initializeSearchAndFilter() {
+    // This function now handles the UI filtering
+    // Actual search is done via form submission
 }
 
-function highlightText(element, searchTerm) {
-    if (!element) return;
-    const originalText = element.textContent;
-    const regex = new RegExp(`(${searchTerm})`, 'gi');
-    element.innerHTML = originalText.replace(regex, '<span class="highlight">$1</span>');
-}
-
-function loadTodayActiveCompanies() {
-    console.log('Loading today\'s active companies...');
+function applyFilters() {
+    const search = document.getElementById('searchInput').value;
+    const status = document.getElementById('statusFilter').value;
     
-    // Get companies data from PHP
-    const companies = @json($companies->items());
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    // Filter companies that have logged in today (using today_login_count)
-    const todayCompanies = companies.filter(company => 
-        company.today_login_count && company.today_login_count > 0
-    );
-    
-    console.log('Today companies found:', todayCompanies.length);
-    
-    // Calculate total unique users who logged in today
-    // This would come from the controller ideally
-    const totalUniqueUsers = @json($stats['today_unique_users'] ?? 0);
-    const totalLogins = @json($stats['today_logins'] ?? 0);
-    
-    // Update summary cards
-    document.getElementById('today-active-companies').textContent = todayCompanies.length;
-    document.getElementById('today-active-users').textContent = totalUniqueUsers;
-    document.getElementById('today-total-logins').textContent = totalLogins;
-    
-    // Generate table rows
-    let tableHtml = '';
-    if (todayCompanies.length > 0) {
-        todayCompanies.forEach((company, index) => {
-            // Format last login time in East African Time
-            const lastLogin = company.last_login_date ? new Date(company.last_login_date) : null;
-            let lastLoginStr = '-';
-            
-            if (lastLogin) {
-                // Convert to East African Time
-                const eatDate = new Date(lastLogin.getTime() + (3 * 60 * 60 * 1000));
-                lastLoginStr = eatDate.toLocaleString('sw-TZ', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            }
-            
-            // Check if company is currently active (last 10 minutes)
-            const isActiveNow = company.is_active || false;
-            const activeStatus = isActiveNow ? 
-                '<span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs"><i class="fas fa-circle text-2xs mr-1"></i>Active</span>' : 
-                '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs"><i class="fas fa-circle text-2xs mr-1"></i>Inactive</span>';
-            
-            tableHtml += `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2">${index + 1}</td>
-                    <td class="px-4 py-2 font-medium">
-                        <button onclick="showCompanyDetails(${company.id}, '${company.company_name}')" 
-                                class="text-emerald-600 hover:text-emerald-800 hover:underline text-left">
-                            ${company.company_name}
-                        </button>
-                    </td>
-                    <td class="px-4 py-2">${company.owner_name || '-'}</td>
-                    <td class="px-4 py-2 text-center font-bold text-emerald-700">${company.today_login_count || 0}</td>
-                    <td class="px-4 py-2 text-center">${activeStatus}</td>
-                    <td class="px-4 py-2">${lastLoginStr}</td>
-                </tr>
-            `;
-        });
+    let url = new URL(window.location.href);
+    url.searchParams.set('search', search);
+    if (status) {
+        url.searchParams.set('status', status);
     } else {
-        tableHtml = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Hakuna kampuni zilizoingia leo</td></tr>';
+        url.searchParams.delete('status');
     }
+    url.searchParams.delete('page'); // Reset to first page
     
-    document.getElementById('today-companies-tbody').innerHTML = tableHtml;
+    window.location.href = url.toString();
 }
 
 function showCompanyDetails(companyId, companyName) {
@@ -1086,8 +1022,8 @@ function hideModal(modalId) {
     }
 }
 
-function closeNotification() {
-    const notification = document.getElementById('success-notification');
+function closeNotification(notificationId = 'success-notification') {
+    const notification = document.getElementById(notificationId);
     if (notification) {
         notification.style.animation = 'slideDown 0.3s ease-out reverse';
         setTimeout(() => notification.remove(), 300);
