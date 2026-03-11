@@ -439,57 +439,92 @@
     </div>
 
 {{-- resources/views/layouts/admin.blade.php --}}
+{{-- resources/views/layouts/admin.blade.php --}}
 @php
   $navItems = [
-      ['route' => 'admin.dashboard', 'icon' => 'fas fa-building', 'label' => 'Makampuni'],
-      ['route' => 'admin.company-activity', 'icon' => 'fas fa-chart-line', 'label' => 'Shughuli za Makampuni'],
-      ['route' => 'admin.payments.index', 'icon' => 'fas fa-credit-card', 'label' => 'Malipo'], // NEW PAYMENT TAB
-      ['route' => 'admin.reports', 'icon' => 'fas fa-chart-bar', 'label' => 'Ripoti'],
-      ['route' => 'password.change', 'icon' => 'fas fa-key', 'label' => 'Badili Neno Siri'],
-      ['route' => 'logout', 'icon' => 'fas fa-sign-out-alt', 'label' => 'Toka', 'logout' => true],
+      [
+        'route' => 'admin.dashboard', 
+        'icon' => 'fas fa-building', 
+        'label' => 'Makampuni',
+        'description' => 'Dhibiti makampuni yote'
+      ],
+      [
+        'route' => 'admin.reports.company-activity', 
+        'icon' => 'fas fa-chart-line', 
+        'label' => 'Shughuli za Makampuni',
+        'description' => 'Fuatilia shughuli za wakati halisi'
+      ],
+      [
+        'route' => 'admin.payments.index', 
+        'icon' => 'fas fa-credit-card', 
+        'label' => 'Malipo',
+        'description' => 'Dhibiti malipo na michango'
+      ],
+      [
+        'route' => 'admin.reports', 
+        'icon' => 'fas fa-chart-bar', 
+        'label' => 'Ripoti',
+        'description' => 'Angalia ripoti na takwimu'
+      ],
+      [
+        'route' => 'password.change', 
+        'icon' => 'fas fa-key', 
+        'label' => 'Badili Neno Siri',
+        'description' => 'Badilisha neno siri lako'
+      ],
+      [
+        'route' => 'logout', 
+        'icon' => 'fas fa-sign-out-alt', 
+        'label' => 'Toka', 
+        'logout' => true,
+        'description' => 'Toka kwenye mfumo'
+      ],
   ];
   $currentRoute = request()->route()->getName();
 @endphp
 
-
     <nav class="flex-1 py-4">
-      @foreach($navItems as $item)
-        @if(isset($item['logout']) && $item['logout'])
-          <form method="POST" action="{{ route('logout') }}">
+@foreach($navItems as $item)
+    @if(isset($item['logout']) && $item['logout'])
+        <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button 
-              type="submit"
-              class="sidebar-item w-full text-left"
-            >
-              <i class="{{ $item['icon'] }}"></i>
-              <span class="font-medium">{{ $item['label'] }}</span>
+            <button type="submit" class="sidebar-item w-full text-left">
+                <i class="{{ $item['icon'] }}"></i>
+                <span class="font-medium">{{ $item['label'] }}</span>
             </button>
-          </form>
-        @else
-          @php
-            $routeExists = Route::has($item['route']);
-            $href = $routeExists ? route($item['route']) : '#';
-            
-            // Check if current route matches (supporting nested routes)
-            $isActive = false;
-            if ($routeExists) {
-              $routeName = str_replace('admin.', '', $item['route']);
-              $currentRouteName = str_replace('admin.', '', $currentRoute);
-              $isActive = strpos($currentRouteName, $routeName) === 0;
+        </form>
+    @else
+        @php
+            if (isset($item['url'])) {
+                $href = $item['url'];
+                $routeExists = true;
+                // For active state check
+                $isActive = request()->is(trim($item['url'], '/'));
+            } else {
+                $routeExists = Route::has($item['route']);
+                $href = $routeExists ? route($item['route']) : '#';
+                
+                $isActive = false;
+                if ($routeExists) {
+                    $routeName = str_replace('admin.', '', $item['route']);
+                    $currentRouteName = str_replace('admin.', '', $currentRoute);
+                    $isActive = strpos($currentRouteName, $routeName) === 0;
+                }
             }
-          @endphp
-          <a 
+        @endphp
+        <a 
             href="{{ $href }}"
             class="sidebar-item {{ $isActive ? 'active-nav-item' : '' }}"
-            @if(!$routeExists)
-              onclick="event.preventDefault(); alert('Ukurasa unatayarishiwa!');"
+            @if(!$routeExists && !isset($item['url']))
+                onclick="event.preventDefault(); alert('Ukurasa unatayarishiwa!');"
             @endif
-          >
+        >
             <i class="{{ $item['icon'] }}"></i>
             <span class="font-medium">{{ $item['label'] }}</span>
-          </a>
-        @endif
-      @endforeach
+        </a>
+    @endif
+@endforeach
+
     </nav>
 
     <!-- Footer -->

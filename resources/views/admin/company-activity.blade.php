@@ -67,7 +67,7 @@
     </div>
     @endif
 
-    <!-- Statistics Cards - Based on ALL companies -->
+    <!-- Statistics Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6 px-4 md:px-0">
         <!-- Active Companies -->
         <div class="bg-white rounded-lg md:rounded-2xl shadow-sm border border-gray-100 p-3 md:p-6 hover-lift transition-all duration-200">
@@ -212,93 +212,6 @@
                 @endif
             </div>
 
-            <!-- Mobile Cards View -->
-            <div class="md:hidden" id="mobileCardsContainer">
-                @forelse($companies as $index => $company)
-                <div class="border-b border-gray-100 p-4 hover:bg-gray-50/50 transition-all duration-200 company-card" 
-                     data-name="{{ strtolower($company->company_name) }}"
-                     data-owner="{{ strtolower($company->owner_name) }}">
-                    <!-- Header -->
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-lg flex items-center justify-center">
-                                <i class="fas fa-building text-emerald-600 text-xs"></i>
-                            </div>
-                            <div>
-                                <div class="text-sm font-semibold text-gray-900 company-name">{{ $company->company_name }}</div>
-                                <div class="text-xs text-gray-500 owner-name">{{ $company->owner_name }}</div>
-                            </div>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <div class="text-xs text-gray-500 mb-1">#{{ $companies->firstItem() + $index }}</div>
-                            @if($company->is_active)
-                                <span class="badge bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
-                                    <i class="fas fa-circle text-2xs mr-1"></i>Active Sasa
-                                </span>
-                            @else
-                                <span class="badge bg-gray-100 text-gray-800 text-xs px-2 py-0.5 rounded-full">
-                                    <i class="fas fa-circle text-2xs mr-1"></i>Inactive
-                                </span>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Stats Grid -->
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div class="bg-gray-50 rounded-lg p-2">
-                            <div class="text-2xs text-gray-500">Active Sasa</div>
-                            <div class="text-sm font-bold text-emerald-600">{{ $company->active_users_count ?? 0 }}</div>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-2">
-                            <div class="text-2xs text-gray-500">Jumla Watumiaji</div>
-                            <div class="text-sm font-bold text-gray-900">{{ $company->users->count() + ($company->wafanyakazi_count ?? 0) }}</div>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-2">
-                            <div class="text-2xs text-gray-500">Walioingia Leo</div>
-                            <div class="text-sm font-bold text-blue-600">{{ $company->today_login_count ?? 0 }}</div>
-                        </div>
-                        <div class="bg-gray-50 rounded-lg p-2">
-                            <div class="text-2xs text-gray-500">Jumla Walioingia</div>
-                            <div class="text-sm font-bold text-gray-900">{{ $company->total_login_count ?? 0 }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Last Login Info -->
-                    <div class="mb-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg">
-                        <i class="fas fa-clock mr-1 text-emerald-600"></i>
-                        @if($company->last_login_date)
-                            @php
-                                $lastLoginDate = \Carbon\Carbon::parse($company->last_login_date)->setTimezone('Africa/Nairobi');
-                            @endphp
-                            @if($lastLoginDate->isToday())
-                                <span class="text-green-600 font-medium">Leo, {{ $lastLoginDate->format('H:i:s') }}</span>
-                            @elseif($lastLoginDate->isYesterday())
-                                <span class="text-blue-600 font-medium">Jana, {{ $lastLoginDate->format('H:i:s') }}</span>
-                            @else
-                                {{ $lastLoginDate->format('d/m/Y H:i:s') }}
-                            @endif
-                        @else
-                            Hajawahi kuingia
-                        @endif
-                    </div>
-
-                    <!-- View Details Button -->
-                    <button onclick="showCompanyDetails({{ $company->id }}, '{{ $company->company_name }}')"
-                            class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 hover:from-emerald-600 hover:to-emerald-700">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Angalia Shughuli za Kina</span>
-                    </button>
-                </div>
-                @empty
-                <div class="text-center py-8">
-                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-building text-gray-400 text-xl"></i>
-                    </div>
-                    <p class="text-gray-500 text-sm">Hakuna makampuni yaliyopatikana</p>
-                </div>
-                @endforelse
-            </div>
-
             <!-- Desktop Table View -->
             <div class="hidden md:block overflow-x-auto">
                 <table class="w-full" id="companiesTable">
@@ -418,6 +331,93 @@
                 </table>
             </div>
 
+            <!-- Mobile Cards View -->
+            <div class="md:hidden" id="mobileCardsContainer">
+                @forelse($companies as $index => $company)
+                <div class="border-b border-gray-100 p-4 hover:bg-gray-50/50 transition-all duration-200 company-card" 
+                     data-name="{{ strtolower($company->company_name) }}"
+                     data-owner="{{ strtolower($company->owner_name) }}">
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-building text-emerald-600 text-xs"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-semibold text-gray-900 company-name">{{ $company->company_name }}</div>
+                                <div class="text-xs text-gray-500 owner-name">{{ $company->owner_name }}</div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <div class="text-xs text-gray-500 mb-1">#{{ $companies->firstItem() + $index }}</div>
+                            @if($company->is_active)
+                                <span class="badge bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
+                                    <i class="fas fa-circle text-2xs mr-1"></i>Active Sasa
+                                </span>
+                            @else
+                                <span class="badge bg-gray-100 text-gray-800 text-xs px-2 py-0.5 rounded-full">
+                                    <i class="fas fa-circle text-2xs mr-1"></i>Inactive
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div class="text-2xs text-gray-500">Active Sasa</div>
+                            <div class="text-sm font-bold text-emerald-600">{{ $company->active_users_count ?? 0 }}</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div class="text-2xs text-gray-500">Jumla Watumiaji</div>
+                            <div class="text-sm font-bold text-gray-900">{{ $company->users->count() + ($company->wafanyakazi_count ?? 0) }}</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div class="text-2xs text-gray-500">Walioingia Leo</div>
+                            <div class="text-sm font-bold text-blue-600">{{ $company->today_login_count ?? 0 }}</div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-2">
+                            <div class="text-2xs text-gray-500">Jumla Walioingia</div>
+                            <div class="text-sm font-bold text-gray-900">{{ $company->total_login_count ?? 0 }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Last Login Info -->
+                    <div class="mb-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg">
+                        <i class="fas fa-clock mr-1 text-emerald-600"></i>
+                        @if($company->last_login_date)
+                            @php
+                                $lastLoginDate = \Carbon\Carbon::parse($company->last_login_date)->setTimezone('Africa/Nairobi');
+                            @endphp
+                            @if($lastLoginDate->isToday())
+                                <span class="text-green-600 font-medium">Leo, {{ $lastLoginDate->format('H:i:s') }}</span>
+                            @elseif($lastLoginDate->isYesterday())
+                                <span class="text-blue-600 font-medium">Jana, {{ $lastLoginDate->format('H:i:s') }}</span>
+                            @else
+                                {{ $lastLoginDate->format('d/m/Y H:i:s') }}
+                            @endif
+                        @else
+                            Hajawahi kuingia
+                        @endif
+                    </div>
+
+                    <!-- View Details Button -->
+                    <button onclick="showCompanyDetails({{ $company->id }}, '{{ $company->company_name }}')"
+                            class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs px-3 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 hover:from-emerald-600 hover:to-emerald-700">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Angalia Shughuli za Kina</span>
+                    </button>
+                </div>
+                @empty
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-building text-gray-400 text-xl"></i>
+                    </div>
+                    <p class="text-gray-500 text-sm">Hakuna makampuni yaliyopatikana</p>
+                </div>
+                @endforelse
+            </div>
+
             <!-- Table Footer with Pagination -->
             @if(method_exists($companies, 'hasPages') && $companies->hasPages())
             <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-100 bg-gray-50/50">
@@ -454,7 +454,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                         <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
                             <p class="text-xs text-gray-600 mb-1">Kampuni Zilizoingia Leo</p>
-                            <p class="text-2xl font-bold text-emerald-700" id="today-active-companies">{{ $todayActiveCompanies->count() }}</p>
+                            <p class="text-2xl font-bold text-emerald-700">{{ $todayActiveCompanies->count() }}</p>
                         </div>
                         <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                             <p class="text-xs text-gray-600 mb-1">Watumiaji Walioingia Leo</p>
@@ -645,14 +645,6 @@
         font-size: 0.6rem;
     }
 }
-
-/* Search highlight */
-.highlight {
-    background-color: #fef3c7;
-    transition: background-color 0.3s;
-    padding: 0 2px;
-    border-radius: 2px;
-}
 </style>
 
 <!-- JavaScript -->
@@ -676,9 +668,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Tab functionality
     initializeTabs();
-    
-    // Search and filter functionality
-    initializeSearchAndFilter();
     
     // Set up enter key for search
     const searchInput = document.getElementById('searchInput');
@@ -741,11 +730,6 @@ function initializeTabs() {
     }
 }
 
-function initializeSearchAndFilter() {
-    // This function now handles the UI filtering
-    // Actual search is done via form submission
-}
-
 function applyFilters() {
     const search = document.getElementById('searchInput').value;
     const status = document.getElementById('statusFilter').value;
@@ -774,6 +758,7 @@ function showCompanyDetails(companyId, companyName) {
         </div>
     `;
 
+    // FIXED URL - Use the correct route name
     const url = `/admin/reports/company-activity/${companyId}/details`;
     
     fetch(url, {

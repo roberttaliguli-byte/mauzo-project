@@ -1,5 +1,4 @@
 <?php
-// app/Services/ActivityService.php
 
 namespace App\Services;
 
@@ -77,7 +76,6 @@ class ActivityService
         } catch (\Exception $e) {
             Log::error('Error in getDashboardStats: ' . $e->getMessage());
             
-            // Return default values on error
             return [
                 'active_companies' => 0,
                 'inactive_companies' => 0,
@@ -108,21 +106,6 @@ class ActivityService
     }
 
     /**
-     * Get list of inactive companies
-     */
-    public function getInactiveCompanies()
-    {
-        try {
-            return Company::whereDoesntHave('users', function($query) {
-                $query->where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow));
-            })->get();
-        } catch (\Exception $e) {
-            Log::error('Error in getInactiveCompanies: ' . $e->getMessage());
-            return collect();
-        }
-    }
-
-    /**
      * Get companies that logged in today
      */
     public function getTodayActiveCompanies()
@@ -142,40 +125,9 @@ class ActivityService
     }
 
     /**
-     * Get company activity statistics for all companies
-     */
-    public function getCompanyActivityStats()
-    {
-        try {
-            $companies = Company::all();
-            $stats = [];
-
-            foreach ($companies as $company) {
-                $stats[] = [
-                    'id' => $company->id,
-                    'name' => $company->company_name,
-                    'owner' => $company->owner_name,
-                    'is_active' => $this->isCompanyActive($company->id),
-                    'active_users' => $this->getActiveUsersCount($company->id),
-                    'total_users' => $this->getTotalUsersCount($company->id),
-                    'today_logins' => $this->getTodayLoginsCount($company->id),
-                    'total_logins' => $this->getTotalLoginsCount($company->id),
-                    'last_login' => $this->getLastLoginDate($company->id),
-                    'weekly_activity' => $this->getWeeklyActivity($company->id)
-                ];
-            }
-
-            return $stats;
-        } catch (\Exception $e) {
-            Log::error('Error in getCompanyActivityStats: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
      * Check if a company is active
      */
-    private function isCompanyActive($companyId)
+    public function isCompanyActive($companyId)
     {
         try {
             return User::where('company_id', $companyId)
@@ -189,7 +141,7 @@ class ActivityService
     /**
      * Get active users count for a company
      */
-    private function getActiveUsersCount($companyId)
+    public function getActiveUsersCount($companyId)
     {
         try {
             return User::where('company_id', $companyId)
@@ -201,21 +153,9 @@ class ActivityService
     }
 
     /**
-     * Get total users count for a company
-     */
-    private function getTotalUsersCount($companyId)
-    {
-        try {
-            return User::where('company_id', $companyId)->count();
-        } catch (\Exception $e) {
-            return 0;
-        }
-    }
-
-    /**
      * Get today's logins count for a company
      */
-    private function getTodayLoginsCount($companyId)
+    public function getTodayLoginsCount($companyId)
     {
         try {
             $today = Carbon::now('Africa/Nairobi')->startOfDay();
@@ -232,7 +172,7 @@ class ActivityService
     /**
      * Get total logins count for a company
      */
-    private function getTotalLoginsCount($companyId)
+    public function getTotalLoginsCount($companyId)
     {
         try {
             return DB::table('login_histories')
@@ -246,7 +186,7 @@ class ActivityService
     /**
      * Get last login date for a company
      */
-    private function getLastLoginDate($companyId)
+    public function getLastLoginDate($companyId)
     {
         try {
             return DB::table('login_histories')
@@ -260,7 +200,7 @@ class ActivityService
     /**
      * Get weekly activity for a company
      */
-    private function getWeeklyActivity($companyId)
+    public function getWeeklyActivity($companyId)
     {
         try {
             $data = [];
@@ -300,46 +240,6 @@ class ActivityService
         } catch (\Exception $e) {
             Log::error('Error updating user activity: ' . $e->getMessage());
             return false;
-        }
-    }
-
-    /**
-     * Update employee activity timestamp
-     */
-    public function updateEmployeeActivity($employeeId)
-    {
-        try {
-            if (class_exists('App\Models\Wafanyakazi')) {
-                $employee = Wafanyakazi::find($employeeId);
-                if ($employee && isset($employee->last_activity_at)) {
-                    $employee->last_activity_at = Carbon::now();
-                    $employee->save();
-                    return true;
-                }
-            }
-            return false;
-        } catch (\Exception $e) {
-            Log::error('Error updating employee activity: ' . $e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Clean old login histories (for scheduled task)
-     */
-    public function cleanOldLoginHistories($days = 90)
-    {
-        try {
-            $cutoffDate = Carbon::now()->subDays($days);
-            $deleted = DB::table('login_histories')
-                ->where('login_at', '<', $cutoffDate)
-                ->delete();
-            
-            Log::info("Cleaned {$deleted} old login history records");
-            return $deleted;
-        } catch (\Exception $e) {
-            Log::error('Error cleaning login histories: ' . $e->getMessage());
-            return 0;
         }
     }
 }

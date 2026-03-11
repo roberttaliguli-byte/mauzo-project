@@ -20,6 +20,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ReportController as MainReportController;
 use App\Http\Controllers\UserReportController;
 use App\Http\Controllers\AdminCompanyActivityController;
+use App\Http\Controllers\Admin\CompanyActivityController;
 use App\Models\Bidhaa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -343,8 +344,9 @@ Route::middleware(['auth', 'role:admin'])
         // Companies
         Route::get('/makampuni', [AdminController::class, 'makampuni'])->name('makampuni');
 
-        // Reports
+        // Reports - ALL in ONE group
         Route::prefix('reports')->group(function () {
+            // Existing report routes
             Route::get('/', [MainReportController::class, 'index'])->name('reports');
             Route::get('/generate', [MainReportController::class, 'generate'])->name('reports.generate');
             Route::get('/export', [MainReportController::class, 'export'])->name('reports.export');
@@ -353,27 +355,13 @@ Route::middleware(['auth', 'role:admin'])
             Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
                 ->name('reports.download-companies');
 
-            // Company Activity Routes
-            Route::get('/company-activity', [AdminCompanyActivityController::class, 'index'])
+            // Company Activity Routes - INSIDE the same reports group
+            Route::get('/company-activity', [CompanyActivityController::class, 'index'])
                 ->name('reports.company-activity');
-
-            Route::get('/company-activity/stats', [AdminCompanyActivityController::class, 'getActivityStats'])
-                ->name('reports.company-activity.stats');
-
-            Route::get('/company-activity/{id}/details', [AdminCompanyActivityController::class, 'getCompanyDetails'])
+            
+            Route::get('/company-activity/{id}/details', [CompanyActivityController::class, 'getCompanyDetails'])
                 ->name('reports.company-activity.details');
-
-            Route::get('/company-activity/chart/data', [AdminCompanyActivityController::class, 'getChartData'])
-                ->name('reports.company-activity.chart');
-
-            // Export routes
-            Route::get('/company-activity/export/pdf', [AdminCompanyActivityController::class, 'exportPDF'])
-                ->name('reports.company-activity.export.pdf');
-
-            Route::get('/company-activity/export/excel', [AdminCompanyActivityController::class, 'exportExcel'])
-                ->name('reports.company-activity.export.excel');
         });
-
         // Change Password
         Route::get('/change-password', [AdminController::class, 'showChangePassword'])->name('password.show');
         Route::post('/change-password', [AdminController::class, 'updatePassword'])
