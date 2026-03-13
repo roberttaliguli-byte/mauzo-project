@@ -6,6 +6,7 @@ use App\Models\Madeni;
 use App\Models\Marejesho;
 use App\Models\Bidhaa;
 use App\Models\Mteja;
+use App\Models\Mauzo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -40,76 +41,205 @@ class MadeniController extends Controller
         ];
     }
     
-    /**
-     * Main index page
-     */
-    public function index(Request $request)
-    {
-        $companyId = $this->getCompanyId();
-        $today = $this->getTodayRange();
+/**
+ * Main index page
+ */
+public function index(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    $today = $this->getTodayRange();
+    
+    // Today's statistics
+    $todayDebts = Madeni::where('company_id', $companyId)
+        ->whereBetween('created_at', $today)
+        ->sum('jumla');
         
-        // Today's statistics
-        $todayDebts = Madeni::where('company_id', $companyId)
-            ->whereBetween('created_at', $today)
-            ->sum('jumla');
+    // Total repayments received today (mapato)
+    $todayRepayments = Marejesho::where('company_id', $companyId)
+        ->whereBetween('tarehe', $today)
+        ->sum('kiasi');
+    
+    // Calculate ACTUAL PROFIT from today's repayments using FIFO method
+    $todayMarejeshos = Marejesho::where('company_id', $companyId)
+        ->whereBetween('tarehe', $today)
+        ->with(['madeni.bidhaa'])
+        ->orderBy('tarehe', 'asc') // Process in chronological order
+        ->get();
+        
+    $faidaMarejesho = 0;
+    $totalRepaidToday = 0;
+    
+    // Track each debt's repayment progress
+    $debtProgress = []; // Track cost recovery and profit for each debt
+    
+    foreach($todayMarejeshos as $marejesho) {
+        if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+            $debt = $marejesho->madeni;
+            $debtId = $debt->id;
+            $repaymentAmount = $marejesho->kiasi;
+            $totalRepaidToday += $repaymentAmount;
             
-        $todayRepayments = Marejesho::where('company_id', $companyId)
-            ->whereBetween('tarehe', $today)
-            ->sum('kiasi');
+            // Initialize debt tracking if not exists
+            if (!isset($debtProgress[$debtId])) {
+                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                $sellingPrice = $debt->jumla; // Total selling price
+                $quantity = $debt->idadi;
+                $totalCost = $buyingPrice * $quantity;
+                
+                $debtProgress[$debtId] = [
+                    'total_cost' => $totalCost,
+                    'total_selling_price' => $sellingPrice,
+                    'recovered_so_far' => 0,
+                    'profit_so_far' => 0,
+                    'remaining_to_recover' => $totalCost,
+                    'is_cost_recovered' => false
+                ];
+            }
             
-        $todayNewBorrowers = Madeni::where('company_id', $companyId)
-            ->whereBetween('created_at', $today)
-            ->distinct('jina_mkopaji')
-            ->count('jina_mkopaji');
+            $progress = &$debtProgress[$debtId];
+            $remainingAmount = $repaymentAmount;
             
-        $todayPending = Madeni::where('company_id', $companyId)
-            ->whereBetween('created_at', $today)
-            ->where('baki', '>', 0)
-            ->count();
-        
-        // Get all borrowers with their total debts (for grouping)
-        $borrowers = Madeni::where('company_id', $companyId)
-            ->select('jina_mkopaji', 'simu', DB::raw('COUNT(*) as total_debts'), DB::raw('SUM(baki) as total_balance'))
-            ->where('baki', '>', 0)
-            ->groupBy('jina_mkopaji', 'simu')
-            ->orderBy('total_balance', 'desc')
-            ->get();
-        
-        // Get all products for dropdown
-        $bidhaa = Bidhaa::where('company_id', $companyId)
-            ->where('idadi', '>', 0)
-            ->orderBy('jina')
-            ->get();
-        
-        // Get paginated debts (for initial load)
-        $query = Madeni::with('bidhaa')
-            ->where('company_id', $companyId);
-        
-        if ($request->filter === 'active') {
-            $query->where('baki', '>', 0);
-        } elseif ($request->filter === 'paid') {
-            $query->where('baki', '<=', 0);
+            // Stage 1: Recover cost first
+            if (!$progress['is_cost_recovered']) {
+                $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+                
+                if ($remainingAmount <= $remainingToRecover) {
+                    // All goes to cost recovery
+                    $progress['recovered_so_far'] += $remainingAmount;
+                    $progress['remaining_to_recover'] = $progress['total_cost'] - $progress['recovered_so_far'];
+                    // No profit from this repayment
+                    $profitFromThis = 0;
+                    $remainingAmount = 0;
+                } else {
+                    // Part goes to cost recovery, rest will go to profit
+                    $costPortion = $remainingToRecover;
+                    $progress['recovered_so_far'] += $costPortion;
+                    $progress['remaining_to_recover'] = 0;
+                    $progress['is_cost_recovered'] = true;
+                    
+                    $remainingAmount -= $costPortion;
+                    $profitFromThis = 0; // Will handle remaining in Stage 2
+                }
+            }
+            
+            // Stage 2: After cost recovered, remaining is profit
+            if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
+                // All remaining is profit
+                $progress['profit_so_far'] += $remainingAmount;
+                $profitFromThis = $remainingAmount;
+                $faidaMarejesho += $remainingAmount;
+                $remainingAmount = 0;
+            }
+            
+            // Debug log
+            \Log::info('Repayment FIFO Calculation:', [
+                'debt_id' => $debtId,
+                'bidhaa' => $debt->bidhaa->jina,
+                'repayment' => $repaymentAmount,
+                'total_cost' => $progress['total_cost'],
+                'total_selling' => $progress['total_selling_price'],
+                'recovered_so_far' => $progress['recovered_so_far'],
+                'profit_so_far' => $progress['profit_so_far'],
+                'profit_from_this' => $profitFromThis ?? 0,
+                'remaining_amount' => $remainingAmount
+            ]);
         }
-        
-        $madeni = $query->orderBy('created_at', 'desc')->paginate(20);
-        
-        // Get recent repayments
-        $marejesho = Marejesho::with('madeni.bidhaa')
-            ->where('company_id', $companyId)
-            ->orderBy('tarehe', 'desc')
-            ->paginate(15, ['*'], 'history_page');
-        
-        return view('madeni.index', compact(
-            'madeni',
-            'marejesho',
-            'bidhaa',
-            'borrowers',
-            'todayDebts',
-            'todayRepayments',
-            'todayNewBorrowers',
-            'todayPending'
-        ));
     }
+    
+    // Log totals for verification
+    \Log::info('Today Repayments Summary:', [
+        'totalRepayments' => $todayRepayments,
+        'totalProfit' => $faidaMarejesho,
+        'totalCostRecovered' => $todayRepayments - $faidaMarejesho,
+        'verification' => ($todayRepayments - $faidaMarejesho) . ' (cost) + ' . $faidaMarejesho . ' (profit) = ' . $todayRepayments
+    ]);
+    
+    // Calculate ACTUAL PROFIT from today's sales (mauzo) - for optional display
+    $todayMauzos = Mauzo::where('company_id', $companyId)
+        ->whereBetween('created_at', $today)
+        ->with('bidhaa')
+        ->get();
+        
+    $faidaMauzo = 0;
+    foreach($todayMauzos as $mauzo) {
+        if ($mauzo->bidhaa) {
+            $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+            $sellingPrice = $mauzo->bei;
+            $quantity = $mauzo->idadi;
+            
+            $totalDiscount = 0;
+            if ($mauzo->punguzo_aina === 'bidhaa') {
+                $totalDiscount = $mauzo->punguzo * $quantity;
+            } else {
+                $totalDiscount = $mauzo->punguzo;
+            }
+            
+            $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+            $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
+            $totalBuyingCost = $buyingPrice * $quantity;
+            $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+            $faidaMauzo += $profit;
+        }
+    }
+        
+    $todayNewBorrowers = Madeni::where('company_id', $companyId)
+        ->whereBetween('created_at', $today)
+        ->distinct('jina_mkopaji')
+        ->count('jina_mkopaji');
+        
+    $todayPending = Madeni::where('company_id', $companyId)
+        ->whereBetween('created_at', $today)
+        ->where('baki', '>', 0)
+        ->count();
+    
+    // Get all borrowers with their total debts (for grouping)
+    $borrowers = Madeni::where('company_id', $companyId)
+        ->select('jina_mkopaji', 'simu', DB::raw('COUNT(*) as total_debts'), DB::raw('SUM(baki) as total_balance'))
+        ->where('baki', '>', 0)
+        ->groupBy('jina_mkopaji', 'simu')
+        ->orderBy('total_balance', 'desc')
+        ->get();
+    
+    // Get all products for dropdown with aina and kipimo
+    $bidhaa = Bidhaa::where('company_id', $companyId)
+        ->where('idadi', '>', 0)
+        ->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi')
+        ->orderBy('jina')
+        ->get();
+    
+    // Get paginated debts (for initial load) with bidhaa including aina and kipimo
+    $query = Madeni::with(['bidhaa' => function($query) {
+        $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
+    }])->where('company_id', $companyId);
+    
+    if ($request->filter === 'active') {
+        $query->where('baki', '>', 0);
+    } elseif ($request->filter === 'paid') {
+        $query->where('baki', '<=', 0);
+    }
+    
+    $madeni = $query->orderBy('created_at', 'desc')->paginate(20);
+    
+    // Get recent repayments with bidhaa including aina and kipimo
+    $marejesho = Marejesho::with(['madeni.bidhaa' => function($query) {
+        $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
+    }])->where('company_id', $companyId)
+        ->orderBy('tarehe', 'desc')
+        ->paginate(15, ['*'], 'history_page');
+    
+    return view('madeni.index', compact(
+        'madeni',
+        'marejesho',
+        'bidhaa',
+        'borrowers',
+        'todayDebts',
+        'todayRepayments',
+        'faidaMarejesho',
+        'faidaMauzo',
+        'todayNewBorrowers',
+        'todayPending'
+    ));
+}
     
     /**
      * AJAX search for debts (unpaginated)
@@ -118,8 +248,9 @@ class MadeniController extends Controller
     {
         $companyId = $this->getCompanyId();
         
-        $query = Madeni::with('bidhaa')
-            ->where('company_id', $companyId);
+        $query = Madeni::with(['bidhaa' => function($query) {
+            $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
+        }])->where('company_id', $companyId);
         
         if ($request->filled('search')) {
             $search = $request->search;
@@ -127,7 +258,9 @@ class MadeniController extends Controller
                 $q->where('jina_mkopaji', 'like', "%{$search}%")
                   ->orWhere('simu', 'like', "%{$search}%")
                   ->orWhereHas('bidhaa', function($q2) use ($search) {
-                      $q2->where('jina', 'like', "%{$search}%");
+                      $q2->where('jina', 'like', "%{$search}%")
+                         ->orWhere('aina', 'like', "%{$search}%")
+                         ->orWhere('kipimo', 'like', "%{$search}%");
                   });
             });
         }
@@ -159,8 +292,9 @@ class MadeniController extends Controller
     {
         $companyId = $this->getCompanyId();
         
-        $debts = Madeni::with('bidhaa')
-            ->where('company_id', $companyId)
+        $debts = Madeni::with(['bidhaa' => function($query) {
+            $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
+        }])->where('company_id', $companyId)
             ->where('jina_mkopaji', $request->borrower)
             ->where('baki', '>', 0)
             ->orderBy('created_at', 'desc')
@@ -401,8 +535,9 @@ class MadeniController extends Controller
     {
         $companyId = $this->getCompanyId();
         
-        $query = Madeni::with('bidhaa')
-            ->where('company_id', $companyId);
+        $query = Madeni::with(['bidhaa' => function($query) {
+            $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'idadi');
+        }])->where('company_id', $companyId);
         
         if ($request->filter === 'active') {
             $query->where('baki', '>', 0);
@@ -414,7 +549,12 @@ class MadeniController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('jina_mkopaji', 'like', "%{$search}%")
-                  ->orWhere('simu', 'like', "%{$search}%");
+                  ->orWhere('simu', 'like', "%{$search}%")
+                  ->orWhereHas('bidhaa', function($q2) use ($search) {
+                      $q2->where('jina', 'like', "%{$search}%")
+                         ->orWhere('aina', 'like', "%{$search}%")
+                         ->orWhere('kipimo', 'like', "%{$search}%");
+                  });
             });
         }
         
@@ -427,7 +567,7 @@ class MadeniController extends Controller
         
         $callback = function() use ($debts) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Tarehe', 'Mkopaji', 'Simu', 'Bidhaa', 'Idadi', 'Deni', 'Punguzo', 'Baki', 'Hali']);
+            fputcsv($file, ['Tarehe', 'Mkopaji', 'Simu', 'Bidhaa', 'Aina', 'Kipimo', 'Idadi', 'Deni', 'Punguzo', 'Baki', 'Hali']);
             
             foreach ($debts as $debt) {
                 $status = $debt->baki <= 0 ? 'Imelipwa' : 'Inayongoza';
@@ -436,6 +576,8 @@ class MadeniController extends Controller
                     $debt->jina_mkopaji,
                     $debt->simu,
                     $debt->bidhaa->jina ?? 'N/A',
+                    $debt->bidhaa->aina ?? 'N/A',
+                    $debt->bidhaa->kipimo ?? 'N/A',
                     $debt->idadi,
                     number_format($debt->jumla, 2),
                     number_format($debt->punguzo, 2),
@@ -469,8 +611,9 @@ class MadeniController extends Controller
         $reportType = $request->report_type ?? 'detailed';
         $status = $request->status ?? 'all';
         
-        $query = Madeni::with('bidhaa')
-            ->where('company_id', $companyId)
+        $query = Madeni::with(['bidhaa' => function($query) {
+            $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
+        }])->where('company_id', $companyId)
             ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         
         if ($status === 'active') {

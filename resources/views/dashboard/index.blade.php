@@ -84,28 +84,33 @@
                 </div>
             </div>
 
-            <!-- Faida Halisi Leo -->
-            <div class="group relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
-                <div class="relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 p-2 md:p-4 rounded-lg shadow-md text-white">
-                    <div class="flex justify-between items-start mb-1 md:mb-3">
-                        <div class="p-1 md:p-2 bg-white/20 rounded-lg">
-                            <i class="fas fa-chart-pie text-xs md:text-base"></i>
-                        </div>
-                        <span class="text-[10px] md:text-xs text-white/70 font-medium">Faida</span>
-                    </div>
-                    @php
-                        $faidaHalisiLeo = $jumlaFaida - $matumiziLeo;
-                    @endphp
-                    <div class="font-bold text-sm md:text-xl mb-0.5 md:mb-1">
-                        <span class="text-xs md:text-base">{{ number_format($faidaHalisiLeo, 0) }}</span>
-                    </div>
-                    <div class="flex items-center text-white/80 text-[9px] md:text-xs">
-                        <i class="fas fa-calendar-day mr-1"></i>
-                        <span>Leo</span>
-                    </div>
-                </div>
+<!-- Faida Halisi Leo -->
+<div class="group relative">
+    <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
+    <div class="relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 p-2 md:p-4 rounded-lg shadow-md text-white">
+        <div class="flex justify-between items-start mb-1 md:mb-3">
+            <div class="p-1 md:p-2 bg-white/20 rounded-lg">
+                <i class="fas fa-chart-pie text-xs md:text-base"></i>
             </div>
+            <span class="text-[10px] md:text-xs text-white/70 font-medium">Faida Halisi</span>
+        </div>
+        @php
+            // Use variables directly from controller
+            $faidaMauzo = $faidaMauzo ?? 0;
+            $faidaMarejesho = $faidaMarejesho ?? 0;
+            $matumiziLeo = $matumiziLeo ?? 0;
+            $jumlaFaida = $faidaMauzo + $faidaMarejesho;
+            $faidaHalisiLeo = $jumlaFaida - $matumiziLeo;
+        @endphp
+        <div class="font-bold text-sm md:text-xl mb-0.5 md:mb-1">
+            <span class="text-xs md:text-base">{{ number_format($faidaHalisiLeo, 0) }}</span>
+        </div>
+        <div class="flex items-center text-white/80 text-[9px] md:text-xs">
+            <i class="fas fa-calendar-day mr-1"></i>
+            <span>Leo</span>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 

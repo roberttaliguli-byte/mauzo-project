@@ -94,39 +94,89 @@ class DashboardController extends Controller
             ->get();
 
         foreach ($mauzosLeo as $mauzo) {
-            $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-            $sellingPrice = $mauzo->bei;
-            $quantity = $mauzo->idadi;
-            
-            $actualDiscount = $mauzo->punguzo;
-            if ($mauzo->punguzo_aina === 'bidhaa') {
-                $actualDiscount = $mauzo->punguzo * $quantity;
+            if ($mauzo->bidhaa) {
+                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                $sellingPrice = $mauzo->bei;
+                $quantity = $mauzo->idadi;
+                
+                $totalDiscount = 0;
+                if ($mauzo->punguzo_aina === 'bidhaa') {
+                    $totalDiscount = $mauzo->punguzo * $quantity;
+                } else {
+                    $totalDiscount = $mauzo->punguzo;
+                }
+                
+                $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+                $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
+                $totalBuyingCost = $buyingPrice * $quantity;
+                $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+                $faidaMauzo += $profit;
             }
-            
-            $faidaMauzo += ($sellingPrice - $buyingPrice) * $quantity - $actualDiscount;
         }
 
-        // Profit from debt repayments
+        // Profit from debt repayments using FIFO method
         $faidaMarejesho = 0;
         $marejeshosLeo = Marejesho::with(['madeni.bidhaa'])
             ->whereHas('madeni', function($q) use ($companyId) {
                 $q->where('company_id', $companyId);
             })
             ->whereDate('tarehe', $today)
+            ->orderBy('tarehe', 'asc') // Process in chronological order
             ->get();
 
+        // Track each debt's repayment progress
+        $debtProgress = [];
+
         foreach ($marejeshosLeo as $marejesho) {
-            if ($marejesho->madeni && $marejesho->madeni->bidhaa) {
+            if (isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
                 $debt = $marejesho->madeni;
-                
-                // SIMPLE: Profit = jumla (discounted price) - buying cost
-                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                $quantity = $debt->idadi;
-                $totalBuyingCost = $buyingPrice * $quantity;
-                $actualSellingPrice = $debt->jumla;
-                
-                $profit = $actualSellingPrice - $totalBuyingCost;
-                $faidaMarejesho += $profit;
+                $debtId = $debt->id;
+                $repaymentAmount = $marejesho->kiasi;
+
+                // Initialize debt tracking if not exists
+                if (!isset($debtProgress[$debtId])) {
+                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                    $quantity = $debt->idadi;
+                    $totalCost = $buyingPrice * $quantity;
+                    $totalSellingPrice = $debt->jumla;
+
+                    $debtProgress[$debtId] = [
+                        'total_cost' => $totalCost,
+                        'total_selling' => $totalSellingPrice,
+                        'recovered_so_far' => 0,
+                        'is_cost_recovered' => false
+                    ];
+                }
+
+                $progress = &$debtProgress[$debtId];
+                $remainingAmount = $repaymentAmount;
+
+                // Stage 1: Recover cost first
+                if (!$progress['is_cost_recovered']) {
+                    $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+
+                    if ($remainingAmount <= $remainingToRecover) {
+                        // All goes to cost recovery
+                        $progress['recovered_so_far'] += $remainingAmount;
+                        // No profit from this repayment
+                        $remainingAmount = 0;
+                    } else {
+                        // Part goes to cost recovery, rest is profit
+                        $costPortion = $remainingToRecover;
+                        $progress['recovered_so_far'] += $costPortion;
+                        $progress['is_cost_recovered'] = true;
+
+                        // Remaining is profit
+                        $profitPortion = $remainingAmount - $costPortion;
+                        $faidaMarejesho += $profitPortion;
+                        $remainingAmount = 0;
+                    }
+                }
+
+                // Stage 2: If cost already recovered, all is profit
+                if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
+                    $faidaMarejesho += $remainingAmount;
+                }
             }
         }
 
@@ -160,6 +210,7 @@ class DashboardController extends Controller
         // Pass all variables to the view
         return view('dashboard.index', compact(
             'company',
+            'companyId',
             'jumlaBidhaa',
             'jumlaIdadi',
             'thamani',
@@ -177,7 +228,7 @@ class DashboardController extends Controller
             'mauzoLeo',           // Today's cash sales (for Mapato section)
             'mapatoMadeni',       // Today's debt repayments (for Mapato section)
             'faidaMauzo',         // Profit from cash sales
-            'faidaMarejesho',     // Profit from debt repayments  
+            'faidaMarejesho',     // Profit from debt repayments (FIFO method)
             'jumlaFaida',         // Total profit today (faida ya leo)
             'allMauzos',          // For Jumla Kuu section
             'allMarejeshos',      // For Jumla Kuu section

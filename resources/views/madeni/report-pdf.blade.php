@@ -161,6 +161,8 @@
                 <th>Mkopaji</th>
                 <th>Simu</th>
                 <th>Bidhaa</th>
+                <th>Aina</th>
+                <th>Kipimo</th>
                 <th class="text-center">Idadi</th>
                 <th class="text-right">Jumla</th>
                 <th class="text-right">Malipo</th>
@@ -179,6 +181,8 @@
                     <td>{{ $debt->jina_mkopaji }}</td>
                     <td>{{ $debt->simu ?? 'N/A' }}</td>
                     <td>{{ $debt->bidhaa->jina ?? 'N/A' }}</td>
+                    <td>{{ $debt->bidhaa->aina ?? 'N/A' }}</td>
+                    <td>{{ $debt->bidhaa->kipimo ?? 'N/A' }}</td>
                     <td class="text-center">{{ $debt->idadi }}</td>
                     <td class="text-right">{{ number_format($debt->jumla, 2) }}</td>
                     <td class="text-right">{{ number_format($paid, 2) }}</td>
@@ -195,7 +199,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="text-center">
+                    <td colspan="12" class="text-center">
                         Hakuna data ya madeni katika kipindi hiki
                     </td>
                 </tr>
@@ -204,7 +208,7 @@
 
         <tfoot>
             <tr>
-                <td colspan="6" class="text-right">JUMLA:</td>
+                <td colspan="8" class="text-right">JUMLA:</td>
                 <td class="text-right">{{ number_format($totalAmount, 2) }}</td>
                 <td class="text-right">{{ number_format($totalPaid, 2) }}</td>
                 <td class="text-right">{{ number_format($totalBalance, 2) }}</td>

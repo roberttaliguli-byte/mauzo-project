@@ -148,48 +148,56 @@
         @endif
     </div>
 
-    <!-- Today's Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="bg-white p-3 rounded-lg border border-emerald-200 shadow-sm hover-lift">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Madeni ya Leo</p>
-                    <p class="text-xl font-bold text-emerald-700">TZS {{ number_format($todayDebts, 2) }}</p>
-                </div>
-                <i class="fas fa-money-bill-wave text-emerald-500 text-lg"></i>
+<!-- Today's Stats Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="bg-white p-3 rounded-lg border border-emerald-200 shadow-sm hover-lift">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-500 mb-1">Madeni ya Leo</p>
+                <p class="text-xl font-bold text-emerald-700">TZS {{ number_format($todayDebts, 2) }}</p>
             </div>
-        </div>
-        
-        <div class="bg-white p-3 rounded-lg border border-red-200 shadow-sm hover-lift">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Marejesho ya Leo</p>
-                    <p class="text-xl font-bold text-red-700">TZS {{ number_format($todayRepayments, 2) }}</p>
-                </div>
-                <i class="fas fa-hand-holding-usd text-red-500 text-lg"></i>
-            </div>
-        </div>
-        
-        <div class="bg-white p-3 rounded-lg border border-green-200 shadow-sm hover-lift">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Wakopaji Wapya Leo</p>
-                    <p class="text-xl font-bold text-green-700">{{ $todayNewBorrowers }}</p>
-                </div>
-                <i class="fas fa-user-plus text-green-500 text-lg"></i>
-            </div>
-        </div>
-        
-        <div class="bg-white p-3 rounded-lg border border-blue-200 shadow-sm hover-lift">
-            <div class="flex justify-between items-center">
-                <div>
-                    <p class="text-xs text-gray-500 mb-1">Madeni Yanayongoza Leo</p>
-                    <p class="text-xl font-bold text-blue-700">{{ $todayPending }}</p>
-                </div>
-                <i class="fas fa-clock text-blue-500 text-lg"></i>
-            </div>
+            <i class="fas fa-money-bill-wave text-emerald-500 text-lg"></i>
         </div>
     </div>
+    
+    <div class="bg-white p-3 rounded-lg border border-red-200 shadow-sm hover-lift">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-500 mb-1">Marejesho ya Leo</p>
+                <p class="text-xl font-bold text-red-700">TZS {{ number_format($todayRepayments, 2) }}</p>
+                <div class="flex justify-between text-xs mt-1">
+                    <span class="text-gray-500">Gharama:</span>
+                    <span class="text-gray-700">TZS {{ number_format($todayRepayments - $faidaMarejesho, 2) }}</span>
+                </div>
+                <div class="flex justify-between text-xs font-semibold">
+                    <span class="text-emerald-600">Faida:</span>
+                    <span class="text-emerald-600">TZS {{ number_format($faidaMarejesho, 2) }}</span>
+                </div>
+            </div>
+            <i class="fas fa-hand-holding-usd text-red-500 text-lg"></i>
+        </div>
+    </div>
+    
+    <div class="bg-white p-3 rounded-lg border border-green-200 shadow-sm hover-lift">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-500 mb-1">Wakopaji Wapya Leo</p>
+                <p class="text-xl font-bold text-green-700">{{ $todayNewBorrowers }}</p>
+            </div>
+            <i class="fas fa-user-plus text-green-500 text-lg"></i>
+        </div>
+    </div>
+    
+    <div class="bg-white p-3 rounded-lg border border-blue-200 shadow-sm hover-lift">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-xs text-gray-500 mb-1">Madeni Yanayongoza Leo</p>
+                <p class="text-xl font-bold text-blue-700">{{ $todayPending }}</p>
+            </div>
+            <i class="fas fa-clock text-blue-500 text-lg"></i>
+        </div>
+    </div>
+</div>
 
     <!-- Borrowers Summary (Grouped) -->
     @if($borrowers->count() > 0)
@@ -315,104 +323,114 @@
             </button>
         </div>
     </div>
-
-    <!-- TAB 2: Historia ya Marejesho -->
-    <div id="marejesho-tab-content" class="tab-content hidden">
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            @if($marejesho->count() > 0)
-            <div class="mb-3">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Jumla ya Marejesho: 
-                    <span class="font-bold text-green-600">TZS {{ number_format($marejesho->sum('kiasi'), 2) }}</span>
-                </h3>
-            </div>
-            @endif
-            
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-emerald-50">
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Bidhaa</th>
-                            <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
-                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Rejesho</th>
-                            <th class="px-4 py-2 text-center font-medium text-emerald-800">Njia ya Malipo</th>
-                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki baada ya Malipo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($marejesho as $rejesho)
-                            @php
-                                $madeni = $rejesho->madeni;
-                                $paymentMethod = $rejesho->lipa_kwa ?? 'cash';
-                                $badgeClass = [
-                                    'cash' => 'payment-badge-cash',
-                                    'lipa_namba' => 'payment-badge-lipa_namba',
-                                    'bank' => 'payment-badge-bank'
-                                ][$paymentMethod];
-                                
-                                $methodText = [
-                                    'cash' => 'Cash',
-                                    'lipa_namba' => 'Lipa Namba',
-                                    'bank' => 'Bank'
-                                ][$paymentMethod];
-                            @endphp
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-2">
-                                    <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($rejesho->tarehe)->format('d/m/Y') }}</div>
-                                    <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($rejesho->tarehe)->format('H:i') }}</div>
-                                </td>
-                                <td class="px-4 py-2">
-                                    <div class="font-medium text-gray-900 text-sm">{{ $madeni->jina_mkopaji }}</div>
-                                    @if($madeni->simu)
-                                    <div class="text-xs text-emerald-600">{{ $madeni->simu }}</div>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-2">
-                                    <span class="text-sm text-gray-700">{{ $madeni->bidhaa->jina ?? 'N/A' }}</span>
-                                </td>
-                                <td class="px-4 py-2 text-center">
-                                    <span class="text-sm">{{ $madeni->idadi }}</span>
-                                </td>
-                                <td class="px-4 py-2 text-right">
-                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-money-bill-wave mr-1"></i>
-                                        {{ number_format($rejesho->kiasi, 2) }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-2 text-center">
-                                    <span class="{{ $badgeClass }}">
-                                        {{ $methodText }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-2 text-right">
-                                    <span class="text-sm font-bold 
-                                        @if($madeni->baki <= 0) text-green-700
-                                        @else text-red-700 @endif">
-                                        {{ number_format($madeni->baki, 2) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                    <i class="fas fa-history text-3xl mb-2 text-gray-300"></i>
-                                    <p>Hakuna historia ya marejesho bado</p>
-                                    <p class="text-xs text-gray-500 mt-1">Rejesho la kwanza litakuonyesha hapa</p>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            
-            @if($marejesho->hasPages())
-            <div class="px-4 py-3 border-t border-gray-200">
-                {{ $marejesho->links() }}
-            </div>
-            @endif
+<!-- TAB 2: Historia ya Marejesho -->
+<div id="marejesho-tab-content" class="tab-content hidden">
+    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+        @if($marejesho->count() > 0)
+        <div class="mb-3">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Jumla ya Marejesho: 
+                <span class="font-bold text-green-600">TZS {{ number_format($marejesho->sum('kiasi'), 2) }}</span>
+            </h3>
         </div>
+        @endif
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-emerald-50">
+                        <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
+                        <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
+                        <th class="px-4 py-2 text-left font-medium text-emerald-800">Bidhaa</th>
+                        <th class="px-4 py-2 text-left font-medium text-emerald-800">Aina</th>
+                        <th class="px-4 py-2 text-left font-medium text-emerald-800">Kipimo</th>
+                        <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
+                        <th class="px-4 py-2 text-right font-medium text-emerald-800">Rejesho</th>
+                        <th class="px-4 py-2 text-center font-medium text-emerald-800">Njia ya Malipo</th>
+                        <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki baada ya Malipo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($marejesho as $rejesho)
+                        @php
+                            $madeni = $rejesho->madeni;
+                            $paymentMethod = $rejesho->lipa_kwa ?? 'cash';
+                            $badgeClass = [
+                                'cash' => 'payment-badge-cash',
+                                'lipa_namba' => 'payment-badge-lipa_namba',
+                                'bank' => 'payment-badge-bank'
+                            ][$paymentMethod];
+                            
+                            $methodText = [
+                                'cash' => 'Cash',
+                                'lipa_namba' => 'Lipa Namba',
+                                'bank' => 'Bank'
+                            ][$paymentMethod];
+                        @endphp
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2">
+                                <div class="text-sm text-gray-900">{{ \Carbon\Carbon::parse($rejesho->tarehe)->format('d/m/Y') }}</div>
+                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($rejesho->tarehe)->format('H:i') }}</div>
+                            </td>
+                            <td class="px-4 py-2">
+                                <div class="font-medium text-gray-900 text-sm">{{ $madeni->jina_mkopaji }}</div>
+                                @if($madeni->simu)
+                                <div class="text-xs text-emerald-600">{{ $madeni->simu }}</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="text-sm text-gray-700">{{ $madeni->bidhaa->jina ?? 'N/A' }}</span>
+                                @if($madeni->punguzo > 0)
+                                <div class="text-xs text-gray-500">Punguzo: {{ number_format($madeni->punguzo, 2) }}</div>
+                                @endif
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="text-sm text-gray-600">{{ $madeni->bidhaa->aina ?? 'N/A' }}</span>
+                            </td>
+                            <td class="px-4 py-2">
+                                <span class="text-sm text-gray-600">{{ $madeni->bidhaa->kipimo ?? 'N/A' }}</span>
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="text-sm">{{ $madeni->idadi }}</span>
+                            </td>
+                            <td class="px-4 py-2 text-right">
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-money-bill-wave mr-1"></i>
+                                    {{ number_format($rejesho->kiasi, 2) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-center">
+                                <span class="{{ $badgeClass }}">
+                                    {{ $methodText }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 text-right">
+                                <span class="text-sm font-bold 
+                                    @if($madeni->baki <= 0) text-green-700
+                                    @else text-red-700 @endif">
+                                    {{ number_format($madeni->baki, 2) }}
+                                </span>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                                <i class="fas fa-history text-3xl mb-2 text-gray-300"></i>
+                                <p>Hakuna historia ya marejesho bado</p>
+                                <p class="text-xs text-gray-500 mt-1">Rejesho la kwanza litakuonyesha hapa</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        @if($marejesho->hasPages())
+        <div class="px-4 py-3 border-t border-gray-200">
+            {{ $marejesho->links() }}
+        </div>
+        @endif
     </div>
+</div>
 
     <!-- TAB 3: Ripoti -->
     <div id="ripoti-tab-content" class="tab-content hidden">
@@ -790,6 +808,7 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 class MadeniManager {
     constructor() {
@@ -911,7 +930,9 @@ class MadeniManager {
                             <tr class="bg-emerald-50">
                                 <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
                                 <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
-                                <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Bidhaa</th>
+                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Bidhaa</th>
+                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Aina</th>
+                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Kipimo</th>
                                 <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
                                 <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
                                 <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
@@ -935,9 +956,15 @@ class MadeniManager {
                             <div class="font-medium text-gray-900 text-sm">${debt.jina_mkopaji}</div>
                             ${debt.simu ? `<div class="text-xs text-emerald-600">${debt.simu}</div>` : ''}
                         </td>
-                        <td class="px-4 py-2 hidden md:table-cell">
+                        <td class="px-4 py-2">
                             <span class="text-sm text-gray-700">${debt.bidhaa?.jina || 'N/A'}</span>
                             ${debt.punguzo > 0 ? `<div class="text-xs text-gray-500">Punguzo: ${parseFloat(debt.punguzo).toLocaleString()}</div>` : ''}
+                        </td>
+                        <td class="px-4 py-2">
+                            <span class="text-sm text-gray-600">${debt.bidhaa?.aina || 'N/A'}</span>
+                        </td>
+                        <td class="px-4 py-2">
+                            <span class="text-sm text-gray-600">${debt.bidhaa?.kipimo || 'N/A'}</span>
                         </td>
                         <td class="px-4 py-2 text-center">
                             <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
@@ -1020,6 +1047,7 @@ class MadeniManager {
                             <div class="flex justify-between items-start">
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">${debt.bidhaa?.jina || 'N/A'}</p>
+                                    <p class="text-xs text-gray-500">Aina: ${debt.bidhaa?.aina || 'N/A'} | Kipimo: ${debt.bidhaa?.kipimo || 'N/A'}</p>
                                     <p class="text-xs text-gray-500">Idadi: ${debt.idadi} | Bei: ${parseFloat(debt.bei).toLocaleString()} TZS</p>
                                     <p class="text-xs text-gray-500">Tarehe: ${new Date(debt.created_at).toLocaleDateString()}</p>
                                 </div>
@@ -1478,6 +1506,8 @@ function printDebts() {
                 <td style="border: 1px solid #ddd; padding: 8px;">${new Date(debt.created_at).toLocaleDateString()}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${debt.jina_mkopaji}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${debt.bidhaa?.jina || 'N/A'}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${debt.bidhaa?.aina || 'N/A'}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${debt.bidhaa?.kipimo || 'N/A'}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${debt.idadi}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(debt.jumla).toLocaleString()}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(debt.baki).toLocaleString()}</td>
@@ -1518,6 +1548,8 @@ function printDebts() {
                         <th>Tarehe</th>
                         <th>Mkopaji</th>
                         <th>Bidhaa</th>
+                        <th>Aina</th>
+                        <th>Kipimo</th>
                         <th>Idadi</th>
                         <th>Jumla ya Deni</th>
                         <th>Baki</th>
@@ -1630,6 +1662,7 @@ function generateDebtReport() {
                     <td class="px-4 py-2">${counter++}</td>
                     <td class="px-4 py-2">Madeni ${grouped[date].count} - ${date}</td>
                     <td class="px-4 py-2">-</td>
+                    <td class="px-4 py-2">-</td>
                     <td class="px-4 py-2 text-center">-</td>
                     <td class="px-4 py-2 text-right">${grouped[date].amount.toLocaleString()}</td>
                     <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
@@ -1665,6 +1698,7 @@ function generateDebtReport() {
                     <td class="px-4 py-2">${counter++}</td>
                     <td class="px-4 py-2">${borrower}</td>
                     <td class="px-4 py-2">Madeni ${grouped[borrower].count}</td>
+                    <td class="px-4 py-2">-</td>
                     <td class="px-4 py-2 text-center">-</td>
                     <td class="px-4 py-2 text-right">${grouped[borrower].amount.toLocaleString()}</td>
                     <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
@@ -1700,7 +1734,8 @@ function generateDebtReport() {
                     <td class="px-4 py-2">${counter++}</td>
                     <td class="px-4 py-2">-</td>
                     <td class="px-4 py-2">${product}</td>
-                    <td class="px-4 py-2 text-center">${grouped[product].count}</td>
+                    <td class="px-4 py-2">${debt.bidhaa?.aina || 'N/A'}</td>
+                    <td class="px-4 py-2 text-center">${debt.bidhaa?.kipimo || 'N/A'}</td>
                     <td class="px-4 py-2 text-right">${grouped[product].amount.toLocaleString()}</td>
                     <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
                     <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
@@ -1719,6 +1754,8 @@ function generateDebtReport() {
                     <td class="px-4 py-2">${counter++}</td>
                     <td class="px-4 py-2">${debt.jina_mkopaji}</td>
                     <td class="px-4 py-2">${debt.bidhaa?.jina || 'N/A'}</td>
+                    <td class="px-4 py-2">${debt.bidhaa?.aina || 'N/A'}</td>
+                    <td class="px-4 py-2">${debt.bidhaa?.kipimo || 'N/A'}</td>
                     <td class="px-4 py-2 text-center">${debt.idadi}</td>
                     <td class="px-4 py-2 text-right">${parseFloat(debt.jumla).toLocaleString()}</td>
                     <td class="px-4 py-2 text-right">${paid.toLocaleString()}</td>

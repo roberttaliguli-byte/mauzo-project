@@ -280,68 +280,117 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Faida ya leo -->
-                    <div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
-                        <div class="flex justify-between items-start mb-2">
-                            <div class="p-2 bg-white/20 rounded-lg">
-                                <i class="fas fa-chart-line text-white"></i>
-                            </div>
-                        </div>
-                        <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">
-                            Faida ya leo
-                        </div>
-                        @php
-                            $faidaMauzo = 0;
-                            foreach($todaysMauzos as $mauzo) {
-                                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-                                $sellingPrice = $mauzo->bei;
-                                $quantity = $mauzo->idadi;
-                                
-                                $totalDiscount = 0;
-                                if ($mauzo->punguzo_aina === 'bidhaa') {
-                                    $totalDiscount = $mauzo->punguzo * $quantity;
-                                } else {
-                                    $totalDiscount = $mauzo->punguzo;
-                                }
-                                
-                                $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
-                                $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
-                                $totalBuyingCost = $buyingPrice * $quantity;
-                                $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
-                                $faidaMauzo += $profit;
-                            }
-                            
-                            $faidaMarejesho = 0;
-                            foreach($todaysMarejeshos as $marejesho) {
-                                if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
-                                    $debt = $marejesho->madeni;
-                                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                                    $quantity = $debt->idadi;
-                                    $totalBuyingCost = $buyingPrice * $quantity;
-                                    $actualSellingPrice = $debt->jumla;
-                                    $profit = $actualSellingPrice - $totalBuyingCost;
-                                    $faidaMarejesho += $profit;
-                                }
-                            }
-                            
-                            $jumlaFaida = $faidaMauzo + $faidaMarejesho;
-                        @endphp
-                        <div class="space-y-1 text-white text-xs">
-                            <div class="flex justify-between items-center">
-                                <span class="text-green-100">Mauzo:</span>
-                                <span class="font-semibold">{{ number_format($faidaMauzo, 2) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-green-100">Marejesho:</span>
-                                <span class="font-semibold">{{ number_format($faidaMarejesho, 2) }}</span>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
-                                <span class="font-semibold">Jumla:</span>
-                                <span class="font-bold">{{ number_format($jumlaFaida, 2) }}</span>
-                            </div>
-                        </div>
-                    </div>
+<!-- Faida ya leo -->
+<div class="bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-lg shadow">
+    <div class="flex justify-between items-start mb-2">
+        <div class="p-2 bg-white/20 rounded-lg">
+            <i class="fas fa-chart-line text-white"></i>
+        </div>
+    </div>
+    <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">
+        Faida ya leo
+    </div>
+    @php
+        // Calculate profit from sales (mauzo) - unchanged
+        $faidaMauzo = 0;
+        foreach($todaysMauzos as $mauzo) {
+            if ($mauzo->bidhaa) {
+                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                $sellingPrice = $mauzo->bei;
+                $quantity = $mauzo->idadi;
+                
+                $totalDiscount = 0;
+                if ($mauzo->punguzo_aina === 'bidhaa') {
+                    $totalDiscount = $mauzo->punguzo * $quantity;
+                } else {
+                    $totalDiscount = $mauzo->punguzo;
+                }
+                
+                $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+                $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
+                $totalBuyingCost = $buyingPrice * $quantity;
+                $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+                $faidaMauzo += $profit;
+            }
+        }
+        
+        // Calculate profit from repayments using FIFO method
+        $faidaMarejesho = 0;
+        $debtProgress = []; // Track cost recovery for each debt
+        
+        // Process repayments in chronological order
+        $sortedMarejeshos = $todaysMarejeshos->sortBy('tarehe');
+        
+        foreach($sortedMarejeshos as $marejesho) {
+            if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+                $debt = $marejesho->madeni;
+                $debtId = $debt->id;
+                $repaymentAmount = $marejesho->kiasi;
+                
+                // Initialize debt tracking if not exists
+                if (!isset($debtProgress[$debtId])) {
+                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                    $quantity = $debt->idadi;
+                    $totalCost = $buyingPrice * $quantity;
+                    $totalSellingPrice = $debt->jumla;
+                    
+                    $debtProgress[$debtId] = [
+                        'total_cost' => $totalCost,
+                        'total_selling' => $totalSellingPrice,
+                        'recovered_so_far' => 0,
+                        'is_cost_recovered' => false
+                    ];
+                }
+                
+                $progress = &$debtProgress[$debtId];
+                $remainingAmount = $repaymentAmount;
+                
+                // Stage 1: Recover cost first
+                if (!$progress['is_cost_recovered']) {
+                    $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+                    
+                    if ($remainingAmount <= $remainingToRecover) {
+                        // All goes to cost recovery
+                        $progress['recovered_so_far'] += $remainingAmount;
+                        // No profit from this repayment
+                        $remainingAmount = 0;
+                    } else {
+                        // Part goes to cost recovery, rest is profit
+                        $costPortion = $remainingToRecover;
+                        $progress['recovered_so_far'] += $costPortion;
+                        $progress['is_cost_recovered'] = true;
+                        
+                        // Remaining is profit
+                        $profitPortion = $remainingAmount - $costPortion;
+                        $faidaMarejesho += $profitPortion;
+                        $remainingAmount = 0;
+                    }
+                }
+                
+                // Stage 2: If cost already recovered, all is profit
+                if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
+                    $faidaMarejesho += $remainingAmount;
+                }
+            }
+        }
+        
+        $jumlaFaida = $faidaMauzo + $faidaMarejesho;
+    @endphp
+    <div class="space-y-1 text-white text-xs">
+        <div class="flex justify-between items-center">
+            <span class="text-green-100">Mauzo:</span>
+            <span class="font-semibold">{{ number_format($faidaMauzo, 2) }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+            <span class="text-green-100">Marejesho:</span>
+            <span class="font-semibold">{{ number_format($faidaMarejesho, 2) }}</span>
+        </div>
+        <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
+            <span class="font-semibold">Jumla:</span>
+            <span class="font-bold">{{ number_format($jumlaFaida, 2) }}</span>
+        </div>
+    </div>
+</div>
 
                     <!-- Matumizi -->
                     <div class="bg-gradient-to-br from-yellow-500 to-amber-600 p-3 rounded-lg shadow">

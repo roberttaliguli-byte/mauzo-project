@@ -483,158 +483,219 @@ class UserReportController extends Controller
             ];
         }
     }
+// Get general data
+private function getGeneralData($companyId, $dateRange)
+{
+    try {
+        // Mapato ya Mauzo by payment method
+        $salesByMethod = Mauzo::where('company_id', $companyId)
+            ->when($dateRange['start'], function($q) use ($dateRange) {
+                $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
+            })
+            ->when($dateRange['end'], function($q) use ($dateRange) {
+                $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
+            })
+            ->select('lipa_kwa', DB::raw('SUM(jumla) as total'))
+            ->groupBy('lipa_kwa')
+            ->get()
+            ->keyBy('lipa_kwa');
 
-    // Get general data
-    private function getGeneralData($companyId, $dateRange)
-    {
-        try {
-            // Mapato ya Mauzo by payment method
-            $salesByMethod = Mauzo::where('company_id', $companyId)
-                ->when($dateRange['start'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
-                })
-                ->when($dateRange['end'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
-                })
-                ->select('lipa_kwa', DB::raw('SUM(jumla) as total'))
-                ->groupBy('lipa_kwa')
-                ->get()
-                ->keyBy('lipa_kwa');
+        $mapatoCashMauzo = $salesByMethod['cash']->total ?? 0;
+        $mapatoMobileMauzo = $salesByMethod['lipa_namba']->total ?? 0;
+        $mapatoBankMauzo = $salesByMethod['bank']->total ?? 0;
+        $mapatoMauzo = $mapatoCashMauzo + $mapatoMobileMauzo + $mapatoBankMauzo;
 
-            $mapatoCashMauzo = $salesByMethod['cash']->total ?? 0;
-            $mapatoMobileMauzo = $salesByMethod['lipa_namba']->total ?? 0;
-            $mapatoBankMauzo = $salesByMethod['bank']->total ?? 0;
-            $mapatoMauzo = $mapatoCashMauzo + $mapatoMobileMauzo + $mapatoBankMauzo;
+        // Mapato ya Madeni by payment method
+        $debtsByMethod = Marejesho::where('company_id', $companyId)
+            ->when($dateRange['start'], function($q) use ($dateRange) {
+                $q->whereDate('tarehe', '>=', $dateRange['start']->format('Y-m-d'));
+            })
+            ->when($dateRange['end'], function($q) use ($dateRange) {
+                $q->whereDate('tarehe', '<=', $dateRange['end']->format('Y-m-d'));
+            })
+            ->select('lipa_kwa', DB::raw('SUM(kiasi) as total'))
+            ->groupBy('lipa_kwa')
+            ->get()
+            ->keyBy('lipa_kwa');
 
-            // Mapato ya Madeni by payment method
-            $debtsByMethod = Marejesho::where('company_id', $companyId)
-                ->when($dateRange['start'], function($q) use ($dateRange) {
-                    $q->whereDate('tarehe', '>=', $dateRange['start']->format('Y-m-d'));
-                })
-                ->when($dateRange['end'], function($q) use ($dateRange) {
-                    $q->whereDate('tarehe', '<=', $dateRange['end']->format('Y-m-d'));
-                })
-                ->select('lipa_kwa', DB::raw('SUM(kiasi) as total'))
-                ->groupBy('lipa_kwa')
-                ->get()
-                ->keyBy('lipa_kwa');
+        $mapatoCashMadeni = $debtsByMethod['cash']->total ?? 0;
+        $mapatoMobileMadeni = $debtsByMethod['lipa_namba']->total ?? 0;
+        $mapatoBankMadeni = $debtsByMethod['bank']->total ?? 0;
+        $mapatoMadeni = $mapatoCashMadeni + $mapatoMobileMadeni + $mapatoBankMadeni;
 
-            $mapatoCashMadeni = $debtsByMethod['cash']->total ?? 0;
-            $mapatoMobileMadeni = $debtsByMethod['lipa_namba']->total ?? 0;
-            $mapatoBankMadeni = $debtsByMethod['bank']->total ?? 0;
-            $mapatoMadeni = $mapatoCashMadeni + $mapatoMobileMadeni + $mapatoBankMadeni;
+        // Jumla ya Mapato by payment method
+        $jumlaMapatoCash = $mapatoCashMauzo + $mapatoCashMadeni;
+        $jumlaMapatoMobile = $mapatoMobileMauzo + $mapatoMobileMadeni;
+        $jumlaMapatoBank = $mapatoBankMauzo + $mapatoBankMadeni;
+        $jumlaMapato = $jumlaMapatoCash + $jumlaMapatoMobile + $jumlaMapatoBank;
 
-            // Jumla ya Mapato by payment method
-            $jumlaMapatoCash = $mapatoCashMauzo + $mapatoCashMadeni;
-            $jumlaMapatoMobile = $mapatoMobileMauzo + $mapatoMobileMadeni;
-            $jumlaMapatoBank = $mapatoBankMauzo + $mapatoBankMadeni;
-            $jumlaMapato = $jumlaMapatoCash + $jumlaMapatoMobile + $jumlaMapatoBank;
+        // Jumla ya Matumizi
+        $jumlaMatumizi = Matumizi::where('company_id', $companyId)
+            ->when($dateRange['start'], function($q) use ($dateRange) {
+                $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
+            })
+            ->when($dateRange['end'], function($q) use ($dateRange) {
+                $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
+            })
+            ->sum('gharama');
 
-            // Jumla ya Matumizi
-            $jumlaMatumizi = Matumizi::where('company_id', $companyId)
-                ->when($dateRange['start'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
-                })
-                ->when($dateRange['end'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
-                })
-                ->sum('gharama');
+        // FAIDA YA MAUZO - Standard profit calculation
+        $faidaMauzo = 0;
+        $mauzos = Mauzo::where('company_id', $companyId)
+            ->when($dateRange['start'], function($q) use ($dateRange) {
+                $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
+            })
+            ->when($dateRange['end'], function($q) use ($dateRange) {
+                $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
+            })
+            ->with('bidhaa')
+            ->get();
 
-            // Faida ya Marejesho
-            $faidaMarejesho = 0;
-            $marejeshos = Marejesho::where('company_id', $companyId)
-                ->when($dateRange['start'], function($q) use ($dateRange) {
-                    $q->whereDate('tarehe', '>=', $dateRange['start']->format('Y-m-d'));
-                })
-                ->when($dateRange['end'], function($q) use ($dateRange) {
-                    $q->whereDate('tarehe', '<=', $dateRange['end']->format('Y-m-d'));
-                })
-                ->with(['madeni.bidhaa'])
-                ->get();
-
-            foreach ($marejeshos as $marejesho) {
-                if ($marejesho->madeni && $marejesho->madeni->bidhaa) {
-                    $buyingPrice = $marejesho->madeni->bidhaa->bei_nunua ?? 0;
-                    $quantity = $marejesho->madeni->idadi;
-                    
-                    $totalBuyingCost = $buyingPrice * $quantity;
-                    $actualSellingPrice = $marejesho->madeni->jumla;
-                    
-                    $profit = $actualSellingPrice - $totalBuyingCost;
-                    $faidaMarejesho += $profit;
+        foreach ($mauzos as $mauzo) {
+            if ($mauzo->bidhaa) {
+                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                $sellingPrice = $mauzo->bei;
+                $quantity = $mauzo->idadi;
+                
+                $totalDiscount = 0;
+                if ($mauzo->punguzo_aina === 'bidhaa') {
+                    $totalDiscount = $mauzo->punguzo * $quantity;
+                } else {
+                    $totalDiscount = $mauzo->punguzo;
                 }
+                
+                $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+                $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
+                $totalBuyingCost = $buyingPrice * $quantity;
+                $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+                $faidaMauzo += $profit;
             }
-
-            // Faida ya Mauzo
-            $faidaMauzo = 0;
-            $mauzos = Mauzo::where('company_id', $companyId)
-                ->when($dateRange['start'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
-                })
-                ->when($dateRange['end'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
-                })
-                ->with('bidhaa')
-                ->get();
-
-            foreach ($mauzos as $mauzo) {
-                if ($mauzo->bidhaa) {
-                    $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-                    $actualDiscount = $this->calculateActualDiscount(
-                        $mauzo->punguzo, 
-                        $mauzo->punguzo_aina, 
-                        $mauzo->idadi
-                    );
-                    
-                    $profit = ($mauzo->bei * $mauzo->idadi) - ($buyingPrice * $mauzo->idadi) - $actualDiscount;
-                    $faidaMauzo += $profit;
-                }
-            }
-
-            // Fedha Dukani
-            $fedhaDukani = $jumlaMapato - $jumlaMatumizi;
-
-            // Faida Halisi
-            $totalProfit = $faidaMauzo + $faidaMarejesho;
-            $faidaHalisi = $totalProfit - $jumlaMatumizi;
-
-            return [
-                'mapatoCashMauzo' => $mapatoCashMauzo,
-                'mapatoMobileMauzo' => $mapatoMobileMauzo,
-                'mapatoBankMauzo' => $mapatoBankMauzo,
-                'mapatoMauzo' => $mapatoMauzo,
-                'mapatoCashMadeni' => $mapatoCashMadeni,
-                'mapatoMobileMadeni' => $mapatoMobileMadeni,
-                'mapatoBankMadeni' => $mapatoBankMadeni,
-                'mapatoMadeni' => $mapatoMadeni,
-                'jumlaMapatoCash' => $jumlaMapatoCash,
-                'jumlaMapatoMobile' => $jumlaMapatoMobile,
-                'jumlaMapatoBank' => $jumlaMapatoBank,
-                'jumlaMapato' => $jumlaMapato,
-                'jumlaMatumizi' => $jumlaMatumizi,
-                'faidaMarejesho' => $faidaMarejesho,
-                'faidaMauzo' => $faidaMauzo,
-                'fedhaDukani' => $fedhaDukani,
-                'faidaHalisi' => $faidaHalisi,
-                'reportTitle' => 'Ripoti ya Jumla ya Biashara',
-                'reportSubtitle' => 'Muhtasari wa shughuli zote za biashara'
-            ];
-
-        } catch (\Exception $e) {
-            return [
-                'mapatoMauzo' => 0,
-                'mapatoMadeni' => 0,
-                'jumlaMapato' => 0,
-                'jumlaMatumizi' => 0,
-                'faidaMarejesho' => 0,
-                'faidaMauzo' => 0,
-                'fedhaDukani' => 0,
-                'faidaHalisi' => 0,
-                'reportTitle' => 'Ripoti ya Jumla ya Biashara',
-                'reportSubtitle' => 'Muhtasari wa shughuli zote za biashara'
-            ];
         }
+
+        // FAIDA YA MAREJESHO - FIFO method (cost recovery first, then profit)
+        $faidaMarejesho = 0;
+        $marejeshos = Marejesho::where('company_id', $companyId)
+            ->when($dateRange['start'], function($q) use ($dateRange) {
+                $q->whereDate('tarehe', '>=', $dateRange['start']->format('Y-m-d'));
+            })
+            ->when($dateRange['end'], function($q) use ($dateRange) {
+                $q->whereDate('tarehe', '<=', $dateRange['end']->format('Y-m-d'));
+            })
+            ->with(['madeni.bidhaa'])
+            ->orderBy('tarehe', 'asc') // Process in chronological order
+            ->get();
+
+        // Track each debt's repayment progress
+        $debtProgress = [];
+
+        foreach ($marejeshos as $marejesho) {
+            if (isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+                $debt = $marejesho->madeni;
+                $debtId = $debt->id;
+                $repaymentAmount = $marejesho->kiasi;
+
+                // Initialize debt tracking if not exists
+                if (!isset($debtProgress[$debtId])) {
+                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                    $quantity = $debt->idadi;
+                    $totalCost = $buyingPrice * $quantity;
+                    $totalSellingPrice = $debt->jumla;
+
+                    $debtProgress[$debtId] = [
+                        'total_cost' => $totalCost,
+                        'total_selling' => $totalSellingPrice,
+                        'recovered_so_far' => 0,
+                        'is_cost_recovered' => false
+                    ];
+                }
+
+                $progress = &$debtProgress[$debtId];
+                $remainingAmount = $repaymentAmount;
+
+                // Stage 1: Recover cost first
+                if (!$progress['is_cost_recovered']) {
+                    $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+
+                    if ($remainingAmount <= $remainingToRecover) {
+                        // All goes to cost recovery
+                        $progress['recovered_so_far'] += $remainingAmount;
+                        // No profit from this repayment
+                        $remainingAmount = 0;
+                    } else {
+                        // Part goes to cost recovery, rest is profit
+                        $costPortion = $remainingToRecover;
+                        $progress['recovered_so_far'] += $costPortion;
+                        $progress['is_cost_recovered'] = true;
+
+                        // Remaining is profit
+                        $profitPortion = $remainingAmount - $costPortion;
+                        $faidaMarejesho += $profitPortion;
+                        $remainingAmount = 0;
+                    }
+                }
+
+                // Stage 2: If cost already recovered, all is profit
+                if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
+                    $faidaMarejesho += $remainingAmount;
+                }
+            }
+        }
+
+        // Fedha Dukani
+        $fedhaDukani = $jumlaMapato - $jumlaMatumizi;
+
+        // Faida Halisi
+        $totalProfit = $faidaMauzo + $faidaMarejesho;
+        $faidaHalisi = $totalProfit - $jumlaMatumizi;
+
+        return [
+            'mapatoCashMauzo' => $mapatoCashMauzo,
+            'mapatoMobileMauzo' => $mapatoMobileMauzo,
+            'mapatoBankMauzo' => $mapatoBankMauzo,
+            'mapatoMauzo' => $mapatoMauzo,
+            'mapatoCashMadeni' => $mapatoCashMadeni,
+            'mapatoMobileMadeni' => $mapatoMobileMadeni,
+            'mapatoBankMadeni' => $mapatoBankMadeni,
+            'mapatoMadeni' => $mapatoMadeni,
+            'jumlaMapatoCash' => $jumlaMapatoCash,
+            'jumlaMapatoMobile' => $jumlaMapatoMobile,
+            'jumlaMapatoBank' => $jumlaMapatoBank,
+            'jumlaMapato' => $jumlaMapato,
+            'jumlaMatumizi' => $jumlaMatumizi,
+            'faidaMarejesho' => $faidaMarejesho,
+            'faidaMauzo' => $faidaMauzo,
+            'fedhaDukani' => $fedhaDukani,
+            'faidaHalisi' => $faidaHalisi,
+            'reportTitle' => 'Ripoti ya Jumla ya Biashara',
+            'reportSubtitle' => 'Muhtasari wa shughuli zote za biashara'
+        ];
+
+    } catch (\Exception $e) {
+        \Log::error('Error in getGeneralData: ' . $e->getMessage());
+        
+        return [
+            'mapatoCashMauzo' => 0,
+            'mapatoMobileMauzo' => 0,
+            'mapatoBankMauzo' => 0,
+            'mapatoMauzo' => 0,
+            'mapatoCashMadeni' => 0,
+            'mapatoMobileMadeni' => 0,
+            'mapatoBankMadeni' => 0,
+            'mapatoMadeni' => 0,
+            'jumlaMapatoCash' => 0,
+            'jumlaMapatoMobile' => 0,
+            'jumlaMapatoBank' => 0,
+            'jumlaMapato' => 0,
+            'jumlaMatumizi' => 0,
+            'faidaMarejesho' => 0,
+            'faidaMauzo' => 0,
+            'fedhaDukani' => 0,
+            'faidaHalisi' => 0,
+            'reportTitle' => 'Ripoti ya Jumla ya Biashara',
+            'reportSubtitle' => 'Muhtasari wa shughuli zote za biashara'
+        ];
     }
+}
 
     // Helper method to format decimals
     private function formatDecimal($value)

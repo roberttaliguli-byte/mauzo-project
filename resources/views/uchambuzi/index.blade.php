@@ -5,713 +5,995 @@
 @section('page-subtitle', 'Uchambuzi wa Biashara kwa Grafu na Takwimu')
 
 @section('content')
-<div class="bg-gray-50 min-h-screen" x-data="dashboardApp()" x-init="init()">
-  <!-- 🔹 Header - Mobile Optimized -->
-  <header class="bg-white shadow-sm border-b px-3 md:px-6 py-3 md:py-4">
-    <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
-      <h1 class="text-xl md:text-2xl font-bold text-gray-800">TAARIFA KATIKA MAUZO</h1>
-      <div class="flex flex-wrap gap-2 md:gap-2">
-        <button @click="setTab('graphs')" 
-                :class="tab === 'graphs' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
-                class="px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all duration-200 text-sm md:text-base">
-          📊 Grafu
-        </button>
+<div class="space-y-4" x-data="dashboardApp()" x-init="init()">
+    <!-- Notifications -->
+    <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none"></div>
 
-        <button @click="setTab('mwenendo')" 
-                :class="tab === 'mwenendo' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
-                class="px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all duration-200 text-sm md:text-base">
-          📈 Mwenendo
-        </button>
-
-        <button @click="setTab('kampuni')" 
-                :class="tab === 'kampuni' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
-                class="px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all duration-200 text-sm md:text-base">
-          💼 Kampuni
-        </button>
-
-        <!-- 📄 Ripoti button styled like others -->
-        <a href="{{ route('user.reports.select') }}" 
-           class="px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all duration-200
-                  bg-gray-100 text-gray-700 hover:bg-gray-200 shadow-sm text-sm md:text-base">
-          📄 Ripoti
-        </a>
-
-        <button @click="setTab('historia')" 
-                :class="tab === 'historia' ? 'bg-green-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'" 
-                class="px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition-all duration-200 text-sm md:text-base">
-          🕒 Historia
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- 🔹 MAIN CONTENT -->
-  <main class="p-3 md:p-6 space-y-4 md:space-y-6">
-    <!-- ✅ GRAPHS TAB -->
-    <div x-show="tab === 'graphs'" class="bg-white rounded-xl shadow-sm p-4 md:p-6" x-cloak>
-      <div class="flex flex-wrap gap-2 mb-4 md:mb-6 border-b pb-3 md:pb-4 overflow-x-auto">
-        <template x-for="(item, key) in graphTabs" :key="key">
-          <button @click="setGraph(key)"
-            :class="graph === key ? 'bg-green-600 text-white font-semibold shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
-            class="px-3 md:px-4 py-1.5 md:py-2 rounded-lg transition-all duration-200 text-xs md:text-sm whitespace-nowrap"
-            x-text="item"></button>
-        </template>
-      </div>
-
-      <div class="h-64 md:h-96">
-        <canvas x-show="graph === 'faidaBidhaa'" id="faidaBidhaaChart" x-cloak></canvas>
-        <canvas x-show="graph === 'faidaSiku'" id="faidaSikuChart" x-cloak></canvas>
-        <canvas x-show="graph === 'mauzoSiku'" id="mauzoSikuChart" x-cloak></canvas>
-        <canvas x-show="graph === 'marejesho'" id="marejeshoChart" x-cloak></canvas> <!-- CHANGED: gharama to marejesho -->
-        <canvas x-show="graph === 'mauzo'" id="mauzoChart" x-cloak></canvas>
-      </div>
-    </div>
-
-    <!-- ✅ MWENENDO TAB -->
-    <div x-show="tab === 'mwenendo'" 
-         class="bg-white rounded-xl shadow-sm p-4 md:p-6" 
-         x-cloak 
-         x-data="mwenendoApp()">
-
-      <!-- Header -->
-      <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4 border-b pb-3 md:pb-4 mb-4 md:mb-6">
-        <div>
-          <h2 class="text-lg md:text-2xl font-bold text-gray-800">📈 Mwenendo wa Biashara</h2>
-          <p class="text-gray-600 text-sm md:text-base mt-1">Chagua kipindi au tarehe kuona takwimu</p>
+    <!-- 🔹 Header - Mobile Optimized -->
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
+        <div class="p-4 border-b border-gray-200 bg-emerald-50">
+            <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                <i class="fas fa-chart-bar text-amber-600 mr-2"></i>
+                TAARIFA KATIKA MAUZO
+            </h2>
+            <p class="text-sm text-gray-600 mt-1">Chagua aina ya taarifa kuona uchambuzi kamili</p>
         </div>
-        <button @click="refresh()" 
-                class="flex items-center gap-2 bg-blue-600 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 mt-2 md:mt-0 text-sm md:text-base">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-          <span class="hidden sm:inline">Pakua Upya</span>
-          <span class="sm:hidden">Refresh</span>
-        </button>
-      </div>
-
-      <!-- Selection -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4 mb-4 md:mb-6">
-        <div class="w-full sm:flex-1">
-          <label class="block font-medium text-gray-700 mb-1 md:mb-2 text-sm md:text-base">⏳ Chagua Muda:</label>
-          <select x-model="viewType" 
-                  @change="toggleDatePicker(false)" 
-                  class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm md:text-base">
-            <option value="Siku">Siku</option>
-            <option value="Wiki">Wiki</option>
-            <option value="Mwezi">Mwezi</option>
-            <option value="Mwaka">Mwaka</option>
-          </select>
-        </div>
-
-        <button @click="toggleDatePicker(true)" 
-                class="w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg hover:from-green-700 hover:to-green-600 shadow-md transition-all duration-200 text-sm md:text-base">
-          📅 Chagua Tarehe
-        </button>
-      </div>
-
-      <!-- Auto Summary -->
-      <div x-show="!manualDateSelect" 
-           class="bg-gray-50 border border-gray-200 rounded-xl p-4 md:p-6 space-y-3 md:space-y-4 transition-all duration-300">
-
-        <h3 class="font-bold text-gray-800 text-base md:text-lg">
-          Muhtasari wa <span x-text="viewType"></span>
-          <span x-show="summary?.date" class="text-sm text-gray-600 font-normal">
-            (<span x-text="summary?.date"></span>)
-          </span>
-        </h3>
         
-        <template x-if="summary">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-            <div class="bg-white border border-blue-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Mapato ya Mauzo</div>
-              <div class="text-lg md:text-xl font-bold text-blue-600 mt-1 truncate" x-text="formatCurrency(summary.mapato_mauzo)"></div>
-            </div>
-            
-            <div class="bg-white border border-green-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Mapato ya Madeni</div>
-              <div class="text-lg md:text-xl font-bold text-green-600 mt-1 truncate" x-text="formatCurrency(summary.mapato_madeni)"></div>
-            </div>
-            
-            <div class="bg-white border border-purple-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Jumla ya Mapato</div>
-              <div class="text-lg md:text-xl font-bold text-purple-600 mt-1 truncate" x-text="formatCurrency(summary.jumla_mapato)"></div>
-            </div>
-            
-            <div class="bg-white border border-red-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Jumla ya Matumizi</div>
-              <div class="text-lg md:text-xl font-bold text-red-600 mt-1 truncate" x-text="formatCurrency(summary.jumla_mat)"></div>
-            </div>
-            
-            <!-- CHANGED: Gharama ya Bidhaa to Faida ya Marejesho -->
-            <div class="bg-white border border-teal-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Faida ya Marejesho</div>
-              <div class="text-lg md:text-xl font-bold text-teal-600 mt-1 truncate" x-text="formatCurrency(summary.faida_marejesho)"></div>
-            </div>
-            
-            <div class="bg-white border border-teal-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Faida ya Mauzo</div>
-              <div class="text-lg md:text-xl font-bold text-teal-600 mt-1 truncate" x-text="formatCurrency(summary.faida_mauzo)"></div>
-            </div>
-            
-            <div class="bg-white border border-indigo-100 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Fedha Dukani</div>
-              <div class="text-lg md:text-xl font-bold text-indigo-600 mt-1 truncate" x-text="formatCurrency(summary.fedha_droo)"></div>
-            </div>
-            
-            <div class="bg-white border border-green-200 rounded-lg p-3 md:p-4 shadow-sm hover:shadow-md transition-all duration-200">
-              <div class="text-xs md:text-sm text-gray-600 font-medium truncate">Faida Halisi</div>
-              <div class="text-lg md:text-xl font-bold text-green-600 mt-1 truncate" x-text="formatCurrency(summary.faida_halisi)"></div>
-            </div>
-          </div>
-        </template>
+        <div class="p-4">
+            <div class="flex flex-wrap gap-2">
+                <!-- Graphs Button - Default Active -->
+                <button @click="setTab('graphs')" 
+                        :class="tab === 'graphs' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" 
+                        class="px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm border border-transparent focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i class="fas fa-chart-bar mr-1"></i> Grafu
+                </button>
 
-        <template x-if="!summary">
-          <div class="text-center py-6 md:py-8 text-gray-500 text-sm md:text-base">
-            Hakuna data inayopatikana kwa kipindi hiki.
-          </div>
-        </template>
-      </div>
+                <!-- Mwenendo Button -->
+                <button @click="setTab('mwenendo')" 
+                        :class="tab === 'mwenendo' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" 
+                        class="px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm border border-transparent focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i class="fas fa-chart-line mr-1"></i> Mwenendo
+                </button>
 
-      <!-- Manual Date Selection -->
-      <div x-show="manualDateSelect" 
-           class="border border-gray-200 rounded-xl p-4 md:p-6 bg-gray-50 space-y-3 md:space-y-4 transition-all duration-300">
+                <!-- Kampuni Button -->
+                <button @click="setTab('kampuni')" 
+                        :class="tab === 'kampuni' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" 
+                        class="px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm border border-transparent focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i class="fas fa-building mr-1"></i> Kampuni
+                </button>
 
-        <h3 class="font-semibold text-gray-800 text-base md:text-lg">📅 Angalia Mwenendo kwa Tarehe</h3>
-        
-        <div class="flex flex-col sm:flex-row gap-3 md:gap-4 items-end">
-          <div class="w-full sm:flex-1">
-            <label class="block text-xs md:text-sm font-medium text-gray-600 mb-1">Kuanzia Tarehe:</label>
-            <input type="date" x-model="dateFrom" 
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm md:text-base">
-          </div>
-          
-          <div class="w-full sm:flex-1">
-            <label class="block text-xs md:text-sm font-medium text-gray-600 mb-1">Mpaka Tarehe:</label>
-            <input type="date" x-model="dateTo" 
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm md:text-base">
-          </div>
+                <!-- Ripoti Button -->
+                <a href="{{ route('user.reports.select') }}" 
+                   class="px-4 py-2 rounded-lg font-medium transition-all duration-200 bg-gray-100 text-gray-800 hover:bg-gray-200 text-sm border border-transparent focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i class="fas fa-file-alt mr-1"></i> Ripoti
+                </a>
 
-          <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <button @click="fetchCustomSummary()" 
-                    class="bg-green-600 text-white px-4 md:px-6 py-2 rounded-lg hover:bg-green-700 shadow-md transition-all duration-200 text-sm md:text-base">
-              🔍 Angalia
-            </button>
-            <button @click="toggleDatePicker(false)" 
-                    class="text-gray-600 bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all duration-200 text-sm md:text-base">
-              ↩ Rudi
-            </button>
-          </div>
+                <!-- Historia Button -->
+                <button @click="setTab('historia')" 
+                        :class="tab === 'historia' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" 
+                        class="px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm border border-transparent focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i class="fas fa-history mr-1"></i> Historia
+                </button>
+            </div>
         </div>
-
-        <template x-if="customSummary">
-          <div class="mt-4 md:mt-6 bg-white border border-gray-200 rounded-lg p-4 md:p-6 shadow-sm">
-            <h4 class="text-green-700 font-semibold mb-3 md:mb-4 text-sm md:text-lg">
-              Matokeo ya kipindi: <span x-text="dateFrom + ' mpaka ' + dateTo"></span>
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-              <div class="border border-blue-100 rounded-lg p-2 md:p-3 bg-blue-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Mapato ya Mauzo</div>
-                <div class="text-base md:text-lg font-bold text-blue-600 truncate" x-text="formatCurrency(customSummary.mapato_mauzo)"></div>
-              </div>
-              <div class="border border-green-100 rounded-lg p-2 md:p-3 bg-green-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Mapato ya Madeni</div>
-                <div class="text-base md:text-lg font-bold text-green-600 truncate" x-text="formatCurrency(customSummary.mapato_madeni)"></div>
-              </div>
-              <div class="border border-purple-100 rounded-lg p-2 md:p-3 bg-purple-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Jumla ya Mapato</div>
-                <div class="text-base md:text-lg font-bold text-purple-600 truncate" x-text="formatCurrency(customSummary.jumla_mapato)"></div>
-              </div>
-              <div class="border border-red-100 rounded-lg p-2 md:p-3 bg-red-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Jumla ya Matumizi</div>
-                <div class="text-base md:text-lg font-bold text-red-600 truncate" x-text="formatCurrency(customSummary.jumla_mat)"></div>
-              </div>
-              
-              <!-- CHANGED: Gharama ya Bidhaa to Faida ya Marejesho -->
-              <div class="border border-teal-100 rounded-lg p-2 md:p-3 bg-teal-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Faida ya Marejesho</div>
-                <div class="text-base md:text-lg font-bold text-teal-600 truncate" x-text="formatCurrency(customSummary.faida_marejesho)"></div>
-              </div>
-              
-              <div class="border border-teal-100 rounded-lg p-2 md:p-3 bg-teal-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Faida ya Mauzo</div>
-                <div class="text-base md:text-lg font-bold text-teal-600 truncate" x-text="formatCurrency(customSummary.faida_mauzo)"></div>
-              </div>
-              
-              <div class="border border-indigo-100 rounded-lg p-2 md:p-3 bg-indigo-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Fedha Dukani</div>
-                <div class="text-base md:text-lg font-bold text-indigo-600 truncate" x-text="formatCurrency(customSummary.fedha_droo)"></div>
-              </div>
-              
-              <div class="border border-green-200 rounded-lg p-2 md:p-3 bg-green-50">
-                <div class="text-xs md:text-sm font-medium text-gray-600 truncate">Faida Halisi</div>
-                <div class="text-base md:text-lg font-bold text-green-600 truncate" x-text="formatCurrency(customSummary.faida_halisi)"></div>
-              </div>
-            </div>
-          </div>
-        </template>
-      </div>
     </div>
 
-    <!-- ✅ KAMPUNI TAB -->
-    <div x-show="tab === 'kampuni'" 
-         x-data="kampuniData()"
-         class="bg-white rounded-xl shadow-sm p-4 md:p-6"
-         x-cloak>
-      
-      <!-- Title -->
-      <h2 class="text-lg md:text-2xl font-bold text-gray-800 mb-1 md:mb-2">💼 Thamani ya Kampuni</h2>
-      <p class="text-gray-600 text-sm md:text-base mb-4 md:mb-6">Muhtasari wa thamani ya kampuni na faida</p>
+    <!-- 🔹 MAIN CONTENT -->
+    <div class="space-y-4">
+        <!-- ✅ GRAPHS TAB (Default) -->
+        <div x-show="tab === 'graphs'" 
+             class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm"
+             x-cloak 
+             x-transition:enter.duration.300ms>
+            
+            <div class="p-4 border-b border-gray-200 bg-amber-50">
+                <h2 class="text-sm font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-chart-pie text-amber-600 mr-2"></i>
+                    Chagua Aina ya Grafu
+                </h2>
+                <p class="text-xs text-gray-600 mt-1">Bonyeza kwenye kitufe kuona uchambuzi tofauti</p>
+            </div>
+            
+            <div class="p-4">
+                <!-- Graph tabs with different colors -->
+                <div class="flex flex-wrap gap-2 mb-4 border-b border-gray-200 pb-3 overflow-x-auto">
+                    <template x-for="(item, key) in graphTabs" :key="key">
+                        <button @click="setGraph(key)"
+                            :class="graph === key ? getActiveClass(key) : 'bg-gray-100 text-gray-800 hover:bg-gray-200'"
+                            class="px-4 py-2 rounded-lg transition-all duration-200 text-xs md:text-sm whitespace-nowrap border border-transparent focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            x-text="item">
+                        </button>
+                    </template>
+                </div>
 
-      <!-- Summary Boxes -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-        <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-200">
-          <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-1 md:mb-2">Thamani Kabla (Bei ya Nunua)</h3>
-          <p class="text-xl md:text-2xl font-bold text-blue-600 truncate" x-text="formatCurrency(beforeSales)"></p>
-          <p class="text-xs text-gray-500 mt-1">Bei ya ununuzi ya bidhaa zilizopo</p>
+                <!-- Chart containers with guaranteed rendering -->
+                <div class="h-64 md:h-96 relative">
+                    <div x-show="graph === 'faidaBidhaa'" x-cloak>
+                        <canvas id="faidaBidhaaChart" class="w-full h-full"></canvas>
+                    </div>
+                    <div x-show="graph === 'faidaSiku'" x-cloak>
+                        <canvas id="faidaSikuChart" class="w-full h-full"></canvas>
+                    </div>
+                    <div x-show="graph === 'mauzoSiku'" x-cloak>
+                        <canvas id="mauzoSikuChart" class="w-full h-full"></canvas>
+                    </div>
+                    <div x-show="graph === 'marejesho'" x-cloak>
+                        <canvas id="marejeshoChart" class="w-full h-full"></canvas>
+                    </div>
+                    <div x-show="graph === 'mauzo'" x-cloak>
+                        <canvas id="mauzoChart" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
+<!-- ✅ MWENENDO TAB -->
+<div x-show="tab === 'mwenendo'" 
+     class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm" 
+     x-cloak
+     x-data="mwenendoApp()"
+     x-init="initMwenendo()"
+     x-transition:enter.duration.300ms>
 
-        <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-200">
-          <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-1 md:mb-2">Thamani Baada (Bei ya Kuuza)</h3>
-          <p class="text-xl md:text-2xl font-bold text-green-600 truncate" x-text="formatCurrency(afterSales)"></p>
-          <p class="text-xs text-gray-500 mt-1">Bei ya kuuzia ya bidhaa zilizopo</p>
-        </div>
-
-        <div class="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-200">
-          <h3 class="text-sm md:text-lg font-semibold text-gray-700 mb-1 md:mb-2">Faida ya Uwezo</h3>
-          <p class="text-xl md:text-2xl font-bold text-amber-600 truncate" x-text="formatCurrency(faida)"></p>
-          <p class="text-xs text-gray-500 mt-1">Faida inayoweza kupatikana</p>
-        </div>
-      </div>
-
-      <!-- Company Total Value -->
-      <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 md:p-6 mb-6 md:mb-8">
-        <h3 class="font-semibold text-gray-700 mb-2 md:mb-3 text-sm md:text-base">Thamani ya Jumla ya Kampuni</h3>
-        <div class="text-xl md:text-3xl font-bold text-green-600">
-          {{ $thamaniKampuniFormatted }}
-        </div>
-        <p class="text-sm text-gray-500 mt-1">Thamani ya sasa ya hisa zote (kwa bei ya kuuzia)</p>
-      </div>
-
-      <!-- Table -->
-      <div>
-        <h3 class="font-semibold text-gray-800 mb-3 md:mb-4 text-base md:text-lg">Orodha ya Bidhaa</h3>
-        <div class="overflow-x-auto -mx-4 md:mx-0 bg-white border border-gray-200 rounded-xl shadow-sm">
-          <table class="min-w-full text-xs md:text-sm">
-            <thead class="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th class="px-3 py-2 md:px-4 md:py-3 text-left font-semibold text-gray-700">Bidhaa</th>
-                <th class="px-3 py-2 md:px-4 md:py-3 text-left font-semibold text-gray-700 hidden sm:table-cell">Aina</th>
-                <th class="px-3 py-2 md:px-4 md:py-3 text-left font-semibold text-gray-700 hidden md:table-cell">Kipimo</th>
-                <th class="px-3 py-2 md:px-4 md:py-3 text-right font-semibold text-gray-700">Idadi</th>
-                <th class="px-3 py-2 md:px-4 md:py-3 text-right font-semibold text-gray-700 hidden lg:table-cell">Nunua</th>
-                <th class="px-3 py-2 md:px-4 md:py-3 text-right font-semibold text-gray-700">Kuuza</th>
-                <th class="px-3 py-2 md:px-4 md:py-3 text-right font-semibold text-gray-700">Faida</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-              @foreach($bidhaaList as $item)
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                  <td class="px-3 py-2 md:px-4 md:py-3 text-gray-900 truncate max-w-[120px]">{{ $item->jina }}</td>
-                  <td class="px-3 py-2 md:px-4 md:py-3 text-gray-600 hidden sm:table-cell truncate max-w-[80px]">{{ $item->aina }}</td>
-                  <td class="px-3 py-2 md:px-4 md:py-3 text-gray-600 hidden md:table-cell truncate max-w-[60px]">{{ $item->kipimo ?? '-' }}</td>
-                  <td class="px-3 py-2 md:px-4 md:py-3 text-right text-gray-900">{{ number_format($item->idadi) }}</td>
-                  <td class="px-3 py-2 md:px-4 md:py-3 text-right text-gray-600 hidden lg:table-cell">Tsh {{ number_format($item->bei_nunua, 0) }}</td>
-                  <td class="px-3 py-2 md:px-4 md:py-3 text-right text-gray-600">Tsh {{ number_format($item->bei_kuuza, 0) }}</td>
-                  <td class="px-3 py-2 md:px-4 md:py-3 text-right font-semibold text-green-600">
-                    Tsh {{ number_format($item->faida, 0) }}
-                  </td>
-                </tr>
-              @endforeach
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <div class="p-4 border-b border-gray-200 bg-amber-50">
+        <h2 class="text-sm font-semibold text-gray-800 flex items-center">
+            <i class="fas fa-chart-line text-amber-600 mr-2"></i>
+            Mwenendo wa Biashara
+        </h2>
+        <p class="text-xs text-gray-600 mt-1">Chagua kipindi au tarehe kuona takwimu</p>
     </div>
+    
+    <div class="p-4">
+        <!-- Header with refresh button -->
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
+            <div class="flex items-center gap-2">
+                <button @click="refresh()" 
+                        class="flex items-center gap-2 bg-amber-600 text-white px-3 py-2 rounded-lg hover:bg-amber-700 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i class="fas fa-sync-alt text-xs"></i>
+                    <span class="text-xs">Pakua Upya</span>
+                </button>
+            </div>
+        </div>
 
-    <!-- ✅ HISTORIA TAB -->
-    <div x-show="tab === 'historia'" class="bg-white rounded-xl shadow-sm p-4 md:p-6" x-cloak>
-      <h2 class="text-lg md:text-2xl font-bold text-gray-800 mb-1 md:mb-2">🕒 Historia ya Mfumo</h2>
-      <p class="text-gray-600 text-sm md:text-base">Taarifa kuhusu historia ya mfumo na takwimu</p>
-      <div class="mt-4 md:mt-6 p-6 md:p-8 text-center border-2 border-dashed border-gray-300 rounded-xl">
-        <p class="text-gray-500 text-sm md:text-base">Inafanya kazi - Ukurasa wa historia utaanza hivi karibuni</p>
-      </div>
+        <!-- Selection Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">⏳ Chagua Muda:</label>
+                <select x-model="viewType" 
+                        @change="toggleDatePicker(false)" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500">
+                    <option value="Siku">Siku</option>
+                    <option value="Wiki">Wiki</option>
+                    <option value="Mwezi">Mwezi</option>
+                    <option value="Mwaka">Mwaka</option>
+                </select>
+            </div>
+
+            <div class="flex items-end">
+                <button @click="toggleDatePicker(true)" 
+                        class="w-full bg-gradient-to-r from-amber-500 to-amber-400 text-white px-4 py-2 rounded-lg hover:from-amber-600 hover:to-amber-500 shadow-sm transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i class="fas fa-calendar-alt mr-1"></i> Chagua Tarehe
+                </button>
+            </div>
+        </div>
+
+        <!-- Auto Summary -->
+        <div x-show="!manualDateSelect" 
+             class="bg-gray-50 border border-gray-200 rounded p-3 space-y-3 transition-all duration-300">
+
+            <h3 class="font-semibold text-gray-800 text-sm">
+                Muhtasari wa <span x-text="viewType"></span>
+                <span x-show="summary?.date" class="text-xs text-gray-600 font-normal">
+                    (<span x-text="summary?.date"></span>)
+                </span>
+            </h3>
+            
+            <template x-if="summary">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Mapato ya Mauzo</p>
+                        <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(summary.mapato_mauzo)"></p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Mapato ya Madeni</p>
+                        <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(summary.mapato_madeni)"></p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Jumla ya Mapato</p>
+                        <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(summary.jumla_mapato)"></p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Jumla ya Matumizi</p>
+                        <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(summary.jumla_mat)"></p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Gharama ya Bidhaa</p>
+                        <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(summary.gharama_bidhaa)"></p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Faida ya Mauzo</p>
+                        <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(summary.faida_mauzo)"></p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Faida ya Marejesho</p>
+                        <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(summary.faida_marejesho)"></p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Fedha Dukani</p>
+                        <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(summary.fedha_droo)"></p>
+                    </div>
+                    
+                    <div class="bg-white border border-gray-200 rounded p-2 shadow-sm lg:col-span-2">
+                        <p class="text-xs text-gray-500 mb-1">Faida Halisi</p>
+                        <p class="text-sm font-bold text-emerald-600" x-text="formatCurrency(summary.faida_halisi)"></p>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="!summary">
+                <div class="text-center py-4 text-gray-500 text-xs">
+                    Hakuna data inayopatikana kwa kipindi hiki.
+                </div>
+            </template>
+        </div>
+
+        <!-- Manual Date Selection -->
+        <div x-show="manualDateSelect" 
+             class="border border-gray-200 rounded p-3 bg-gray-50 space-y-3 transition-all duration-300">
+
+            <h3 class="font-semibold text-gray-800 text-sm">📅 Angalia Mwenendo kwa Tarehe</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Kuanzia Tarehe:</label>
+                    <input type="date" x-model="dateFrom" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Mpaka Tarehe:</label>
+                    <input type="date" x-model="dateTo" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button @click="fetchCustomSummary()" 
+                        class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 shadow-sm transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <i class="fas fa-search mr-1"></i> Angalia
+                </button>
+                <button @click="toggleDatePicker(false)" 
+                        class="text-gray-800 bg-gray-200 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all duration-200 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    <i class="fas fa-arrow-left mr-1"></i> Rudi
+                </button>
+            </div>
+
+            <template x-if="customSummary">
+                <div class="mt-3 bg-white border border-gray-200 rounded p-3 shadow-sm">
+                    <h4 class="text-amber-600 font-semibold mb-2 text-xs">
+                        Matokeo ya kipindi: <span x-text="dateFrom + ' mpaka ' + dateTo"></span>
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-xs text-gray-500">Mapato ya Mauzo</p>
+                            <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(customSummary.mapato_mauzo)"></p>
+                        </div>
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-xs text-gray-500">Mapato ya Madeni</p>
+                            <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(customSummary.mapato_madeni)"></p>
+                        </div>
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-xs text-gray-500">Jumla ya Mapato</p>
+                            <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(customSummary.jumla_mapato)"></p>
+                        </div>
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-xs text-gray-500">Jumla ya Matumizi</p>
+                            <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(customSummary.jumla_mat)"></p>
+                        </div>
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-xs text-gray-500">Gharama ya Bidhaa</p>
+                            <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(customSummary.gharama_bidhaa)"></p>
+                        </div>
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-xs text-gray-500">Faida ya Mauzo</p>
+                            <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(customSummary.faida_mauzo)"></p>
+                        </div>
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-xs text-gray-500">Faida ya Marejesho</p>
+                            <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(customSummary.faida_marejesho)"></p>
+                        </div>
+                        <div class="border border-gray-200 rounded p-2">
+                            <p class="text-xs text-gray-500">Fedha Dukani</p>
+                            <p class="text-sm font-bold text-gray-900" x-text="formatCurrency(customSummary.fedha_droo)"></p>
+                        </div>
+                        <div class="border border-gray-200 rounded p-2 lg:col-span-2">
+                            <p class="text-xs text-gray-500">Faida Halisi</p>
+                            <p class="text-sm font-bold text-emerald-600" x-text="formatCurrency(customSummary.faida_halisi)"></p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
     </div>
-  </main>
+</div>
+
+<script>
+    function mwenendoApp() {
+        return {
+            viewType: 'Siku',
+            summary: null,
+            customSummary: null,
+            manualDateSelect: false,
+            dateFrom: '',
+            dateTo: '',
+            
+            initMwenendo() {
+                // Load initial data
+                this.fetchSummary();
+            },
+            
+            async fetchSummary() {
+                try {
+                    // Determine date range based on viewType
+                    let from, to;
+                    const today = new Date();
+                    
+                    switch(this.viewType) {
+                        case 'Siku':
+                            from = this.formatDate(today);
+                            to = this.formatDate(today);
+                            break;
+                        case 'Wiki':
+                            const weekStart = new Date(today);
+                            weekStart.setDate(today.getDate() - today.getDay() + 1); // Monday
+                            const weekEnd = new Date(weekStart);
+                            weekEnd.setDate(weekStart.getDate() + 6); // Sunday
+                            from = this.formatDate(weekStart);
+                            to = this.formatDate(weekEnd);
+                            break;
+                        case 'Mwezi':
+                            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                            const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                            from = this.formatDate(monthStart);
+                            to = this.formatDate(monthEnd);
+                            break;
+                        case 'Mwaka':
+                            const yearStart = new Date(today.getFullYear(), 0, 1);
+                            const yearEnd = new Date(today.getFullYear(), 11, 31);
+                            from = this.formatDate(yearStart);
+                            to = this.formatDate(yearEnd);
+                            break;
+                    }
+                    
+                    const response = await fetch(`/uchambuzi/mwenendo?from=${from}&to=${to}`);
+                    const data = await response.json();
+                    
+                    this.summary = {
+                        ...data,
+                        date: this.getDisplayDate(from, to)
+                    };
+                } catch (error) {
+                    console.error('Error fetching summary:', error);
+                }
+            },
+            
+            async fetchCustomSummary() {
+                if (!this.dateFrom || !this.dateTo) {
+                    alert('Tafadhali chagua tarehe zote mbili');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/uchambuzi/mwenendo?from=${this.dateFrom}&to=${this.dateTo}`);
+                    const data = await response.json();
+                    this.customSummary = data;
+                } catch (error) {
+                    console.error('Error fetching custom summary:', error);
+                }
+            },
+            
+            refresh() {
+                this.summary = null;
+                this.customSummary = null;
+                this.fetchSummary();
+            },
+            
+            toggleDatePicker(show) {
+                this.manualDateSelect = show;
+                if (!show) {
+                    this.customSummary = null;
+                    this.fetchSummary();
+                }
+            },
+            
+            formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            },
+            
+            getDisplayDate(from, to) {
+                if (from === to) {
+                    return new Date(from).toLocaleDateString('sw-TZ');
+                }
+                return `${new Date(from).toLocaleDateString('sw-TZ')} - ${new Date(to).toLocaleDateString('sw-TZ')}`;
+            },
+            
+            formatCurrency(value) {
+                return new Intl.NumberFormat('sw-TZ', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(value || 0) + ' TZS';
+            }
+        };
+    }
+</script>
+
+        <!-- ✅ KAMPUNI TAB -->
+        <div x-show="tab === 'kampuni'" 
+             x-data="kampuniData()"
+             class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm"
+             x-cloak
+             x-transition:enter.duration.300ms>
+            
+            <div class="p-4 border-b border-gray-200 bg-amber-50">
+                <h2 class="text-sm font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-building text-amber-600 mr-2"></i>
+                    Thamani ya Kampuni
+                </h2>
+                <p class="text-xs text-gray-600 mt-1">Muhtasari wa thamani ya kampuni na faida</p>
+            </div>
+            
+            <div class="p-4">
+                <!-- Summary Boxes -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                    <div class="bg-white border border-gray-200 rounded p-3 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Thamani Kabla (Bei ya Nunua)</p>
+                        <p class="text-base font-bold text-gray-900" x-text="formatCurrency(beforeSales)"></p>
+                        <p class="text-xs text-gray-400 mt-1">Bei ya ununuzi ya bidhaa zilizopo</p>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded p-3 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Thamani Baada (Bei ya Kuuza)</p>
+                        <p class="text-base font-bold text-gray-900" x-text="formatCurrency(afterSales)"></p>
+                        <p class="text-xs text-gray-400 mt-1">Bei ya kuuzia ya bidhaa zilizopo</p>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded p-3 shadow-sm">
+                        <p class="text-xs text-gray-500 mb-1">Faida ya Uwezo</p>
+                        <p class="text-base font-bold text-amber-600" x-text="formatCurrency(faida)"></p>
+                        <p class="text-xs text-gray-400 mt-1">Faida inayoweza kupatikana</p>
+                    </div>
+                </div>
+
+                <!-- Company Total Value -->
+                <div class="bg-gray-50 border border-gray-200 rounded p-3 mb-4">
+                    <p class="text-xs text-gray-600 mb-1">Thamani ya Jumla ya Kampuni</p>
+                    <p class="text-lg font-bold text-amber-600">{{ $thamaniKampuniFormatted }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Thamani ya sasa ya hisa zote (kwa bei ya kuuzia)</p>
+                </div>
+
+                <!-- Table -->
+                <div>
+                    <h3 class="font-semibold text-gray-800 mb-2 text-sm">Orodha ya Bidhaa</h3>
+                    <div class="overflow-x-auto border border-gray-200 rounded">
+                        <table class="w-full text-xs">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-700">Bidhaa</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-700 hidden sm:table-cell">Aina</th>
+                                    <th class="px-3 py-2 text-left font-medium text-gray-700 hidden md:table-cell">Kipimo</th>
+                                    <th class="px-3 py-2 text-right font-medium text-gray-700">Idadi</th>
+                                    <th class="px-3 py-2 text-right font-medium text-gray-700 hidden lg:table-cell">Nunua</th>
+                                    <th class="px-3 py-2 text-right font-medium text-gray-700">Kuuza</th>
+                                    <th class="px-3 py-2 text-right font-medium text-gray-700">Faida</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($bidhaaList as $item)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-3 py-2 text-gray-900 truncate max-w-[120px]">{{ $item->jina }}</td>
+                                        <td class="px-3 py-2 text-gray-700 hidden sm:table-cell truncate max-w-[80px]">{{ $item->aina }}</td>
+                                        <td class="px-3 py-2 text-gray-700 hidden md:table-cell truncate max-w-[60px]">{{ $item->kipimo ?? '-' }}</td>
+                                        <td class="px-3 py-2 text-right text-gray-900">{{ number_format($item->idadi) }}</td>
+                                        <td class="px-3 py-2 text-right text-gray-700 hidden lg:table-cell">Tsh {{ number_format($item->bei_nunua, 0) }}</td>
+                                        <td class="px-3 py-2 text-right text-gray-700">Tsh {{ number_format($item->bei_kuuza, 0) }}</td>
+                                        <td class="px-3 py-2 text-right font-semibold text-amber-600">
+                                            Tsh {{ number_format($item->faida, 0) }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ HISTORIA TAB -->
+        <div x-show="tab === 'historia'" 
+             class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm" 
+             x-cloak
+             x-transition:enter.duration.300ms>
+            
+            <div class="p-4 border-b border-gray-200 bg-amber-50">
+                <h2 class="text-sm font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-history text-amber-600 mr-2"></i>
+                    Historia ya Mfumo
+                </h2>
+                <p class="text-xs text-gray-600 mt-1">Taarifa kuhusu historia ya mfumo na takwimu</p>
+            </div>
+            
+            <div class="p-4">
+                <div class="p-6 text-center border-2 border-dashed border-gray-300 rounded">
+                    <p class="text-gray-500 text-sm">Inafanya kazi - Ukurasa wa historia utaanza hivi karibuni</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner (Hidden initially) -->
+<div id="loading-spinner" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white p-4 rounded-lg shadow-xl flex items-center space-x-3">
+        <svg class="animate-spin h-5 w-5 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-gray-700 text-sm">Inapakia...</span>
+    </div>
 </div>
 @endsection
 
 @push('styles')
 <style>
-[x-cloak] { display: none !important; }
-
-@media (max-width: 640px) {
-  table {
-    font-size: 0.75rem;
-  }
-}
+    [x-cloak] { display: none !important; }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Chart container */
+    canvas {
+        max-height: 100%;
+        width: 100% !important;
+        height: auto !important;
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 640px) {
+        .table-responsive {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
 </style>
 @endpush
 
 @push('scripts')
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 <script>
 // Global utility function for formatting currency
 function formatCurrency(value) {
-  return new Intl.NumberFormat('sw-TZ', {
-    style: 'currency',
-    currency: 'TZS',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(value || 0);
+    return new Intl.NumberFormat('sw-TZ', {
+        style: 'currency',
+        currency: 'TZS',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(value || 0);
 }
 
+// Chart storage
+let chartInstances = {};
+
+// Graph colors - different for each chart type
+const graphColors = {
+    faidaBidhaa: {
+        bg: 'rgba(245, 158, 11, 0.7)',  // amber
+        border: '#f59e0b'
+    },
+    faidaSiku: {
+        bg: 'rgba(16, 185, 129, 0.7)',   // green
+        border: '#10b981'
+    },
+    mauzoSiku: {
+        bg: 'rgba(59, 130, 246, 0.7)',   // blue
+        border: '#3b82f6'
+    },
+    marejesho: {
+        bg: 'rgba(139, 92, 246, 0.7)',   // purple
+        border: '#8b5cf6'
+    },
+    mauzo: {
+        bg: 'rgba(236, 72, 153, 0.7)',   // pink
+        border: '#ec4899'
+    }
+};
+
 document.addEventListener('alpine:init', () => {
-  Alpine.data('dashboardApp', () => ({
-    // Load saved tab from localStorage or default to 'graphs'
-    tab: localStorage.getItem('dashboardTab') || 'graphs',
-    // Load saved graph tab from localStorage or default to 'faidaBidhaa'
-    graph: localStorage.getItem('dashboardGraph') || 'faidaBidhaa',
-    
-    charts: {},
-    graphTabs: {
-      faidaBidhaa: 'Faida kwa Bidhaa',
-      faidaSiku: 'Faida kwa Siku',
-      mauzoSiku: 'Mauzo kwa Siku',
-      marejesho: 'Faida ya Marejesho', // CHANGED: gharama to marejesho
-      mauzo: 'Mauzo Jumla'
-    },
-
-    // Data from Laravel
-    faidaByBidhaa: @json($faidaBidhaa ?? []),
-    faidaBySiku: @json($faidaSiku ?? []),
-    mauzoBySiku: @json($mauzoSiku ?? []),
-    marejeshoByBidhaa: @json($marejesho ?? []), // CHANGED: gharama to marejesho
-    mauzoByBidhaa: @json($mauzo ?? []),
-
-    setTab(tabName) {
-      this.tab = tabName;
-      // Save to localStorage
-      localStorage.setItem('dashboardTab', tabName);
-      
-      if(tabName === 'graphs') {
-        this.$nextTick(() => this.drawChart(this.graph));
-      }
-    },
-
-    setGraph(name) {
-      this.graph = name;
-      // Save to localStorage
-      localStorage.setItem('dashboardGraph', name);
-      this.$nextTick(() => this.drawChart(name));
-    },
-
-    drawChart(name) {
-      // If chart already exists, destroy it first
-      if (this.charts[name]) {
-        this.charts[name].destroy();
-      }
-      
-      const ctx = document.getElementById(name + 'Chart');
-      if(!ctx) return;
-
-      let config = {};
-      switch(name) {
-        case 'faidaBidhaa': 
-          config = this.barChart(this.faidaByBidhaa, 'jina', 'faida', 'rgba(79, 70, 229, 0.8)', 'Faida kwa Bidhaa');
-          break;
-        case 'faidaSiku': 
-          config = this.lineChart(this.faidaBySiku, 'day', 'faida', 'rgba(16, 185, 129, 0.8)', 'Faida kwa Siku');
-          break;
-        case 'mauzoSiku': 
-          config = this.lineChart(this.mauzoBySiku, 'day', 'total', 'rgba(245, 158, 11, 0.8)', 'Mauzo kwa Siku');
-          break;
-        case 'marejesho': 
-          config = this.barChart(this.marejeshoByBidhaa, 'jina', 'total', 'rgba(14, 165, 233, 0.8)', 'Faida ya Marejesho'); // CHANGED: gharama to marejesho
-          break;
-        case 'mauzo': 
-          config = this.barChart(this.mauzoByBidhaa, 'jina', 'total', 'rgba(139, 92, 246, 0.8)', 'Mauzo Jumla');
-          break;
-      }
-
-      this.charts[name] = new Chart(ctx, config);
-    },
-
-    barChart(data, labelKey, valueKey, color, label) {
-      const labels = data.map(i => i[labelKey] || 'N/A');
-      const values = data.map(i => Math.max(0, Number(i[valueKey]) || 0));
-      
-      return {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{ 
-            label: label, 
-            data: values, 
-            backgroundColor: color,
-            borderColor: color.replace('0.8', '1'),
-            borderWidth: 1,
-            borderRadius: 4
-          }]
+    Alpine.data('dashboardApp', () => ({
+        // Default to 'graphs' tab
+        tab: 'graphs',
+        graph: 'faidaBidhaa',
+        
+        graphTabs: {
+            faidaBidhaa: 'Faida kwa Bidhaa',
+            faidaSiku: 'Faida kwa Siku',
+            mauzoSiku: 'Mauzo kwa Siku',
+            marejesho: 'Faida ya Marejesho',
+            mauzo: 'Mauzo Jumla'
         },
-        options: this.chartOptions()
-      };
-    },
 
-    lineChart(data, labelKey, valueKey, color, label) {
-      const labels = data.map(i => i[labelKey] || 'N/A');
-      const values = data.map(i => Math.max(0, Number(i[valueKey]) || 0));
-      
-      return {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{ 
-            label: label, 
-            data: values, 
-            borderColor: color,
-            backgroundColor: color.replace('0.8', '0.1'),
-            borderWidth: 3,
-            tension: 0.3,
-            fill: true,
-            pointBackgroundColor: color,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointRadius: 4
-          }]
+        // Data from Laravel
+        faidaByBidhaa: @json($faidaBidhaa ?? []),
+        faidaBySiku: @json($faidaSiku ?? []),
+        mauzoBySiku: @json($mauzoSiku ?? []),
+        marejeshoByBidhaa: @json($marejesho ?? []),
+        mauzoByBidhaa: @json($mauzo ?? []),
+
+        getActiveClass(key) {
+            const colors = {
+                faidaBidhaa: 'bg-amber-600 text-white shadow-md',
+                faidaSiku: 'bg-emerald-600 text-white shadow-md',
+                mauzoSiku: 'bg-blue-600 text-white shadow-md',
+                marejesho: 'bg-purple-600 text-white shadow-md',
+                mauzo: 'bg-pink-600 text-white shadow-md'
+            };
+            return colors[key] || 'bg-amber-600 text-white shadow-md';
         },
-        options: this.chartOptions()
-      };
-    },
 
-    chartOptions() {
-      return {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { 
-          legend: { 
-            display: true,
-            position: 'top',
-            labels: {
-              font: {
-                size: window.innerWidth < 768 ? 10 : 12
-              },
-              padding: 20
+        setTab(tabName) {
+            this.tab = tabName;
+            
+            if(tabName === 'graphs') {
+                setTimeout(() => {
+                    this.drawChart(this.graph);
+                }, 50);
             }
-          }, 
-          tooltip: { 
-            enabled: true,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleColor: 'white',
-            bodyColor: 'white',
-            titleFont: {
-              size: window.innerWidth < 768 ? 10 : 12
-            },
-            bodyFont: {
-              size: window.innerWidth < 768 ? 10 : 12
-            },
-            callbacks: {
-              label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
+        },
+
+        setGraph(name) {
+            this.graph = name;
+            setTimeout(() => {
+                this.drawChart(name);
+            }, 50);
+        },
+
+        drawChart(name) {
+            const canvasId = name + 'Chart';
+            const canvas = document.getElementById(canvasId);
+            
+            if(!canvas) {
+                console.log('Canvas not found:', canvasId);
+                return;
+            }
+
+            if (chartInstances[name]) {
+                chartInstances[name].destroy();
+                chartInstances[name] = null;
+            }
+
+            const ctx = canvas.getContext('2d');
+            if(!ctx) return;
+
+            let config = {};
+            const colorSet = graphColors[name] || graphColors.faidaBidhaa;
+            
+            switch(name) {
+                case 'faidaBidhaa': 
+                    config = this.barChart(this.faidaByBidhaa, 'jina', 'faida', colorSet, 'Faida kwa Bidhaa');
+                    break;
+                case 'faidaSiku': 
+                    config = this.lineChart(this.faidaBySiku, 'day', 'faida', colorSet, 'Faida kwa Siku');
+                    break;
+                case 'mauzoSiku': 
+                    config = this.lineChart(this.mauzoBySiku, 'day', 'total', colorSet, 'Mauzo kwa Siku');
+                    break;
+                case 'marejesho': 
+                    config = this.barChart(this.marejeshoByBidhaa, 'jina', 'total', colorSet, 'Faida ya Marejesho');
+                    break;
+                case 'mauzo': 
+                    config = this.barChart(this.mauzoByBidhaa, 'jina', 'total', colorSet, 'Mauzo Jumla');
+                    break;
+            }
+
+            try {
+                chartInstances[name] = new Chart(ctx, config);
+            } catch (e) {
+                console.error('Error creating chart:', e);
+            }
+        },
+
+        barChart(data, labelKey, valueKey, colors, label) {
+            const labels = data.map(i => i[labelKey] || 'N/A');
+            const values = data.map(i => Math.max(0, Number(i[valueKey]) || 0));
+            
+            return {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ 
+                        label: label, 
+                        data: values, 
+                        backgroundColor: colors.bg,
+                        borderColor: colors.border,
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: this.chartOptions()
+            };
+        },
+
+        lineChart(data, labelKey, valueKey, colors, label) {
+            const labels = data.map(i => i[labelKey] || 'N/A');
+            const values = data.map(i => Math.max(0, Number(i[valueKey]) || 0));
+            
+            return {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{ 
+                        label: label, 
+                        data: values, 
+                        borderColor: colors.border,
+                        backgroundColor: colors.bg.replace('0.7', '0.1'),
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: colors.border,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: this.chartOptions()
+            };
+        },
+
+        chartOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#1f2937',
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 11,
+                                weight: '500'
+                            },
+                            padding: 15
+                        }
+                    }, 
+                    tooltip: { 
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        titleFont: {
+                            size: window.innerWidth < 768 ? 10 : 11
+                        },
+                        bodyFont: {
+                            size: window.innerWidth < 768 ? 10 : 11
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += formatCurrency(context.parsed.y);
+                                return label;
+                            }
+                        }
+                    } 
+                },
+                scales: { 
+                    y: { 
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            color: '#4b5563',
+                            font: {
+                                size: window.innerWidth < 768 ? 9 : 10
+                            },
+                            callback: function(value) {
+                                if (value >= 1000000) {
+                                    return 'Tsh ' + (value / 1000000).toFixed(1) + 'M';
+                                } else if (value >= 1000) {
+                                    return 'Tsh ' + (value / 1000).toFixed(0) + 'K';
+                                }
+                                return 'Tsh ' + value;
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#4b5563',
+                            font: {
+                                size: window.innerWidth < 768 ? 9 : 10
+                            },
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
                 }
-                label += formatCurrency(context.parsed.y);
-                return label;
-              }
-            }
-          } 
+            };
         },
-        scales: { 
-          y: { 
-            beginAtZero: true,
-            grid: {
-              color: 'rgba(0, 0, 0, 0.05)'
-            },
-            ticks: {
-              font: {
-                size: window.innerWidth < 768 ? 8 : 10
-              },
-              callback: function(value) {
-                if (value >= 1000000) {
-                  return 'Tsh ' + (value / 1000000).toFixed(1) + 'M';
-                } else if (value >= 1000) {
-                  return 'Tsh ' + (value / 1000).toFixed(0) + 'K';
+
+        handleResize() {
+            if (this.tab === 'graphs' && chartInstances[this.graph]) {
+                setTimeout(() => {
+                    if (chartInstances[this.graph]) {
+                        chartInstances[this.graph].resize();
+                    }
+                }, 100);
+            }
+        },
+
+        init() {
+            // Force 'graphs' as default tab
+            this.tab = 'graphs';
+            
+            // Draw the saved chart on init
+            setTimeout(() => {
+                if (this.tab === 'graphs') {
+                    this.drawChart(this.graph);
                 }
-                return 'Tsh ' + value;
-              }
+            }, 100);
+            
+            // Redraw charts on window resize
+            window.addEventListener('resize', () => {
+                this.handleResize();
+            });
+        }
+    }));
+
+    Alpine.data('mwenendoApp', () => ({
+        viewType: 'Siku',
+        manualDateSelect: false,
+        dateFrom: '',
+        dateTo: '',
+        summary: null,
+        customSummary: null,
+        mwenendoSummary: @json($mwenendoSummary ?: []),
+
+        toggleDatePicker(val) { 
+            this.manualDateSelect = val; 
+            if(!val) {
+                this.customSummary = null;
+                this.updateSummary(); 
             }
-          },
-          x: {
-            grid: {
-              display: false
-            },
-            ticks: {
-              font: {
-                size: window.innerWidth < 768 ? 8 : 10
-              },
-              maxRotation: 45,
-              minRotation: 45
+        },
+        
+        formatCurrency(value) {
+            return formatCurrency(value);
+        },
+
+        updateSummary() {
+            const key = this.viewType.toLowerCase();
+            const data = this.mwenendoSummary[key] || null;
+            this.summary = data ? data : null;
+        },
+
+        async fetchCustomSummary() {
+            if(!this.dateFrom || !this.dateTo) {
+                this.showNotification('Tafadhali chagua tarehe zote za kuanzia na mpaka', 'error');
+                return;
             }
-          }
+            
+            const fromDate = new Date(this.dateFrom);
+            const toDate = new Date(this.dateTo);
+            const today = new Date();
+            
+            if (fromDate > today) {
+                this.showNotification('Tarehe ya kuanzia haiwezi kuwa baada ya leo', 'error');
+                return;
+            }
+            
+            if (toDate > today) {
+                this.showNotification('Tarehe ya mwisho haiwezi kuwa baada ya leo', 'error');
+                return;
+            }
+            
+            if (fromDate > toDate) {
+                this.showNotification('Tarehe ya kuanzia haiwezi kuwa baada ya tarehe ya mwisho', 'error');
+                return;
+            }
+            
+            try {
+                document.getElementById('loading-spinner').classList.remove('hidden');
+                this.customSummary = null;
+                
+                const response = await fetch(`/uchambuzi/mwenendo?from=${this.dateFrom}&to=${this.dateTo}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}`);
+                }
+                
+                const data = await response.json();
+                this.customSummary = data;
+                this.showNotification('Data imepakuliwa kwa mafanikio', 'success');
+                
+            } catch(error) { 
+                console.error('Hitilafu:', error);
+                this.showNotification('Kumetokea hitilafu wakati wa kupakua data', 'error');
+            } finally {
+                document.getElementById('loading-spinner').classList.add('hidden');
+            }
+        },
+
+        refresh() {
+            this.updateSummary();
+            this.customSummary = null;
+            this.manualDateSelect = false;
+            this.setDefaultDates();
+            this.showNotification('Data imeburushwa upya', 'info');
+        },
+
+        setDefaultDates() {
+            const today = new Date();
+            const weekAgo = new Date();
+            weekAgo.setDate(today.getDate() - 7);
+            
+            this.dateFrom = weekAgo.toISOString().split('T')[0];
+            this.dateTo = today.toISOString().split('T')[0];
+        },
+
+        initMwenendo() { 
+            this.setDefaultDates();
+            this.updateSummary(); 
+        },
+
+        showNotification(message, type = 'info') {
+            const container = document.getElementById('notification-container');
+            if (!container) return;
+            
+            const colors = {
+                success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+                error: 'bg-red-50 border-red-200 text-red-800',
+                warning: 'bg-amber-50 border-amber-200 text-amber-800',
+                info: 'bg-blue-50 border-blue-200 text-blue-800'
+            };
+
+            const notification = document.createElement('div');
+            notification.className = `rounded border px-3 py-2 text-xs font-medium mb-2 ${colors[type]} shadow-sm animate-fade-in`;
+            notification.textContent = message;
+
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-10px)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
-      };
-    },
+    }));
 
-    init() {
-      // Draw the saved chart on init
-      this.$nextTick(() => {
-        if (this.tab === 'graphs') {
-          this.drawChart(this.graph);
+    Alpine.data('kampuniData', () => ({
+        beforeSales: {{ $thamaniBefore ?? 0 }},
+        afterSales: {{ $thamaniAfter ?? 0 }},
+        faida: {{ $faida ?? 0 }},
+        
+        formatCurrency(value) {
+            return formatCurrency(value);
         }
-      });
-      
-      // Redraw charts on window resize
-      window.addEventListener('resize', () => {
-        if (this.tab === 'graphs' && this.charts[this.graph]) {
-          this.charts[this.graph].resize();
-        }
-      });
-    }
-  }));
-
-  Alpine.data('mwenendoApp', () => ({
-    viewType: 'Siku',
-    manualDateSelect: false,
-    dateFrom: '',
-    dateTo: '',
-    summary: null,
-    customSummary: null,
-    mwenendoSummary: @json($mwenendoSummary ?: []),
-
-    toggleDatePicker(val) { 
-      this.manualDateSelect = val; 
-      if(!val) {
-        this.customSummary = null;
-        this.updateSummary(); 
-      }
-    },
-    
-    formatCurrency(value) {
-      return formatCurrency(value);
-    },
-
-    updateSummary() {
-      const key = this.viewType.toLowerCase();
-      const data = this.mwenendoSummary[key] || null;
-      this.summary = data ? data : null;
-    },
-
-    async fetchCustomSummary() {
-      if(!this.dateFrom || !this.dateTo) {
-        alert('Tafadhali chagua tarehe zote za kuanzia na mpaka');
-        return;
-      }
-      
-      // Validate date range
-      const fromDate = new Date(this.dateFrom);
-      const toDate = new Date(this.dateTo);
-      const today = new Date();
-      
-      if (fromDate > today) {
-        alert('Tarehe ya kuanzia haiwezi kuwa baada ya leo');
-        return;
-      }
-      
-      if (toDate > today) {
-        alert('Tarehe ya mwisho haiwezi kuwa baada ya leo');
-        return;
-      }
-      
-      if (fromDate > toDate) {
-        alert('Tarehe ya kuanzia haiwezi kuwa baada ya tarehe ya mwisho');
-        return;
-      }
-      
-      try {
-        // Show loading state
-        this.customSummary = null;
-        
-        // Add loading indicator
-        const button = event?.target;
-        if (button) {
-          const originalText = button.innerHTML;
-          button.innerHTML = '<span class="animate-spin mr-2">⟳</span> Inapakua...';
-          button.disabled = true;
-        }
-        
-        const response = await fetch(`/uchambuzi/mwenendo?from=${this.dateFrom}&to=${this.dateTo}`);
-        
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        this.customSummary = data;
-        
-        // Restore button
-        if (button) {
-          button.innerHTML = '🔍 Angalia';
-          button.disabled = false;
-        }
-        
-      } catch(error) { 
-        console.error('Hitilafu:', error);
-        alert('Kumetokea hitilafu wakati wa kupakua data. Tafadhali angalia muunganisho wa mtandao na jaribu tena.');
-        
-        // Restore button in case of error
-        const button = event?.target;
-        if (button) {
-          button.innerHTML = '🔍 Angalia';
-          button.disabled = false;
-        }
-      }
-    },
-
-    refresh() {
-      this.updateSummary();
-      this.customSummary = null;
-      this.manualDateSelect = false;
-      // Reset to today's date
-      this.setDefaultDates();
-    },
-
-    setDefaultDates() {
-      // Set default dates for manual selection (last 7 days)
-      const today = new Date();
-      const weekAgo = new Date();
-      weekAgo.setDate(today.getDate() - 7);
-      
-      this.dateFrom = weekAgo.toISOString().split('T')[0];
-      this.dateTo = today.toISOString().split('T')[0];
-    },
-
-    init() { 
-      this.setDefaultDates();
-      this.updateSummary(); 
-    }
-  }));
-
-  Alpine.data('kampuniData', () => ({
-    beforeSales: {{ $thamaniBefore ?? 0 }},
-    afterSales: {{ $thamaniAfter ?? 0 }},
-    faida: {{ $faida ?? 0 }},
-    
-    formatCurrency(value) {
-      return formatCurrency(value);
-    }
-  }));
+    }));
 });
 
-// Add API route check
-document.addEventListener('DOMContentLoaded', function() {
-  // Check if API endpoint is accessible
-  fetch('/uchambuzi/mwenendo?from=' + new Date().toISOString().split('T')[0] + '&to=' + new Date().toISOString().split('T')[0])
-    .catch(error => {
-      console.warn('API endpoint /uchambuzi/mwenendo haipatikani. Hakikisha route imefunguliwa.');
-    });
+// Ensure charts are drawn when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const alpineData = document.querySelector('[x-data="dashboardApp()"]')?.__x;
+        if (alpineData && alpineData.$data.tab === 'graphs') {
+            alpineData.$data.drawChart(alpineData.$data.graph);
+        }
+    }, 200);
 });
 </script>
 @endpush

@@ -88,49 +88,8 @@ class UchambuziController extends Controller
             ->values()
             ->toArray();
 
-        // 4️⃣ Faida ya Marejesho - Profit from debt repayments
-        $marejesho = $company->marejeshos()
-            ->with(['madeni' => function($query) {
-                $query->with('bidhaa');
-            }])
-            ->whereDate('created_at', '>=', Carbon::now()->subDays(30))
-            ->get()
-            ->filter(function($marejesho) {
-                return $marejesho->madeni && $marejesho->madeni->bidhaa;
-            })
-            ->groupBy(function($marejesho) {
-                return $marejesho->madeni->bidhaa->jina;
-            })
-            ->map(function ($repayments, $productName) {
-                $totalProfit = $repayments->sum(function($marejesho) {
-                    // Calculate profit from each repayment
-                    $debt = $marejesho->madeni;
-                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                    $quantity = $debt->idadi;
-                    
-                    // Calculate actual discount if any
-                    $actualDiscount = $debt->punguzo_aina === 'bidhaa'
-                        ? $debt->punguzo * $quantity
-                        : $debt->punguzo;
-                    
-                    // Selling price after discount (debt amount)
-                    $sellingPrice = $debt->jumla;
-                    
-                    // Total buying cost
-                    $totalBuyingCost = $buyingPrice * $quantity;
-                    
-                    // Profit = Selling price - Buying cost
-                    return $sellingPrice - $totalBuyingCost;
-                });
-                
-                return [
-                    'jina' => $productName,
-                    'total' => $totalProfit,
-                    'repayment_count' => $repayments->count()
-                ];
-            })
-            ->values()
-            ->toArray();
+        // 4️⃣ Faida ya Marejesho - Profit from debt repayments using FIFO method
+        $marejesho = $this->calculateFifoProfit($company, Carbon::now()->subDays(30), Carbon::now());
 
         // 5️⃣ Mauzo Jumla kwa Bidhaa - Total sales per product
         $mauzo = $company->bidhaa()
@@ -147,7 +106,7 @@ class UchambuziController extends Controller
             ->values()
             ->toArray();
 
-        // 6️⃣ Mwenendo wa Biashara - Business trends
+        // 6️⃣ Mwenendo wa Biashara - Business trends with FIFO method
         $computeBetween = function (Carbon $from, Carbon $to) use ($company) {
             $fromDt = $from->copy()->startOfDay();
             $toDt = $to->copy()->endOfDay();
@@ -179,35 +138,8 @@ class UchambuziController extends Controller
                     return $mauzo->idadi * $mauzo->bidhaa->bei_nunua;
                 });
 
-            // Profit from debt repayments
-            $faidaMarejesho = $company->marejeshos()
-                ->with(['madeni' => function($query) {
-                    $query->with('bidhaa');
-                }])
-                ->whereBetween('created_at', [$fromDt, $toDt])
-                ->get()
-                ->filter(function($marejesho) {
-                    return $marejesho->madeni && $marejesho->madeni->bidhaa;
-                })
-                ->sum(function($marejesho) {
-                    $debt = $marejesho->madeni;
-                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                    $quantity = $debt->idadi;
-                    
-                    // Calculate actual discount if any
-                    $actualDiscount = $debt->punguzo_aina === 'bidhaa'
-                        ? $debt->punguzo * $quantity
-                        : $debt->punguzo;
-                    
-                    // Selling price after discount (debt amount)
-                    $sellingPrice = $debt->jumla;
-                    
-                    // Total buying cost
-                    $totalBuyingCost = $buyingPrice * $quantity;
-                    
-                    // Profit = Selling price - Buying cost
-                    return $sellingPrice - $totalBuyingCost;
-                });
+            // Profit from debt repayments using FIFO method
+            $faidaMarejesho = $this->calculateFifoProfitTotal($company, $fromDt, $toDt);
 
             // Gross profit from sales (Revenue - Cost of Goods Sold)
             $faidaMauzo = $mapatoMauzo - $costOfGoodsSold;
@@ -224,7 +156,7 @@ class UchambuziController extends Controller
                 'jumla_mapato' => (float) $jumlaMapato,
                 'jumla_mat' => (float) $jumlaMatumizi,
                 'gharama_bidhaa' => (float) $costOfGoodsSold,
-                'faida_marejesho' => (float) $faidaMarejesho, // ADDED: Profit from debt repayments
+                'faida_marejesho' => (float) $faidaMarejesho,
                 'faida_mauzo' => (float) $faidaMauzo,
                 'fedha_droo' => (float) $fedhaDroo,
                 'faida_halisi' => (float) $faidaHalisi,
@@ -283,7 +215,7 @@ class UchambuziController extends Controller
             'faidaBidhaa',
             'faidaSiku',
             'mauzoSiku',
-            'marejesho', // CHANGED: gharama to marejesho
+            'marejesho',
             'mauzo',
             'mwenendoSummary',
             'thamaniKampuniFormatted',
@@ -292,6 +224,161 @@ class UchambuziController extends Controller
             'thamaniAfter',
             'faida',
         ));
+    }
+
+    /**
+     * Calculate FIFO profit for debt repayments grouped by product
+     */
+    private function calculateFifoProfit($company, $fromDate, $toDate)
+    {
+        // Get all repayments in date range with their debts
+        $repayments = $company->marejeshos()
+            ->with(['madeni' => function($query) {
+                $query->with('bidhaa');
+            }])
+            ->whereBetween('created_at', [$fromDate, $toDate])
+            ->orderBy('tarehe', 'asc')
+            ->get()
+            ->filter(function($marejesho) {
+                return $marejesho->madeni && $marejesho->madeni->bidhaa;
+            });
+
+        // Track each debt's progress
+        $debtProgress = [];
+        $productProfits = [];
+
+        foreach ($repayments as $marejesho) {
+            $debt = $marejesho->madeni;
+            $debtId = $debt->id;
+            $productName = $debt->bidhaa->jina;
+            $repaymentAmount = $marejesho->kiasi;
+
+            // Initialize product profit tracking
+            if (!isset($productProfits[$productName])) {
+                $productProfits[$productName] = [
+                    'jina' => $productName,
+                    'total' => 0,
+                    'repayment_count' => 0
+                ];
+            }
+
+            // Initialize debt tracking if not exists
+            if (!isset($debtProgress[$debtId])) {
+                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                $quantity = $debt->idadi;
+                $totalCost = $buyingPrice * $quantity;
+                $totalSellingPrice = $debt->jumla;
+
+                $debtProgress[$debtId] = [
+                    'total_cost' => $totalCost,
+                    'total_selling' => $totalSellingPrice,
+                    'recovered_so_far' => 0,
+                    'is_cost_recovered' => false
+                ];
+            }
+
+            $progress = &$debtProgress[$debtId];
+            $remainingAmount = $repaymentAmount;
+            $profitFromThis = 0;
+
+            // Stage 1: Recover cost first
+            if (!$progress['is_cost_recovered']) {
+                $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+
+                if ($remainingAmount <= $remainingToRecover) {
+                    // All goes to cost recovery
+                    $progress['recovered_so_far'] += $remainingAmount;
+                    $profitFromThis = 0;
+                    $remainingAmount = 0;
+                } else {
+                    // Part goes to cost recovery, rest is profit
+                    $costPortion = $remainingToRecover;
+                    $progress['recovered_so_far'] += $costPortion;
+                    $progress['is_cost_recovered'] = true;
+
+                    $profitPortion = $remainingAmount - $costPortion;
+                    $profitFromThis = $profitPortion;
+                    $remainingAmount = 0;
+                }
+            }
+
+            // Stage 2: If cost already recovered, all is profit
+            if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
+                $profitFromThis = $remainingAmount;
+            }
+
+            // Add to product total
+            if ($profitFromThis > 0) {
+                $productProfits[$productName]['total'] += $profitFromThis;
+            }
+            
+            $productProfits[$productName]['repayment_count']++;
+        }
+
+        return array_values($productProfits);
+    }
+
+    /**
+     * Calculate total FIFO profit for a date range
+     */
+    private function calculateFifoProfitTotal($company, $fromDt, $toDt)
+    {
+        $repayments = $company->marejeshos()
+            ->with(['madeni' => function($query) {
+                $query->with('bidhaa');
+            }])
+            ->whereBetween('created_at', [$fromDt, $toDt])
+            ->orderBy('tarehe', 'asc')
+            ->get()
+            ->filter(function($marejesho) {
+                return $marejesho->madeni && $marejesho->madeni->bidhaa;
+            });
+
+        $debtProgress = [];
+        $totalProfit = 0;
+
+        foreach ($repayments as $marejesho) {
+            $debt = $marejesho->madeni;
+            $debtId = $debt->id;
+            $repaymentAmount = $marejesho->kiasi;
+
+            if (!isset($debtProgress[$debtId])) {
+                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                $quantity = $debt->idadi;
+                $totalCost = $buyingPrice * $quantity;
+
+                $debtProgress[$debtId] = [
+                    'total_cost' => $totalCost,
+                    'recovered_so_far' => 0,
+                    'is_cost_recovered' => false
+                ];
+            }
+
+            $progress = &$debtProgress[$debtId];
+            $remainingAmount = $repaymentAmount;
+
+            // Stage 1: Recover cost first
+            if (!$progress['is_cost_recovered']) {
+                $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+
+                if ($remainingAmount <= $remainingToRecover) {
+                    $progress['recovered_so_far'] += $remainingAmount;
+                } else {
+                    $costPortion = $remainingToRecover;
+                    $progress['recovered_so_far'] += $costPortion;
+                    $progress['is_cost_recovered'] = true;
+
+                    $profitPortion = $remainingAmount - $costPortion;
+                    $totalProfit += $profitPortion;
+                }
+            } 
+            // Stage 2: If cost already recovered, all is profit
+            else if ($progress['is_cost_recovered']) {
+                $totalProfit += $remainingAmount;
+            }
+        }
+
+        return $totalProfit;
     }
 
     public function mwenendoRange(Request $request)
@@ -332,35 +419,8 @@ class UchambuziController extends Controller
                 return $mauzo->idadi * $mauzo->bidhaa->bei_nunua;
             });
 
-        // Profit from debt repayments
-        $faidaMarejesho = $company->marejeshos()
-            ->with(['madeni' => function($query) {
-                $query->with('bidhaa');
-            }])
-            ->whereBetween('created_at', [$from, $to])
-            ->get()
-            ->filter(function($marejesho) {
-                return $marejesho->madeni && $marejesho->madeni->bidhaa;
-            })
-            ->sum(function($marejesho) {
-                $debt = $marejesho->madeni;
-                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                $quantity = $debt->idadi;
-                
-                // Calculate actual discount if any
-                $actualDiscount = $debt->punguzo_aina === 'bidhaa'
-                    ? $debt->punguzo * $quantity
-                    : $debt->punguzo;
-                
-                // Selling price after discount (debt amount)
-                $sellingPrice = $debt->jumla;
-                
-                // Total buying cost
-                $totalBuyingCost = $buyingPrice * $quantity;
-                
-                // Profit = Selling price - Buying cost
-                return $sellingPrice - $totalBuyingCost;
-            });
+        // Profit from debt repayments using FIFO method
+        $faidaMarejesho = $this->calculateFifoProfitTotal($company, $from, $to);
 
         // Gross profit from sales (Revenue - Cost of Goods Sold)
         $faidaMauzo = $mapatoMauzo - $costOfGoodsSold;
@@ -377,7 +437,7 @@ class UchambuziController extends Controller
             'jumla_mapato' => (float) $jumlaMapato,
             'jumla_mat' => (float) $jumlaMatumizi,
             'gharama_bidhaa' => (float) $costOfGoodsSold,
-            'faida_marejesho' => (float) $faidaMarejesho, // ADDED
+            'faida_marejesho' => (float) $faidaMarejesho,
             'faida_mauzo' => (float) $faidaMauzo,
             'fedha_droo' => (float) $fedhaDroo,
             'faida_halisi' => (float) $faidaHalisi,

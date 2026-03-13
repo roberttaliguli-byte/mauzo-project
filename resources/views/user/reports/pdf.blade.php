@@ -1,5 +1,3 @@
-Here is the black and white HTML report code. All summary data is now presented in clean, monochrome tables for a professional, print-ready appearance.
-```html
 <!DOCTYPE html>
 <html lang="sw">
 <head>
@@ -194,7 +192,7 @@ Here is the black and white HTML report code. All summary data is now presented 
     </style>
 </head>
 <body>
-    <!-- Header (unchanged) -->
+    <!-- Header -->
     <div class="header">
         <div class="company-name">{{ $companyName ?? 'Biashara' }}</div>
         <div class="report-title">{{ $reportTitle ?? 'Ripoti' }}</div>
@@ -222,7 +220,7 @@ Here is the black and white HTML report code. All summary data is now presented 
     </div>
 
     @if($reportType === 'sales')
-        <!-- SALES REPORT - all summary data in a black & white table -->
+        <!-- SALES REPORT - summary table -->
         <table class="summary-table page-break-avoid">
             <tr>
                 <th>Jumla ya Mauzo</th>
@@ -252,55 +250,49 @@ Here is the black and white HTML report code. All summary data is now presented 
             </tr>
         </table>
 
-   <!-- Sales details table (already B&W compatible) -->
-<table class="data-table">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Tarehe</th>
-            <th>Bidhaa</th>
-            <th class="text-center">Idadi</th>
-            <th class="text-center">Njia ya Malipo</th>
-            <th class="text-right">Jumla (TZS)</th>
-        </tr>
-    </thead>
-    <tbody>
-        @forelse($sales ?? [] as $index => $sale)
-            @if(!$sale->bidhaa) @continue @endif
-            @php
-                $paymentMethod = $sale->lipa_kwa ?? 'cash';
-                $methodName = $paymentMethod === 'cash' ? 'Cash' : 
-                             ($paymentMethod === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
-                $idadi = $sale->idadi;
-                $formattedIdadi = is_numeric($idadi) ? 
-                    ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
-                    $idadi;
-            @endphp
-            <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $sale->created_at ? date('d/m/Y', strtotime($sale->created_at)) : '' }}</td>
-                <td>
-                    <!-- MODIFIED: Now includes aina in the same column -->
-                    <div class="flex flex-col">
-                        <span>{{ $sale->bidhaa->jina ?? 'N/A' }}</span>
-                        @if($sale->bidhaa && $sale->bidhaa->aina)
-                        <span class="inline-flex items-center mt-1 text-xs text-gray-600">
-                            <i class="fas fa-tag mr-1" style="font-size: 10px;"></i>{{ $sale->bidhaa->aina }}
-                        </span>
-                        @endif
-                    </div>
-                </td>
-                <td class="text-center">{{ $formattedIdadi }}</td>
-                <td class="text-center">{{ $methodName }}</td>
-                <td class="text-right">{{ number_format($sale->jumla, 2) }}</td>
-            </tr>
-        @empty
-            <tr>
-                <td colspan="6" class="text-center no-data">Hakuna mauzo katika kipindi hiki</td>
-            </tr>
-        @endforelse
-    </tbody>
-</table>
+        <!-- Sales details table with Aina and Kipimo -->
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tarehe</th>
+                    <th>Bidhaa</th>
+                    <th>Aina</th>
+                    <th>Kipimo</th>
+                    <th class="text-center">Idadi</th>
+                    <th class="text-center">Njia ya Malipo</th>
+                    <th class="text-right">Jumla (TZS)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($sales ?? [] as $index => $sale)
+                    @if(!$sale->bidhaa) @continue @endif
+                    @php
+                        $paymentMethod = $sale->lipa_kwa ?? 'cash';
+                        $methodName = $paymentMethod === 'cash' ? 'Cash' : 
+                                     ($paymentMethod === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
+                        $idadi = $sale->idadi;
+                        $formattedIdadi = is_numeric($idadi) ? 
+                            ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
+                            $idadi;
+                    @endphp
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td>{{ $sale->created_at ? date('d/m/Y', strtotime($sale->created_at)) : '' }}</td>
+                        <td>{{ $sale->bidhaa->jina ?? 'N/A' }}</td>
+                        <td>{{ $sale->bidhaa->aina ?? 'N/A' }}</td>
+                        <td>{{ $sale->bidhaa->kipimo ?? 'N/A' }}</td>
+                        <td class="text-center">{{ $formattedIdadi }}</td>
+                        <td class="text-center">{{ $methodName }}</td>
+                        <td class="text-right">{{ number_format($sale->jumla, 2) }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="8" class="text-center no-data">Hakuna mauzo katika kipindi hiki</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
 
         <div class="grand-total page-break-avoid">
             JUMLA YA MAPATO YOTE: {{ number_format($grandTotal ?? 0, 2) }} TZS
@@ -331,13 +323,15 @@ Here is the black and white HTML report code. All summary data is now presented 
             </tr>
         </table>
 
-        <!-- Purchases table -->
+        <!-- Purchases table with Aina and Kipimo -->
         <table class="data-table">
             <thead>
                 <tr>
                     <th>#</th>
                     <th>Tarehe</th>
                     <th>Bidhaa</th>
+                    <th>Aina</th>
+                    <th>Kipimo</th>
                     <th class="text-center">Idadi</th>
                     <th class="text-right">Bei (TZS)</th>
                     <th class="text-right">Bei kwa Kimoja</th>
@@ -356,13 +350,15 @@ Here is the black and white HTML report code. All summary data is now presented 
                         <td class="text-center">{{ $index + 1 }}</td>
                         <td>{{ $purchase->created_at ? date('d/m/Y', strtotime($purchase->created_at)) : '' }}</td>
                         <td>{{ $purchase->bidhaa->jina ?? 'N/A' }}</td>
+                        <td>{{ $purchase->bidhaa->aina ?? 'N/A' }}</td>
+                        <td>{{ $purchase->bidhaa->kipimo ?? 'N/A' }}</td>
                         <td class="text-center">{{ $formattedIdadi }}</td>
                         <td class="text-right">{{ number_format($purchase->bei, 2) }}</td>
                         <td class="text-right">{{ number_format($unitCost, 2) }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center no-data">Hakuna manunuzi katika kipindi hiki</td>
+                        <td colspan="8" class="text-center no-data">Hakuna manunuzi katika kipindi hiki</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -484,7 +480,7 @@ Here is the black and white HTML report code. All summary data is now presented 
             </tr>
         </table>
 
-        <!-- Detailed income/expense comparison table (already B&W) -->
+        <!-- Detailed income/expense comparison table -->
         <table class="data-table">
             <thead>
                 <tr>
@@ -565,12 +561,16 @@ Here is the black and white HTML report code. All summary data is now presented 
             </tr>
         </table>
 
-        <!-- Income details table -->
+        <!-- Income details table with Aina and Kipimo -->
         <table class="data-table">
             <thead>
                 <tr>
                     <th>#</th>
+                    <th>Tarehe</th>
                     <th>Aina</th>
+                    <th>Bidhaa</th>
+                    <th>Aina ya Bidhaa</th>
+                    <th>Kipimo</th>
                     <th>Njia ya Malipo</th>
                     <th class="text-center">Idadi</th>
                     <th class="text-right">Jumla (TZS)</th>
@@ -579,39 +579,55 @@ Here is the black and white HTML report code. All summary data is now presented 
             <tbody>
                 @php $index = 1; @endphp
 
-                @forelse(($salesByMethod ?? []) as $item)
+                @forelse(($salesWithDetails ?? []) as $item)
                     @php
                         $methodName = $item->lipa_kwa === 'cash' ? 'Cash' : 
                                      ($item->lipa_kwa === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
+                        $idadi = $item->idadi;
+                        $formattedIdadi = is_numeric($idadi) ? 
+                            ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
+                            $idadi;
                     @endphp
                     <tr>
                         <td class="text-center">{{ $index++ }}</td>
+                        <td>{{ $item->created_at ? date('d/m/Y', strtotime($item->created_at)) : '' }}</td>
                         <td>Mauzo</td>
+                        <td>{{ $item->bidhaa->jina ?? 'N/A' }}</td>
+                        <td>{{ $item->bidhaa->aina ?? 'N/A' }}</td>
+                        <td>{{ $item->bidhaa->kipimo ?? 'N/A' }}</td>
                         <td>{{ $methodName }}</td>
-                        <td class="text-center">{{ $item->count }}</td>
-                        <td class="text-right">{{ number_format($item->total, 2) }}</td>
+                        <td class="text-center">{{ $formattedIdadi }}</td>
+                        <td class="text-right">{{ number_format($item->jumla, 2) }}</td>
                     </tr>
                 @empty
                 @endforelse
 
-                @forelse(($debtsByMethod ?? []) as $item)
+                @forelse(($debtRepaymentsWithDetails ?? []) as $item)
                     @php
                         $methodName = $item->lipa_kwa === 'cash' ? 'Cash' : 
                                      ($item->lipa_kwa === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
+                        $idadi = $item->madeni->idadi ?? 0;
+                        $formattedIdadi = is_numeric($idadi) ? 
+                            ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
+                            $idadi;
                     @endphp
                     <tr>
                         <td class="text-center">{{ $index++ }}</td>
+                        <td>{{ $item->tarehe ? date('d/m/Y', strtotime($item->tarehe)) : '' }}</td>
                         <td>Marejesho ya Madeni</td>
+                        <td>{{ $item->madeni->bidhaa->jina ?? 'N/A' }}</td>
+                        <td>{{ $item->madeni->bidhaa->aina ?? 'N/A' }}</td>
+                        <td>{{ $item->madeni->bidhaa->kipimo ?? 'N/A' }}</td>
                         <td>{{ $methodName }}</td>
-                        <td class="text-center">{{ $item->count }}</td>
-                        <td class="text-right">{{ number_format($item->total, 2) }}</td>
+                        <td class="text-center">{{ $formattedIdadi }}</td>
+                        <td class="text-right">{{ number_format($item->kiasi, 2) }}</td>
                     </tr>
                 @empty
                 @endforelse
 
                 @if($index === 1)
                     <tr>
-                        <td colspan="5" class="text-center no-data">Hakuna data katika kipindi hiki</td>
+                        <td colspan="9" class="text-center no-data">Hakuna data katika kipindi hiki</td>
                     </tr>
                 @endif
             </tbody>

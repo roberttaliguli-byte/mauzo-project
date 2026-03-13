@@ -6,6 +6,8 @@
                 <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
                 <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
                 <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Bidhaa</th>
+                <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Aina</th>
+                <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Kipimo</th>
                 <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
                 <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
                 <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
@@ -30,6 +32,12 @@
                         @if($deni->punguzo > 0)
                         <div class="text-xs text-gray-500">Punguzo: {{ number_format($deni->punguzo, 2) }}</div>
                         @endif
+                    </td>
+                    <td class="px-4 py-2 hidden md:table-cell">
+                        <span class="text-sm text-gray-600">{{ $deni->bidhaa->aina ?? 'N/A' }}</span>
+                    </td>
+                    <td class="px-4 py-2 hidden md:table-cell">
+                        <span class="text-sm text-gray-600">{{ $deni->bidhaa->kipimo ?? 'N/A' }}</span>
                     </td>
                     <td class="px-4 py-2 text-center">
                         <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
@@ -70,7 +78,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                    <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                         <i class="fas fa-hand-holding-usd text-3xl mb-2 text-gray-300"></i>
                         <p>Hakuna madeni yaliyorekodiwa bado</p>
                         <p class="text-xs text-gray-500 mt-1">Anza kwa kuingiza deni jipya</p>
