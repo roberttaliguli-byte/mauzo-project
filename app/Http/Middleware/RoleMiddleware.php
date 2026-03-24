@@ -12,7 +12,6 @@ class RoleMiddleware
     {
         // For employee routes
         if ($role === 'mfanyakazi') {
-            // Check employee guard
             if (!Auth::guard('mfanyakazi')->check()) {
                 return redirect()->route('login')
                     ->withErrors(['auth' => 'Tafadhali ingia kama mfanyakazi.']);
@@ -20,14 +19,20 @@ class RoleMiddleware
 
             $user = Auth::guard('mfanyakazi')->user();
             
-            // Check if employee is allowed to login (using getini field)
+            // Check if employee is allowed to login
             if (!isset($user->getini) || $user->getini !== 'ingia') {
                 Auth::guard('mfanyakazi')->logout();
                 return redirect()->route('login')
                     ->withErrors(['auth' => 'Akaunti yako haijaidhinishwa kuingia.']);
             }
             
-            // Employee is valid, proceed
+            // Check if employee has full access (uwezo mkubwa)
+            // If yes, they can access boss-level routes
+            if ($user->uwezo === 'mkubwa') {
+                return $next($request);
+            }
+            
+            // Regular employee - proceed
             return $next($request);
         }
         
@@ -39,14 +44,12 @@ class RoleMiddleware
 
         $user = Auth::guard('web')->user();
 
-        // Check if user has role property
         if (!isset($user->role) || !is_string($user->role)) {
             Auth::guard('web')->logout();
             return redirect()->route('login')
                 ->withErrors(['auth' => 'Akaunti yako haina ruhusa sahihi.']);
         }
 
-        // Check if role matches
         if (strtolower(trim($user->role)) !== strtolower(trim($role))) {
             Auth::guard('web')->logout();
             return redirect()->route('login')

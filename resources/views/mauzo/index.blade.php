@@ -7,9 +7,25 @@
 
 @section('content')
 @php
-    // Check user type
+    // Check user type and uwezo
     $isMfanyakazi = Auth::guard('mfanyakazi')->check();
     $isBoss = Auth::guard('web')->check();
+    $hasFullAccess = true;
+    
+    if(Auth::guard('mfanyakazi')->check()) {
+        $user = Auth::guard('mfanyakazi')->user();
+        $hasFullAccess = ($user->uwezo ?? 'mdogo') === 'mkubwa';
+    }
+    
+    // Get user role text
+    $userRoleText = '';
+    if(Auth::guard('mfanyakazi')->check()) {
+        $user = Auth::guard('mfanyakazi')->user();
+        $userRoleText = $user->uwezo === 'mkubwa' ? 'Mfanyakazi Mkubwa' : 'Mfanyakazi';
+    } elseif(Auth::guard('web')->check()) {
+        $user = Auth::guard('web')->user();
+        $userRoleText = $user->role === 'boss' ? 'Mmiliki' : 'Msimamizi';
+    }
 @endphp
 @php
     // Check which guard is active and get company info accordingly
@@ -126,7 +142,7 @@
                         </div>
                     </div>
 
-                    <!-- Quantity - MODIFIED TO ACCEPT DECIMAL -->
+                    <!-- Quantity -->
                     <div class="lg:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Idadi</label>
                         <input type="number" name="idadi" id="quantity-input" placeholder="0.00" min="0.01" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
@@ -138,7 +154,7 @@
                         <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
 
-                    <!-- Stock - MODIFIED TO SHOW DECIMAL -->
+                    <!-- Stock -->
                     <div class="lg:col-span-3">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Stock</label>
                         <input type="number" id="stock-input" readonly step="0.01" class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
@@ -204,22 +220,14 @@
             </form>
         </div>
 
-
-
-
-
-
-
-
-
-        <!-- Financial Overview - Modified for mfanyakazi -->
+        <!-- Financial Overview - Based on User Access -->
         <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
             <h2 class="text-base font-bold text-gray-800 mb-3">
                 Taarifa Fupi ya Mapato na Matumizi
             </h2>
 
-            @if($isMfanyakazi)
-                <!-- Simplified view for mfanyakazi -->
+            @if($isMfanyakazi && !$hasFullAccess)
+                <!-- Simplified view for mfanyakazi mdogo -->
                 <div class="grid grid-cols-1 gap-3">
                     <div class="bg-gray-200 p-4 rounded-lg shadow">
                         <div class="flex items-center justify-between">
@@ -248,7 +256,7 @@
                     </div>
                 </div>
             @else
-                <!-- Full view for boss/admin -->
+                <!-- Full view for boss or mkubwa employee -->
                 <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3" id="financial-overview">
                     <!-- Mapato -->
                     <div class="bg-gradient-to-br from-amber-500 to-amber-600 p-3 rounded-lg shadow">
@@ -1004,7 +1012,7 @@
                     </button>
                     <button id="checkout-cart" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
                         <i class="fas fa-check mr-2"></i>
-                        Funga Kapu
+                        Uza bidhaa
                     </button>
                 </div>
             </div>

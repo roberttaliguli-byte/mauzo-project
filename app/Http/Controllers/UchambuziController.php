@@ -14,9 +14,25 @@ use Illuminate\Support\Facades\DB;
 
 class UchambuziController extends Controller
 {
+    /**
+     * Get the authenticated user from either guard
+     */
+    private function getAuthenticatedUser()
+    {
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user();
+        }
+        
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+        
+        abort(403, 'Unauthorized - Please login first');
+    }
+    
     public function index()
     {
-        $user = Auth::user();
+        $user = $this->getAuthenticatedUser();
         $company = $user->company;
 
         if (!$company) {
@@ -388,7 +404,9 @@ class UchambuziController extends Controller
             'to' => 'required|date|after_or_equal:from',
         ]);
 
-        $company = Auth::user()->company;
+        $user = $this->getAuthenticatedUser();
+        $company = $user->company;
+        
         $from = Carbon::parse($request->query('from'))->startOfDay();
         $to = Carbon::parse($request->query('to'))->endOfDay();
 

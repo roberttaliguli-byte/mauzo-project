@@ -10,16 +10,37 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class WafanyakaziController extends Controller
 {
     /**
-     * Display a listing of the employees for the logged-in company.
+     * Get the authenticated user from either guard
      */
+    private function getAuthenticatedUser()
+    {
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user();
+        }
+        
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+        
+        abort(403, 'Unauthorized - Please login first');
+    }
+    
+    /**
+     * Get company ID for current user
+     */
+    private function getCompanyId()
+    {
+        $user = $this->getAuthenticatedUser();
+        return $user->company_id;
+    }
+    
     public function index(Request $request)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
         $perPage = $request->input('per_page', 10);
 
         $query = Wafanyakazi::where('company_id', $companyId);
 
-        // Search functionality
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -34,19 +55,17 @@ class WafanyakaziController extends Controller
                             ->paginate($perPage)
                             ->appends($request->except('page'));
 
-        // Get statistics
         $totalEmployees = $wafanyakazi->total();
         $activeEmployees = $wafanyakazi->where('getini', 'ingia')->count();
         $maleEmployees = $wafanyakazi->where('jinsia', 'Mwanaume')->count();
         $femaleEmployees = $wafanyakazi->where('jinsia', 'Mwanamke')->count();
 
-        // PDF Export
         if ($request->has('export') && $request->export === 'pdf') {
             $data = [
                 'wafanyakazi' => Wafanyakazi::where('company_id', $companyId)->latest()->get(),
                 'title' => 'Orodha ya Wafanyakazi',
                 'date' => now()->format('d/m/Y'),
-                'company' => Auth::user()->company->name ?? 'Kampuni',
+                'company' => $this->getAuthenticatedUser()->company->name ?? 'Kampuni',
                 'total_employees' => $totalEmployees,
                 'active_employees' => $activeEmployees,
             ];
@@ -64,79 +83,71 @@ class WafanyakaziController extends Controller
         ));
     }
 
-    /**
-     * Store a newly created employee belonging to the logged-in company.
-     */
-public function store(Request $request)
-{
-    $request->validate([
-        'jina' => 'required|string|max:255',
-        'simu' => 'nullable|string|max:20',
-        'jinsia' => 'required|string',
-        'anuani' => 'nullable|string|max:500',
-        'barua_pepe' => 'nullable|email|max:255',
-        'ndugu' => 'nullable|string|max:255',
-        'simu_ndugu' => 'nullable|string|max:20',
-        'username' => [
-            'required',
-            'string',
-            'max:255',
-            // Check uniqueness across both users and wafanyakazis tables
-            function ($attribute, $value, $fail) {
-                // Check if username exists in users table
-                $existsInUsers = \App\Models\User::where('username', $value)->exists();
-                
-                // Check if username exists in wafanyakazis table
-                $existsInWafanyakazi = \App\Models\Wafanyakazi::where('username', $value)->exists();
-                
-                if ($existsInUsers || $existsInWafanyakazi) {
-                    $fail('Jina la mtumiaji "' . $value . '" tayari limetumika. Tafadhali chagua jingine.');
+    public function store(Request $request)
+    {
+        $request->validate([
+            'jina' => 'required|string|max:255',
+            'simu' => 'nullable|string|max:20',
+            'jinsia' => 'required|string',
+            'anuani' => 'nullable|string|max:500',
+            'barua_pepe' => 'nullable|email|max:255',
+            'ndugu' => 'nullable|string|max:255',
+            'simu_ndugu' => 'nullable|string|max:20',
+            'username' => [
+                'required',
+                'string',
+                'max:255',
+                function ($attribute, $value, $fail) {
+                    $existsInUsers = \App\Models\User::where('username', $value)->exists();
+                    $existsInWafanyakazi = \App\Models\Wafanyakazi::where('username', $value)->exists();
+                    
+                    if ($existsInUsers || $existsInWafanyakazi) {
+                        $fail('Jina la mtumiaji "' . $value . '" tayari limetumika. Tafadhali chagua jingine.');
+                    }
                 }
-            }
-        ],
-        'password' => 'required|string|min:6|max:255',
-        'tarehe_kuzaliwa' => 'nullable|date',
-    ], [
-        'username.required' => 'Jina la mtumiaji linahitajika.',
-        'password.required' => 'Neno la siri linahitajika.',
-        'password.min' => 'Neno la siri lazima liwe na angalau herufi 6.',
-    ]);
-
-    $data = [
-        'jina' => $request->jina,
-        'simu' => $request->simu,
-        'jinsia' => $request->jinsia,
-        'anuani' => $request->anuani,
-        'barua_pepe' => $request->barua_pepe,
-        'ndugu' => $request->ndugu,
-        'simu_ndugu' => $request->simu_ndugu,
-        'username' => $request->username,
-        'password' => bcrypt($request->password),
-        'tarehe_kuzaliwa' => $request->tarehe_kuzaliwa,          
-        'company_id' => Auth::guard('web')->user()->company_id,
-        'role' => 'mfanyakazi', // ✅ Set role explicitly
-        'getini' => $request->getini ?? 'simama',
-    ];
-
-    Wafanyakazi::create($data);
-
-    if ($request->ajax() || $request->wantsJson()) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Mfanyakazi amesajiliwa kikamilifu!'
+            ],
+            'password' => 'required|string|min:6|max:255',
+            'tarehe_kuzaliwa' => 'nullable|date',
+            'uwezo' => 'nullable|in:mdogo,mkubwa',
+        ], [
+            'username.required' => 'Jina la mtumiaji linahitajika.',
+            'password.required' => 'Neno la siri linahitajika.',
+            'password.min' => 'Neno la siri lazima liwe na angalau herufi 6.',
         ]);
+
+        $data = [
+            'jina' => $request->jina,
+            'simu' => $request->simu,
+            'jinsia' => $request->jinsia,
+            'anuani' => $request->anuani,
+            'barua_pepe' => $request->barua_pepe,
+            'ndugu' => $request->ndugu,
+            'simu_ndugu' => $request->simu_ndugu,
+            'username' => $request->username,
+            'password' => bcrypt($request->password),
+            'tarehe_kuzaliwa' => $request->tarehe_kuzaliwa,          
+            'company_id' => $this->getCompanyId(),
+            'role' => 'mfanyakazi',
+            'getini' => $request->getini ?? 'simama',
+            'uwezo' => $request->uwezo ?? 'mdogo',
+        ];
+
+        Wafanyakazi::create($data);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Mfanyakazi amesajiliwa kikamilifu!'
+            ]);
+        }
+
+        return redirect()->route('wafanyakazi.index')
+            ->with('success', 'Mfanyakazi amesajiliwa kikamilifu!');
     }
 
-    return redirect()->route('wafanyakazi.index')
-        ->with('success', 'Mfanyakazi amesajiliwa kikamilifu!');
-}
-
-    /**
-     * Update the specified employee.
-     */
     public function update(Request $request, $id)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
         $mfanyakazi = Wafanyakazi::where('company_id', $companyId)->findOrFail($id);
 
         $request->validate([
@@ -151,6 +162,7 @@ public function store(Request $request)
             'password' => 'nullable|string|max:255',
             'tarehe_kuzaliwa' => 'nullable|date',
             'getini' => 'in:simama,ingia',
+            'uwezo' => 'in:mdogo,mkubwa',
         ]);
 
         $data = $request->all();
@@ -174,12 +186,9 @@ public function store(Request $request)
             ->with('success', 'Taarifa za mfanyakazi zimesasishwa!');
     }
 
-    /**
-     * Remove the specified employee from storage.
-     */
     public function destroy($id, Request $request)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
         $mfanyakazi = Wafanyakazi::where('company_id', $companyId)->findOrFail($id);
 
         $mfanyakazi->delete();

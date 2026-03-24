@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'check.package' => \App\Http\Middleware\CheckPackageExpiry::class,
         'auth.any' => \App\Http\Middleware\AuthAnyGuard::class, // Add this
+        
     ]);
     
     // 🔴🔴🔴 CRITICAL: Exclude PesaPal routes from CSRF protection

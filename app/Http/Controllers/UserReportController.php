@@ -15,11 +15,44 @@ use Illuminate\Support\Facades\DB;
 
 class UserReportController extends Controller
 {
+    /**
+     * Get the authenticated user from either guard
+     */
+    private function getAuthenticatedUser()
+    {
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user();
+        }
+        
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+        
+        abort(403, 'Unauthorized - Please login first');
+    }
+    
+    /**
+     * Get company for current user
+     */
+    private function getCompany()
+    {
+        $user = $this->getAuthenticatedUser();
+        return $user->company;
+    }
+    
+    /**
+     * Get company ID for current user
+     */
+    private function getCompanyId()
+    {
+        $company = $this->getCompany();
+        return $company->id;
+    }
+    
     // Show report selection page
     public function select()
     {
-        $user = Auth::user();
-        $company = $user->company;
+        $company = $this->getCompany();
         
         return view('user.reports.select', compact('company'));
     }
@@ -35,8 +68,7 @@ class UserReportController extends Controller
         ]);
 
         $dateRange = $this->getDateRange($request->date_range, $request);
-        $user = Auth::user();
-        $company = $user->company;
+        $company = $this->getCompany();
         $companyId = $company->id;
         $reportType = $request->report_type;
 
@@ -70,8 +102,7 @@ class UserReportController extends Controller
         ]);
 
         $dateRange = $this->getDateRange($request->date_range, $request);
-        $user = Auth::user();
-        $company = $user->company;
+        $company = $this->getCompany();
         $companyId = $company->id;
         $reportType = $request->report_type;
 
@@ -115,7 +146,7 @@ class UserReportController extends Controller
                 return [];
         }
     }
-
+    
     // Get sales data
     private function getSalesData($companyId, $dateRange)
     {

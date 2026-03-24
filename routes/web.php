@@ -295,42 +295,42 @@ Route::middleware(['auth.any'])->group(function () {
     });
 });
 
+
 // =========================
-// Boss only routes
+// Boss only routes - Changed to auth.any to allow mkubwa employees
 // =========================
-Route::middleware(['auth', 'role:boss'])->group(function () {
+Route::middleware(['auth.any'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
     Route::get('/uchambuzi/mwenendo', [UchambuziController::class, 'mwenendoRange'])->name('uchambuzi.mwenendo.range');
     
-    // Manunuzi routes (boss only)
+    // Manunuzi routes
     Route::get('/manunuzi', [ManunuziController::class, 'index'])->name('manunuzi.index');
     Route::post('/manunuzi', [ManunuziController::class, 'store'])->name('manunuzi.store');
     Route::put('/manunuzi/{manunuzi}', [ManunuziController::class, 'update'])->name('manunuzi.update');
     Route::delete('/manunuzi/{manunuzi}', [ManunuziController::class, 'destroy'])->name('manunuzi.destroy');
     
-    // Wafanyakazi routes (boss only)
+    // Wafanyakazi routes
     Route::get('/wafanyakazi', [WafanyakaziController::class, 'index'])->name('wafanyakazi.index');
     Route::post('/wafanyakazi', [WafanyakaziController::class, 'store'])->name('wafanyakazi.store');
     Route::get('/wafanyakazi/{id}/edit', [WafanyakaziController::class, 'edit'])->name('wafanyakazi.edit');
     Route::put('/wafanyakazi/{id}', [WafanyakaziController::class, 'update'])->name('wafanyakazi.update');
     Route::delete('/wafanyakazi/{id}', [WafanyakaziController::class, 'destroy'])->name('wafanyakazi.destroy');
     Route::get('/wafanyakazi/export-pdf', [WafanyakaziController::class, 'exportPdf'])->name('wafanyakazi.export.pdf');
-    
-    // Masaplaya routes (boss only)
+
+    // Masaplaya routes
     Route::get('/masaplaya', [MasaplayaController::class, 'index'])->name('masaplaya.index');
     Route::post('/masaplaya', [MasaplayaController::class, 'store'])->name('masaplaya.store');
     Route::put('/masaplaya/{masaplaya}', [MasaplayaController::class, 'update'])->name('masaplaya.update');
     Route::delete('/masaplaya/{masaplaya}', [MasaplayaController::class, 'destroy'])->name('masaplaya.destroy');
     
-    // Reports routes (boss only)
+    // Reports routes
     Route::prefix('reports')->group(function () {
         Route::get('/select', [UserReportController::class, 'select'])->name('user.reports.select');
         Route::post('/generate', [UserReportController::class, 'generate'])->name('user.reports.generate');
         Route::post('/download', [UserReportController::class, 'download'])->name('user.reports.download');
     });
 });
-
 // =========================
 // Admin routes
 // =========================

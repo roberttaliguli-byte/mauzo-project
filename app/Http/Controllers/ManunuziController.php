@@ -13,11 +13,36 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class ManunuziController extends Controller
 {
     /**
+     * Get the authenticated user from either guard
+     */
+    private function getAuthenticatedUser()
+    {
+        if (Auth::guard('mfanyakazi')->check()) {
+            return Auth::guard('mfanyakazi')->user();
+        }
+        
+        if (Auth::guard('web')->check()) {
+            return Auth::guard('web')->user();
+        }
+        
+        abort(403, 'Unauthorized - Please login first');
+    }
+    
+    /**
+     * Get company ID for current user
+     */
+    private function getCompanyId()
+    {
+        $user = $this->getAuthenticatedUser();
+        return $user->company_id;
+    }
+    
+    /**
      * Show list of manunuzi and form data (company specific).
      */
     public function index(Request $request)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         $perPage = $request->input('per_page', 10);
 
@@ -87,7 +112,7 @@ class ManunuziController extends Controller
      */
     public function store(Request $request)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         // First validate basic fields
         $validator = Validator::make($request->all(), [
@@ -181,7 +206,7 @@ class ManunuziController extends Controller
      */
     public function update(Request $request, Manunuzi $manunuzi)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         // Ensure this manunuzi belongs to this company
         abort_unless($manunuzi->company_id === $companyId, 403, 'Huna ruhusa ya kubadilisha manunuzi haya.');
@@ -274,7 +299,7 @@ class ManunuziController extends Controller
      */
     public function destroy(Manunuzi $manunuzi)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
 
         abort_unless($manunuzi->company_id === $companyId, 403, 'Huna ruhusa ya kufuta manunuzi haya.');
 
@@ -298,7 +323,7 @@ class ManunuziController extends Controller
      */
     public function getProductDetails($id)
     {
-        $companyId = Auth::user()->company_id;
+        $companyId = $this->getCompanyId();
         
         $bidhaa = Bidhaa::where('id', $id)
                         ->where('company_id', $companyId)

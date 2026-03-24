@@ -5,7 +5,7 @@
     $navItems = [];
 
     /* =========================
-       Menu Definitions - Optimized for mobile (half screen)
+       Menu Definitions - Optimized for mobile
     ========================= */
 
     $bossNavItems = [
@@ -29,14 +29,19 @@
     ];
 
     /* =========================
-       Guard & Role Resolution
+       Guard & Role Resolution with Uwezo Support
     ========================= */
 
     if (Auth::guard('mfanyakazi')->check()) {
-        // Employee logged in
-        $navItems = $mfanyakaziNavItems;
+        $employee = Auth::guard('mfanyakazi')->user();
+        
+        // Check if employee has full access (uwezo mkubwa)
+        if (isset($employee->uwezo) && $employee->uwezo === 'mkubwa') {
+            $navItems = $bossNavItems; // Full access like boss
+        } else {
+            $navItems = $mfanyakaziNavItems; // Limited access
+        }
     } elseif (Auth::check()) {
-        // Web guard (boss / admin)
         $user = Auth::user();
         if (in_array($user->role ?? null, ['boss', 'admin'], true)) {
             $navItems = $bossNavItems;
@@ -45,72 +50,109 @@
 @endphp
 
 {{-- =========================
-     Sidebar Navigation - Half screen on mobile
+     Sidebar Navigation - No Transparency, Proper Alignment
 ========================= --}}
 
-{{-- Boss Dashboard (ONLY for boss, never mfanyakazi) --}}
-@if (Auth::check() && Auth::user()?->role === 'boss')
-    <a href="{{ route('dashboard') }}"
-       class="sidebar-item flex items-center px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 rounded-lg transition-all duration-200
-              {{ $currentRoute === 'dashboard' ? 'active-nav-item bg-green-700' : 'hover:bg-green-700' }}"
-       @click="window.innerWidth < 1024 ? closeSidebar() : null">
-        <span class="text-sm sm:text-base md:text-lg flex-shrink-0">🏠</span>
-        <span x-show="sidebarOpen || window.innerWidth >= 1024" 
-              x-transition.opacity.duration.200ms
-              class="ml-1.5 sm:ml-2 md:ml-3 font-medium text-xs sm:text-sm truncate">
-            Dashboard
-        </span>
-    </a>
-@endif
+<div class="flex flex-col h-full">
+    {{-- Dashboard Section (for Boss or Mkubwa Employee) --}}
+    @if((Auth::check() && Auth::user()?->role === 'boss') || 
+         (Auth::guard('mfanyakazi')->check() && Auth::guard('mfanyakazi')->user()->uwezo === 'mkubwa'))
+        <div class="mb-1">
+            <a href="{{ route('dashboard') }}"
+               class="sidebar-item flex items-center px-3 py-3 sm:px-4 sm:py-3 rounded-lg transition-all duration-200
+                      {{ $currentRoute === 'dashboard' ? 'active-nav-item' : 'hover:bg-green-700/20' }}"
+               @click="window.innerWidth < 1024 ? closeSidebar() : null">
+                <span class="text-base sm:text-lg md:text-xl flex-shrink-0">🏠</span>
+                <span x-show="sidebarOpen || window.innerWidth >= 1024" 
+                      class="ml-3 sm:ml-4 font-medium text-sm sm:text-base truncate">
+                    Dashboard
+                </span>
+                <span x-show="!(sidebarOpen || window.innerWidth >= 1024)" 
+                      x-cloak
+                      class="ml-2 text-xs font-medium truncate">
+                    Dash
+                </span>
+            </a>
+        </div>
+        
+        {{-- Divider - SOLID --}}
+        <div class="border-t border-white/20 my-2"></div>
+    @endif
 
-{{-- Shared Menu - Compact for half screen mobile --}}
-@foreach ($navItems as $item)
-    <a href="{{ route($item['route']) }}"
-       class="sidebar-item flex items-center px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 md:py-3 rounded-lg transition-all duration-200
-              {{ $currentRoute === $item['route'] ? 'active-nav-item bg-green-700' : 'hover:bg-green-700' }}"
-       @click="window.innerWidth < 1024 ? closeSidebar() : null">
-        {{-- Icon (smaller on mobile) --}}
-        <span class="text-sm sm:text-base md:text-lg flex-shrink-0">{{ $item['icon'] }}</span>
-        
-        {{-- Label - shown when sidebar is open or on desktop --}}
-        <span x-show="sidebarOpen || window.innerWidth >= 1024" 
-              x-transition.opacity.duration.200ms
-              class="ml-1.5 sm:ml-2 md:ml-3 font-medium text-xs sm:text-sm truncate">
-            {{ $item['label'] }}
-        </span>
-        
-        {{-- Short label for mobile when sidebar is collapsed --}}
-        <span x-show="!(sidebarOpen || window.innerWidth >= 1024)" 
-              x-cloak
-              class="ml-1.5 text-xs font-medium truncate">
-            {{ $item['short'] ?? $item['label'] }}
-        </span>
-        
-        {{-- Active indicator --}}
-        @if($currentRoute === $item['route'])
-            <span class="ml-auto w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></span>
-        @endif
-    </a>
-@endforeach
+    {{-- Main Menu Items --}}
+    <div class="flex-1 space-y-1">
+        @foreach ($navItems as $item)
+            <a href="{{ route($item['route']) }}"
+               class="sidebar-item flex items-center px-3 py-3 sm:px-4 sm:py-3 rounded-lg transition-all duration-200
+                      {{ $currentRoute === $item['route'] ? 'active-nav-item' : 'hover:bg-green-700/20' }}"
+               @click="window.innerWidth < 1024 ? closeSidebar() : null">
+                {{-- Icon with consistent sizing --}}
+                <span class="text-base sm:text-lg md:text-xl flex-shrink-0">{{ $item['icon'] }}</span>
+                
+                {{-- Full label - shown when sidebar is open or on desktop --}}
+                <span x-show="sidebarOpen || window.innerWidth >= 1024" 
+                      class="ml-3 sm:ml-4 font-medium text-sm sm:text-base truncate">
+                    {{ $item['label'] }}
+                </span>
+                
+                {{-- Short label - only shown on mobile when sidebar is collapsed --}}
+                <span x-show="!(sidebarOpen || window.innerWidth >= 1024)" 
+                      x-cloak
+                      class="ml-2 text-xs font-medium truncate">
+                    {{ $item['short'] ?? $item['label'] }}
+                </span>
+                
+                {{-- Active indicator --}}
+                @if($currentRoute === $item['route'])
+                    <span class="ml-auto w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></span>
+                @endif
+            </a>
+        @endforeach
+    </div>
 
-{{-- Mobile only: Add logout button at bottom --}}
-<div class="mt-auto pt-2 border-t border-green-700 lg:hidden">
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button type="submit"
-                class="sidebar-item flex items-center px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg transition-all duration-200 hover:bg-red-700 w-full text-left"
-                @click="closeSidebar()">
-            <span class="text-sm sm:text-base">🚪</span>
-            <span x-show="sidebarOpen" 
-                  x-transition.opacity.duration.200ms
-                  class="ml-1.5 sm:ml-2 font-medium text-xs sm:text-sm">
-                Toka
-            </span>
-            <span x-show="!sidebarOpen" 
-                  x-cloak
-                  class="ml-1.5 text-xs font-medium">
-                Toka
-            </span>
-        </button>
-    </form>
+    {{-- Mobile only: Logout button at bottom --}}
+    <div class="mt-auto pt-3 border-t border-white/20 lg:hidden">
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit"
+                    class="sidebar-item flex items-center px-3 py-3 sm:px-4 rounded-lg transition-all duration-200 hover:bg-red-700/50 w-full text-left"
+                    @click="closeSidebar()">
+                <span class="text-base sm:text-lg">🚪</span>
+                <span x-show="sidebarOpen" 
+                      class="ml-3 sm:ml-4 font-medium text-sm sm:text-base">
+                    Toka
+                </span>
+                <span x-show="!sidebarOpen" 
+                      x-cloak
+                      class="ml-2 text-xs font-medium">
+                    Toka
+                </span>
+            </button>
+        </form>
+    </div>
 </div>
+
+{{-- Optional: Add custom CSS for better mobile spacing --}}
+@push('styles')
+<style>
+    /* Better touch targets for mobile */
+    @media (max-width: 640px) {
+        .sidebar-item {
+            min-height: 48px;
+            margin: 2px 0;
+        }
+    }
+    
+    /* Smooth transitions */
+    .sidebar-item {
+        transition: all 0.2s ease-in-out;
+    }
+    
+    /* Better spacing for collapsed sidebar */
+    @media (max-width: 1023px) {
+        [x-cloak] {
+            display: none !important;
+        }
+    }
+</style>
+@endpush

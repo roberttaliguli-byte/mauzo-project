@@ -108,6 +108,7 @@
                             <th class="px-4 py-2 text-left font-medium text-emerald-800">Mfanyakazi</th>
                             <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden sm:table-cell">Mawasiliano</th>
                             <th class="px-4 py-2 text-center font-medium text-emerald-800">Jinsia</th>
+                            <th class="px-4 py-2 text-center font-medium text-emerald-800 hidden md:table-cell">Uwezo</th>
                             <th class="px-4 py-2 text-center font-medium text-emerald-800 hidden md:table-cell">Umri</th>
                             <th class="px-4 py-2 text-center font-medium text-emerald-800">Hali</th>
                             <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
@@ -141,6 +142,17 @@
                                             <i class="fas fa-venus mr-1"></i>
                                         @endif
                                         {{ $item->jinsia }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-center hidden md:table-cell">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium 
+                                        @if($item->uwezo === 'mkubwa') bg-purple-100 text-purple-800
+                                        @else bg-gray-100 text-gray-600 @endif">
+                                        @if($item->uwezo === 'mkubwa')
+                                            <i class="fas fa-crown mr-1"></i> Mkubwa
+                                        @else
+                                            <i class="fas fa-user mr-1"></i> Mdogo
+                                        @endif
                                     </span>
                                 </td>
                                 <td class="px-4 py-2 text-center hidden md:table-cell">
@@ -187,7 +199,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                                     <i class="fas fa-users text-3xl mb-2 text-gray-300"></i>
                                     <p>Hakuna wafanyakazi bado</p>
                                 </td>
@@ -284,7 +296,7 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Username</label>
                         <input type="text" name="username" 
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               placeholder="Neno la kuingia">
+                               placeholder="Neno la kuingia" required>
                     </div>
 
                     <!-- Password -->
@@ -292,7 +304,21 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Password</label>
                         <input type="password" name="password" 
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               placeholder="Neno la siri">
+                               placeholder="Neno la siri" required>
+                    </div>
+
+                    <!-- UWEZO Field -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Uwezo *</label>
+                        <select name="uwezo" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500" required>
+                            <option value="mdogo">Mdogo (Mfanyakazi wa Kawaida)</option>
+                            <option value="mkubwa">Mkubwa (Msimamizi - Ana Ruhusa Zote)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-info-circle"></i> 
+                            Mkubwa anaweza kuona na kufanya shughuli zote kama Mkuu
+                        </p>
                     </div>
                 </div>
 
@@ -362,6 +388,10 @@
                 <div class="flex justify-between">
                     <span class="text-xs text-gray-500">Username:</span>
                     <span id="view-username" class="text-xs text-gray-900"></span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-500">Uwezo:</span>
+                    <span id="view-uwezo" class="text-xs text-gray-900"></span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-xs text-gray-500">Hali:</span>
@@ -468,6 +498,16 @@
                     <input type="password" name="password"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                            placeholder="Acha tupu kama hutaki kubadilisha">
+                </div>
+
+                <!-- Uwezo Field -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Uwezo</label>
+                    <select name="uwezo" id="edit-uwezo"
+                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <option value="mdogo">Mdogo (Mfanyakazi wa Kawaida)</option>
+                        <option value="mkubwa">Mkubwa (Msimamizi - Ana Ruhusa Zote)</option>
+                    </select>
                 </div>
 
                 <!-- Getini -->
@@ -745,6 +785,14 @@ class SmartWafanyakaziManager {
         document.getElementById('view-simu-ndugu').textContent = employee.simu_ndugu || '--';
         document.getElementById('view-username').textContent = employee.username || '--';
         
+        // Set uwezo display
+        const uwezoSpan = document.getElementById('view-uwezo');
+        if (employee.uwezo === 'mkubwa') {
+            uwezoSpan.innerHTML = '<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800"><i class="fas fa-crown mr-1"></i> Mkubwa</span>';
+        } else {
+            uwezoSpan.innerHTML = '<span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600"><i class="fas fa-user mr-1"></i> Mdogo</span>';
+        }
+        
         // Set hali badge
         const haliBadge = document.getElementById('view-hali-badge');
         if (employee.getini === 'ingia') {
@@ -782,6 +830,7 @@ class SmartWafanyakaziManager {
         document.getElementById('edit-simu-ndugu').value = employee.simu_ndugu || '';
         document.getElementById('edit-username').value = employee.username || '';
         document.getElementById('edit-getini').value = employee.getini || 'simama';
+        document.getElementById('edit-uwezo').value = employee.uwezo || 'mdogo';
         
         editForm.action = `/wafanyakazi/${employee.id}`;
         
@@ -909,12 +958,15 @@ function printWafanyakazi() {
         const age = employee.tarehe_kuzaliwa ? 
             new Date().getFullYear() - new Date(employee.tarehe_kuzaliwa).getFullYear() + ' yrs' : 
             '--';
+        
+        const uwezoText = employee.uwezo === 'mkubwa' ? 'Mkubwa' : 'Mdogo';
             
         tableRows += `
             <tr>
                 <td style="border: 1px solid #ddd; padding: 8px;">${employee.jina}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${employee.simu || '--'}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${employee.jinsia}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${uwezoText}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${age}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${employee.getini === 'ingia' ? 'Ingia' : 'Simama'}</td>
             </tr>`;
@@ -950,6 +1002,7 @@ function printWafanyakazi() {
                         <th>Jina</th>
                         <th>Simu</th>
                         <th>Jinsia</th>
+                        <th>Uwezo</th>
                         <th>Umri</th>
                         <th>Hali</th>
                     </tr>

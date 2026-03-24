@@ -21,24 +21,28 @@ class Wafanyakazi extends Authenticatable
         'simu_ndugu',
         'username',
         'password',
-        'role', // ✅ Make sure this is included
+        'role',
         'tarehe_kuzaliwa',
         'getini',
         'company_id',
+        'uwezo', // Add this
     ];
 
     protected $hidden = ['password'];
 
-    // ✅ Add this to always set role as 'mfanyakazi'
     protected $attributes = [
         'role' => 'mfanyakazi',
+        'uwezo' => 'mdogo', // Default to mdogo
     ];
 
-    /**
-     * ✅ Uhusiano na kampuni (Company)
-     */
     public function company()
     {
         return $this->belongsTo(\App\Models\Company::class);
+    }
+    
+    // Helper method to check if employee has full access
+    public function hasFullAccess(): bool
+    {
+        return $this->uwezo === 'mkubwa';
     }
 }

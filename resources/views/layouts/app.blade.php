@@ -11,7 +11,7 @@
         (Auth::guard('mfanyakazi')->check() && Auth::guard('mfanyakazi')->user()->company ? Auth::guard('mfanyakazi')->user()->company->company_name : 'Default Company')) 
     }}">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>@yield('title', 'MAUZO SHEET')</title>
     <style>[x-cloak]{display:none!important}</style>
     
@@ -27,7 +27,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
 <style>
-    /* Custom Styles - keep your existing styles */
+    /* Custom Styles - NO TRANSPARENCY */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
     * {
@@ -45,11 +45,10 @@
         font-family: 'Inter', sans-serif;
         transition: background-color 0.3s ease, color 0.3s ease;
         overflow-x: hidden;
-        width: 100vw;
+        width: 100%;
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        touch-action: manipulation;
     }
     
     /* Mobile Font Size Adjustments */
@@ -65,37 +64,41 @@
         }
     }
     
-    /* Color Modes */
+    /* Color Modes - SOLID BACKGROUNDS, NO TRANSPARENCY */
     .color-mode-light {
         --bg-primary: #ffffff;
         --bg-secondary: #f8fafc;
         --text-primary: #1e293b;
-        --text-secondary: #64748b;
-        --text-muted: #6b7280;
+        --text-secondary: #475569;
+        --text-muted: #64748b;
         --border-color: #e2e8f0;
         --sidebar-bg: #065f46;
         --sidebar-text: #ffffff;
-        --hover-bg: #f3f4f6;
+        --sidebar-hover: #047857;
+        --hover-bg: #f1f5f9;
         --card-bg: #ffffff;
         --header-bg: #ffffff;
         --input-bg: #ffffff;
-        --input-border: #d1d5db;
+        --input-border: #cbd5e1;
+        --shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
     .color-mode-dark {
-        --bg-primary: #111827;
-        --bg-secondary: #1f2937;
-        --text-primary: #f9fafb;
-        --text-secondary: #d1d5db;
-        --text-muted: #9ca3af;
-        --border-color: #374151;
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #cbd5e6;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
         --sidebar-bg: #065f46;
         --sidebar-text: #ffffff;
-        --hover-bg: #374151;
-        --card-bg: #1f2937;
-        --header-bg: #1f2937;
-        --input-bg: #374151;
-        --input-border: #4b5563;
+        --sidebar-hover: #047857;
+        --hover-bg: #334155;
+        --card-bg: #1e293b;
+        --header-bg: #1e293b;
+        --input-bg: #334155;
+        --input-border: #475569;
+        --shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     
     /* Apply color variables */
@@ -105,20 +108,21 @@
         color: var(--text-primary);
     }
     
-    /* Sidebar Styles */
+    /* Sidebar Styles - SOLID BACKGROUND */
     .sidebar {
         position: fixed;
         top: 0;
         left: 0;
         height: 100vh;
         width: 280px;
-        max-width: 80vw;
+        max-width: 85vw;
         z-index: 1000;
         transform: translateX(-100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        background: #065f46; /* Solid fallback */
         background: linear-gradient(135deg, #065f46 0%, #047857 100%);
         color: white;
     }
@@ -132,86 +136,10 @@
         width: 100%;
         min-height: 100vh;
         position: relative;
-        transition: all 0.3s ease;
+        transition: margin-left 0.3s ease;
     }
     
     /* Desktop sidebar open */
-    .sidebar-open .main-container {
-        margin-left: 280px;
-        width: calc(100% - 280px);
-    }
-    
-    /* Main content */
-    .main-content {
-        width: 100%;
-        min-height: 100vh;
-        overflow-x: hidden;
-        padding: 0.5rem;
-    }
-    
-    /* Mobile specific */
-    @media (max-width: 1023px) {
-        .sidebar {
-            width: 280px;
-            max-width: 85vw;
-        }
-        
-        .sidebar-open .main-container {
-            margin-left: 0 !important;
-            width: 100% !important;
-            transform: translateX(280px);
-        }
-        
-        .sidebar-open .main-container::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(3px);
-            z-index: 999;
-            pointer-events: auto;
-        }
-        
-        body.sidebar-open {
-            overflow: hidden;
-        }
-        
-        .main-content {
-            padding: 0.5rem;
-        }
-    }
-    
-    /* Animation */
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    .notification-slide {
-        animation: slideInRight 0.3s ease-out;
-    }
-    
-    /* Form input focus effects */
-    input:focus, select:focus, textarea:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
-    }
-    
-    /* Smooth transitions */
-    .tab-content {
-        transition: opacity 0.3s ease-in-out;
-    }
-    
-    /* Desktop */
     @media (min-width: 1024px) {
         .sidebar {
             transform: translateX(0);
@@ -227,12 +155,70 @@
             display: none !important;
         }
         
-        .main-content {
-            padding: 1rem 1.5rem;
+        .close-sidebar-btn {
+            display: none;
         }
     }
     
-    /* Hamburger Menu - FIXED */
+    /* Main content */
+    .main-content {
+        width: 100%;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+    
+    /* Mobile specific - SOLID OVERLAY (no transparency/blur) */
+    @media (max-width: 1023px) {
+        .sidebar {
+            width: 280px;
+            max-width: 85vw;
+        }
+        
+        .sidebar-open .main-container {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+        
+        /* SOLID overlay - NO BLUR, NO TRANSPARENCY */
+        .sidebar-open .main-container::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000000;
+            opacity: 0.7;
+            z-index: 999;
+            pointer-events: auto;
+        }
+        
+        body.sidebar-open {
+            overflow: hidden;
+        }
+        
+        .main-content {
+            padding: 0;
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .main-content {
+            padding: 0;
+        }
+    }
+    
+    /* Header styles - SOLID */
+    .app-header {
+        background-color: var(--header-bg);
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        box-shadow: var(--shadow);
+    }
+    
+    /* Hamburger Menu */
     .hamburger-menu {
         width: 30px;
         height: 24px;
@@ -269,13 +255,14 @@
         transform: translateY(-11px) rotate(-45deg);
     }
     
-    /* Sidebar Header - FIXED close button position */
+    /* Sidebar Header */
     .sidebar-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 1rem;
         border-bottom: 1px solid rgba(255,255,255,0.2);
+        background: #065f46;
     }
     
     .logo-container {
@@ -291,34 +278,28 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.15);
         color: white;
         transition: all 0.2s ease;
     }
     
     .close-sidebar-btn:hover {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.25);
     }
     
-    @media (min-width: 1024px) {
-        .close-sidebar-btn {
-            display: none;
-        }
-    }
-    
-    /* Sidebar items */
+    /* Sidebar items - SOLID hover */
     .sidebar-item {
         position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
         padding: 0.75rem 1rem;
-        margin: 0.25rem 0;
+        margin: 0.25rem 0.5rem;
         border-radius: 0.5rem;
         font-size: 0.875rem;
         color: white;
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        background: transparent;
     }
     
     .sidebar-item i {
@@ -327,30 +308,31 @@
     }
     
     .sidebar-item:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.12);
     }
     
-    /* Active navigation item */
+    /* Active navigation item - SOLID */
     .active-nav-item {
-        background-color: rgba(255, 255, 255, 0.15);
+        background-color: rgba(255, 255, 255, 0.18);
         position: relative;
     }
     
-    .active-nav-item::after {
+    .active-nav-item::before {
         content: '';
         position: absolute;
-        right: 0;
-        top: 0;
-        height: 100%;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
         width: 3px;
+        height: 60%;
         background: white;
+        border-radius: 0 2px 2px 0;
     }
     
     /* Blinking animation for package expiry */
     @keyframes blink {
-        0% { opacity: 1; }
-        50% { opacity: 0.3; }
-        100% { opacity: 1; }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
     
     .blink-warning {
@@ -361,45 +343,127 @@
         animation: blink 0.8s infinite;
     }
     
-    /* Package indicator */
-    .package-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
+    /* Package indicator - SOLID COLORS */
     .package-critical {
-        background-color: #fee2e2;
-        color: #b91c1c;
+        background-color: #dc2626;
+        color: white;
     }
     
     .package-warning {
-        background-color: #fef3c7;
-        color: #92400e;
+        background-color: #f59e0b;
+        color: white;
     }
     
     .package-good {
-        background-color: #d1fae5;
-        color: #065f46;
+        background-color: #10b981;
+        color: white;
     }
     
     .color-mode-dark .package-critical {
-        background-color: #7f1d1d;
-        color: #fecaca;
+        background-color: #b91c1c;
+        color: #fee2e2;
     }
     
     .color-mode-dark .package-warning {
-        background-color: #78350f;
-        color: #fde68a;
+        background-color: #d97706;
+        color: #fef3c7;
     }
     
     .color-mode-dark .package-good {
-        background-color: #064e3b;
-        color: #a7f3d0;
+        background-color: #059669;
+        color: #d1fae5;
+    }
+    
+    /* Dropdown menus - SOLID */
+    .dropdown-solid {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Color mode toggle button */
+    .color-mode-toggle {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 100;
+    }
+    
+    .color-mode-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        color: var(--text-primary);
+    }
+    
+    .color-mode-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .color-mode-menu {
+        position: absolute;
+        bottom: 60px;
+        right: 0;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 0.75rem;
+        padding: 0.5rem;
+        min-width: 140px;
+        box-shadow: var(--shadow);
+        z-index: 101;
+    }
+    
+    .color-mode-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        border-radius: 0.5rem;
+        transition: background-color 0.2s;
+        color: var(--text-primary);
+    }
+    
+    .color-mode-option:hover {
+        background-color: var(--hover-bg);
+    }
+    
+    /* Utility classes */
+    .text-primary {
+        color: var(--text-primary);
+    }
+    
+    .text-secondary {
+        color: var(--text-secondary);
+    }
+    
+    .border-color {
+        border-color: var(--border-color);
+    }
+    
+    .bg-secondary {
+        background-color: var(--bg-secondary);
+    }
+    
+    .hover-bg:hover {
+        background-color: var(--hover-bg);
+    }
+    
+    .card-bg {
+        background-color: var(--card-bg);
+    }
+    
+    .header-bg {
+        background-color: var(--header-bg);
     }
 </style>
     @stack('styles')
@@ -470,9 +534,9 @@
       x-init="init()">
     
     <!-- Sidebar -->
-    <aside class="sidebar flex flex-col shadow-xl"
+    <aside class="sidebar flex flex-col"
            :class="{'open': sidebarOpen}">
-        <!-- Logo Section - FIXED -->
+        <!-- Logo Section -->
         <div class="sidebar-header">
             <div class="logo-container">
                 <img src="https://test.mauzosheet.com/assets/images/apple-icon.gif" 
@@ -484,13 +548,13 @@
                 </div>
             </div>
             <button @click="closeSidebar()" 
-                    class="close-sidebar-btn lg:hidden">
+                    class="close-sidebar-btn">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
         <!-- Navigation Menu -->
-        <nav class="flex-1 p-2 sm:p-3 space-y-1 overflow-y-auto scrollbar-thin">
+        <nav class="flex-1 p-2 sm:p-3 overflow-y-auto">
             @include('partials.navigation')
         </nav>
         
@@ -505,206 +569,207 @@
     <!-- Main Content Container -->
     <div class="main-container">
         <div class="main-content flex flex-col min-h-screen">
-            <!-- Header with Hamburger Menu - FIXED -->
-            <header class="sticky top-0 z-30 shadow-sm border-b px-3 sm:px-4 py-3 header-bg border-color">
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <!-- Hamburger Menu - FIXED lines -->
-                        <button class="hamburger-menu lg:hidden" 
-                                :class="{'active': sidebarOpen}"
-                                @click="toggleSidebar()"
-                                aria-label="Toggle Menu">
-                            <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
-                            <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
-                            <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
-                        </button>
-                        
-                        <!-- Page Title -->
-                        <div>
-                            <h1 class="text-lg sm:text-xl font-bold text-primary">@yield('page-title', 'Dashboard')</h1>
-                            <p class="text-xs sm:text-sm text-secondary">@yield('page-subtitle', 'Karibu tena, Meneja!')</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-1 sm:gap-2">
-                        <!-- Package Days Remaining with Email Icon -->
-                        <div x-data="packageRemaining()" x-init="initPackageRemaining()" class="relative">
-                            <button @click="fetchPackageInfo()" 
-                                    class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    :class="{
-                                        'blink-critical': daysLeft <= 5 && daysLeft > 0,
-                                        'blink-warning': daysLeft > 5 && daysLeft <= 10
-                                    }"
-                                    aria-label="Package Days Remaining">
-                                <!-- Email Icon -->
-                                <i class="fas fa-envelope text-lg"></i>
-                                <template x-if="daysLeft <= 5 && daysLeft > 0">
-                                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-                                </template>
-                            </button>
-
-                            <!-- Package Info Tooltip -->
-                            <div x-show="showPackageInfo"
-                                 @click.away="showPackageInfo = false"
-                                 x-cloak
-                                 x-transition
-                                 class="absolute right-0 mt-2 w-64 rounded-lg shadow-lg p-3 z-40 card-bg border border-color">
-                                <div class="text-center">
-                                    <div class="text-sm font-medium text-primary mb-2">Taarifa ya Package</div>
-                                    <div class="mb-2">
-                                        <span class="text-xs text-secondary">Package:</span>
-                                        <span class="ml-1 text-sm font-semibold text-primary" x-text="packageName"></span>
-                                    </div>
-                                    <div class="mb-3">
-                                        <span class="text-xs text-secondary">Siku Zilizobaki:</span>
-                                        <div class="mt-1">
-                                            <span class="text-2xl font-bold" 
-                                                  :class="{
-                                                      'text-red-600': daysLeft <= 5,
-                                                      'text-amber-600': daysLeft > 5 && daysLeft <= 10,
-                                                      'text-green-600': daysLeft > 10
-                                                  }" 
-                                                  x-text="daysLeft"></span>
-                                            <span class="text-xs text-secondary ml-1">siku</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-xs p-2 rounded mb-2" 
-                                         :class="{
-                                             'package-critical': daysLeft <= 5,
-                                             'package-warning': daysLeft > 5 && daysLeft <= 10,
-                                             'package-good': daysLeft > 10
-                                         }">
-                                        <i class="fas mr-1" :class="{
-                                            'fa-exclamation-triangle': daysLeft <= 5,
-                                            'fa-clock': daysLeft > 5 && daysLeft <= 10,
-                                            'fa-check-circle': daysLeft > 10
-                                        }"></i>
-                                        <span x-text="getPackageMessage()"></span>
-                                    </div>
-                                    <div class="text-xs text-secondary border-t border-color pt-2">
-                                        Itaisha: <span class="font-medium" x-text="packageEndDate"></span>
-                                    </div>
-                                    <template x-if="daysLeft <= 5 && daysLeft > 0">
-                                        <div class="mt-2 pt-2 border-t border-color">
-                                            <a href="{{ route('payment.package.selection') }}" 
-                                               class="block w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium py-2 px-3 rounded hover:from-amber-600 hover:to-orange-600 transition">
-                                                <i class="fas fa-shopping-cart mr-1"></i>
-                                                Lipa Sasa
-                                            </a>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Alert Dropdown -->
-                        <div x-data="alertDropdown()" x-init="initAlert()" class="relative">
-                            <button @click="toggleAlert()"
-                                class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                                aria-label="Notifications">
-                                <i class="fas fa-bell text-lg"></i>
-                                <template x-if="lowStockCount > 0">
-                                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                </template>
-                            </button>
-
-                            <div x-show="openPro"
-                                 @click.away="openPro = false"
-                                 x-cloak
-                                 x-transition
-                                 class="absolute right-0 mt-2 w-72 sm:w-80 rounded-lg shadow-lg p-0 overflow-hidden z-40 card-bg border border-color">
-                                <!-- Alert header -->
-                                <div class="px-3 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white font-medium">
-                                    <div class="flex justify-between items-center">
-                                        <span>Bidhaa Zinazokaribia Kuisha</span>
-                                        <span x-text="lowStockCount" class="bg-white text-green-600 text-xs px-2 py-1 rounded-full"></span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Low stock products list -->
-                                <div class="max-h-64 overflow-y-auto">
-                                    <template x-if="lowStockProducts.length > 0">
-                                        <div>
-                                            <template x-for="product in lowStockProducts" :key="product.id">
-                                                <div class="p-3 border-b border-color hover-bg">
-                                                    <div class="flex justify-between items-start">
-                                                        <div>
-                                                            <div class="font-medium text-primary" x-text="product.jina"></div>
-                                                            <div class="text-xs text-secondary mt-1">
-                                                                <span x-text="product.aina"></span>
-                                                                <span x-show="product.kipimo" class="ml-1">• <span x-text="product.kipimo"></span></span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="text-right">
-                                                            <div class="text-sm font-bold"
-                                                                 :class="product.idadi <= 3 ? 'text-red-600' : 'text-amber-600'"
-                                                                 x-text="product.idadi"></div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="mt-1 text-xs" 
-                                                         :class="product.idadi <= 3 ? 'text-red-600' : 'text-amber-600'">
-                                                        <i class="fas fa-exclamation-triangle mr-1"></i>
-                                                        <span x-text="getStockMessage(product.idadi)"></span>
-                                                    </div>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </template>
-                                    <template x-if="lowStockProducts.length === 0">
-                                        <div class="py-6 text-center">
-                                            <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
-                                            <p class="text-sm text-primary">Hakuna bidhaa zinazokaribia kuisha</p>
-                                            <p class="text-xs text-secondary mt-1">Bidhaa zote zina idadi ya kutosha</p>
-                                        </div>
-                                    </template>
-                                </div>
-                                
-                                <!-- Footer -->
-                                <div class="px-3 py-2 border-t border-color bg-secondary">
-                                    <a href="{{ route('bidhaa.index') }}" 
-                                       class="block text-center text-sm font-medium text-green-600 hover:text-green-700">
-                                        <i class="fas fa-list mr-1"></i> Angalia Bidhaa Zote
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- User Profile -->
-                        <div class="relative" x-data="{ profileOpen: false }">
-                            <button @click="profileOpen = !profileOpen" 
-                                    class="flex items-center gap-2 focus:outline-none">
-                                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-600 to-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-                                    {{ $userInitial }}
-                                </div>
-                                <div class="hidden sm:block text-left">
-                                    <div class="text-sm font-medium text-primary">{{ $userName }}</div>
-                                    <div class="text-xs text-secondary">{{ $userRole }}</div>
-                                </div>
-                                <i class="fas fa-chevron-down text-xs text-secondary hidden sm:block"></i>
+            <!-- Header -->
+            <header class="app-header">
+                <div class="px-3 sm:px-4 py-3">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <!-- Hamburger Menu -->
+                            <button class="hamburger-menu lg:hidden" 
+                                    :class="{'active': sidebarOpen}"
+                                    @click="toggleSidebar()"
+                                    aria-label="Toggle Menu">
+                                <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
+                                <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
+                                <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
                             </button>
                             
-                            <!-- Profile Dropdown -->
-                            <div x-show="profileOpen" 
-                                 @click.away="profileOpen = false" 
-                                 x-cloak
-                                 x-transition
-                                 class="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-1 card-bg border border-color">
-                                <a href="{{ route('password.change') }}" 
-                                   class="block px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
-                                    <i class="fas fa-key mr-2 w-4"></i>Badili Neno Siri
-                                </a>
-                                <a href="{{ route('company.info') }}" 
-                                   class="block px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
-                                    <i class="fas fa-building mr-2 w-4"></i>Taarifa ya Kampuni
-                                </a>
-                                <div class="border-t my-1 border-color"></div>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" 
-                                            class="w-full text-left px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
-                                        <i class="fas fa-sign-out-alt mr-2 w-4"></i>Toka
-                                    </button>
-                                </form>
+                            <!-- Page Title -->
+                            <div>
+                                <h1 class="text-lg sm:text-xl font-bold text-primary">@yield('page-title', 'Dashboard')</h1>
+                                <p class="text-xs sm:text-sm text-secondary">@yield('page-subtitle', 'Karibu tena, Meneja!')</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-1 sm:gap-2">
+                            <!-- Package Days Remaining with Email Icon -->
+                            <div x-data="packageRemaining()" x-init="initPackageRemaining()" class="relative">
+                                <button @click="fetchPackageInfo()" 
+                                        class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        :class="{
+                                            'blink-critical': daysLeft <= 5 && daysLeft > 0,
+                                            'blink-warning': daysLeft > 5 && daysLeft <= 10
+                                        }"
+                                        aria-label="Package Days Remaining">
+                                    <i class="fas fa-envelope text-lg"></i>
+                                    <template x-if="daysLeft <= 5 && daysLeft > 0">
+                                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                                    </template>
+                                </button>
+
+                                <!-- Package Info Tooltip - SOLID -->
+                                <div x-show="showPackageInfo"
+                                     @click.away="showPackageInfo = false"
+                                     x-cloak
+                                     x-transition
+                                     class="absolute right-0 mt-2 w-64 rounded-lg shadow-lg p-3 z-40 dropdown-solid">
+                                    <div class="text-center">
+                                        <div class="text-sm font-medium text-primary mb-2">Taarifa ya Package</div>
+                                        <div class="mb-2">
+                                            <span class="text-xs text-secondary">Package:</span>
+                                            <span class="ml-1 text-sm font-semibold text-primary" x-text="packageName"></span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <span class="text-xs text-secondary">Siku Zilizobaki:</span>
+                                            <div class="mt-1">
+                                                <span class="text-2xl font-bold" 
+                                                      :class="{
+                                                          'text-red-600': daysLeft <= 5,
+                                                          'text-amber-600': daysLeft > 5 && daysLeft <= 10,
+                                                          'text-green-600': daysLeft > 10
+                                                      }" 
+                                                      x-text="daysLeft"></span>
+                                                <span class="text-xs text-secondary ml-1">siku</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-xs p-2 rounded mb-2" 
+                                             :class="{
+                                                 'package-critical': daysLeft <= 5,
+                                                 'package-warning': daysLeft > 5 && daysLeft <= 10,
+                                                 'package-good': daysLeft > 10
+                                             }">
+                                            <i class="fas mr-1" :class="{
+                                                'fa-exclamation-triangle': daysLeft <= 5,
+                                                'fa-clock': daysLeft > 5 && daysLeft <= 10,
+                                                'fa-check-circle': daysLeft > 10
+                                            }"></i>
+                                            <span x-text="getPackageMessage()"></span>
+                                        </div>
+                                        <div class="text-xs text-secondary border-t border-color pt-2">
+                                            Itaisha: <span class="font-medium" x-text="packageEndDate"></span>
+                                        </div>
+                                        <template x-if="daysLeft <= 5 && daysLeft > 0">
+                                            <div class="mt-2 pt-2 border-t border-color">
+                                                <a href="{{ route('payment.package.selection') }}" 
+                                                   class="block w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium py-2 px-3 rounded hover:from-amber-600 hover:to-orange-600 transition">
+                                                    <i class="fas fa-shopping-cart mr-1"></i>
+                                                    Lipa Sasa
+                                                </a>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alert Dropdown -->
+                            <div x-data="alertDropdown()" x-init="initAlert()" class="relative">
+                                <button @click="toggleAlert()"
+                                    class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    aria-label="Notifications">
+                                    <i class="fas fa-bell text-lg"></i>
+                                    <template x-if="lowStockCount > 0">
+                                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                    </template>
+                                </button>
+
+                                <div x-show="openPro"
+                                     @click.away="openPro = false"
+                                     x-cloak
+                                     x-transition
+                                     class="absolute right-0 mt-2 w-72 sm:w-80 rounded-lg shadow-lg p-0 overflow-hidden z-40 dropdown-solid">
+                                    <!-- Alert header -->
+                                    <div class="px-3 py-2 bg-gradient-to-r from-green-600 to-green-500 text-white font-medium">
+                                        <div class="flex justify-between items-center">
+                                            <span>Bidhaa Zinazokaribia Kuisha</span>
+                                            <span x-text="lowStockCount" class="bg-white text-green-600 text-xs px-2 py-1 rounded-full"></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Low stock products list -->
+                                    <div class="max-h-64 overflow-y-auto">
+                                        <template x-if="lowStockProducts.length > 0">
+                                            <div>
+                                                <template x-for="product in lowStockProducts" :key="product.id">
+                                                    <div class="p-3 border-b border-color hover-bg">
+                                                        <div class="flex justify-between items-start">
+                                                            <div>
+                                                                <div class="font-medium text-primary" x-text="product.jina"></div>
+                                                                <div class="text-xs text-secondary mt-1">
+                                                                    <span x-text="product.aina"></span>
+                                                                    <span x-show="product.kipimo" class="ml-1">• <span x-text="product.kipimo"></span></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <div class="text-sm font-bold"
+                                                                     :class="product.idadi <= 3 ? 'text-red-600' : 'text-amber-600'"
+                                                                     x-text="product.idadi"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-1 text-xs" 
+                                                             :class="product.idadi <= 3 ? 'text-red-600' : 'text-amber-600'">
+                                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                            <span x-text="getStockMessage(product.idadi)"></span>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <template x-if="lowStockProducts.length === 0">
+                                            <div class="py-6 text-center">
+                                                <i class="fas fa-check-circle text-green-500 text-2xl mb-2"></i>
+                                                <p class="text-sm text-primary">Hakuna bidhaa zinazokaribia kuisha</p>
+                                                <p class="text-xs text-secondary mt-1">Bidhaa zote zina idadi ya kutosha</p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    
+                                    <!-- Footer -->
+                                    <div class="px-3 py-2 border-t border-color bg-secondary">
+                                        <a href="{{ route('bidhaa.index') }}" 
+                                           class="block text-center text-sm font-medium text-green-600 hover:text-green-700">
+                                            <i class="fas fa-list mr-1"></i> Angalia Bidhaa Zote
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- User Profile -->
+                            <div class="relative" x-data="{ profileOpen: false }">
+                                <button @click="profileOpen = !profileOpen" 
+                                        class="flex items-center gap-2 focus:outline-none">
+                                    <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-green-600 to-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                                        {{ $userInitial }}
+                                    </div>
+                                    <div class="hidden sm:block text-left">
+                                        <div class="text-sm font-medium text-primary">{{ $userName }}</div>
+                                        <div class="text-xs text-secondary">{{ $userRole }}</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down text-xs text-secondary hidden sm:block"></i>
+                                </button>
+                                
+                                <!-- Profile Dropdown - SOLID -->
+                                <div x-show="profileOpen" 
+                                     @click.away="profileOpen = false" 
+                                     x-cloak
+                                     x-transition
+                                     class="absolute right-0 mt-2 w-40 sm:w-48 rounded-lg shadow-lg z-50 py-1 dropdown-solid">
+                                    <a href="{{ route('password.change') }}" 
+                                       class="block px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
+                                        <i class="fas fa-key mr-2 w-4"></i>Badili Neno Siri
+                                    </a>
+                                    <a href="{{ route('company.info') }}" 
+                                       class="block px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
+                                        <i class="fas fa-building mr-2 w-4"></i>Taarifa ya Kampuni
+                                    </a>
+                                    <div class="border-t my-1 border-color"></div>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" 
+                                                class="w-full text-left px-3 py-2 text-xs sm:text-sm text-primary hover-bg">
+                                            <i class="fas fa-sign-out-alt mr-2 w-4"></i>Toka
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -712,7 +777,7 @@
             </header>
 
             <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto p-2 sm:p-4 scrollbar-thin content-inner bg-secondary">
+            <main class="flex-1 overflow-y-auto p-2 sm:p-4 bg-secondary">
                 <div class="max-w-full overflow-x-hidden">
                     @yield('content')
                 </div>
@@ -780,15 +845,15 @@
                 document.body.classList.add(this.colorMode);
                 
                 // Set sidebar state based on screen size
-                const isMobile = window.innerWidth < 1024;
-                this.sidebarOpen = !isMobile;
+                const isDesktop = window.innerWidth >= 1024;
+                this.sidebarOpen = isDesktop;
                 
                 // Handle resize
                 window.addEventListener('resize', () => {
-                    const newIsMobile = window.innerWidth < 1024;
-                    if (!newIsMobile && !this.sidebarOpen) {
+                    const nowDesktop = window.innerWidth >= 1024;
+                    if (nowDesktop && !this.sidebarOpen) {
                         this.sidebarOpen = true;
-                    } else if (newIsMobile && this.sidebarOpen) {
+                    } else if (!nowDesktop && this.sidebarOpen) {
                         this.sidebarOpen = false;
                     }
                 });
@@ -838,7 +903,6 @@
                 
                 // Check if we need to send email notification
                 if (this.daysLeft <= 5 && this.daysLeft > 0 && !this.notificationsSent) {
-                    // Check if we haven't sent notification in last 24 hours
                     this.sendEmailNotification();
                 }
                 
@@ -850,7 +914,6 @@
             
             calculateDaysLeft() {
                 // Days left is already calculated from PHP
-                // This method is kept for future real-time updates
             },
             
             fetchPackageInfo() {
@@ -864,7 +927,6 @@
                         }
                         this.showPackageInfo = true;
                         
-                        // Auto-hide after 5 seconds
                         setTimeout(() => {
                             this.showPackageInfo = false;
                         }, 5000);
@@ -893,8 +955,6 @@
                     if (data.success) {
                         console.log('Email notification sent successfully');
                         this.notificationsSent = true;
-                        
-                        // Show success message in tooltip
                         this.showNotification('Email imetumwa!', 'success');
                     }
                 })
@@ -914,7 +974,6 @@
             },
             
             showNotification(message, type) {
-                // You can implement a toast notification here
                 console.log(message, type);
             }
         }
@@ -931,7 +990,6 @@
             initAlert() {
                 this.fetchLowStockProducts();
                 
-                // Refresh every 5 minutes
                 setInterval(() => {
                     this.fetchLowStockProducts();
                 }, 5 * 60 * 1000);
