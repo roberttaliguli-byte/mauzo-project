@@ -7,9 +7,9 @@
 @section('content')
 <div class="min-h-screen bg-gray-50/30">
     <!-- Header Section -->
-    <div class="mb-6 md:mb-8 px-4 md:px-0">
+    <div class="mb-4 md:mb-6 px-4 md:px-0">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div class="mb-4 md:mb-0">
+            <div class="mb-3 md:mb-0">
                 <h1 class="text-xl md:text-2xl font-bold text-gray-900">📋 Orodha ya Makampuni</h1>
                 <p class="text-gray-600 text-sm md:text-base mt-1">Dumisha na udhibiti makampuni yote yaliyosajiliwa</p>
             </div>
@@ -22,78 +22,78 @@
         </div>
     </div>
 
-    <!-- Summary Boxes Section -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-6 md:mb-8 px-4 md:px-0">
+    <!-- Summary Boxes Section - REDUCED SIZE -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3 mb-4 md:mb-6 px-4 md:px-0">
         <!-- Verified Companies -->
-        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-3 md:p-4 hover:shadow-md transition-all duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-check-circle text-green-600 text-sm md:text-base"></i>
+        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-1 md:mb-2">
+                <div class="w-6 h-6 md:w-8 md:h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-600 text-xs md:text-sm"></i>
                 </div>
                 <span class="text-xs md:text-sm font-medium text-green-600">{{ $verifiedCompanies }}</span>
             </div>
             <h3 class="text-xs md:text-sm font-medium text-gray-600">Imethibitishwa</h3>
-            <p class="text-lg md:text-xl font-bold text-gray-900">{{ $verifiedCompanies }}</p>
+            <p class="text-base md:text-xl font-bold text-gray-900">{{ $verifiedCompanies }}</p>
         </div>
 
         <!-- Approved Users -->
-        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-3 md:p-4 hover:shadow-md transition-all duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-user-check text-blue-600 text-sm md:text-base"></i>
+        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-1 md:mb-2">
+                <div class="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-user-check text-blue-600 text-xs md:text-sm"></i>
                 </div>
                 <span class="text-xs md:text-sm font-medium text-blue-600">{{ $approvedUsers }}</span>
             </div>
             <h3 class="text-xs md:text-sm font-medium text-gray-600">Watumiaji Walioidhinishwa</h3>
-            <p class="text-lg md:text-xl font-bold text-gray-900">{{ $approvedUsers }}</p>
+            <p class="text-base md:text-xl font-bold text-gray-900">{{ $approvedUsers }}</p>
         </div>
 
         <!-- Active Packages -->
-        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-3 md:p-4 hover:shadow-md transition-all duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-clock text-emerald-600 text-sm md:text-base"></i>
+        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-1 md:mb-2">
+                <div class="w-6 h-6 md:w-8 md:h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-clock text-emerald-600 text-xs md:text-sm"></i>
                 </div>
                 <span class="text-xs md:text-sm font-medium text-emerald-600">{{ $activePackages }}</span>
             </div>
             <h3 class="text-xs md:text-sm font-medium text-gray-600">Vifurushi Vinavyotumika</h3>
-            <p class="text-lg md:text-xl font-bold text-gray-900">{{ $activePackages }}</p>
+            <p class="text-base md:text-xl font-bold text-gray-900">{{ $activePackages }}</p>
         </div>
 
         <!-- Expired Packages -->
-        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-3 md:p-4 hover:shadow-md transition-all duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-exclamation-circle text-red-600 text-sm md:text-base"></i>
+        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-1 md:mb-2">
+                <div class="w-6 h-6 md:w-8 md:h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-exclamation-circle text-red-600 text-xs md:text-sm"></i>
                 </div>
                 <span class="text-xs md:text-sm font-medium text-red-600">{{ $expiredPackages }}</span>
             </div>
             <h3 class="text-xs md:text-sm font-medium text-gray-600">Vifurushi Vilivyokwisha</h3>
-            <p class="text-lg md:text-xl font-bold text-gray-900">{{ $expiredPackages }}</p>
+            <p class="text-base md:text-xl font-bold text-gray-900">{{ $expiredPackages }}</p>
         </div>
 
         <!-- Free Trial -->
-        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-3 md:p-4 hover:shadow-md transition-all duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-gift text-purple-600 text-sm md:text-base"></i>
+        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-1 md:mb-2">
+                <div class="w-6 h-6 md:w-8 md:h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-gift text-purple-600 text-xs md:text-sm"></i>
                 </div>
                 <span class="text-xs md:text-sm font-medium text-purple-600">{{ $freeTrialCompanies }}</span>
             </div>
             <h3 class="text-xs md:text-sm font-medium text-gray-600">Free Trial</h3>
-            <p class="text-lg md:text-xl font-bold text-gray-900">{{ $freeTrialCompanies }}</p>
+            <p class="text-base md:text-xl font-bold text-gray-900">{{ $freeTrialCompanies }}</p>
         </div>
 
         <!-- Pending Approval -->
-        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-3 md:p-4 hover:shadow-md transition-all duration-200">
-            <div class="flex items-center justify-between mb-2">
-                <div class="w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-hourglass-half text-yellow-600 text-sm md:text-base"></i>
+        <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
+            <div class="flex items-center justify-between mb-1 md:mb-2">
+                <div class="w-6 h-6 md:w-8 md:h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-hourglass-half text-yellow-600 text-xs md:text-sm"></i>
                 </div>
                 <span class="text-xs md:text-sm font-medium text-yellow-600">{{ $totalCompanies - $verifiedCompanies }}</span>
             </div>
             <h3 class="text-xs md:text-sm font-medium text-gray-600">Zinazosubiri</h3>
-            <p class="text-lg md:text-xl font-bold text-gray-900">{{ $totalCompanies - $verifiedCompanies }}</p>
+            <p class="text-base md:text-xl font-bold text-gray-900">{{ $totalCompanies - $verifiedCompanies }}</p>
         </div>
     </div>
 
@@ -119,37 +119,20 @@
     </div>
     @endif
 
-    <!-- Search Bar -->
+    <!-- Search Bar - LIVE FILTERING WITHOUT SUBMIT BUTTON -->
     <div class="mb-4 md:mb-6 px-4 md:px-0">
-        <form method="GET" action="{{ route('admin.makampuni') }}" class="flex flex-col md:flex-row gap-3">
+        <div class="flex flex-col md:flex-row gap-3">
             <div class="flex-1 relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i class="fas fa-search text-gray-400 text-sm"></i>
                 </div>
                 <input type="text" 
-                       name="search" 
-                       value="{{ request('search') }}"
+                       id="liveSearchInput"
                        placeholder="Tafuta kwa jina la kampuni, mmiliki, barua pepe, namba ya simu, au kifurushi..." 
                        class="w-full pl-10 pr-4 py-2 md:py-3 border border-gray-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm">
             </div>
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg md:rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 text-sm">
-                    <i class="fas fa-search text-sm"></i>
-                    <span>Tafuta</span>
-                </button>
-                @if(request('search'))
-                <a href="{{ route('admin.makampuni') }}" class="flex-1 md:flex-none px-4 md:px-6 py-2 md:py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg md:rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 text-sm">
-                    <i class="fas fa-times text-sm"></i>
-                    <span>Ondoa</span>
-                </a>
-                @endif
-            </div>
-        </form>
-        @if(request('search'))
-        <div class="mt-2 text-sm text-gray-600">
-            Matokeo ya utafutaji: "{{ request('search') }}"
         </div>
-        @endif
+        <div id="searchStatus" class="mt-2 text-sm text-gray-600 hidden"></div>
     </div>
 
     <!-- Main Content Card -->
@@ -163,16 +146,21 @@
                 </h3>
                 <div class="flex items-center justify-between md:justify-normal space-x-4 mt-2 md:mt-0">
                     <div class="text-xs md:text-sm text-gray-500">
-                        <span class="font-medium">{{ $companies->total() }}</span> kati ya <span class="font-medium">{{ $totalCompanies }}</span>
+                        <span id="visibleCount">{{ $companies->total() }}</span> kati ya <span id="totalCount">{{ $totalCompanies }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Mobile Cards View -->
-        <div class="md:hidden">
+        <div class="md:hidden" id="mobileCardsContainer">
             @forelse ($companies as $index => $company)
-            <div class="border-b border-gray-100 p-4 hover:bg-gray-50/50 transition-all duration-200">
+            <div class="company-item border-b border-gray-100 p-4 hover:bg-gray-50/50 transition-all duration-200"
+                 data-name="{{ strtolower($company->company_name) }}"
+                 data-owner="{{ strtolower($company->owner_name) }}"
+                 data-phone="{{ strtolower($company->phone) }}"
+                 data-email="{{ strtolower($company->email) }}"
+                 data-package="{{ strtolower($company->package ?? '') }}">
                 <!-- Header -->
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex items-center space-x-2">
@@ -269,7 +257,7 @@
         </div>
 
         <!-- Desktop Table View -->
-        <div class="hidden md:block overflow-x-auto">
+        <div class="hidden md:block overflow-x-auto" id="desktopTableContainer">
             <table class="w-full">
                 <thead>
                     <tr class="bg-gray-50/80 border-b border-gray-100">
@@ -296,9 +284,14 @@
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody id="desktopTableBody" class="divide-y divide-gray-100">
                     @forelse ($companies as $index => $company)
-                    <tr class="hover:bg-gray-50/50 transition-all duration-200 group">
+                    <tr class="company-row hover:bg-gray-50/50 transition-all duration-200 group"
+                        data-name="{{ strtolower($company->company_name) }}"
+                        data-owner="{{ strtolower($company->owner_name) }}"
+                        data-phone="{{ strtolower($company->phone) }}"
+                        data-email="{{ strtolower($company->email) }}"
+                        data-package="{{ strtolower($company->package ?? '') }}">
                         <!-- Serial Number -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-600 font-medium">{{ $companies->firstItem() + $index }}</div>
@@ -431,8 +424,8 @@
         </div>
 
         <!-- Table Footer -->
-        @if($companies->hasPages())
-        <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-100 bg-gray-50/50">
+        <div id="paginationContainer" class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-100 bg-gray-50/50">
+            @if($companies->hasPages())
             <div class="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
                 <div class="text-sm text-gray-600">
                     {{ $companies->firstItem() }} - {{ $companies->lastItem() }} ya {{ $companies->total() }}
@@ -441,8 +434,8 @@
                     {{ $companies->onEachSide(1)->withQueryString()->links('vendor.pagination.tailwind') }}
                 </div>
             </div>
+            @endif
         </div>
-        @endif
     </div>
 </div>
 
@@ -765,7 +758,134 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeModalHandlers();
     initializePackageModalHandlers();
     initializeDeleteHandlers();
+    
+    // Initialize live search
+    initializeLiveSearch();
 });
+
+function initializeLiveSearch() {
+    const searchInput = document.getElementById('liveSearchInput');
+    const mobileItems = document.querySelectorAll('#mobileCardsContainer .company-item');
+    const desktopRows = document.querySelectorAll('#desktopTableBody .company-row');
+    const visibleCountSpan = document.getElementById('visibleCount');
+    const totalCountSpan = document.getElementById('totalCount');
+    const paginationDiv = document.getElementById('paginationContainer');
+    const searchStatus = document.getElementById('searchStatus');
+    
+    if (!searchInput) return;
+    
+    function filterCompanies() {
+        const term = searchInput.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        // Filter mobile items
+        mobileItems.forEach(item => {
+            const name = item.getAttribute('data-name') || '';
+            const owner = item.getAttribute('data-owner') || '';
+            const phone = item.getAttribute('data-phone') || '';
+            const email = item.getAttribute('data-email') || '';
+            const pkg = item.getAttribute('data-package') || '';
+            
+            const matches = term === '' || 
+                name.includes(term) || 
+                owner.includes(term) || 
+                phone.includes(term) || 
+                email.includes(term) || 
+                pkg.includes(term);
+            
+            item.style.display = matches ? '' : 'none';
+            if (matches) visibleCount++;
+        });
+        
+        // Filter desktop rows
+        desktopRows.forEach(row => {
+            const name = row.getAttribute('data-name') || '';
+            const owner = row.getAttribute('data-owner') || '';
+            const phone = row.getAttribute('data-phone') || '';
+            const email = row.getAttribute('data-email') || '';
+            const pkg = row.getAttribute('data-package') || '';
+            
+            const matches = term === '' || 
+                name.includes(term) || 
+                owner.includes(term) || 
+                phone.includes(term) || 
+                email.includes(term) || 
+                pkg.includes(term);
+            
+            row.style.display = matches ? '' : 'none';
+        });
+        
+        // Update visible count
+        if (visibleCountSpan) {
+            visibleCountSpan.textContent = visibleCount;
+        }
+        
+        // Show/hide pagination and status based on search
+        if (term !== '') {
+            if (paginationDiv) paginationDiv.style.display = 'none';
+            if (searchStatus) {
+                searchStatus.classList.remove('hidden');
+                searchStatus.innerHTML = `<i class="fas fa-search text-xs mr-1"></i> Matokeo: ${visibleCount} kati ya ${totalCountSpan ? totalCountSpan.textContent : '0'} makampuni`;
+            }
+        } else {
+            if (paginationDiv) paginationDiv.style.display = '';
+            if (searchStatus) searchStatus.classList.add('hidden');
+        }
+        
+        // Show empty state message if no results
+        const mobileContainer = document.getElementById('mobileCardsContainer');
+        const desktopContainer = document.getElementById('desktopTableBody');
+        
+        // Remove existing empty messages
+        const existingMobileEmpty = document.getElementById('mobile-empty-message');
+        const existingDesktopEmpty = document.getElementById('desktop-empty-message');
+        if (existingMobileEmpty) existingMobileEmpty.remove();
+        if (existingDesktopEmpty) existingDesktopEmpty.remove();
+        
+        if (visibleCount === 0 && term !== '') {
+            // Add empty message for mobile
+            if (mobileContainer && !document.getElementById('mobile-empty-message')) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.id = 'mobile-empty-message';
+                emptyMsg.className = 'p-8 text-center';
+                emptyMsg.innerHTML = `
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-search text-gray-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-gray-700 font-medium mb-2">Hakuna matokeo</h3>
+                    <p class="text-gray-500 text-sm">Hakuna kampuni inayolingana na "<strong>${escapeHtml(term)}</strong>"</p>
+                `;
+                mobileContainer.appendChild(emptyMsg);
+            }
+            
+            // Add empty message for desktop
+            if (desktopContainer && !document.getElementById('desktop-empty-message')) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.id = 'desktop-empty-message';
+                emptyRow.innerHTML = `
+                    <td colspan="7" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-search text-gray-400 text-2xl"></i>
+                            </div>
+                            <h3 class="text-gray-700 font-medium mb-2">Hakuna matokeo</h3>
+                            <p class="text-gray-500 text-sm">Hakuna kampuni inayolingana na "<strong>${escapeHtml(term)}</strong>"</p>
+                        </div>
+                    </td>
+                `;
+                desktopContainer.appendChild(emptyRow);
+            }
+        }
+    }
+    
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+    
+    searchInput.addEventListener('input', filterCompanies);
+}
 
 function initializeModalHandlers() {
     // Info modal handlers
@@ -816,9 +936,12 @@ function initializeDeleteHandlers() {
     });
 
     // Cancel delete
-    document.getElementById('cancel-delete').addEventListener('click', () => {
-        hideModal('delete-modal');
-    });
+    const cancelBtn = document.getElementById('cancel-delete');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            hideModal('delete-modal');
+        });
+    }
 
     // Backdrop click handlers for all modals
     document.querySelectorAll('[id^="modal-"], #delete-modal, [id^="package-modal-"]').forEach(modal => {
@@ -865,13 +988,6 @@ document.addEventListener('keydown', (e) => {
         openModals.forEach(modal => {
             hideModal(modal.id);
         });
-    }
-});
-
-// Prevent form submission on enter key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
-        e.preventDefault();
     }
 });
 </script>

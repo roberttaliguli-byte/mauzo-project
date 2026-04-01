@@ -1065,12 +1065,21 @@
                     </div>
                 </div>
 
-                <div class="flex justify-center">
-                    <button id="print-thermal-receipt" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-sm">
-                        <i class="fas fa-print"></i>
-                        Chapisha Risiti
-                    </button>
-                </div>
+<!-- Action Buttons Row -->
+<div class="flex flex-col sm:flex-row gap-2 justify-center mt-4">
+    <button id="print-thermal-receipt" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-print"></i>
+        Chapisha Risiti
+    </button>
+    <button id="share-receipt-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-share-alt"></i>
+        Shiriki Risiti
+    </button>
+    <button id="sms-receipt-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2 text-sm">
+        <i class="fas fa-envelope"></i>
+        Tuma kwa SMS
+    </button>
+</div>
             </div>
 
             <div id="no-receipt-found" class="hidden text-center py-6">
@@ -1366,6 +1375,52 @@
         </div>
     </div>
 </div>
+<!-- Custom SMS Modal for Receipt -->
+<div id="sms-receipt-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-2 z-50">
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 p-3 text-white flex items-center">
+            <i class="fas fa-envelope mr-2"></i>
+            <h2 class="text-base font-semibold">Tuma Risiti kwa SMS</h2>
+            <button type="button" id="close-sms-receipt-modal" class="ml-auto text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-4 space-y-3">
+            <div class="mb-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Namba ya Simu ya Mpokeaji
+                </label>
+                <input type="tel" id="sms-receipt-phone" 
+                       class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                       placeholder="Mfano: 255712345678"
+                       autocomplete="off">
+                <p class="text-xs text-gray-500 mt-1">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Tumia muundo: 255XXXXXXXXX (Anza na 255)
+                </p>
+            </div>
+            
+            <div class="bg-gray-50 rounded-lg p-3 max-h-40 overflow-y-auto">
+                <p class="text-xs text-gray-600 font-medium mb-1">Muhtasari wa Risiti:</p>
+                <p id="sms-receipt-preview" class="text-xs text-gray-500 whitespace-pre-line"></p>
+            </div>
+            
+            <div class="flex justify-end gap-2 pt-2">
+                <button type="button" id="cancel-sms-receipt" 
+                        class="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg text-sm font-semibold transition">
+                    Ghairi
+                </button>
+                <button type="button" id="confirm-send-sms" 
+                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold flex items-center gap-1 transition">
+                    <i class="fas fa-paper-plane mr-1"></i>
+                    Tuma SMS
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -1453,31 +1508,40 @@
 @push('scripts')
 <script>
 class MauzoManager {
-    constructor() {
-        // Get company ID from meta tag or data attribute
-        this.companyId = document.querySelector('meta[name="company-id"]')?.getAttribute('content') 
-                       || document.body.dataset.companyId
-                       || 'default';
-        
-        // Create unique cart key for this company
-        this.cartKey = `mauzo_cart_${this.companyId}`;
-        this.cart = JSON.parse(localStorage.getItem(this.cartKey)) || [];
-        this.bidhaaList = @json($bidhaa);
-        this.barcodeScanTimeout = null;
-        this.currentReceiptNo = null;
-        this.deleteCallback = null;
-        this.pendingSaleData = null;
-        this.currentKopeshaType = null;
-        this.currentSaleToDelete = null;
-        this.searchTimer = null;
-        
-        // Check if user is mfanyakazi
-        this.isMfanyakazi = document.body.hasAttribute('data-mfanyakazi') || false;
-        
-        // Restore tab state BEFORE init to ensure correct tab is shown
-        this.restoreTabState();
-        this.init();
-    }
+constructor() {
+    // Get company ID from meta tag or data attribute
+    this.companyId = document.querySelector('meta[name="company-id"]')?.getAttribute('content') 
+                   || document.body.dataset.companyId
+                   || 'default';
+    
+    // Create unique cart key for this company
+    this.cartKey = `mauzo_cart_${this.companyId}`;
+    this.cart = JSON.parse(localStorage.getItem(this.cartKey)) || [];
+    this.bidhaaList = @json($bidhaa);
+    this.barcodeScanTimeout = null;
+    this.currentReceiptNo = null;
+    this.deleteCallback = null;
+    this.pendingSaleData = null;
+    this.currentKopeshaType = null;
+    this.currentSaleToDelete = null;
+    this.searchTimer = null;
+    
+    // ADD THESE TWO LINES
+    this.pendingSmsData = null;           // ← ADD THIS
+    this.pendingSmsReceiptNo = null;      // ← ADD THIS
+    
+    // Check if user is mfanyakazi
+    this.isMfanyakazi = document.body.hasAttribute('data-mfanyakazi') || false;
+    
+    // Restore tab state BEFORE init to ensure correct tab is shown
+    this.restoreTabState();
+    this.init();
+    
+    // MOVE THIS AFTER init() and wrap in setTimeout to ensure DOM is ready
+    setTimeout(() => {
+        this.setupSmsModalEvents();
+    }, 100);
+}
 
     init() {
         this.bindEvents();
@@ -2090,43 +2154,133 @@ class MauzoManager {
         this.updateCartDisplay();
     }
 
-    initReceiptLookup() {
-        const searchInput = document.getElementById('search-receipt-input');
-        const printButton = document.getElementById('print-thermal-receipt');
-        
-        if (searchInput) {
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    this.lookupReceipt(searchInput.value.trim());
+initReceiptLookup() {
+    // Get all DOM elements
+    const searchInput = document.getElementById('search-receipt-input');
+    const printButton = document.getElementById('print-thermal-receipt');
+    const shareButton = document.getElementById('share-receipt-btn');
+    const smsButton = document.getElementById('sms-receipt-btn');
+    
+    // 1. Handle search input - search when Enter key is pressed
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const receiptNo = searchInput.value.trim();
+                if (receiptNo) {
+                    this.lookupReceipt(receiptNo);
+                } else {
+                    this.showNotification('Tafadhali ingiza namba ya risiti', 'error');
                 }
-            });
-        }
-        
-        if (printButton) {
-            printButton.addEventListener('click', () => {
-                this.printThermalReceipt();
-            });
-        }
-        
-        document.querySelectorAll('.copy-receipt').forEach(element => {
-            element.addEventListener('click', (e) => {
-                const receiptNo = e.target.dataset.receipt;
-                navigator.clipboard.writeText(receiptNo).then(() => {
-                    this.showNotification('Namba ya risiti imenakiliwa!', 'success');
-                });
-            });
+            }
         });
         
-        document.querySelectorAll('.print-single-receipt').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const receiptNo = e.target.closest('.print-single-receipt').dataset.receiptNo;
+        // Clear red border when user focuses on input
+        searchInput.addEventListener('focus', () => {
+            searchInput.classList.remove('border-red-500');
+        });
+        
+        // Optional: Add a search button or icon click handler
+        const searchIcon = searchInput.parentElement?.querySelector('.fa-search');
+        if (searchIcon) {
+            searchIcon.addEventListener('click', () => {
+                const receiptNo = searchInput.value.trim();
                 if (receiptNo) {
-                    this.printSingleReceipt(receiptNo);
+                    this.lookupReceipt(receiptNo);
+                } else {
+                    this.showNotification('Tafadhali ingiza namba ya risiti', 'error');
                 }
             });
+        }
+    }
+    
+    // 2. Handle Print button - print thermal receipt
+    if (printButton) {
+        printButton.addEventListener('click', () => {
+            if (this.currentReceiptNo) {
+                this.printThermalReceipt();
+            } else {
+                this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
+            }
         });
     }
+    
+    // 3. Handle Share button - share receipt via Web Share API or copy to clipboard
+    if (shareButton) {
+        shareButton.addEventListener('click', () => {
+            if (this.currentReceiptNo) {
+                this.shareReceipt(this.currentReceiptNo);
+            } else {
+                this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
+            }
+        });
+    }
+    
+    // 4. Handle SMS button - send receipt via SMS
+    if (smsButton) {
+        smsButton.addEventListener('click', () => {
+            if (this.currentReceiptNo) {
+                this.sendReceiptSms(this.currentReceiptNo);
+                
+            } else {
+                this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
+            }
+        });
+    }
+    
+    // 5. Handle receipt copy from the table (copy receipt number)
+    document.querySelectorAll('.copy-receipt').forEach(element => {
+        element.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const receiptNo = element.dataset.receipt;
+            if (receiptNo) {
+                navigator.clipboard.writeText(receiptNo).then(() => {
+                    this.showNotification('Namba ya risiti imenakiliwa!', 'success');
+                }).catch(() => {
+                    this.showNotification('Imeshindwa kunakili namba ya risiti', 'error');
+                });
+            }
+        });
+    });
+    
+    // 6. Handle print single receipt from the table
+    document.querySelectorAll('.print-single-receipt').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const receiptNo = button.dataset.receiptNo;
+            if (receiptNo) {
+                this.printSingleReceipt(receiptNo);
+            } else {
+                this.showNotification('Namba ya risiti haipatikani', 'error');
+            }
+        });
+    });
+    
+    // 7. Optional: Add keyboard shortcut (Ctrl+P) to print current receipt
+    document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+            if (this.currentReceiptNo && document.getElementById('risiti-tab-content') && 
+                !document.getElementById('risiti-tab-content').classList.contains('hidden')) {
+                e.preventDefault();
+                this.printThermalReceipt();
+            }
+        }
+    });
+    
+    // 8. Optional: Focus search input when Risiti tab is activated
+    const risitiTab = document.getElementById('risiti-tab');
+    if (risitiTab) {
+        risitiTab.addEventListener('click', () => {
+            setTimeout(() => {
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }, 100);
+        });
+    }
+}
 
     initCustomerSelection() {
         const customerSelectors = ['mteja-select', 'barcode-mteja-select', 'kikapu-mteja-select'];
@@ -3432,6 +3586,7 @@ showConfirmation(message, confirmCallback) {
         confirmCallback();
     }
 }
+
 lookupReceipt(receiptNo) {
     if (!receiptNo) {
         this.showNotification('Tafadhali ingiza namba ya risiti', 'error');
@@ -3607,59 +3762,6 @@ displayReceiptDetails(data) {
     }
 }
 
-initReceiptLookup() {
-    const searchInput = document.getElementById('search-receipt-input');
-    const printButton = document.getElementById('print-thermal-receipt');
-    
-    if (searchInput) {
-        // Search on Enter key
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                this.lookupReceipt(searchInput.value.trim());
-            }
-        });
-        
-        // Clear error styling on focus
-        searchInput.addEventListener('focus', () => {
-            searchInput.classList.remove('border-red-500');
-        });
-    }
-    
-    if (printButton) {
-        printButton.addEventListener('click', () => {
-            this.printThermalReceipt();
-        });
-    }
-    
-    // Add click handlers for receipt copy and print in the table
-    document.querySelectorAll('.copy-receipt').forEach(element => {
-        element.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const receiptNo = e.target.dataset.receipt;
-            if (receiptNo) {
-                navigator.clipboard.writeText(receiptNo).then(() => {
-                    this.showNotification('Namba ya risiti imenakiliwa!', 'success');
-                }).catch(() => {
-                    this.showNotification('Imeshindwa kunakili', 'error');
-                });
-            }
-        });
-    });
-    
-    document.querySelectorAll('.print-single-receipt').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const receiptNo = button.dataset.receiptNo;
-            if (receiptNo) {
-                this.printSingleReceipt(receiptNo);
-            }
-        });
-    });
-}
-
 printThermalReceipt() {
     if (!this.currentReceiptNo) {
         this.showNotification('Hakuna risiti iliyochaguliwa', 'error');
@@ -3683,6 +3785,259 @@ printSingleReceipt(receiptNo) {
     
     if (printWindow) {
         printWindow.focus();
+    }
+}
+// Share receipt via Web Share API (CORRECTED)
+async shareReceipt(receiptNo) {
+    try {
+        // Fetch receipt data
+        const response = await fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            this.showNotification('Hitilafu: ' + data.message, 'error');
+            return;
+        }
+        
+        // Format receipt text for sharing
+        let receiptText = `*RISITI YA MALIPO*\n`;
+        receiptText += `------------------\n`;
+        receiptText += `Namba: ${data.receipt_no}\n`;
+        receiptText += `Tarehe: ${data.date}\n`;
+        receiptText += `------------------\n`;
+        
+        data.items.forEach(item => {
+            receiptText += `${item.bidhaa}\n`;
+            receiptText += `  ${item.idadi} x ${item.bei} = ${item.jumla}\n`;
+        });
+        
+        receiptText += `------------------\n`;
+        receiptText += `Jumla Kuu: ${data.total}\n`;
+        receiptText += `------------------\n`;
+        receiptText += `Asante kwa kununua!\n`;
+        
+        // Check if Web Share API is supported
+        if (navigator.share) {
+            await navigator.share({
+                title: 'Risiti ya Mauzo',
+                text: receiptText,
+            });
+        } else {
+            // Fallback: Copy to clipboard
+            await navigator.clipboard.writeText(receiptText);
+            this.showNotification('Risiti imenakiliwa kwenye clipboard!', 'success');
+        }
+    } catch (error) {
+        console.error('Error sharing receipt:', error);
+        this.showNotification('Hitilafu wakati wa kushare risiti', 'error');
+    }
+}
+
+async sendReceiptSms(receiptNo) {
+    console.log('🔵 sendReceiptSms called with receiptNo:', receiptNo); // ← ADD THIS
+    
+    if (!receiptNo) {
+        this.showNotification('Hakuna risiti iliyochaguliwa', 'error');
+        return;
+    }
+    
+    // Store receipt number for later use
+    this.pendingSmsReceiptNo = receiptNo;
+    
+    // Show loading in the modal preview
+    const previewDiv = document.getElementById('sms-receipt-preview');
+    console.log('Preview div:', previewDiv); // ← ADD THIS
+    
+    if (previewDiv) {
+        previewDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inataarisha risiti...';
+    }
+    
+    // First, fetch receipt data to show preview
+    try {
+        console.log('Fetching receipt data for:', receiptNo); // ← ADD THIS
+        const response = await fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`);
+        const data = await response.json();
+        console.log('Receipt data:', data); // ← ADD THIS
+        
+        if (!data.success) {
+            throw new Error(data.message);
+        }
+        
+        // Format preview message
+        let previewText = `Risiti: ${data.receipt_no}\n`;
+        previewText += `Tarehe: ${data.date}\n`;
+        previewText += `Jumla: ${data.total}/=\n`;
+        previewText += `Bidhaa: ${data.items.length}`;
+        
+        if (previewDiv) {
+            previewDiv.textContent = previewText;
+        }
+        
+        // Store full receipt data for sending
+        this.pendingSmsData = data;
+        console.log('Pending SMS data stored'); // ← ADD THIS
+        
+    } catch (error) {
+        console.error('Error fetching receipt:', error);
+        if (previewDiv) {
+            previewDiv.innerHTML = '<span class="text-red-500">Imeshindwa kupata taarifa za risiti</span>';
+        }
+    }
+    
+    // Show the custom modal
+    const modal = document.getElementById('sms-receipt-modal');
+    console.log('SMS Modal element:', modal); // ← ADD THIS
+    
+    if (modal) {
+        modal.classList.remove('hidden');
+        
+        // Focus on phone input
+        const phoneInput = document.getElementById('sms-receipt-phone');
+        if (phoneInput) {
+            setTimeout(() => phoneInput.focus(), 100);
+            phoneInput.value = '';
+        }
+    } else {
+        console.error('SMS modal not found in DOM!'); // ← ADD THIS
+        this.showNotification('Hitilafu: Modal ya SMS haipatikani', 'error');
+    }
+}
+
+// Setup SMS modal event listeners (call this in your init method or constructor)
+setupSmsModalEvents() {
+    console.log('🔵 setupSmsModalEvents called'); // ← ADD THIS
+    const modal = document.getElementById('sms-receipt-modal');
+    console.log('Modal element found:', modal); // ← ADD THIS
+    const closeBtn = document.getElementById('close-sms-receipt-modal');
+    const cancelBtn = document.getElementById('cancel-sms-receipt');
+    const confirmBtn = document.getElementById('confirm-send-sms');
+    const phoneInput = document.getElementById('sms-receipt-phone');
+    
+    if (!modal) return;
+    
+    // Close modal function
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        if (phoneInput) phoneInput.value = '';
+        this.pendingSmsData = null;
+        this.pendingSmsReceiptNo = null;
+    };
+    
+    // Close on close button
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    
+    // Close on cancel button
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal || e.target.classList.contains('modal-overlay')) {
+            closeModal();
+        }
+    });
+    
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
+    
+    // Confirm send SMS
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+            const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
+            
+            if (!phoneNumber) {
+                this.showNotification('Tafadhali ingiza namba ya simu', 'error');
+                if (phoneInput) phoneInput.focus();
+                return;
+            }
+            
+            // Validate phone number
+            let cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
+            if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) {
+                cleanPhone = '255' + cleanPhone.substring(1);
+            } else if (cleanPhone.length === 10 && cleanPhone.startsWith('0')) {
+                cleanPhone = '255' + cleanPhone.substring(1);
+            } else if (!cleanPhone.startsWith('255')) {
+                this.showNotification('Namba ya simu lazima ianze na 255 au 0. Mfano: 255712345678', 'error');
+                if (phoneInput) phoneInput.focus();
+                return;
+            }
+            
+            if (cleanPhone.length !== 12 || !cleanPhone.startsWith('255')) {
+                this.showNotification('Namba ya simu si sahihi. Tumia muundo: 255XXXXXXXXX', 'error');
+                if (phoneInput) phoneInput.focus();
+                return;
+            }
+            
+            // Close modal
+            closeModal();
+            
+            // Show loading
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'sms-loading';
+            loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            loadingDiv.innerHTML = `
+                <div class="bg-white rounded-lg p-6 flex items-center gap-3">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                    <span class="text-gray-700">Inatuma risiti kwa SMS...</span>
+                </div>
+            `;
+            document.body.appendChild(loadingDiv);
+            
+            try {
+                // Format full message for SMS
+                let smsText = `*RISITI YA MALIPO*\n`;
+                smsText += `------------------\n`;
+                smsText += `Namba: ${this.pendingSmsData.receipt_no}\n`;
+                smsText += `Tarehe: ${this.pendingSmsData.date}\n`;
+                smsText += `------------------\n`;
+                
+                this.pendingSmsData.items.forEach(item => {
+                    smsText += `${item.bidhaa}\n`;
+                    smsText += `  ${item.idadi} x ${item.bei} = ${item.jumla}\n`;
+                });
+                
+                smsText += `------------------\n`;
+                smsText += `Jumla Kuu: ${this.pendingSmsData.total}\n`;
+                smsText += `------------------\n`;
+                smsText += `Asante kwa kununua!\n`;
+                
+                // Send SMS
+                const smsResponse = await fetch('/send-receipt-sms', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: cleanPhone,
+                        message: smsText,
+                        receipt_no: this.pendingSmsReceiptNo
+                    })
+                });
+                
+                const smsResult = await smsResponse.json();
+                
+                if (smsResult.success) {
+                    this.showNotification(`✓ Risiti imetumwa kwa ${cleanPhone} kikamilifu!`, 'success');
+                } else {
+                    this.showNotification(`✗ Hitilafu: ${smsResult.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error sending SMS:', error);
+                this.showNotification('Hitilafu wakati wa kutuma risiti kwa SMS', 'error');
+            } finally {
+                // Remove loading
+                const loading = document.getElementById('sms-loading');
+                if (loading) loading.remove();
+                this.pendingSmsData = null;
+                this.pendingSmsReceiptNo = null;
+            }
+        });
     }
 }
 

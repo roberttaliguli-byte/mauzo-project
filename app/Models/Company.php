@@ -48,6 +48,13 @@ public function wafanyakazi()
 {
     return $this->hasMany(\App\Models\Masaplaya::class);
 }
+/**
+ * Get SMS logs for this company
+ */
+public function smsLogs()
+{
+    return $this->hasMany(SmsLog::class);
+}
 
     public function matumizi()
 {

@@ -439,7 +439,6 @@
     </div>
 
 {{-- resources/views/layouts/admin.blade.php --}}
-{{-- resources/views/layouts/admin.blade.php --}}
 @php
   $navItems = [
       [
@@ -465,6 +464,12 @@
         'icon' => 'fas fa-chart-bar', 
         'label' => 'Ripoti',
         'description' => 'Angalia ripoti na takwimu'
+      ],
+            [
+        'route' => 'admin.sms.dashboard', 
+        'icon' => 'fas fa-envelope', 
+        'label' => 'Usimamizi wa SMS',
+        'description' => 'Tuma na fuatilia SMS za makampuni'
       ],
       [
         'route' => 'password.change', 

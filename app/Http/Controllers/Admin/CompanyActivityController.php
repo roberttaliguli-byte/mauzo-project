@@ -33,6 +33,9 @@ class CompanyActivityController extends Controller
             // Get summary statistics
             $stats = $this->activityService->getDashboardStats();
             
+            // Get today's active companies
+            $todayActiveCompanies = $this->activityService->getTodayActiveCompanies();
+            
             // Build the query with filters
             $companiesQuery = Company::query();
             
@@ -46,42 +49,27 @@ class CompanyActivityController extends Controller
                 });
             }
             
-            // Get all companies first to apply status filter
-            $allCompanies = $companiesQuery->get();
-            
-            // Enrich with activity data
-            foreach ($allCompanies as $company) {
-                $company->is_active = $this->activityService->isCompanyActive($company->id);
-                $company->active_users_count = $this->activityService->getActiveUsersCount($company->id);
-                $company->today_login_count = $this->activityService->getTodayLoginsCount($company->id);
-                $company->total_login_count = $this->activityService->getTotalLoginsCount($company->id);
-                $company->last_login_date = $this->activityService->getLastLoginDate($company->id);
-                
-                // Get users count
-                $company->users_count = User::where('company_id', $company->id)->count();
-                $company->wafanyakazi_count = 0;
-                if (class_exists('App\Models\Wafanyakazi')) {
-                    $company->wafanyakazi_count = Wafanyakazi::where('company_id', $company->id)->count();
+            // Apply status filter
+            if ($status === 'active') {
+                $activeCompanyIds = $this->getActiveCompanyIds();
+                if (!empty($activeCompanyIds)) {
+                    $companiesQuery->whereIn('id', $activeCompanyIds);
+                } else {
+                    $companiesQuery->whereRaw('1 = 0'); // No results
+                }
+            } elseif ($status === 'inactive') {
+                $activeCompanyIds = $this->getActiveCompanyIds();
+                if (!empty($activeCompanyIds)) {
+                    $companiesQuery->whereNotIn('id', $activeCompanyIds);
                 }
             }
             
-            // Apply status filter if provided
-            if ($status === 'active') {
-                $filteredIds = $allCompanies->filter(function($company) {
-                    return $company->is_active;
-                })->pluck('id');
-                $companiesQuery->whereIn('id', $filteredIds);
-            } elseif ($status === 'inactive') {
-                $filteredIds = $allCompanies->filter(function($company) {
-                    return !$company->is_active;
-                })->pluck('id');
-                $companiesQuery->whereIn('id', $filteredIds);
-            }
-            
             // Get paginated results
-            $companies = $companiesQuery->paginate(10)->withQueryString();
+            $companies = $companiesQuery->orderBy('created_at', 'desc')
+                ->paginate(10)
+                ->withQueryString();
             
-            // Enrich the paginated companies with activity data
+            // Enrich companies with activity data
             foreach ($companies as $company) {
                 $company->is_active = $this->activityService->isCompanyActive($company->id);
                 $company->active_users_count = $this->activityService->getActiveUsersCount($company->id);
@@ -94,9 +82,6 @@ class CompanyActivityController extends Controller
                     $q->select('id', 'company_id', 'name', 'username', 'last_activity_at', 'last_login_at', 'login_count', 'role');
                 }]);
             }
-            
-            // Get today's active companies for the report tab
-            $todayActiveCompanies = $this->activityService->getTodayActiveCompanies();
 
             return view('admin.company-activity', compact(
                 'companies', 
@@ -108,6 +93,7 @@ class CompanyActivityController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error in company activity index: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
             
             return view('admin.company-activity', [
                 'companies' => collect([]),
@@ -120,10 +106,10 @@ class CompanyActivityController extends Controller
                     'today_unique_users' => 0,
                     'active_percentage' => 0
                 ],
-                'search' => $search,
-                'status' => $status,
+                'search' => $search ?? null,
+                'status' => $status ?? null,
                 'todayActiveCompanies' => collect([]),
-                'error' => 'Hitilafu katika kupakia data: ' . $e->getMessage()
+                'error' => 'Hitilafu katika kupakia data'
             ]);
         }
     }
@@ -154,37 +140,21 @@ class CompanyActivityController extends Controller
             // Get employees if table exists
             $employees = collect();
             if (class_exists('App\Models\Wafanyakazi')) {
-                $employees = Wafanyakazi::where('company_id', $company->id)
-                    ->select('id', 'jina as name', 'username', 'last_activity_at', 'last_login_at', 'login_count')
-                    ->get();
+                try {
+                    $employees = Wafanyakazi::where('company_id', $company->id)
+                        ->select('id', 'jina as name', 'username', 'last_activity_at', 'last_login_at', 'login_count')
+                        ->get();
+                } catch (\Exception $e) {
+                    Log::warning('Error fetching employees: ' . $e->getMessage());
+                }
             }
 
-            // Get today's date
-            $today = Carbon::now('Africa/Nairobi')->startOfDay();
-
-            // Calculate weekly activity
-            $weeklyActivity = [];
-            for ($i = 6; $i >= 0; $i--) {
-                $date = Carbon::now()->subDays($i);
-                
-                $activeUsers = DB::table('login_histories')
-                    ->where('company_id', $company->id)
-                    ->whereDate('login_at', $date)
-                    ->distinct('user_id')
-                    ->count('user_id');
-                
-                $weeklyActivity[] = [
-                    'date' => $date->format('Y-m-d'),
-                    'day' => $date->format('D'),
-                    'active_users' => $activeUsers
-                ];
-            }
-
+            // Get weekly activity
+            $weeklyActivity = $this->activityService->getWeeklyActivity($company->id);
+            
             // Count currently active users
-            $activeUsersCount = User::where('company_id', $company->id)
-                ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
-                ->count();
-                
+            $activeUsersCount = $this->activityService->getActiveUsersCount($company->id);
+            
             $activeEmployeesCount = 0;
             if ($employees->isNotEmpty()) {
                 $activeEmployeesCount = $employees->filter(function($emp) {
@@ -194,19 +164,22 @@ class CompanyActivityController extends Controller
             }
 
             // Get login statistics
-            $totalLogins = DB::table('login_histories')
-                ->where('company_id', $company->id)
-                ->count();
+            $totalLogins = $this->activityService->getTotalLoginsCount($company->id);
+            $lastLogin = $this->activityService->getLastLoginDate($company->id);
+            $dailyActiveUsers = $this->activityService->getTodayLoginsCount($company->id);
 
-            $lastLogin = DB::table('login_histories')
-                ->where('company_id', $company->id)
-                ->max('login_at');
-
-            $dailyActiveUsers = DB::table('login_histories')
-                ->where('company_id', $company->id)
-                ->whereDate('login_at', $today)
-                ->distinct('user_id')
-                ->count('user_id');
+            // Get daily active users count (unique users who logged in today)
+            $today = Carbon::now('Africa/Nairobi')->startOfDay();
+            $dailyActiveUsersUnique = 0;
+            try {
+                $dailyActiveUsersUnique = DB::table('login_histories')
+                    ->where('company_id', $company->id)
+                    ->whereDate('login_at', $today)
+                    ->distinct('user_id')
+                    ->count('user_id');
+            } catch (\Exception $e) {
+                Log::warning('Error counting daily active users: ' . $e->getMessage());
+            }
 
             // Prepare company data
             $companyData = [
@@ -217,7 +190,7 @@ class CompanyActivityController extends Controller
                 'total_users' => $users->count() + $employees->count(),
                 'total_logins' => $totalLogins,
                 'last_login' => $lastLogin,
-                'daily_active_users' => $dailyActiveUsers,
+                'daily_active_users' => $dailyActiveUsersUnique,
                 'weekly_activity' => $weeklyActivity
             ];
 
@@ -268,11 +241,27 @@ class CompanyActivityController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error fetching company details: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
             
             return response()->json([
                 'success' => false,
                 'message' => 'Error loading company details: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Helper method to get active company IDs
+     */
+    private function getActiveCompanyIds()
+    {
+        try {
+            return User::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+                ->distinct('company_id')
+                ->pluck('company_id')
+                ->toArray();
+        } catch (\Exception $e) {
+            return [];
         }
     }
 }

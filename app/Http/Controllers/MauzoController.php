@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use App\Services\SMSService;
 use App\Models\Mauzo;
 use App\Models\Bidhaa;
 use App\Models\Matumizi;
@@ -16,6 +17,12 @@ use Carbon\Carbon;
 
 class MauzoController extends Controller
 {
+    protected $smsService;
+
+public function __construct(SMSService $smsService)
+{
+    $this->smsService = $smsService;
+}
     // Helper method to get authenticated user from any guard
     private function getAuthUser()
     {
@@ -1313,6 +1320,53 @@ class MauzoController extends Controller
             'item_count' => $sales->count()
         ]);
     }
+
+
+public function sendReceiptSms(Request $request)
+{
+    $request->validate([
+        'phone' => 'required|string',
+        'message' => 'required|string',
+        'receipt_no' => 'required|string'
+    ]);
+    
+    $user = $this->getAuthUser();
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized access'
+        ], 401);
+    }
+    
+    // Clean and format phone number
+    $phone = preg_replace('/[^0-9]/', '', $request->phone);
+    if (substr($phone, 0, 1) == '0') {
+        $phone = '255' . substr($phone, 1);
+    }
+    
+    if (!preg_match('/^255[0-9]{9}$/', $phone)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Namba ya simu si sahihi. Tumia muundo: 255XXXXXXXXX'
+        ], 422);
+    }
+    
+    $reference = 'RECEIPT_' . $request->receipt_no . '_' . time();
+    $message = $request->message;
+    
+    // Log for debugging
+    \Log::info('Sending receipt SMS', [
+        'phone' => $phone,
+        'receipt_no' => $request->receipt_no,
+        'message' => $message
+    ]);
+    
+    $result = $this->smsService->sendSms($phone, $message, $reference);
+    
+    \Log::info('SMS result', $result);
+    
+    return response()->json($result);
+}
 
     // Special kopesha endpoint for barcode
     public function storeKopesha(Request $request)

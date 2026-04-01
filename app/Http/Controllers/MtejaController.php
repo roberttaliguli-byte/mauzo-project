@@ -4,11 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Mteja;
+use App\Models\SmsLog;
+use App\Services\SMSService;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class MtejaController extends Controller
 {
+    protected $smsService;
+
+    public function __construct(SMSService $smsService)
+    {
+        $this->smsService = $smsService;
+    }
+
     /**
      * Get company ID for current user (works for both guards)
      */
@@ -273,5 +282,126 @@ class MtejaController extends Controller
             'success' => true,
             'data' => $mteja
         ]);
+    }
+
+/**
+ * Send SMS to customers
+ */
+public function sendSms(Request $request)
+{
+    $request->validate([
+        'recipients' => 'required|string',
+        'message' => 'required|string|max:1600'
+        // Remove this line: 'company_name' => 'required|string'
+    ]);
+
+    // Parse recipients (supports comma or new line separated)
+    $recipients = preg_split('/[\n,]+/', $request->recipients);
+    $recipients = array_map('trim', $recipients);
+    $recipients = array_filter($recipients);
+    
+    if (empty($recipients)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Hakuna namba za simu zilizojazwa'
+        ], 422);
+    }
+    
+    // Format phone numbers (ensure they start with 255)
+    $formattedRecipients = array_map(function($phone) {
+        // Remove any non-digit characters
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // If starts with 0, replace with 255
+        if (substr($phone, 0, 1) == '0') {
+            $phone = '255' . substr($phone, 1);
+        }
+        
+        return $phone;
+    }, $recipients);
+
+    // Get company name from the authenticated user's company
+    $companyId = $this->getCompanyId();
+    $company = \App\Models\Company::find($companyId);
+    $companyName = $company ? $company->company_name : 'Kampuni Yako';
+    
+    // Format message for customers
+    $userMessage = $request->message;
+    
+    $formattedMessage = "📢 UJUMBE KUTOKA {$companyName}:\n\n" 
+        . $userMessage . "\n\n---\n"
+        . "Karibu tena mteja wetu!\n"
+        . "Huduma nzuri na yenye uhakika kupitia www.mauzosheetai.co.tz\n"
+        . "Powered by Blackscience Technology";
+
+    $reference = 'REF_' . time() . '_' . uniqid();
+
+    $result = $this->smsService->sendSms($formattedRecipients, $formattedMessage, $reference);
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json($result);
+    }
+
+    if ($result['success']) {
+        return redirect()->back()->with('success', $result['message']);
+    }
+    
+    return redirect()->back()->with('error', $result['message']);
+}
+/**
+ * Get SMS stats
+ */
+public function getSmsStats()
+{
+    $companyId = $this->getCompanyId();
+    
+    $totalSent = SmsLog::where('company_id', $companyId)->count();
+    $todaySent = SmsLog::where('company_id', $companyId)
+        ->whereDate('sent_at', today())
+        ->count();
+    $monthSent = SmsLog::where('company_id', $companyId)
+        ->whereMonth('sent_at', now()->month)
+        ->whereYear('sent_at', now()->year)
+        ->count();
+
+    return response()->json([
+        'success' => true,
+        'total_sent' => $totalSent,
+        'today_sent' => $todaySent,
+        'month_sent' => $monthSent
+    ]);
+}
+
+/**
+ * Get SMS logs
+ */
+public function getSmsLogs(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    
+    $logs = SmsLog::where('company_id', $companyId)
+        ->orderBy('sent_at', 'desc')
+        ->when($request->limit, function($query, $limit) {
+            $query->limit($limit);
+        })
+        ->paginate($request->limit ?? 20);
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'logs' => $logs
+        ]);
+    }
+
+    return $logs;
+}
+
+    /**
+     * Test SMS connection
+     */
+    public function testSmsConnection()
+    {
+        $result = $this->smsService->testConnection();
+        return response()->json($result);
     }
 }

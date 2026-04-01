@@ -70,6 +70,9 @@
             <button data-tab="sajili" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
                 <i class="fas fa-plus mr-2"></i> Sajili
             </button>
+            <button data-tab="sms" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-envelope mr-2"></i> Tuma SMS
+            </button>
         </div>
     </div>
 
@@ -152,15 +155,19 @@
                                                 data-id="{{ $item->id }}" title="Badili">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <button class="delete-mteja-btn text-red-600 hover:text-red-800"
-                                                data-id="{{ $item->id }}" data-name="{{ $item->jina }}" title="Futa">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
                                         @if($item->simu)
+                                        <button class="sms-mteja-btn text-purple-600 hover:text-purple-800"
+                                                data-id="{{ $item->id }}" data-phone="{{ $item->simu }}" data-name="{{ $item->jina }}" title="Tuma SMS">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
                                         <a href="tel:{{ $item->simu }}" class="text-green-600 hover:text-green-800" title="Piga Simu">
                                             <i class="fas fa-phone"></i>
                                         </a>
                                         @endif
+                                        <button class="delete-mteja-btn text-red-600 hover:text-red-800"
+                                                data-id="{{ $item->id }}" data-name="{{ $item->jina }}" title="Futa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -203,9 +210,10 @@
                     <!-- Simu -->
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Namba ya Simu *</label>
-                        <input type="text" name="simu" 
+                        <input type="text" name="simu" id="customer-phone"
                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                               placeholder="Mf. 0712345678" required>
+                               placeholder="Mf. 255712345678" required>
+                        <p class="text-xs text-gray-500 mt-1">Tumia muundo: 255XXXXXXXXX</p>
                     </div>
 
                     <!-- Barua Pepe -->
@@ -245,6 +253,96 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- TAB 3: Tuma SMS -->
+    <div id="sms-tab-content" class="tab-content hidden">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <h2 class="text-sm font-semibold text-gray-800 mb-4">Tuma SMS kwa Wateja</h2>
+            
+            <!-- SMS Stats Mini -->
+            <div class="mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div>
+                        <p class="text-xs text-gray-600">Jumla ya SMS</p>
+                        <p id="stat-total" class="text-lg font-bold text-purple-700">0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-600">Leo</p>
+                        <p id="stat-today" class="text-lg font-bold text-pink-700">0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-600">Mwezi</p>
+                        <p id="stat-month" class="text-lg font-bold text-indigo-700">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="sms-form" method="POST" action="{{ route('sms.send') }}" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Namba za Simu *</label>
+                    <textarea name="recipients" id="sms-recipients" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                              placeholder="255712345678&#10;255758483019&#10;Tenganisha kwa kutumia mstari mpya au koma"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle"></i> Tenganisha namba kwa kutumia comma (,) au mstari mpya. Muundo: 255XXXXXXXXX
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Ujumbe *</label>
+                    <textarea name="message" id="sms-message" rows="4"
+                              class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                              placeholder="Andika ujumbe wako hapa..." required></textarea>
+                    <div class="flex justify-between mt-1">
+                        <p class="text-xs text-gray-500">
+                            <span id="message-chars">0</span> herufi | 
+                            <span id="message-parts-info">Sehemu: <span id="parts-count">1</span></span>
+                        </p>
+                        <button type="button" onclick="clearSmsForm()" class="text-xs text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-eraser"></i> Safisha
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <button type="submit" id="send-sms-btn"
+                            class="flex-1 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm font-medium">
+                        <i class="fas fa-paper-plane mr-1"></i> Tuma SMS
+                    </button>
+                    <button type="button" 
+                            onclick="selectAllCustomers()"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm">
+                        <i class="fas fa-users mr-1"></i> Chagua Wote
+                    </button>
+                    <button type="button" 
+                            onclick="testSmsConnection()"
+                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+                        <i class="fas fa-vial mr-1"></i> Test
+                    </button>
+                </div>
+            </form>
+
+            <!-- SMS History - Hidden by default, shows on click -->
+            <div class="mt-6 pt-4 border-t border-gray-200">
+                <button onclick="toggleSmsHistory()" 
+                        class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+                    <span class="text-sm font-semibold text-gray-700">
+                        <i class="fas fa-history mr-2"></i> Historia ya SMS
+                    </span>
+                    <span class="text-gray-500">
+                        <i id="history-icon" class="fas fa-chevron-down"></i>
+                        <span id="history-count" class="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">0</span>
+                    </span>
+                </button>
+                <div id="sms-history-container" class="hidden mt-3">
+                    <div id="sms-history" class="space-y-2 max-h-96 overflow-y-auto">
+                        <p class="text-xs text-gray-500 text-center py-4">Hakuna historia ya SMS</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -299,7 +397,53 @@
                class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium text-center hidden">
                 <i class="fas fa-phone mr-1"></i> Piga Simu
             </a>
+            <button id="sms-from-view" 
+                    class="flex-1 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-medium text-center hidden">
+                <i class="fas fa-envelope mr-1"></i> Tuma SMS
+            </button>
         </div>
+    </div>
+</div>
+
+<!-- SMS Modal (For Single Customer) -->
+<div id="single-sms-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-50">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">Tuma SMS kwa Mteja</h3>
+        </div>
+        <form id="single-sms-form" method="POST" action="{{ route('sms.send') }}" class="p-4">
+            @csrf
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Mteja</label>
+                    <p id="sms-customer-name" class="text-sm font-medium text-gray-900"></p>
+                    <p id="sms-customer-phone" class="text-xs text-gray-500"></p>
+                    <input type="hidden" name="recipients" id="sms-recipient-single">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Ujumbe *</label>
+                    <textarea name="message" id="single-sms-message" rows="4"
+                              class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-purple-500"
+                              placeholder="Andika ujumbe wako hapa..." required></textarea>
+                    <div class="flex justify-between mt-1">
+                        <p class="text-xs text-gray-500">
+                            <span id="single-message-chars">0</span> herufi
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
+                <button type="button" id="close-sms-modal"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
+                    Ghairi
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-medium">
+                    <i class="fas fa-paper-plane mr-1"></i> Tuma SMS
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -314,37 +458,28 @@
             @csrf
             @method('PUT')
             <div class="space-y-3">
-                <!-- Jina -->
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Jina Kamili *</label>
                     <input type="text" name="jina" id="edit-jina"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                            required>
                 </div>
-
-                <!-- Simu -->
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Namba ya Simu *</label>
                     <input type="text" name="simu" id="edit-simu"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                            required>
                 </div>
-
-                <!-- Barua Pepe -->
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Barua Pepe</label>
                     <input type="email" name="barua_pepe" id="edit-email"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
-
-                <!-- Anapoishi -->
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Anuani ya Makazi</label>
                     <input type="text" name="anapoishi" id="edit-address"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
-
-                <!-- Maelezo -->
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Maelezo ya Ziada</label>
                     <textarea name="maelezo" id="edit-notes" rows="3"
@@ -396,10 +531,37 @@
         </div>
     </div>
 </div>
+
 @endsection
 
 @push('scripts')
 <script>
+// Global variable to track history visibility
+let historyVisible = false;
+
+// Toggle SMS History visibility
+function toggleSmsHistory() {
+    const container = document.getElementById('sms-history-container');
+    const icon = document.getElementById('history-icon');
+    
+    if (historyVisible) {
+        container.classList.add('hidden');
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+        historyVisible = false;
+    } else {
+        container.classList.remove('hidden');
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+        historyVisible = true;
+        
+        // Load history only when first opened
+        if (window.watejaManager && document.getElementById('sms-history').innerHTML.includes('Hakuna historia')) {
+            window.watejaManager.loadSmsHistory();
+        }
+    }
+}
+
 class SmartWatejaManager {
     constructor() {
         this.currentTab = this.getSavedTab() || 'taarifa';
@@ -411,6 +573,8 @@ class SmartWatejaManager {
         this.bindEvents();
         this.showTab(this.currentTab);
         this.setupAjaxForms();
+        this.initSmsFeatures();
+        this.refreshSmsStats();
     }
 
     getSavedTab() {
@@ -421,36 +585,181 @@ class SmartWatejaManager {
         sessionStorage.setItem('wateja_tab', tab);
     }
 
-    bindEvents() {
-        // Tab navigation
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const tab = e.target.closest('.tab-button').dataset.tab;
-                this.showTab(tab);
-                this.saveTab(tab);
-            });
-        });
-
-        // Search with debounce
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => {
-                    this.filterWateja(e.target.value.toLowerCase().trim());
-                }, 300);
+    initSmsFeatures() {
+        // SMS message character counter
+        const smsMessage = document.getElementById('sms-message');
+        if (smsMessage) {
+            smsMessage.addEventListener('input', (e) => {
+                const length = e.target.value.length;
+                document.getElementById('message-chars').textContent = length;
+                
+                const parts = Math.ceil(length / 153);
+                document.getElementById('parts-count').textContent = parts;
             });
         }
 
-        // Mteja action buttons
-        this.bindMtejaActions();
+        // Single SMS message counter
+        const singleMessage = document.getElementById('single-sms-message');
+        if (singleMessage) {
+            singleMessage.addEventListener('input', (e) => {
+                document.getElementById('single-message-chars').textContent = e.target.value.length;
+            });
+        }
 
-        // Modal events
-        this.bindModalEvents();
+        // SMS form submission
+        const smsForm = document.getElementById('sms-form');
+        if (smsForm) {
+            smsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.sendSms(smsForm);
+            });
+        }
+
+        // Single SMS form submission
+        const singleSmsForm = document.getElementById('single-sms-form');
+        if (singleSmsForm) {
+            singleSmsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.sendSms(singleSmsForm);
+                document.getElementById('single-sms-modal').classList.add('hidden');
+            });
+        }
+    }
+
+    async loadSmsHistory() {
+        try {
+            const response = await fetch('{{ route("sms.logs") }}?limit=20', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            const historyDiv = document.getElementById('sms-history');
+            const historyCount = document.getElementById('history-count');
+            
+            if (data.logs && data.logs.data && data.logs.data.length > 0) {
+                historyCount.textContent = data.logs.total || data.logs.data.length;
+                
+                historyDiv.innerHTML = data.logs.data.map(log => `
+                    <div class="bg-gray-50 rounded p-3 text-xs border border-gray-200 hover:shadow-sm transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-medium text-gray-900">${log.recipient}</span>
+                                    <span class="px-2 py-0.5 text-xs rounded-full 
+                                        ${log.status === 'PENDING_ENROUTE' || log.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : 
+                                          log.status === 'REJECTED' || log.status.includes('FAILED') ? 'bg-red-100 text-red-800' : 
+                                          'bg-blue-100 text-blue-800'}">
+                                        ${log.status}
+                                    </span>
+                                </div>
+                                <p class="text-gray-700 mt-1 leading-relaxed">${this.escapeHtml(log.message)}</p>
+                                <div class="flex justify-between mt-2 text-gray-400">
+                                    <span><i class="fas fa-envelope mr-1"></i> Sehemu: ${log.sms_count}</span>
+                                    <span><i class="far fa-clock mr-1"></i> ${new Date(log.sent_at).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                historyCount.textContent = '0';
+                historyDiv.innerHTML = '<p class="text-xs text-gray-500 text-center py-4"><i class="fas fa-inbox mr-2"></i> Hakuna historia ya SMS</p>';
+            }
+        } catch (error) {
+            console.error('Failed to load SMS history', error);
+            document.getElementById('sms-history').innerHTML = '<p class="text-xs text-red-500 text-center py-4">Hitilafu katika kupakia historia</p>';
+        }
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    async refreshSmsStats() {
+        try {
+            const response = await fetch('{{ route("sms.stats") }}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update stats in SMS tab
+                document.getElementById('stat-total').textContent = data.total_sent;
+                document.getElementById('stat-today').textContent = data.today_sent;
+                document.getElementById('stat-month').textContent = data.month_sent;
+                
+                // Update history count badge
+                const historyCount = document.getElementById('history-count');
+                if (historyCount && data.total_sent) {
+                    historyCount.textContent = data.total_sent;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch SMS stats:', error);
+        }
+    }
+
+    async sendSms(form) {
+        const formData = new FormData(form);
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        
+        try {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Inatuma...';
+            
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                this.showNotification(data.message || 'SMS imetumwa kikamilifu!', 'success');
+                if (form.id === 'sms-form') {
+                    document.getElementById('sms-recipients').value = '';
+                    document.getElementById('sms-message').value = '';
+                    document.getElementById('message-chars').textContent = '0';
+                    document.getElementById('parts-count').textContent = '1';
+                } else {
+                    document.getElementById('single-sms-message').value = '';
+                    document.getElementById('single-message-chars').textContent = '0';
+                }
+                
+                // Refresh stats and update history count
+                await this.refreshSmsStats();
+                
+                // If history is visible, reload it
+                if (historyVisible) {
+                    await this.loadSmsHistory();
+                }
+            } else {
+                const error = data.message || 'Hitilafu imetokea wakati wa kutuma SMS';
+                this.showNotification(error, 'error');
+            }
+        } catch (error) {
+            this.showNotification('Hitilafu ya mtandao', 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        }
     }
 
     showTab(tabName) {
-        // Update tabs
         document.querySelectorAll('.tab-button').forEach(button => {
             if (button.dataset.tab === tabName) {
                 button.classList.add('bg-emerald-50', 'text-emerald-700');
@@ -461,17 +770,42 @@ class SmartWatejaManager {
             }
         });
 
-        // Update tab content
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.add('hidden');
         });
         
         document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
         this.currentTab = tabName;
+        
+        if (tabName === 'sms') {
+            this.refreshSmsStats();
+        }
+    }
+
+    bindEvents() {
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const tab = e.target.closest('.tab-button').dataset.tab;
+                this.showTab(tab);
+                this.saveTab(tab);
+            });
+        });
+
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.filterWateja(e.target.value.toLowerCase().trim());
+                }, 300);
+            });
+        }
+
+        this.bindMtejaActions();
+        this.bindModalEvents();
     }
 
     bindMtejaActions() {
-        // View buttons
         document.querySelectorAll('.view-mteja-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const row = e.target.closest('.mteja-row');
@@ -480,7 +814,6 @@ class SmartWatejaManager {
             });
         });
 
-        // Edit buttons
         document.querySelectorAll('.edit-mteja-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const row = e.target.closest('.mteja-row');
@@ -489,70 +822,45 @@ class SmartWatejaManager {
             });
         });
 
-        // Delete buttons
+        document.querySelectorAll('.sms-mteja-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const phone = button.dataset.phone;
+                const name = button.dataset.name;
+                this.showSingleSmsModal(phone, name);
+            });
+        });
+
         document.querySelectorAll('.delete-mteja-btn').forEach(button => {
             button.addEventListener('click', (e) => {
-                const mtejaId = e.target.closest('.delete-mteja-btn').dataset.id;
-                const mtejaName = e.target.closest('.delete-mteja-btn').dataset.name;
+                const mtejaId = button.dataset.id;
+                const mtejaName = button.dataset.name;
                 this.deleteMteja(mtejaId, mtejaName);
             });
         });
     }
 
     bindModalEvents() {
-        // View modal
         const viewModal = document.getElementById('view-modal');
         const closeViewBtn = document.getElementById('close-view-modal');
-
-        if (closeViewBtn) {
-            closeViewBtn.addEventListener('click', () => viewModal.classList.add('hidden'));
-        }
+        if (closeViewBtn) closeViewBtn.addEventListener('click', () => viewModal.classList.add('hidden'));
         
-        if (viewModal) {
-            viewModal.addEventListener('click', (e) => {
-                if (e.target === viewModal || e.target.classList.contains('modal-overlay')) {
-                    viewModal.classList.add('hidden');
-                }
-            });
-        }
-
-        // Edit modal
         const editModal = document.getElementById('edit-modal');
         const closeEditBtn = document.getElementById('close-edit-modal');
-
-        if (closeEditBtn) {
-            closeEditBtn.addEventListener('click', () => editModal.classList.add('hidden'));
-        }
+        if (closeEditBtn) closeEditBtn.addEventListener('click', () => editModal.classList.add('hidden'));
         
-        if (editModal) {
-            editModal.addEventListener('click', (e) => {
-                if (e.target === editModal || e.target.classList.contains('modal-overlay')) {
-                    editModal.classList.add('hidden');
-                }
-            });
-        }
-
-        // Delete modal
+        const smsModal = document.getElementById('single-sms-modal');
+        const closeSmsBtn = document.getElementById('close-sms-modal');
+        if (closeSmsBtn) closeSmsBtn.addEventListener('click', () => smsModal.classList.add('hidden'));
+        
         const deleteModal = document.getElementById('delete-modal');
         const cancelDeleteBtn = document.getElementById('cancel-delete');
-
-        if (cancelDeleteBtn) {
-            cancelDeleteBtn.addEventListener('click', () => deleteModal.classList.add('hidden'));
-        }
+        if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => deleteModal.classList.add('hidden'));
         
-        if (deleteModal) {
-            deleteModal.addEventListener('click', (e) => {
-                if (e.target === deleteModal || e.target.classList.contains('modal-overlay')) {
-                    deleteModal.classList.add('hidden');
-                }
-            });
-        }
-
-        // Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (viewModal) viewModal.classList.add('hidden');
                 if (editModal) editModal.classList.add('hidden');
+                if (smsModal) smsModal.classList.add('hidden');
                 if (deleteModal) deleteModal.classList.add('hidden');
             }
         });
@@ -564,12 +872,7 @@ class SmartWatejaManager {
         
         rows.forEach(row => {
             const mteja = JSON.parse(row.dataset.mteja);
-            const searchText = `
-                ${mteja.jina || ''}
-                ${mteja.simu || ''}
-                ${mteja.barua_pepe || ''}
-                ${mteja.anapoishi || ''}
-            `.toLowerCase();
+            const searchText = `${mteja.jina} ${mteja.simu} ${mteja.barua_pepe} ${mteja.anapoishi}`.toLowerCase();
             
             if (searchText.includes(searchTerm) || !searchTerm) {
                 row.classList.remove('hidden');
@@ -588,23 +891,32 @@ class SmartWatejaManager {
         const viewModal = document.getElementById('view-modal');
         if (!viewModal) return;
 
-        // Populate view modal
         document.getElementById('view-initial').textContent = mteja.jina ? mteja.jina.charAt(0).toUpperCase() : 'M';
         document.getElementById('view-jina').textContent = mteja.jina || '--';
-        document.getElementById('view-simu').textContent = mteja.simu ? `+${mteja.simu}` : '--';
+        document.getElementById('view-simu').textContent = mteja.simu || '--';
         document.getElementById('view-phone').textContent = mteja.simu || '--';
         document.getElementById('view-email').textContent = mteja.barua_pepe || '--';
         document.getElementById('view-address').textContent = mteja.anapoishi || '--';
         document.getElementById('view-date').textContent = mteja.created_at ? new Date(mteja.created_at).toLocaleDateString() : '--';
-        document.getElementById('view-notes').textContent = mteja.maelezo || 'Hakuna maelezo ya ziada';
+        document.getElementById('view-notes').textContent = mteja.maelezo || 'Hakuna maelezo';
 
-        // Show/hide call button
         const callButton = document.getElementById('call-button');
         if (mteja.simu) {
             callButton.href = `tel:${mteja.simu}`;
             callButton.classList.remove('hidden');
         } else {
             callButton.classList.add('hidden');
+        }
+
+        const smsButton = document.getElementById('sms-from-view');
+        if (mteja.simu) {
+            smsButton.onclick = () => {
+                viewModal.classList.add('hidden');
+                this.showSingleSmsModal(mteja.simu, mteja.jina);
+            };
+            smsButton.classList.remove('hidden');
+        } else {
+            smsButton.classList.add('hidden');
         }
 
         viewModal.classList.remove('hidden');
@@ -614,7 +926,6 @@ class SmartWatejaManager {
         const editForm = document.getElementById('edit-form');
         if (!editForm) return;
 
-        // Populate edit form
         document.getElementById('edit-jina').value = mteja.jina || '';
         document.getElementById('edit-simu').value = mteja.simu || '';
         document.getElementById('edit-email').value = mteja.barua_pepe || '';
@@ -622,9 +933,20 @@ class SmartWatejaManager {
         document.getElementById('edit-notes').value = mteja.maelezo || '';
         
         editForm.action = `/wateja/${mteja.id}`;
+        document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
+    showSingleSmsModal(phone, name) {
+        const smsModal = document.getElementById('single-sms-modal');
+        if (!smsModal) return;
+
+        document.getElementById('sms-customer-name').textContent = name;
+        document.getElementById('sms-customer-phone').textContent = `Namba: ${phone}`;
+        document.getElementById('sms-recipient-single').value = phone;
+        document.getElementById('single-sms-message').value = '';
+        document.getElementById('single-message-chars').textContent = '0';
         
-        const editModal = document.getElementById('edit-modal');
-        if (editModal) editModal.classList.remove('hidden');
+        smsModal.classList.remove('hidden');
     }
 
     deleteMteja(mtejaId, mtejaName) {
@@ -632,15 +954,12 @@ class SmartWatejaManager {
         const deleteModal = document.getElementById('delete-modal');
         const deleteMtejaName = document.getElementById('delete-mteja-name');
         
-        if (!deleteForm || !deleteModal || !deleteMtejaName) return;
-        
         deleteMtejaName.textContent = mtejaName;
         deleteForm.action = `/wateja/${mtejaId}`;
         deleteModal.classList.remove('hidden');
     }
 
     setupAjaxForms() {
-        // Mteja form
         const mtejaForm = document.getElementById('mteja-form');
         if (mtejaForm) {
             mtejaForm.addEventListener('submit', async (e) => {
@@ -650,7 +969,6 @@ class SmartWatejaManager {
             });
         }
 
-        // Edit form
         const editForm = document.getElementById('edit-form');
         if (editForm) {
             editForm.addEventListener('submit', async (e) => {
@@ -660,7 +978,6 @@ class SmartWatejaManager {
             });
         }
 
-        // Delete form
         const deleteForm = document.getElementById('delete-form');
         if (deleteForm) {
             deleteForm.addEventListener('submit', async (e) => {
@@ -671,13 +988,12 @@ class SmartWatejaManager {
         }
     }
 
-    async submitForm(form, successMessage = 'Operesheni imekamilika!') {
+    async submitForm(form, successMessage) {
         const formData = new FormData(form);
         const submitButton = form.querySelector('button[type="submit"]');
         const originalText = submitButton.innerHTML;
         
         try {
-            // Disable submit button
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Inatumwa...';
             
@@ -692,11 +1008,8 @@ class SmartWatejaManager {
 
             const data = await response.json();
 
-            if (response.ok) {
-                const message = data.message || successMessage;
-                this.showNotification(message, 'success');
-                
-                // Reload after successful operation
+            if (response.ok && data.success) {
+                this.showNotification(data.message || successMessage, 'success');
                 setTimeout(() => window.location.reload(), 1000);
             } else {
                 const error = data.errors ? Object.values(data.errors)[0][0] : data.message;
@@ -705,7 +1018,6 @@ class SmartWatejaManager {
         } catch (error) {
             this.showNotification('Hitilafu ya mtandao', 'error');
         } finally {
-            // Re-enable submit button
             submitButton.disabled = false;
             submitButton.innerHTML = originalText;
         }
@@ -723,20 +1035,71 @@ class SmartWatejaManager {
         };
 
         const notification = document.createElement('div');
-        notification.className = `rounded border px-4 py-3 text-sm font-medium mb-2 ${colors[type]} shadow-sm animate-fade-in`;
+        notification.className = `rounded border px-4 py-3 text-sm font-medium mb-2 ${colors[type]} shadow-sm`;
         notification.textContent = message;
 
         container.appendChild(notification);
 
         setTimeout(() => {
             notification.style.opacity = '0';
-            notification.style.transform = 'translateY(-10px) translateX(-50%)';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }
 }
 
-// Print function
+// Global functions
+async function refreshSmsStats() {
+    if (window.watejaManager) {
+        await window.watejaManager.refreshSmsStats();
+    }
+}
+
+async function testSmsConnection() {
+    try {
+        const response = await fetch('{{ route("sms.test") }}', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            window.watejaManager.showNotification(data.message, 'success');
+        } else {
+            window.watejaManager.showNotification(data.message, 'error');
+        }
+    } catch (error) {
+        window.watejaManager.showNotification('Test failed: ' + error.message, 'error');
+    }
+}
+
+function selectAllCustomers() {
+    const phoneNumbers = [];
+    document.querySelectorAll('.mteja-row').forEach(row => {
+        const mteja = JSON.parse(row.dataset.mteja);
+        if (mteja.simu) {
+            phoneNumbers.push(mteja.simu);
+        }
+    });
+    
+    if (phoneNumbers.length > 0) {
+        const recipientsField = document.getElementById('sms-recipients');
+        recipientsField.value = phoneNumbers.join('\n');
+        window.watejaManager.showNotification(`${phoneNumbers.length} wateja wamechaguliwa`, 'success');
+    } else {
+        window.watejaManager.showNotification('Hakuna wateja wenye namba za simu', 'warning');
+    }
+}
+
+function clearSmsForm() {
+    document.getElementById('sms-recipients').value = '';
+    document.getElementById('sms-message').value = '';
+    document.getElementById('message-chars').textContent = '0';
+    document.getElementById('parts-count').textContent = '1';
+}
+
 function printWateja() {
     const printWindow = window.open('', '_blank');
     const rows = document.querySelectorAll('.mteja-row');
@@ -751,7 +1114,8 @@ function printWateja() {
                 <td style="border: 1px solid #ddd; padding: 8px;">${mteja.barua_pepe || '--'}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${mteja.anapoishi || '--'}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${mteja.created_at ? new Date(mteja.created_at).toLocaleDateString() : ''}</td>
-            </tr>`;
+            </tr>
+        `;
     });
     
     printWindow.document.write(`
@@ -767,10 +1131,6 @@ function printWateja() {
                 .header { text-align: center; margin-bottom: 30px; }
                 .header h2 { margin: 0; color: #047857; }
                 .header p { margin: 5px 0 0 0; color: #6b7280; }
-                @media print {
-                    body { margin: 0; }
-                    .no-print { display: none; }
-                }
             </style>
         </head>
         <body>
@@ -788,9 +1148,7 @@ function printWateja() {
                         <th>Tarehe</th>
                     </tr>
                 </thead>
-                <tbody>
-                    ${tableRows}
-                </tbody>
+                <tbody>${tableRows}</tbody>
             </table>
         </body>
         </html>
@@ -799,7 +1157,6 @@ function printWateja() {
     printWindow.print();
 }
 
-// PDF Export
 function exportPDF() {
     const search = new URLSearchParams(window.location.search);
     search.set('export', 'pdf');
@@ -809,13 +1166,6 @@ function exportPDF() {
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     window.watejaManager = new SmartWatejaManager();
-    
-    // Save tab state
-    window.addEventListener('beforeunload', () => {
-        if (window.watejaManager) {
-            window.watejaManager.saveTab(window.watejaManager.currentTab);
-        }
-    });
 });
 </script>
 @endpush

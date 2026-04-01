@@ -223,14 +223,19 @@ Route::middleware(['auth.any'])->group(function () {
         }
     })->name('api.send.package.email');
     
-    // ================================
-    // Wateja Routes (accessible by both)
-    // ================================
-    Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
-    Route::post('/wateja', [MtejaController::class, 'store'])->name('wateja.store');
-    Route::put('/wateja/{mteja}', [MtejaController::class, 'update'])->name('wateja.update');
-    Route::delete('/wateja/{mteja}', [MtejaController::class, 'destroy'])->name('wateja.destroy');
-    
+// ================================
+// Wateja Routes (accessible by both)
+// ================================
+Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
+Route::post('/wateja', [MtejaController::class, 'store'])->name('wateja.store');
+Route::put('/wateja/{mteja}', [MtejaController::class, 'update'])->name('wateja.update');
+Route::delete('/wateja/{mteja}', [MtejaController::class, 'destroy'])->name('wateja.destroy');
+
+// SMS Routes - Make sure these are inside the auth.any group
+Route::post('/send-sms', [MtejaController::class, 'sendSms'])->name('sms.send');
+Route::get('/sms-logs', [MtejaController::class, 'getSmsLogs'])->name('sms.logs');
+Route::get('/sms-stats', [MtejaController::class, 'getSmsStats'])->name('sms.stats');
+Route::get('/sms-test', [MtejaController::class, 'testSmsConnection'])->name('sms.test');
     // ================================
     // Matumizi Routes (accessible by both)
     // ================================
@@ -240,27 +245,29 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/matumizi/export-pdf', [MatumiziController::class, 'exportPDF'])->name('matumizi.export.pdf');
     Route::get('/matumizi/export-report-pdf', [MatumiziController::class, 'exportReportPDF'])->name('matumizi.export.report.pdf');
     
-    // ================================
-    // Mauzo Routes (accessible by both)
-    // ================================
-    Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
-    Route::post('/mauzo', [MauzoController::class, 'store'])->name('mauzo.store');
-    Route::delete('/mauzo/{id}', [MauzoController::class, 'destroy'])->name('mauzo.destroy');
-    Route::post('/mauzo/barcode', [MauzoController::class, 'storeBarcode'])->name('mauzo.store.barcode');
-    Route::post('/mauzo/kikapu', [MauzoController::class, 'storeKikapu'])->name('mauzo.store.kikapu');
-    Route::post('/mauzo/kikapu/loan', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kikapu.loan');
-    Route::post('/mauzo/kopesha', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kopesha');
-    Route::post('/mauzo/kopesha/barcode', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kopesha.barcode');
-    Route::get('/mauzo/check-double-sale/{bidhaaId}', [MauzoController::class, 'checkDoubleSale'])->name('mauzo.check.double.sale');
-    Route::get('/mauzo/receipt-data/{receiptNo}', [MauzoController::class, 'getReceiptData'])->name('mauzo.receipt.data');
-    Route::post('/mauzo/filtered-sales', [MauzoController::class, 'getFilteredSales'])->name('mauzo.filtered');
-    Route::get('/mauzo/search-receipts', [MauzoController::class, 'searchReceipts'])->name('mauzo.search.receipts');
-    Route::get('/mauzo/receipt-print/{receiptNo}', [MauzoController::class, 'getReceiptForPrint'])->name('mauzo.receipt.print');
-    Route::get('/mauzo/thermal-receipt/{receiptNo}', [MauzoController::class, 'printThermalReceipt'])->name('mauzo.thermal.receipt');
-    Route::get('/mauzo/financial-data', [MauzoController::class, 'getFinancialData'])->name('mauzo.financial.data');
-    Route::get('/mauzo/product-by-barcode/{barcode}', [MauzoController::class, 'getProductByBarcode'])->name('mauzo.product.by.barcode');
-    Route::post('/mauzo/update-stock', [MauzoController::class, 'updateStock'])->name('mauzo.update.stock');
-    
+// ================================
+// Mauzo Routes (accessible by both)
+// ================================
+Route::get('/mauzo', [MauzoController::class, 'index'])->name('mauzo.index');
+Route::post('/mauzo', [MauzoController::class, 'store'])->name('mauzo.store');
+Route::delete('/mauzo/{id}', [MauzoController::class, 'destroy'])->name('mauzo.destroy');
+Route::post('/mauzo/barcode', [MauzoController::class, 'storeBarcode'])->name('mauzo.store.barcode');
+Route::post('/mauzo/kikapu', [MauzoController::class, 'storeKikapu'])->name('mauzo.store.kikapu');
+Route::post('/mauzo/kikapu/loan', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kikapu.loan');
+Route::post('/mauzo/kopesha', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kopesha');
+Route::post('/mauzo/kopesha/barcode', [MauzoController::class, 'storeKikapuLoan'])->name('mauzo.store.kopesha.barcode');
+Route::get('/mauzo/check-double-sale/{bidhaaId}', [MauzoController::class, 'checkDoubleSale'])->name('mauzo.check.double.sale');
+Route::get('/mauzo/receipt-data/{receiptNo}', [MauzoController::class, 'getReceiptData'])->name('mauzo.receipt.data');
+Route::post('/mauzo/filtered-sales', [MauzoController::class, 'getFilteredSales'])->name('mauzo.filtered');
+Route::get('/mauzo/search-receipts', [MauzoController::class, 'searchReceipts'])->name('mauzo.search.receipts');
+Route::get('/mauzo/receipt-print/{receiptNo}', [MauzoController::class, 'getReceiptForPrint'])->name('mauzo.receipt.print');
+Route::get('/mauzo/thermal-receipt/{receiptNo}', [MauzoController::class, 'printThermalReceipt'])->name('mauzo.thermal.receipt');
+Route::get('/mauzo/financial-data', [MauzoController::class, 'getFinancialData'])->name('mauzo.financial.data');
+Route::get('/mauzo/product-by-barcode/{barcode}', [MauzoController::class, 'getProductByBarcode'])->name('mauzo.product.by.barcode');
+Route::post('/mauzo/update-stock', [MauzoController::class, 'updateStock'])->name('mauzo.update.stock');
+
+// ADD THIS ROUTE - Send receipt via SMS
+Route::post('/send-receipt-sms', [MauzoController::class, 'sendReceiptSms'])->name('send.receipt.sms');
     // ================================
     // Bidhaa Routes (accessible by both)
     // ================================
@@ -355,11 +362,11 @@ Route::middleware(['auth', 'role:admin'])
             Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
                 ->name('reports.download-companies');
 
-            // Company Activity Routes - INSIDE the same reports group
-            Route::get('/company-activity', [CompanyActivityController::class, 'index'])
+            // CRITICAL: Company Activity Routes - Make sure these are present
+            Route::get('/company-activity', [\App\Http\Controllers\Admin\CompanyActivityController::class, 'index'])
                 ->name('reports.company-activity');
             
-            Route::get('/company-activity/{id}/details', [CompanyActivityController::class, 'getCompanyDetails'])
+            Route::get('/company-activity/{id}/details', [\App\Http\Controllers\Admin\CompanyActivityController::class, 'getCompanyDetails'])
                 ->name('reports.company-activity.details');
         });
         // Change Password
@@ -381,6 +388,24 @@ Route::middleware(['auth', 'role:admin'])
             ->name('payments.verify');
         Route::get('/payments/export', [App\Http\Controllers\Admin\PaymentController::class, 'export'])
             ->name('payments.export');
+
+                    Route::prefix('sms')->name('sms.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\AdminSmsController::class, 'index'])->name('dashboard');
+            Route::get('/logs', [App\Http\Controllers\Admin\AdminSmsController::class, 'allLogs'])->name('logs');
+            Route::get('/stats', [App\Http\Controllers\Admin\AdminSmsController::class, 'stats'])->name('stats');
+            
+            // Send to specific company
+            Route::get('/company/{company}/send', [App\Http\Controllers\Admin\AdminSmsController::class, 'sendToCompanyForm'])->name('send-to-company');
+            Route::post('/company/{company}/send', [App\Http\Controllers\Admin\AdminSmsController::class, 'sendToCompany'])->name('send-to-company.post');
+            
+            // Company SMS report
+            Route::get('/company/{company}/report', [App\Http\Controllers\Admin\AdminSmsController::class, 'companyReport'])->name('company-report');
+            Route::get('/company/{company}/export', [App\Http\Controllers\Admin\AdminSmsController::class, 'exportCompanyReport'])->name('company-report.export');
+            
+            // Bulk SMS
+            Route::get('/bulk', [App\Http\Controllers\Admin\AdminSmsController::class, 'sendBulkForm'])->name('bulk');
+            Route::post('/bulk', [App\Http\Controllers\Admin\AdminSmsController::class, 'sendBulk'])->name('bulk.post');
+        });
     });
 
 // =========================
