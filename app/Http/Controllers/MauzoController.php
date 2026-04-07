@@ -1552,6 +1552,7 @@ public function __construct(SMSService $smsService)
         
         $message .= str_repeat("-", 25) . "\n";
         $message .= "ASANTE KWA KUNUNUA!\n";
+         $message .= "powered by www.mauzosheetai.co.tz\n";
         
         // Send SMS
         $result = $this->smsService->sendSms($phone, $message, 'RECEIPT_' . $receiptNo);
