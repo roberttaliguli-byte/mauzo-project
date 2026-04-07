@@ -3903,31 +3903,21 @@ async sendReceiptSms(receiptNo) {
     }
 }
 
-// Setup SMS modal event listeners (call this in your init method or constructor)
+// Completely replace the setupSmsModalEvents method with this:
+
 setupSmsModalEvents() {
-    console.log('🔵 setupSmsModalEvents called'); // ← ADD THIS
     const modal = document.getElementById('sms-receipt-modal');
-    console.log('Modal element found:', modal); // ← ADD THIS
-    const closeBtn = document.getElementById('close-sms-receipt-modal');
-    const cancelBtn = document.getElementById('cancel-sms-receipt');
-    const confirmBtn = document.getElementById('confirm-send-sms');
-    const phoneInput = document.getElementById('sms-receipt-phone');
-    
     if (!modal) return;
     
-    // Close modal function
     const closeModal = () => {
         modal.classList.add('hidden');
+        const phoneInput = document.getElementById('sms-receipt-phone');
         if (phoneInput) phoneInput.value = '';
-        this.pendingSmsData = null;
-        this.pendingSmsReceiptNo = null;
     };
     
-    // Close on close button
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    
-    // Close on cancel button
-    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    // Close buttons
+    document.getElementById('close-sms-receipt-modal')?.addEventListener('click', closeModal);
+    document.getElementById('cancel-sms-receipt')?.addEventListener('click', closeModal);
     
     // Close on overlay click
     modal.addEventListener('click', (e) => {
@@ -3936,111 +3926,60 @@ setupSmsModalEvents() {
         }
     });
     
-    // Close on escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
-            closeModal();
-        }
-    });
+// Send SMS
+document.getElementById('confirm-send-sms')?.addEventListener('click', async () => {
+    const phoneInput = document.getElementById('sms-receipt-phone');
+    const phone = phoneInput?.value.trim() || '';
     
-    // Confirm send SMS
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', async () => {
-            const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
-            
-            if (!phoneNumber) {
-                this.showNotification('Tafadhali ingiza namba ya simu', 'error');
-                if (phoneInput) phoneInput.focus();
-                return;
-            }
-            
-            // Validate phone number
-            let cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
-            if (cleanPhone.length === 9 && cleanPhone.startsWith('0')) {
-                cleanPhone = '255' + cleanPhone.substring(1);
-            } else if (cleanPhone.length === 10 && cleanPhone.startsWith('0')) {
-                cleanPhone = '255' + cleanPhone.substring(1);
-            } else if (!cleanPhone.startsWith('255')) {
-                this.showNotification('Namba ya simu lazima ianze na 255 au 0. Mfano: 255712345678', 'error');
-                if (phoneInput) phoneInput.focus();
-                return;
-            }
-            
-            if (cleanPhone.length !== 12 || !cleanPhone.startsWith('255')) {
-                this.showNotification('Namba ya simu si sahihi. Tumia muundo: 255XXXXXXXXX', 'error');
-                if (phoneInput) phoneInput.focus();
-                return;
-            }
-            
-            // Close modal
-            closeModal();
-            
-            // Show loading
-            const loadingDiv = document.createElement('div');
-            loadingDiv.id = 'sms-loading';
-            loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-            loadingDiv.innerHTML = `
-                <div class="bg-white rounded-lg p-6 flex items-center gap-3">
-                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
-                    <span class="text-gray-700">Inatuma risiti kwa SMS...</span>
-                </div>
-            `;
-            document.body.appendChild(loadingDiv);
-            
-            try {
-                // Format full message for SMS
-                let smsText = `*RISITI YA MALIPO*\n`;
-                smsText += `------------------\n`;
-                smsText += `Namba: ${this.pendingSmsData.receipt_no}\n`;
-                smsText += `Tarehe: ${this.pendingSmsData.date}\n`;
-                smsText += `------------------\n`;
-                
-                this.pendingSmsData.items.forEach(item => {
-                    smsText += `${item.bidhaa}\n`;
-                    smsText += `  ${item.idadi} x ${item.bei} = ${item.jumla}\n`;
-                });
-                
-                smsText += `------------------\n`;
-                smsText += `Jumla Kuu: ${this.pendingSmsData.total}\n`;
-                smsText += `------------------\n`;
-                smsText += `Asante kwa kununua!\n`;
-                
-                // Send SMS
-                const smsResponse = await fetch('/send-receipt-sms', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        phone: cleanPhone,
-                        message: smsText,
-                        receipt_no: this.pendingSmsReceiptNo
-                    })
-                });
-                
-                const smsResult = await smsResponse.json();
-                
-                if (smsResult.success) {
-                    this.showNotification(`✓ Risiti imetumwa kwa ${cleanPhone} kikamilifu!`, 'success');
-                } else {
-                    this.showNotification(`✗ Hitilafu: ${smsResult.message}`, 'error');
-                }
-            } catch (error) {
-                console.error('Error sending SMS:', error);
-                this.showNotification('Hitilafu wakati wa kutuma risiti kwa SMS', 'error');
-            } finally {
-                // Remove loading
-                const loading = document.getElementById('sms-loading');
-                if (loading) loading.remove();
-                this.pendingSmsData = null;
-                this.pendingSmsReceiptNo = null;
-            }
-        });
+    if (!phone) {
+        this.showNotification('Tafadhali ingiza namba ya simu', 'warning');
+        phoneInput?.focus();
+        return;
     }
+    
+    if (!this.pendingSmsReceiptNo) {
+        this.showNotification('Hitilafu: Hakuna risiti iliyochaguliwa', 'error');
+        closeModal();
+        return;
+    }
+    
+    // Show loading
+    const btn = document.getElementById('confirm-send-sms');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inatuma...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('/send-receipt-sms-simple', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                phone: phone,
+                receipt_no: this.pendingSmsReceiptNo
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            this.showNotification('✓ Risiti imetumwa kikamilifu kwa ' + phone, 'success');
+            closeModal();
+        } else {
+            this.showNotification('✗ Hitilafu: ' + (data.message || 'Imeshindwa kutuma SMS'), 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        this.showNotification('Hitilafu ya mtandao. Tafadhali jaribu tena.', 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
 }
-
 }
 
 // Initialize when DOM is loaded

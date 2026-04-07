@@ -1322,52 +1322,6 @@ public function __construct(SMSService $smsService)
     }
 
 
-public function sendReceiptSms(Request $request)
-{
-    $request->validate([
-        'phone' => 'required|string',
-        'message' => 'required|string',
-        'receipt_no' => 'required|string'
-    ]);
-    
-    $user = $this->getAuthUser();
-    if (!$user) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unauthorized access'
-        ], 401);
-    }
-    
-    // Clean and format phone number
-    $phone = preg_replace('/[^0-9]/', '', $request->phone);
-    if (substr($phone, 0, 1) == '0') {
-        $phone = '255' . substr($phone, 1);
-    }
-    
-    if (!preg_match('/^255[0-9]{9}$/', $phone)) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Namba ya simu si sahihi. Tumia muundo: 255XXXXXXXXX'
-        ], 422);
-    }
-    
-    $reference = 'RECEIPT_' . $request->receipt_no . '_' . time();
-    $message = $request->message;
-    
-    // Log for debugging
-    \Log::info('Sending receipt SMS', [
-        'phone' => $phone,
-        'receipt_no' => $request->receipt_no,
-        'message' => $message
-    ]);
-    
-    $result = $this->smsService->sendSms($phone, $message, $reference);
-    
-    \Log::info('SMS result', $result);
-    
-    return response()->json($result);
-}
-
     // Special kopesha endpoint for barcode
     public function storeKopesha(Request $request)
     {
@@ -1486,6 +1440,132 @@ public function sendReceiptSms(Request $request)
         ]);
     }
 
+   public function sendReceiptSmsSimple(Request $request)
+{
+    try {
+        $phone = $request->input('phone');
+        $receiptNo = $request->input('receipt_no');
+        
+        // Validate
+        if (empty($phone) || empty($receiptNo)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Namba ya simu na namba ya risiti inahitajika'
+            ]);
+        }
+        
+        // Clean phone number
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        if (substr($phone, 0, 1) == '0') {
+            $phone = '255' . substr($phone, 1);
+        }
+        
+        if (strlen($phone) != 12) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Namba ya simu si sahihi. Tumia 255XXXXXXXXX'
+            ]);
+        }
+        
+        // Get authenticated user
+        $user = $this->getAuthUser();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access'
+            ], 401);
+        }
+        
+        $companyId = $user->company_id;
+        
+        // Get company name - only if company exists
+        $company = \App\Models\Company::find($companyId);
+        
+        // Get receipt data
+        $sales = Mauzo::with('bidhaa')
+            ->where('company_id', $companyId)
+            ->where('receipt_no', $receiptNo)
+            ->get();
+            
+        if ($sales->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Risiti haipatikani'
+            ]);
+        }
+        
+        // Calculate totals
+        $subtotal = $sales->sum('jumla') + $sales->sum('punguzo');
+        $totalPunguzo = $sales->sum(function($sale) {
+            return $sale->punguzo_aina === 'bidhaa' 
+                ? $sale->punguzo * $sale->idadi 
+                : $sale->punguzo;
+        });
+        $total = $sales->sum('jumla');
+        $paymentMethod = $sales->first()->lipa_kwa ?? 'cash';
+        
+        // Build SMS message
+        $message = "";
+        
+        // Add company name ONLY if company exists and has company_name
+        if ($company && $company->company_name) {
+            $message .= strtoupper($company->company_name) . "\n";
+        }
+        
+        $message .= "RISITI: " . $receiptNo . "\n";
+        $message .= "Tarehe: " . now()->format('d/m/Y H:i') . "\n";
+        $message .= str_repeat("-", 25) . "\n";
+        
+        // Add items
+        foreach($sales as $sale) {
+            $message .= $sale->bidhaa->jina . "\n";
+            $message .= "  " . number_format($sale->idadi, 2) . " x " . number_format($sale->bei, 0) . " = " . number_format($sale->jumla, 0) . "\n";
+            
+            // Add discount if any
+            if($sale->punguzo > 0) {
+                $discountAmount = $sale->punguzo_aina === 'bidhaa' 
+                    ? $sale->punguzo * $sale->idadi 
+                    : $sale->punguzo;
+                $message .= "  Punguzo: -" . number_format($discountAmount, 0) . "\n";
+            }
+        }
+        
+        $message .= str_repeat("-", 25) . "\n";
+        
+        // Add totals
+        if($totalPunguzo > 0) {
+            $message .= "Jumla Ndogo: " . number_format($subtotal, 0) . "\n";
+            $message .= "Punguzo: -" . number_format($totalPunguzo, 0) . "\n";
+            $message .= str_repeat("-", 25) . "\n";
+        }
+        
+        $message .= "JUMLA: " . number_format($total, 0) . "/=\n";
+        
+        // Add payment method
+        $paymentText = match($paymentMethod) {
+            'cash' => 'CASH',
+            'lipa_namba' => 'LIPA NAMBA',
+            'bank' => 'BENKI',
+            default => strtoupper($paymentMethod)
+        };
+        $message .= "Malipo: " . $paymentText . "\n";
+        
+        $message .= str_repeat("-", 25) . "\n";
+        $message .= "ASANTE KWA KUNUNUA!\n";
+        
+        // Send SMS
+        $result = $this->smsService->sendSms($phone, $message, 'RECEIPT_' . $receiptNo);
+        
+        return response()->json($result);
+        
+    } catch (\Exception $e) {
+        \Log::error('Send receipt SMS error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Hitilafu: ' . $e->getMessage()
+        ]);
+    }
+}
     // Helper function to calculate actual discount
     private function actualDiscount($sale)
     {

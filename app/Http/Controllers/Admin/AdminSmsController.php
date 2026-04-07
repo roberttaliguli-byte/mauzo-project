@@ -121,7 +121,7 @@ class AdminSmsController extends Controller
         
         // Add prefix to message to identify it's from admin
            // Format message: greeting + message + footer
-    $message = "📢 UJUMBE KUTOKA KWA Msimamizi:\n\n" . $request->message . "\n\n---\nEndelea kufurahia huduma bora kupitia www.mauzosheetai.co.tz\nPowered by Blackscience Technology";
+    $message = "UJUMBE KUTOKA KWA Msimamizi:\n\n" . $request->message . "\n\n---\n powered by www.mauzosheetai.co.tz\n";
     
         $result = $this->smsService->sendSms($recipients, $message, $reference);
         

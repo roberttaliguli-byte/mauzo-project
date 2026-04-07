@@ -328,11 +328,10 @@ public function sendSms(Request $request)
     // Format message for customers
     $userMessage = $request->message;
     
-    $formattedMessage = "📢 UJUMBE KUTOKA {$companyName}:\n\n" 
+    $formattedMessage = "KARIBU {$companyName}:\n\n" 
         . $userMessage . "\n\n---\n"
         . "Karibu tena mteja wetu!\n"
-        . "Huduma nzuri na yenye uhakika kupitia www.mauzosheetai.co.tz\n"
-        . "Powered by Blackscience Technology";
+        . "Powered by www.mauzosheetai.co.tz";
 
     $reference = 'REF_' . time() . '_' . uniqid();
 
