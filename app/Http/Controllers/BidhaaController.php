@@ -46,6 +46,23 @@ class BidhaaController extends Controller
     {
         return Auth::guard('web')->check();
     }
+
+
+private function canViewPurchasePrice()
+{
+    // Boss via web guard
+    if (Auth::guard('web')->check()) {
+        return true;
+    }
+    
+    // Employee via mfanyakazi guard
+    $employee = Auth::guard('mfanyakazi')->user();
+    if ($employee && method_exists($employee, 'hasFullAccess')) {
+        return $employee->hasFullAccess(); // uses uwezo === 'mkubwa'
+    }
+    
+    return false;
+}
     
 /**
  * Display a listing of the products with pagination
@@ -183,16 +200,17 @@ public function index(Request $request)
         ]);
     }
 
-    return view('bidhaa.index', compact(
-        'bidhaa', 
-        'totalProducts', 
-        'availableProducts', 
-        'lowStockProducts', 
-        'expiredProducts',
-        'outOfStockProducts',
-        'isBoss'
-    ));
+return view('bidhaa.index', compact(
+    'bidhaa', 
+    'totalProducts', 
+    'availableProducts', 
+    'lowStockProducts', 
+    'expiredProducts',
+    'outOfStockProducts',
+    'isBoss'
+) + ['canViewPurchasePrice' => $this->canViewPurchasePrice()]);
 }
+
     /**
      * Search all products (returns ALL results, no pagination)
      */

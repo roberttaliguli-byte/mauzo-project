@@ -196,10 +196,12 @@
                                         {{ $formattedIdadi }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-2 text-right">
-                                    <div class="text-sm font-bold text-emerald-700">{{ number_format($item->bei_kuuza, 0) }} TZS</div>
-                                    <div class="text-xs text-gray-500">Nunua: {{ number_format($item->bei_nunua, 0) }} TZS</div>
-                                </td>
+<td class="px-4 py-2 text-right">
+    <div class="text-sm font-bold text-emerald-700">{{ number_format($item->bei_kuuza, 0) }} TZS</div>
+    @if($canViewPurchasePrice)
+        <div class="text-xs text-gray-500">Nunua: {{ number_format($item->bei_nunua, 0) }} TZS</div>
+    @endif
+</td>
                                 <td class="px-4 py-2 hidden lg:table-cell">
                                     @if($item->expiry)
                                         @php
