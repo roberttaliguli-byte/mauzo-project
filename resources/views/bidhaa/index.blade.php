@@ -6,8 +6,7 @@
 @section('page-subtitle', now()->format('d/m/Y'))
 
 @section('content')
-<div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}" data-is-boss="{{ $isBoss ? 'true' : 'false' }}">
-    <!-- Notifications -->
+<div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}" data-is-boss="{{ $isBoss ? 'true' : 'false' }}" data-can-view-price="{{ $canViewPurchasePrice ? 'true' : 'false' }}">   <!-- Notifications -->
     <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none">
         @if(session('success'))
         <div class="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 mb-2 shadow-sm">
@@ -880,6 +879,7 @@ let allSearchResults = [];
 let isSearchActive = false;
 let currentSearchTerm = '';
 let isBoss = document.getElementById('app-container')?.dataset.isBoss === 'true';
+let canViewPrice = document.getElementById('app-container')?.dataset.canViewPrice === 'true';
 let originalRows = [];
 
 // ========== SEARCH FUNCTIONALITY ==========
@@ -1207,10 +1207,10 @@ function createProductRow(product) {
                 ${formattedIdadi}
             </span>
         </td>
-        <td class="px-4 py-2 text-right">
-            <div class="text-sm font-bold text-emerald-700">${parseFloat(product.bei_kuuza || 0).toLocaleString()} TZS</div>
-            <div class="text-xs text-gray-500">Nunua: ${parseFloat(product.bei_nunua || 0).toLocaleString()} TZS</div>
-        </td>
+<td class="px-4 py-2 text-right">
+    <div class="text-sm font-bold text-emerald-700">${parseFloat(product.bei_kuuza || 0).toLocaleString()} TZS</div>
+    ${canViewPrice ? `<div class="text-xs text-gray-500">Nunua: ${parseFloat(product.bei_nunua || 0).toLocaleString()} TZS</div>` : ''}
+</td>
         <td class="px-4 py-2 hidden lg:table-cell">
             ${expiryHtml}
         </td>
