@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Mteja;
+use App\Models\Madeni;
+use App\Models\Mauzo;
 use App\Models\SmsLog;
 use App\Services\SMSService;
 use Illuminate\Support\Facades\Auth;
@@ -370,7 +372,6 @@ public function getSmsStats()
         'month_sent' => $monthSent
     ]);
 }
-
 /**
  * Get SMS logs
  */
@@ -393,6 +394,107 @@ public function getSmsLogs(Request $request)
     }
 
     return $logs;
+}
+public function ripoti(Request $request)
+{
+    $companyId = $this->getCompanyId();
+
+    // All customers for the filter dropdown
+    $wateja = Mteja::where('company_id', $companyId)->orderBy('jina')->get();
+
+    $selectedCustomerId = $request->input('mteja_id');
+
+    // Base queries scoped to company
+    $mauzoQuery = Mauzo::where('company_id', $companyId);
+    $madeniQuery = Madeni::where('company_id', $companyId);
+
+    // Apply customer filter if provided
+    if ($selectedCustomerId) {
+        $mauzoQuery->where('mteja_id', $selectedCustomerId);
+        $madeniQuery->where('mteja_id', $selectedCustomerId);
+    }
+
+    // ---- Sales aggregation by customer ----
+    $salesData = $mauzoQuery
+        ->selectRaw('mteja_id, SUM(jumla) as total_sales, COUNT(*) as sale_count')
+        ->groupBy('mteja_id')
+        ->get();
+    
+    // Load mteja relationship and handle nulls
+    foreach ($salesData as $sale) {
+        if ($sale->mteja_id) {
+            $sale->load('mteja');
+        } else {
+            // Create a dummy mteja object with "Mteja asiyejulikana" name
+            $sale->mteja = new \stdClass();
+            $sale->mteja->jina = 'Mteja asiyejulikana';
+        }
+    }
+
+    // ---- Debts aggregation by customer ----
+    $debtsData = $madeniQuery
+        ->selectRaw('mteja_id, SUM(jumla) as total_debt, SUM(baki) as total_balance, COUNT(*) as debt_count')
+        ->groupBy('mteja_id')
+        ->get();
+
+    foreach ($debtsData as $debt) {
+        if ($debt->mteja_id) {
+            $debt->load('mteja');
+        } else {
+            $debt->mteja = new \stdClass();
+            $debt->mteja->jina = 'Mteja asiyejulikana';
+        }
+    }
+
+    // Top 10 customers by sales
+    $topSalesCustomers = $salesData->sortByDesc('total_sales')->take(10);
+
+    // Top 10 customers by outstanding balance
+    $topDebtCustomers = $debtsData->sortByDesc('total_balance')->take(10);
+
+    // ---- Detailed data for a specific customer ----
+    $customerDetails = null;
+    $customerSales = collect();
+    $customerDebts = collect();
+
+    if ($selectedCustomerId) {
+        $customer = Mteja::where('company_id', $companyId)->find($selectedCustomerId);
+        if ($customer) {
+            $customerDetails = $customer;
+
+            $customerSales = Mauzo::where('company_id', $companyId)
+                ->where('mteja_id', $selectedCustomerId)
+                ->with('bidhaa')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $customerDebts = Madeni::where('company_id', $companyId)
+                ->where('mteja_id', $selectedCustomerId)
+                ->with(['bidhaa', 'marejeshos'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+    }
+
+    // Overall totals (respecting filter)
+    $totalSales = $mauzoQuery->sum('jumla');
+    $totalDebts = $madeniQuery->sum('jumla');
+    $totalOutstanding = $madeniQuery->sum('baki');
+
+    return view('wateja.ripoti', compact(
+        'wateja',
+        'selectedCustomerId',
+        'salesData',
+        'debtsData',
+        'topSalesCustomers',
+        'topDebtCustomers',
+        'customerDetails',
+        'customerSales',
+        'customerDebts',
+        'totalSales',
+        'totalDebts',
+        'totalOutstanding'
+    ));
 }
 
     /**

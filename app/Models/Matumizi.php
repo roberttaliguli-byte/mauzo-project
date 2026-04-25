@@ -20,4 +20,9 @@ class Matumizi extends Model
     {
         return $this->belongsTo(\App\Models\Company::class);
     }
+    // Example for Mauzo model
+public function user()
+{
+    return $this->belongsTo(\App\Models\User::class, 'user_id'); // adjust foreign key if needed
+}
 }

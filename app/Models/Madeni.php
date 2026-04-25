@@ -50,6 +50,7 @@ protected $casts = [
     {
         return $this->belongsTo(Mteja::class);
     }
+    
 
     // 4️⃣ Deni linaweza kuwa na marejesho mengi
     public function marejeshos()

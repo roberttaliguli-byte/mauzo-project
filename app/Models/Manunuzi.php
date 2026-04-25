@@ -54,6 +54,12 @@ class Manunuzi extends Model
         return number_format($this->idadi, 2);
     }
 
+    // Example for Mauzo model
+public function user()
+{
+    return $this->belongsTo(\App\Models\User::class, 'user_id'); // adjust foreign key if needed
+}
+
     /**
      * Get formatted total cost
      */

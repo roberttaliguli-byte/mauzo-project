@@ -79,7 +79,7 @@
     </div>
 
     <!-- Tab Navigation -->
-    <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-1 mb-4">
+    <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-2 mb-4">
         <div class="flex flex-wrap gap-1" id="tab-nav">
             <button id="sehemu-tab" class="tab-button pb-2 px-3 transition-colors flex items-center border-b-2 border-white text-white font-semibold whitespace-nowrap text-sm" data-tab="sehemu">
                 <i class="fas fa-cash-register mr-2 text-xs"></i>Sehemu ya Mauzo
@@ -105,120 +105,131 @@
 
     <!-- TAB 1: Sehemu ya Mauzo -->
     <div id="sehemu-tab-content" class="tab-content active">
-        <!-- Sales Form -->
-        <div class="bg-white rounded-lg shadow border border-gray-200 p-4 mb-4">
-            <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                <i class="fas fa-cash-register mr-2 text-green-600"></i>
-                Rekodi Mauzo
-            </h2>
+<!-- Sales Form -->
+<div class="bg-white rounded-lg shadow border border-gray-200 p-4 mb-4">
+    <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+        <i class="fas fa-cash-register mr-2 text-green-600"></i>
+        Rekodi Mauzo
+    </h2>
 
-            <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-4" id="sales-form">
-                @csrf
+    <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-4" id="sales-form">
+        @csrf
 
-                <!-- Product Selection Row -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                    <!-- Product Selection -->
-                    <div class="lg:col-span-5">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Bidhaa</label>
-                        <div class="relative">
-                            <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                            <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
-                                <option value="">Chagua Bidhaa...</option>
-                                @foreach($bidhaa as $item)
-                                <option
-                                    value="{{ $item->id }}"
-                                    data-bei="{{ $item->bei_kuuza }}"
-                                    data-stock="{{ $item->idadi }}"
-                                    data-jina="{{ e($item->jina) }}"
-                                    data-aina="{{ e($item->aina) }}"
-                                    data-kipimo="{{ e($item->kipimo) }}"
-                                    data-bei-nunua="{{ $item->bei_nunua }}"
-                                    data-barcode="{{ $item->barcode }}"
-                                >
-                                    {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }} - Stock: {{ $item->idadi }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Quantity -->
-                    <div class="lg:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Idadi</label>
-                        <input type="number" name="idadi" id="quantity-input" placeholder="0.00" min="0.01" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                    </div>
-
-                    <!-- Price -->
-                    <div class="lg:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Bei (Tsh)</label>
-                        <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
-                    </div>
-
-                    <!-- Stock -->
-                    <div class="lg:col-span-3">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Stock</label>
-                        <input type="number" id="stock-input" readonly step="0.01" class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
-                    </div>
+        <!-- Row 1: Product, Quantity, Price, Stock -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+            <!-- Product Selection - 5 columns -->
+            <div class="sm:col-span-2 lg:col-span-5">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Bidhaa</label>
+                <div class="relative">
+                    <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                    <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
+                        <option value="">Chagua Bidhaa...</option>
+                        @foreach($bidhaa as $item)
+                        <option
+                            value="{{ $item->id }}"
+                            data-bei="{{ $item->bei_kuuza }}"
+                            data-stock="{{ $item->idadi }}"
+                            data-jina="{{ e($item->jina) }}"
+                            data-aina="{{ e($item->aina) }}"
+                            data-kipimo="{{ e($item->kipimo) }}"
+                            data-bei-nunua="{{ $item->bei_nunua }}"
+                            data-barcode="{{ $item->barcode }}"
+                        >
+                            {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }} - Stock: {{ $item->idadi }}
+                        </option>
+                        @endforeach
+                    </select>
                 </div>
+            </div>
 
-                <!-- Discount and Payment Row -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-                    <!-- Discount Type -->
-                    <div class="lg:col-span-3">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Punguzo</label>
-                        <select id="punguzo-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                            <option value="bidhaa">kwa bidhaa</option>
-                            <option value="jumla">Jumla</option>
-                        </select>
-                    </div>
+            <!-- Quantity - 2 columns -->
+            <div class="sm:col-span-1 lg:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Idadi</label>
+                <input type="number" name="idadi" id="quantity-input" placeholder="0.00" min="0.01" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+            </div>
 
-                    <!-- Discount Amount -->
-                    <div class="lg:col-span-3">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Punguzo (Tsh)</label>
-                        <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                    </div>
+            <!-- Price - 2 columns -->
+            <div class="sm:col-span-1 lg:col-span-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Bei (Tsh)</label>
+                <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
+            </div>
 
-                    <!-- Total -->
-                    <div class="lg:col-span-3">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Jumla (Tsh)</label>
-                        <input type="number" name="jumla" id="total-input" readonly class="w-full bg-green-50 border border-green-300 rounded-lg p-2 text-sm font-bold text-gray-800">
-                    </div>
-
-                    <!-- Payment Method -->
-                    <div class="lg:col-span-3">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
-                        <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                            <option value="cash">Cash</option>
-                            <option value="lipa_namba">Lipa Namba</option>
-                            <option value="bank">Bank</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Hidden fields -->
-                <input type="hidden" name="baki" id="baki-input" value="0">
-                <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
-                <input type="hidden" name="check_double_sale" id="check-double-sale-input" value="1">
-                
-                <!-- Action Buttons -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                        <i class="fas fa-cash-register"></i>
-                        Uza
-                    </button>
-
-                    <button type="button" id="kopesha-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                        <i class="fas fa-hand-holding-usd"></i>
-                        Kopesha
-                    </button>
-
-                    <button type="button" id="add-to-cart-btn" class="bg-emerald-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
-                        <i class="fas fa-cart-plus"></i>
-                        Kikapu
-                    </button>
-                </div>
-            </form>
+            <!-- Stock - 3 columns -->
+            <div class="sm:col-span-2 lg:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Stock</label>
+                <input type="number" id="stock-input" readonly step="0.01" class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
+            </div>
         </div>
+
+        <!-- Row 2: Discount Type, Discount Amount, Total, Payment Method, Customer -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+            <!-- Discount Type -->
+            <div class="sm:col-span-1 lg:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Punguzo</label>
+                <select id="punguzo-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                    <option value="bidhaa">kwa bidhaa</option>
+                    <option value="jumla">Jumla</option>
+                </select>
+            </div>
+
+            <!-- Discount Amount -->
+            <div class="sm:col-span-1 lg:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Punguzo (Tsh)</label>
+                <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+            </div>
+
+            <!-- Total -->
+            <div class="sm:col-span-1 lg:col-span-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Jumla (Tsh)</label>
+                <input type="number" name="jumla" id="total-input" readonly class="w-full bg-green-50 border border-green-300 rounded-lg p-2 text-sm font-bold text-gray-800">
+            </div>
+
+            <!-- Payment Method -->
+            <div class="sm:col-span-1 lg:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
+                <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                    <option value="cash">Cash</option>
+                    <option value="lipa_namba">Lipa Namba</option>
+                    <option value="bank">Bank</option>
+                </select>
+            </div>
+
+            <!-- Customer Selection -->
+            <div class="sm:col-span-2 lg:col-span-3">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Mteja (si lazima)</label>
+                <select name="mteja_id" id="mteja_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                    <option value="">-- Chagua Mteja  --</option>
+                    @foreach($wateja as $mteja)
+                        <option value="{{ $mteja->id }}">{{ $mteja->jina }} - {{ $mteja->simu }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <!-- Hidden fields -->
+        <input type="hidden" name="baki" id="baki-input" value="0">
+        <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
+        <input type="hidden" name="check_double_sale" id="check-double-sale-input" value="1">
+
+        <!-- Action Buttons Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-cash-register"></i>
+                Uza
+            </button>
+
+            <button type="button" id="kopesha-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-hand-holding-usd"></i>
+                Kopesha
+            </button>
+
+            <button type="button" id="add-to-cart-btn" class="bg-emerald-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2">
+                <i class="fas fa-cart-plus"></i>
+                Kikapu
+            </button>
+        </div>
+    </form>
+</div>
 
         <!-- Financial Overview - Based on User Access -->
         <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
@@ -1000,7 +1011,15 @@
                         <option value="bank">Bank</option>
                     </select>
                 </div>
-
+<div class="mb-3">
+    <label class="block text-sm font-semibold text-gray-700 mb-1">Mteja (si lazima)</label>
+    <select id="kikapu-mteja" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+        <option value="">-- Mteja Asiyejulikana --</option>
+        @foreach($wateja as $mteja)
+            <option value="{{ $mteja->id }}">{{ $mteja->jina }} - {{ $mteja->simu }}</option>
+        @endforeach
+    </select>
+</div>
                 <div class="flex flex-wrap gap-2">
                     <button id="clear-cart" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
                         <i class="fas fa-trash mr-2"></i>
@@ -1152,17 +1171,18 @@
             <input type="hidden" name="punguzo_aina" id="kopesha-punguzo-aina">
             <input type="hidden" name="kopesha" value="1">
 
-            <div>
-                <label class="block text-sm font-semibold mb-1 text-gray-700">Mteja Aliyesajiliwa</label>
-                <select id="mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                    <option value="">-- Mteja Mpya --</option>
-                    @foreach($wateja as $m)
-                        <option value="{{ $m->id }}" data-jina="{{ $m->jina }}" data-simu="{{ $m->simu }}" data-barua_pepe="{{ $m->barua_pepe }}" data-anapoishi="{{ $m->anapoishi }}">
-                            {{ $m->jina }} - {{ $m->simu }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+<div>
+    <label class="block text-sm font-semibold mb-1 text-gray-700">Mteja Aliyesajiliwa</label>
+<select id="kopesha-mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+    <option value="">-- Mteja Mpya --</option>
+    @foreach($wateja as $m)
+        <option value="{{ $m->id }}" data-jina="{{ $m->jina }}" data-simu="{{ $m->simu }}" data-barua_pepe="{{ $m->barua_pepe }}" data-anapoishi="{{ $m->anapoishi }}">
+            {{ $m->jina }} - {{ $m->simu }}
+        </option>
+    @endforeach
+</select>
+<input type="hidden" name="mteja_id" id="kopesha-mteja-id" value="">
+</div>
 
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-1">Jina la Mkopaji *</label>
@@ -1217,20 +1237,18 @@
         <form id="kopesha-barcode-form" action="{{ route('mauzo.store.kopesha') }}" method="POST" class="p-4 space-y-3">
             @csrf
             
-            <div>
-                <label class="block text-sm font-semibold mb-1 text-gray-700">Chagua Mteja</label>
-                <select id="barcode-mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                    <option value="">-- Mteja Mpya --</option>
-                    @foreach($wateja as $mteja)
-                        <option value="{{ $mteja->id }}" data-jina="{{ $mteja->jina }}" data-simu="{{ $mteja->simu }}" data-barua_pepe="{{ $mteja->barua_pepe }}" data-anapoishi="{{ $mteja->anapoishi }}">
-                            {{ $mteja->jina }} 
-                            @if($mteja->simu)
-                                - {{ $mteja->simu }}
-                            @endif
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+<div>
+    <label class="block text-sm font-semibold mb-1 text-gray-700">Mteja Aliyesajiliwa</label>
+<select id="barcode-mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+    <option value="">-- Mteja Mpya --</option>
+    @foreach($wateja as $m)
+        <option value="{{ $m->id }}" data-jina="{{ $m->jina }}" data-simu="{{ $m->simu }}" data-barua_pepe="{{ $m->barua_pepe }}" data-anapoishi="{{ $m->anapoishi }}">
+            {{ $m->jina }} - {{ $m->simu }}
+        </option>
+    @endforeach
+</select>
+<input type="hidden" name="mteja_id" id="barcode-kopesha-mteja-id" value="">
+</div>
 
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-1">Jina la Mkopaji *</label>
@@ -1287,20 +1305,18 @@
         <form id="kikapu-kopesha-form" action="{{ route('mauzo.store.kikapu.loan') }}" method="POST" class="p-4 space-y-3">
             @csrf
             
-            <div>
-                <label class="block text-sm font-semibold mb-1 text-gray-700">Chagua Mteja</label>
-                <select id="kikapu-mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                    <option value="">-- Mteja Mpya --</option>
-                    @foreach($wateja as $mteja)
-                        <option value="{{ $mteja->id }}" data-jina="{{ $mteja->jina }}" data-simu="{{ $mteja->simu }}" data-barua_pepe="{{ $mteja->barua_pepe }}" data-anapoishi="{{ $mteja->anapoishi }}">
-                            {{ $mteja->jina }} 
-                            @if($mteja->simu)
-                                - {{ $mteja->simu }}
-                            @endif
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+<div>
+    <label class="block text-sm font-semibold mb-1 text-gray-700">Mteja Aliyesajiliwa</label>
+<select id="kikapu-mteja-select" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+    <option value="">-- Mteja Mpya --</option>
+    @foreach($wateja as $m)
+        <option value="{{ $m->id }}" data-jina="{{ $m->jina }}" data-simu="{{ $m->simu }}" data-barua_pepe="{{ $m->barua_pepe }}" data-anapoishi="{{ $m->anapoishi }}">
+            {{ $m->jina }} - {{ $m->simu }}
+        </option>
+    @endforeach
+</select>
+<input type="hidden" name="mteja_id" id="kikapu-kopesha-mteja-id" value="">
+</div>
 
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-1">Jina la Mkopaji *</label>
@@ -2034,50 +2050,55 @@ constructor() {
         }
     }
 
-    async checkoutCart() {
-        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
-        
-        if (companyCart.length === 0) {
-            this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
-            return;
-        }
-
-        const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
-        const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
-
-        try {
-            const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'X-Company-ID': this.companyId
-                },
-                body: JSON.stringify({ 
-                    items: companyCart,
-                    company_id: this.companyId,
-                    lipa_kwa: paymentMethod
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-                this.clearCart();
-                this.updateFinancialData();
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
-        }
+async checkoutCart() {
+    const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+    
+    if (companyCart.length === 0) {
+        this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
+        return;
     }
+
+    const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
+    const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
+    
+    // Get selected customer ID
+    const mtejaSelect = document.getElementById('kikapu-mteja');
+    const mtejaId = mtejaSelect ? mtejaSelect.value : null;
+
+    try {
+        const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Company-ID': this.companyId
+            },
+            body: JSON.stringify({ 
+                items: companyCart,
+                company_id: this.companyId,
+                lipa_kwa: paymentMethod,
+                mteja_id: mtejaId   // <-- ADD THIS LINE
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+            this.clearCart();
+            this.updateFinancialData();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
+    }
+}
 
     prepareBarcodeKopeshaData() {
         const items = [];
@@ -2295,21 +2316,37 @@ initReceiptLookup() {
         });
     }
 
-    handleCustomerSelection(selectElement, modalType) {
-        const selectedOption = selectElement.options[selectElement.selectedIndex];
-        
-        if (selectedOption.value === "") {
-            this.clearCustomerFields(modalType);
-        } else {
-            const jina = selectedOption.dataset.jina || '';
-            const simu = selectedOption.dataset.simu || '';
-            const baruaPepe = selectedOption.dataset.barua_pepe || '';
-            const anapoishi = selectedOption.dataset.anapoishi || '';
-            
-            this.populateCustomerFields(modalType, jina, simu, baruaPepe, anapoishi);
-        }
+handleCustomerSelection(selectElement, modalType) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    let prefix = '';
+    let hiddenFieldId = '';
+    
+    if (modalType === 'mteja-select') {
+        prefix = 'kopesha-';
+        hiddenFieldId = 'kopesha-mteja-id';
+    } else if (modalType === 'barcode-mteja-select') {
+        prefix = 'barcode-kopesha-';
+        hiddenFieldId = 'barcode-kopesha-mteja-id';
+    } else if (modalType === 'kikapu-mteja-select') {
+        prefix = 'kikapu-kopesha-';
+        hiddenFieldId = 'kikapu-kopesha-mteja-id';
     }
-
+    
+    const hiddenField = document.getElementById(hiddenFieldId);
+    if (hiddenField) {
+        hiddenField.value = selectedOption.value === "" ? "" : selectedOption.value;
+    }
+    
+    if (selectedOption.value === "") {
+        this.clearCustomerFields(modalType);
+    } else {
+        const jina = selectedOption.dataset.jina || '';
+        const simu = selectedOption.dataset.simu || '';
+        const baruaPepe = selectedOption.dataset.barua_pepe || '';
+        const anapoishi = selectedOption.dataset.anapoishi || '';
+        this.populateCustomerFields(modalType, jina, simu, baruaPepe, anapoishi);
+    }
+}
     clearCustomerFields(modalType) {
         let prefix = '';
         if (modalType === 'mteja-select') prefix = 'kopesha-';

@@ -22,6 +22,7 @@ class Mauzo extends Model
         'is_debt_repayment',
         'reprint_count',
         'lipa_kwa', // ✅ ADDED payment method
+        'mteja_id',
     ];
 
     protected $casts = [
@@ -52,6 +53,11 @@ class Mauzo extends Model
     {
         return $this->belongsTo(Bidhaa::class);
     }
+
+    public function mteja()
+{
+    return $this->belongsTo(Mteja::class);
+}
 
     /**
      * Relationship: Each sale belongs to a Company
@@ -108,6 +114,11 @@ class Mauzo extends Model
         return $subtotal - $totalDiscount;
     }
 
+    // Example for Mauzo model
+public function user()
+{
+    return $this->belongsTo(\App\Models\User::class, 'user_id'); // adjust foreign key if needed
+}
     /**
      * Accessor: Get total discount (not per item)
      */

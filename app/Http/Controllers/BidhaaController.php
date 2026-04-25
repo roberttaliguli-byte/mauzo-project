@@ -47,23 +47,25 @@ class BidhaaController extends Controller
         return Auth::guard('web')->check();
     }
 
-
 private function canViewPurchasePrice()
 {
-    // Boss via web guard
+    // ✅ Boss (web guard) ALWAYS allowed
     if (Auth::guard('web')->check()) {
         return true;
     }
-    
-    // Employee via mfanyakazi guard
+
+    // ✅ Employee check
     $employee = Auth::guard('mfanyakazi')->user();
-    if ($employee && method_exists($employee, 'hasFullAccess')) {
-        return $employee->hasFullAccess(); // uses uwezo === 'mkubwa'
+
+    if (!$employee) {
+        return false;
     }
-    
-    return false;
+
+    // normalize value
+    $uwezo = strtolower(trim($employee->uwezo ?? ''));
+
+    return in_array($uwezo, ['mkubwa']);
 }
-    
 /**
  * Display a listing of the products with pagination
  */
@@ -208,7 +210,10 @@ return view('bidhaa.index', compact(
     'expiredProducts',
     'outOfStockProducts',
     'isBoss'
-) + ['canViewPurchasePrice' => $this->canViewPurchasePrice()]);
+) + [
+    'canViewPurchasePrice' => $this->canViewPurchasePrice(),
+    'canEditProduct' => $this->canViewPurchasePrice()
+]);
 }
 
     /**
@@ -291,62 +296,64 @@ return view('bidhaa.index', compact(
             ], 500);
         }
     }
-    
-    /**
-     * Get product for editing
-     */
     public function editProduct($id)
-    {
-        try {
-            $companyId = $this->getCompanyId();
-            
-            $product = Bidhaa::where('id', $id)
-                            ->where('company_id', $companyId)
-                            ->first();
-            
-            if (!$product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Bidhaa haijapatikana'
-                ], 404);
-            }
-            
-            $expiryDate = null;
-            if ($product->expiry) {
-                if ($product->expiry instanceof \Carbon\Carbon) {
-                    $expiryDate = $product->expiry->format('Y-m-d');
-                } else {
-                    try {
-                        $expiryDate = \Carbon\Carbon::parse($product->expiry)->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        $expiryDate = $product->expiry;
-                    }
-                }
-            }
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $product->id,
-                    'jina' => $product->jina,
-                    'aina' => $product->aina,
-                    'kipimo' => $product->kipimo,
-                    'idadi' => $product->idadi,
-                    'bei_nunua' => $product->bei_nunua,
-                    'bei_kuuza' => $product->bei_kuuza,
-                    'expiry' => $expiryDate,
-                    'barcode' => $product->barcode
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
+{
+    // Check permission: boss OR mkubwa employee
+    if (!$this->canViewPurchasePrice()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Huna ruhusa ya kurekebisha bidhaa.'
+        ], 403);
+    }
+
+    try {
+        $companyId = $this->getCompanyId();
+        $product = Bidhaa::where('id', $id)
+                        ->where('company_id', $companyId)
+                        ->first();
+
+        if (!$product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hitilafu katika kupakua bidhaa'
-            ], 500);
+                'message' => 'Bidhaa haijapatikana'
+            ], 404);
         }
+
+        $expiryDate = null;
+        if ($product->expiry) {
+            if ($product->expiry instanceof \Carbon\Carbon) {
+                $expiryDate = $product->expiry->format('Y-m-d');
+            } else {
+                try {
+                    $expiryDate = \Carbon\Carbon::parse($product->expiry)->format('Y-m-d');
+                } catch (\Exception $e) {
+                    $expiryDate = $product->expiry;
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $product->id,
+                'jina' => $product->jina,
+                'aina' => $product->aina,
+                'kipimo' => $product->kipimo,
+                'idadi' => $product->idadi,
+                'bei_nunua' => $product->bei_nunua,
+                'bei_kuuza' => $product->bei_kuuza,
+                'expiry' => $expiryDate,
+                'barcode' => $product->barcode
+            ]
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Hitilafu katika kupakua bidhaa'
+        ], 500);
     }
-    
+}
     /**
      * Store a newly created product
      */
@@ -418,16 +425,17 @@ return view('bidhaa.index', compact(
      */
     public function update(Request $request, $id)
     {
-        if (!$this->isBoss()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hurumia, wewe huna ruhusa ya kurekebisha bidhaa. Wasiliana na meneja.'
-                ], 403);
-            }
-            return redirect()->route('bidhaa.index')
-                ->with('error', 'Hurumia, wewe huna ruhusa ya kurekebisha bidhaa.');
-        }
+if (!$this->canViewPurchasePrice()) {
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'huna ruhusa ya kurekebisha bidhaa. Wasiliana na meneja.'
+        ], 403);
+    }
+
+    return redirect()->route('bidhaa.index')
+        ->with('error', 'huna ruhusa ya kurekebisha bidhaa.');
+}
 
         $companyId = $this->getCompanyId();
         $bidhaa = Bidhaa::where('id', $id)
@@ -485,39 +493,39 @@ return view('bidhaa.index', compact(
             ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
     }
 
-    /**
-     * Remove the specified product
-     */
-    public function destroy($id, Request $request)
-    {
-        if (!$this->isBoss()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hurumia, wewe huna ruhusa ya kufuta bidhaa. Wasiliana na meneja.'
-                ], 403);
-            }
-            return redirect()->route('bidhaa.index')
-                ->with('error', 'Hurumia, wewe huna ruhusa ya kufuta bidhaa.');
-        }
+public function destroy($id, Request $request)
+{
+    $companyId = $this->getCompanyId();
+    $bidhaa = Bidhaa::where('id', $id)
+                    ->where('company_id', $companyId)
+                    ->firstOrFail();
 
-        $companyId = $this->getCompanyId();
-        $bidhaa = Bidhaa::where('id', $id)
-                        ->where('company_id', $companyId)
-                        ->firstOrFail();
+    // Check permission: boss OR mkubwa employee
+    $isAllowed = $this->isBoss() || $this->canViewPurchasePrice();
 
-        $bidhaa->delete();
-
+    if (!$isAllowed) {
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Bidhaa imefutwa kikamilifu!'
-            ]);
+                'success' => false,
+                'message' => 'Huna ruhusa ya kufuta bidhaa. Wasiliana na meneja.'
+            ], 403);
         }
-
         return redirect()->route('bidhaa.index')
-            ->with('success', 'Bidhaa imefutwa kikamilifu!');
+            ->with('error', 'Huna ruhusa ya kufuta bidhaa.');
     }
+
+    $bidhaa->delete();
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Bidhaa imefutwa kikamilifu!'
+        ]);
+    }
+
+    return redirect()->route('bidhaa.index')
+        ->with('success', 'Bidhaa imefutwa kikamilifu!');
+}
 
 /**
  * Export all products to Excel (including out of stock)

@@ -24,7 +24,11 @@ class Marejesho extends Model
     {
         return $this->belongsTo(Madeni::class, 'madeni_id');
     }
-
+// Example for Mauzo model
+public function user()
+{
+    return $this->belongsTo(\App\Models\User::class, 'user_id'); // adjust foreign key if needed
+}
     /**
      * 🏢 Optional: A rejesho belongs to a company
      */

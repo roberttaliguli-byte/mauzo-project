@@ -26,7 +26,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-
 // =========================
 // Public routes
 // =========================
@@ -230,6 +229,7 @@ Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
 Route::post('/wateja', [MtejaController::class, 'store'])->name('wateja.store');
 Route::put('/wateja/{mteja}', [MtejaController::class, 'update'])->name('wateja.update');
 Route::delete('/wateja/{mteja}', [MtejaController::class, 'destroy'])->name('wateja.destroy');
+Route::get('/wateja/ripoti', [MtejaController::class, 'ripoti'])->name('wateja.ripoti');
 
 // SMS Routes - Make sure these are inside the auth.any group
 Route::post('/send-sms', [MtejaController::class, 'sendSms'])->name('sms.send');
@@ -310,6 +310,7 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
     Route::get('/uchambuzi/mwenendo', [UchambuziController::class, 'mwenendoRange'])->name('uchambuzi.mwenendo.range');
+    Route::get('/uchambuzi/all-activities', [App\Http\Controllers\UchambuziController::class, 'getAllActivities'])->name('uchambuzi.all-activities');
     
     // Manunuzi routes
     Route::get('/manunuzi', [ManunuziController::class, 'index'])->name('manunuzi.index');
@@ -468,6 +469,15 @@ Route::middleware(['auth'])->group(function () {
         ->name('payment.retry');
 });
 
+Route::get('/madeni/{id}/repayments', function($id) {
+    $debt = App\Models\Madeni::with('marejeshos')->findOrFail($id);
+    return response()->json([
+        'success' => true,
+        'repayments' => $debt->marejeshos,
+        'bidhaa' => $debt->bidhaa->jina ?? 'Bidhaa',
+        'total' => number_format($debt->jumla, 2) . ' Tsh'
+    ]);
+})->name('madeni.repayments');
 // =========================
 // Debug route
 // =========================

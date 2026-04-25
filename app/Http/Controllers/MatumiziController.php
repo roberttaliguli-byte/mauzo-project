@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Matumizi;
 use App\Models\AinaZaMatumizi;
+use App\Models\Mauzo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -59,6 +60,27 @@ class MatumiziController extends Controller
     }
 
     /**
+     * Calculate total profit from all sales (mauzo) for the company
+     * Profit = (selling price - buying price) * quantity - total discount
+     */
+    private function getTotalSalesProfit($companyId)
+    {
+        $totalProfit = 0;
+        $sales = Mauzo::where('company_id', $companyId)->with('bidhaa')->get();
+        
+        foreach ($sales as $sale) {
+            if ($sale->bidhaa) {
+                $profitPerUnit = $sale->bei - $sale->bidhaa->bei_nunua;
+                $discount = ($sale->punguzo_aina === 'bidhaa')
+                    ? $sale->punguzo * $sale->idadi
+                    : $sale->punguzo;
+                $totalProfit += ($profitPerUnit * $sale->idadi) - $discount;
+            }
+        }
+        return $totalProfit;
+    }
+
+    /**
      * Display all expenses
      */
     public function index()
@@ -102,7 +124,7 @@ class MatumiziController extends Controller
     }
 
     /**
-     * Store new expense
+     * Store new expense (with profit validation)
      */
     public function store(Request $request)
     {
@@ -115,26 +137,41 @@ class MatumiziController extends Controller
         ]);
 
         $company = $this->getCompany();
+        $companyId = $company->id;
 
-        // Use custom type if provided
+        // Calculate current total expenses and total sales profit
+        $currentExpensesTotal = Matumizi::where('company_id', $companyId)->sum('gharama');
+        $totalSalesProfit = $this->getTotalSalesProfit($companyId);
+        $remainingProfit = $totalSalesProfit - $currentExpensesTotal;
+
+        // Check if the new expense would exceed remaining profit
+        $newExpenseAmount = $request->gharama;
+        if ($newExpenseAmount > $remainingProfit) {
+            $errorMsg = "Gharama ya " . number_format($newExpenseAmount) . " inazidi faida iliyobaki ya " . number_format($remainingProfit) . ". Tafadhali punguza kiasi au ongeza mapato kwanza.";
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'message' => $errorMsg], 422);
+            }
+            return redirect()->back()->withErrors(['gharama' => $errorMsg]);
+        }
+
+        // Determine the expense type (custom or existing)
         $aina = $request->filled('aina_mpya')
             ? $request->input('aina_mpya')
             : $request->input('aina');
 
-        // If using a custom type, check if it exists in aina_za_matumizi
+        // If using a custom type, auto-register it if not exists
         if ($request->filled('aina_mpya')) {
-            $existingAina = AinaZaMatumizi::where('company_id', $company->id)
+            $existingAina = AinaZaMatumizi::where('company_id', $companyId)
                 ->where('jina', $request->aina_mpya)
                 ->first();
 
             if (!$existingAina) {
-                // Auto-register the new expense type
                 AinaZaMatumizi::create([
                     'jina' => $request->aina_mpya,
                     'maelezo' => 'Auto-generated from expense entry',
                     'rangi' => 'bg-gray-100 text-gray-800 border border-gray-200',
                     'kategoria' => 'mengineyo',
-                    'company_id' => $company->id,
+                    'company_id' => $companyId,
                 ]);
             }
         }
@@ -142,7 +179,7 @@ class MatumiziController extends Controller
         $matumizi = $company->matumizi()->create([
             'aina' => $aina,
             'maelezo' => $request->maelezo,
-            'gharama' => $request->gharama,
+            'gharama' => $newExpenseAmount,
             'created_at' => $request->tarehe ?: now(),
         ]);
 
@@ -200,7 +237,7 @@ class MatumiziController extends Controller
     }
 
     /**
-     * Update expense
+     * Update expense (with profit validation)
      */
     public function update(Request $request, $id)
     {
@@ -217,6 +254,26 @@ class MatumiziController extends Controller
             'maelezo' => 'nullable|string|max:500',
             'gharama' => 'required|numeric|min:0',
         ]);
+
+        $oldAmount = $matumizi->gharama;
+        $newAmount = $request->gharama;
+        $difference = $newAmount - $oldAmount;
+
+        // If the expense is being increased, check available profit
+        if ($difference > 0) {
+            $currentExpensesTotal = Matumizi::where('company_id', $companyId)->sum('gharama');
+            // Subtract the old amount because it's already counted, then add new to see remaining
+            $totalSalesProfit = $this->getTotalSalesProfit($companyId);
+            $remainingProfit = $totalSalesProfit - ($currentExpensesTotal - $oldAmount);
+            
+            if ($difference > $remainingProfit) {
+                $errorMsg = "Ongezeko la gharama (" . number_format($difference) . ") linazidi faida iliyobaki ya " . number_format($remainingProfit) . ". Huwezi kuongeza zaidi.";
+                if ($request->ajax()) {
+                    return response()->json(['success' => false, 'message' => $errorMsg], 422);
+                }
+                return redirect()->back()->withErrors(['gharama' => $errorMsg]);
+            }
+        }
 
         $matumizi->update($request->only('aina', 'maelezo', 'gharama'));
 

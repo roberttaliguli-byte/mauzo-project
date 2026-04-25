@@ -98,6 +98,9 @@
                     <button onclick="exportPDF()" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">
                         <i class="fas fa-file-pdf mr-1"></i> PDF
                     </button>
+                    <a href="{{ route('wateja.ripoti') }}" class="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-medium">
+    <i class="fas fa-chart-pie mr-1"></i> Ripoti
+</a>
                 </div>
             </div>
         </div>

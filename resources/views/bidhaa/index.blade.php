@@ -224,25 +224,25 @@
                                         <span class="text-xs text-gray-400">--</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-2 text-center print:hidden">
-                                    <div class="flex justify-center space-x-2">
-                                        @if($isBoss)
-                                            <button class="edit-product-btn text-emerald-600 hover:text-emerald-800"
-                                                    data-id="{{ $item->id }}" title="Badili">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="delete-product-btn text-red-600 hover:text-red-800"
-                                                    data-id="{{ $item->id }}" data-name="{{ $item->jina }}" title="Futa">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        @else
-                                            <span class="text-gray-400 cursor-not-allowed" title="Huwezi kurekebisha au kufuta">
-                                                <i class="fas fa-edit mr-2"></i>
-                                                <i class="fas fa-trash"></i>
-                                            </span>
-                                        @endif
-                                    </div>
-                                </td>
+<td class="px-4 py-2 text-center print:hidden">
+    <div class="flex justify-center space-x-2">
+@if($canEditProduct)
+    <button class="edit-product-btn text-emerald-600 hover:text-emerald-800"
+            data-id="{{ $item->id }}" title="Badili">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button class="delete-product-btn text-red-600 hover:text-red-800"
+            data-id="{{ $item->id }}" data-name="{{ $item->jina }}" title="Futa">
+        <i class="fas fa-trash"></i>
+    </button>
+@else
+    <span class="text-gray-400 cursor-not-allowed" title="Huwezi kurekebisha au kufuta">
+        <i class="fas fa-edit mr-2"></i>
+        <i class="fas fa-trash"></i>
+    </span>
+@endif
+    </div>
+</td>
                             </tr>
                         @empty
                             <tr>
@@ -1264,8 +1264,9 @@ function handleEditClick(e) {
     e.preventDefault();
     const productId = this.dataset.id;
     
-    if (!isBoss) {
-        showNotification('Hurumia, wewe huna ruhusa ya kurekebisha bidhaa', 'error');
+    // Allow boss OR mkubwa employee
+    if (!isBoss && !canViewPrice) {
+        showNotification('Huna ruhusa ya kurekebisha bidhaa', 'error');
         return;
     }
     
@@ -1282,23 +1283,24 @@ function handleEditClick(e) {
     }
 }
 
-// Handle delete click
 function handleDeleteClick(e) {
     e.preventDefault();
     const productId = this.dataset.id;
     const productName = this.dataset.name;
     
-    if (!isBoss) {
-        showNotification('Hurumia, wewe huna ruhusa ya kufuta bidhaa', 'error');
+    // Allow boss OR mkubwa employee
+    if (!isBoss && !canViewPrice) {
+        showNotification('Huna ruhusa ya kufuta bidhaa', 'error');
         return;
     }
     
     deleteProduct(productId, productName);
 }
 
-// Edit product
+// Edit product - opens the modal with product data
 function editProduct(product) {
-    if (!isBoss) return;
+    // Allow boss OR mkubwa employee (who can view purchase price)
+    if (!isBoss && !canViewPrice) return;
     
     document.getElementById('edit-jina').value = product.jina || '';
     document.getElementById('edit-aina').value = product.aina || '';
@@ -1312,8 +1314,12 @@ function editProduct(product) {
     document.getElementById('edit-modal').classList.remove('hidden');
 }
 
-// Load and edit product
 function loadAndEditProduct(productId) {
+    if (!isBoss && !canViewPrice) {
+        showNotification('Hurumia, wewe huna ruhusa ya kurekebisha bidhaa', 'error');
+        return;
+    }
+    
     fetch(`/bidhaa/${productId}/edit-product`, {
         headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
     })
@@ -1332,7 +1338,8 @@ function loadAndEditProduct(productId) {
 
 // Delete product
 function deleteProduct(productId, productName) {
-    if (!isBoss) return;
+    // Allow boss OR mkubwa employee
+    if (!isBoss && !canViewPrice) return;
     
     document.getElementById('delete-product-name').textContent = productName;
     document.getElementById('delete-form').action = `/bidhaa/${productId}`;
