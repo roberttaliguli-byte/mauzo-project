@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Matumizi;
 use App\Models\AinaZaMatumizi;
 use App\Models\Mauzo;
+use App\Models\Bidhaa;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -60,24 +61,95 @@ class MatumiziController extends Controller
     }
 
     /**
-     * Calculate total profit from all sales (mauzo) for the company
-     * Profit = (selling price - buying price) * quantity - total discount
+     * Calculate Faida ya Mauzo (Sales Profit)
+     * Formula: Total Revenue - Cost of Goods Sold
      */
-    private function getTotalSalesProfit($companyId)
+    private function getSalesProfit($companyId, $fromDate = null, $toDate = null)
     {
-        $totalProfit = 0;
-        $sales = Mauzo::where('company_id', $companyId)->with('bidhaa')->get();
+        $query = Mauzo::where('company_id', $companyId);
         
-        foreach ($sales as $sale) {
-            if ($sale->bidhaa) {
-                $profitPerUnit = $sale->bei - $sale->bidhaa->bei_nunua;
-                $discount = ($sale->punguzo_aina === 'bidhaa')
-                    ? $sale->punguzo * $sale->idadi
-                    : $sale->punguzo;
-                $totalProfit += ($profitPerUnit * $sale->idadi) - $discount;
+        if ($fromDate && $toDate) {
+            $query->whereBetween('created_at', [$fromDate, $toDate]);
+        }
+        
+        $sales = $query->with('bidhaa')->get();
+        
+        $totalRevenue = $sales->sum('jumla');
+        $totalCost = $sales->sum(function($sale) {
+            return $sale->idadi * ($sale->bidhaa->bei_nunua ?? 0);
+        });
+        
+        return $totalRevenue - $totalCost;
+    }
+
+    /**
+     * Calculate Faida ya Marejesho (Returns Profit)
+     * Using FIFO method as in your UchambuziController
+     */
+    private function getReturnsProfit($companyId, $fromDate = null, $toDate = null)
+    {
+        $query = \App\Models\Marejesho::where('company_id', $companyId);
+        
+        if ($fromDate && $toDate) {
+            $query->whereBetween('created_at', [$fromDate, $toDate]);
+        }
+        
+        $repayments = $query->with(['madeni' => function($q) {
+                $q->with('bidhaa');
+            }])
+            ->orderBy('tarehe', 'asc')
+            ->get()
+            ->filter(fn($r) => $r->madeni && $r->madeni->bidhaa);
+
+        $debtProgress = [];
+        $totalProfit = 0;
+
+        foreach ($repayments as $marejesho) {
+            $debt = $marejesho->madeni;
+            $debtId = $debt->id;
+            $amount = $marejesho->kiasi;
+
+            if (!isset($debtProgress[$debtId])) {
+                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                $quantity = $debt->idadi;
+                $totalCost = $buyingPrice * $quantity;
+                $debtProgress[$debtId] = [
+                    'total_cost' => $totalCost,
+                    'recovered_so_far' => 0,
+                    'is_cost_recovered' => false
+                ];
+            }
+
+            $progress = &$debtProgress[$debtId];
+            $remaining = $amount;
+
+            if (!$progress['is_cost_recovered']) {
+                $toRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+                if ($remaining <= $toRecover) {
+                    $progress['recovered_so_far'] += $remaining;
+                } else {
+                    $costPortion = $toRecover;
+                    $progress['recovered_so_far'] += $costPortion;
+                    $progress['is_cost_recovered'] = true;
+                    $totalProfit += ($remaining - $costPortion);
+                }
+            } else {
+                $totalProfit += $remaining;
             }
         }
+        
         return $totalProfit;
+    }
+
+    /**
+     * Get total available for expenses (Faida ya Mauzo + Faida ya Marejesho)
+     */
+    private function getTotalAvailableForExpenses($companyId)
+    {
+        $salesProfit = $this->getSalesProfit($companyId);
+        $returnsProfit = $this->getReturnsProfit($companyId);
+        
+        return $salesProfit + $returnsProfit;
     }
 
     /**
@@ -112,6 +184,12 @@ class MatumiziController extends Controller
             ->sum('gharama');
         $expensesCount = Matumizi::where('company_id', $company->id)->count();
         $averageExpense = $expensesCount > 0 ? $totalExpenses / $expensesCount : 0;
+        
+        // Get available amount (Faida ya Mauzo + Faida ya Marejesho)
+        $salesProfit = $this->getSalesProfit($company->id);
+        $returnsProfit = $this->getReturnsProfit($company->id);
+        $availableForExpenses = $salesProfit + $returnsProfit;
+        $remainingBalance = $availableForExpenses - $totalExpenses;
 
         return view('matumizi.index', compact(
             'matumizi', 
@@ -119,12 +197,16 @@ class MatumiziController extends Controller
             'totalExpenses',
             'todayExpenses',
             'expensesCount',
-            'averageExpense'
+            'averageExpense',
+            'availableForExpenses',
+            'salesProfit',
+            'returnsProfit',
+            'remainingBalance'
         ));
     }
 
     /**
-     * Store new expense (with profit validation)
+     * Store new expense (with validation: cannot exceed Faida ya Mauzo + Faida ya Marejesho)
      */
     public function store(Request $request)
     {
@@ -139,19 +221,34 @@ class MatumiziController extends Controller
         $company = $this->getCompany();
         $companyId = $company->id;
 
-        // Calculate current total expenses and total sales profit
+        // Calculate current total expenses
         $currentExpensesTotal = Matumizi::where('company_id', $companyId)->sum('gharama');
-        $totalSalesProfit = $this->getTotalSalesProfit($companyId);
-        $remainingProfit = $totalSalesProfit - $currentExpensesTotal;
+        
+        // Calculate total available (Faida ya Mauzo + Faida ya Marejesho)
+        $salesProfit = $this->getSalesProfit($companyId);
+        $returnsProfit = $this->getReturnsProfit($companyId);
+        $totalAvailable = $salesProfit + $returnsProfit;
+        
+        // Calculate remaining
+        $remainingAvailable = $totalAvailable - $currentExpensesTotal;
 
-        // Check if the new expense would exceed remaining profit
+        // Check if the new expense would exceed available amount
         $newExpenseAmount = $request->gharama;
-        if ($newExpenseAmount > $remainingProfit) {
-            $errorMsg = "Gharama ya " . number_format($newExpenseAmount) . " inazidi faida iliyobaki ya " . number_format($remainingProfit) . ". Tafadhali punguza kiasi au ongeza mapato kwanza.";
+        
+        if ($newExpenseAmount > $remainingAvailable) {
+            $errorMsg = "❌ HUWEZI KUZIDI! Matumizi ya " . number_format($newExpenseAmount) . " TZS yanazidi kiasi kinachoruhusiwa.\n\n" .
+                       "📊 Taarifa:\n" .
+                       "• Faida ya Mauzo: " . number_format($salesProfit) . " TZS\n" .
+                       "• Faida ya Marejesho: " . number_format($returnsProfit) . " TZS\n" .
+                       "• Jumla inayopatikana: " . number_format($totalAvailable) . " TZS\n" .
+                       "• Matumizi ya sasa: " . number_format($currentExpensesTotal) . " TZS\n" .
+                       "• Unabakiwa na: " . number_format($remainingAvailable) . " TZS\n\n" .
+                       "Tafadhali punguza kiasi!";
+            
             if ($request->ajax()) {
                 return response()->json(['success' => false, 'message' => $errorMsg], 422);
             }
-            return redirect()->back()->withErrors(['gharama' => $errorMsg]);
+            return redirect()->back()->withErrors(['gharama' => $errorMsg])->withInput();
         }
 
         // Determine the expense type (custom or existing)
@@ -159,7 +256,7 @@ class MatumiziController extends Controller
             ? $request->input('aina_mpya')
             : $request->input('aina');
 
-        // If using a custom type, auto-register it if not exists
+        // If using a custom type, auto-register it
         if ($request->filled('aina_mpya')) {
             $existingAina = AinaZaMatumizi::where('company_id', $companyId)
                 ->where('jina', $request->aina_mpya)
@@ -186,12 +283,13 @@ class MatumiziController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Matumizi yamehifadhiwa kwa mafanikio!',
-                'data' => $matumizi
+                'message' => '✅ Matumizi yamehifadhiwa!',
+                'data' => $matumizi,
+                'remaining' => $remainingAvailable - $newExpenseAmount
             ]);
         }
 
-        return redirect()->route('matumizi.index')->with('success', 'Matumizi yamehifadhiwa kwa mafanikio!');
+        return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamehifadhiwa!');
     }
 
     /**
@@ -228,16 +326,16 @@ class MatumiziController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Aina mpya ya matumizi imesajiliwa kikamilifu!',
+                'message' => '✅ Aina mpya ya matumizi imesajiliwa!',
                 'data' => $aina
             ]);
         }
 
-        return redirect()->route('matumizi.index')->with('success', 'Aina mpya ya matumizi imesajiliwa kikamilifu!');
+        return redirect()->route('matumizi.index')->with('success', '✅ Aina mpya ya matumizi imesajiliwa!');
     }
 
     /**
-     * Update expense (with profit validation)
+     * Update expense
      */
     public function update(Request $request, $id)
     {
@@ -259,15 +357,19 @@ class MatumiziController extends Controller
         $newAmount = $request->gharama;
         $difference = $newAmount - $oldAmount;
 
-        // If the expense is being increased, check available profit
+        // Only validate if increasing
         if ($difference > 0) {
             $currentExpensesTotal = Matumizi::where('company_id', $companyId)->sum('gharama');
-            // Subtract the old amount because it's already counted, then add new to see remaining
-            $totalSalesProfit = $this->getTotalSalesProfit($companyId);
-            $remainingProfit = $totalSalesProfit - ($currentExpensesTotal - $oldAmount);
+            $salesProfit = $this->getSalesProfit($companyId);
+            $returnsProfit = $this->getReturnsProfit($companyId);
+            $totalAvailable = $salesProfit + $returnsProfit;
+            // Subtract old amount because it's already counted
+            $remainingAvailable = $totalAvailable - ($currentExpensesTotal - $oldAmount);
             
-            if ($difference > $remainingProfit) {
-                $errorMsg = "Ongezeko la gharama (" . number_format($difference) . ") linazidi faida iliyobaki ya " . number_format($remainingProfit) . ". Huwezi kuongeza zaidi.";
+            if ($difference > $remainingAvailable) {
+                $errorMsg = "❌ HUWEZI KUONGEZA! Ongezeko la " . number_format($difference) . " TZS linazidi kiasi kinachoruhusiwa.\n\n" .
+                           "Unabakiwa na " . number_format($remainingAvailable) . " TZS tu!";
+                
                 if ($request->ajax()) {
                     return response()->json(['success' => false, 'message' => $errorMsg], 422);
                 }
@@ -280,12 +382,12 @@ class MatumiziController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Matumizi yamerekebishwa!',
+                'message' => '✅ Matumizi yamerekebishwa!',
                 'data' => $matumizi
             ]);
         }
 
-        return redirect()->route('matumizi.index')->with('success', 'Matumizi yamerekebishwa!');
+        return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamerekebishwa!');
     }
 
     /**
@@ -306,11 +408,11 @@ class MatumiziController extends Controller
         if (request()->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Matumizi yamefutwa kikamilifu!'
+                'message' => '✅ Matumizi yamefutwa!'
             ]);
         }
 
-        return redirect()->route('matumizi.index')->with('success', 'Matumizi yamefutwa kikamilifu!');
+        return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamefutwa!');
     }
 
     /**
@@ -335,10 +437,10 @@ class MatumiziController extends Controller
             if (request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Huwezi kufuta aina hii ya matumizi kwa sababu inatumika kwenye matumizi ' . $matumiziCount . '.'
+                    'message' => '❌ Huwezi kufuta aina hii! Inatumika kwenye matumizi ' . $matumiziCount . '.'
                 ], 422);
             }
-            return redirect()->back()->with('error', 'Huwezi kufuta aina hii ya matumizi kwa sababu inatumika kwenye matumizi ' . $matumiziCount . '.');
+            return redirect()->back()->with('error', '❌ Huwezi kufuta aina hii! Inatumika kwenye matumizi ' . $matumiziCount . '.');
         }
 
         $aina->delete();
@@ -346,11 +448,11 @@ class MatumiziController extends Controller
         if (request()->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Aina ya matumizi imefutwa kikamilifu!'
+                'message' => '✅ Aina ya matumizi imefutwa!'
             ]);
         }
 
-        return redirect()->route('matumizi.index')->with('success', 'Aina ya matumizi imefutwa kikamilifu!');
+        return redirect()->route('matumizi.index')->with('success', '✅ Aina ya matumizi imefutwa!');
     }
 
     /**
@@ -391,7 +493,6 @@ class MatumiziController extends Controller
         
         $matumizi = $query->orderBy('created_at', 'desc')->get();
         
-        // Calculate statistics
         $total = $matumizi->sum('gharama');
         $count = $matumizi->count();
         $average = $count > 0 ? $total / $count : 0;

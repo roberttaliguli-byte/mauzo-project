@@ -19,22 +19,28 @@ class AdminController extends Controller
         // Get search query
         $search = $request->input('search');
         
-        // Base query
+        // Base query for companies
         $query = Company::query();
         
-        // Apply search if provided - search across all companies (not just paginated)
-        if ($search) {
+        // Apply search if provided - search across all columns
+        if ($search && !empty($search)) {
             $query->where(function($q) use ($search) {
                 $q->where('company_name', 'LIKE', "%{$search}%")
                   ->orWhere('owner_name', 'LIKE', "%{$search}%")
                   ->orWhere('email', 'LIKE', "%{$search}%")
                   ->orWhere('phone', 'LIKE', "%{$search}%")
-                  ->orWhere('package', 'LIKE', "%{$search}%");
+                  ->orWhere('package', 'LIKE', "%{$search}%")
+                  ->orWhere('region', 'LIKE', "%{$search}%");
             });
         }
         
-        // Get paginated results
+        // Get paginated results (this will respect the search filter)
         $companies = $query->latest()->paginate(10);
+        
+        // Preserve search query in pagination links
+        if ($search) {
+            $companies->appends(['search' => $search]);
+        }
         
         // Calculate summary statistics from ALL companies (not filtered by search)
         $totalCompanies = Company::count();
@@ -274,5 +280,31 @@ class AdminController extends Controller
             ->paginate(10);
 
         return view('admin.active-packages', compact('activeCompanies'));
+    }
+
+    /**
+     * Ajax search for companies (real-time filtering)
+     */
+    public function searchCompanies(Request $request)
+    {
+        $search = $request->input('q');
+        
+        if (!$search || empty($search)) {
+            $companies = Company::latest()->take(20)->get();
+        } else {
+            $companies = Company::where('company_name', 'LIKE', "%{$search}%")
+                ->orWhere('owner_name', 'LIKE', "%{$search}%")
+                ->orWhere('email', 'LIKE', "%{$search}%")
+                ->orWhere('phone', 'LIKE', "%{$search}%")
+                ->orWhere('package', 'LIKE', "%{$search}%")
+                ->latest()
+                ->take(50)
+                ->get();
+        }
+        
+        return response()->json([
+            'companies' => $companies,
+            'count' => $companies->count()
+        ]);
     }
 }

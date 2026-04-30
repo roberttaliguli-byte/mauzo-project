@@ -30,11 +30,29 @@ class DashboardController extends Controller
         }
 
         if (!$companyId) {
-            abort(403, 'Company not found for user.');
+            // Log out the user and redirect to login page
+            if (Auth::guard('mfanyakazi')->check()) {
+                Auth::guard('mfanyakazi')->logout();
+            } else {
+                Auth::logout();
+            }
+            
+            return redirect()->route('login')->with('error', 'Company not found. Please login again.');
         }
 
         // --- Fetch Company ---
         $company = Company::find($companyId);
+        
+        if (!$company) {
+            // Log out the user and redirect to login page
+            if (Auth::guard('mfanyakazi')->check()) {
+                Auth::guard('mfanyakazi')->logout();
+            } else {
+                Auth::logout();
+            }
+            
+            return redirect()->route('login')->with('error', 'Company not found. Please login again.');
+        }
 
         // --- Stock / Inventory Metrics ---
         $jumlaBidhaa = Bidhaa::where('company_id', $companyId)->count();

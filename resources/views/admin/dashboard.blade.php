@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <!-- Summary Boxes Section - REDUCED SIZE -->
+    <!-- Summary Boxes Section -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3 mb-4 md:mb-6 px-4 md:px-0">
         <!-- Verified Companies -->
         <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
@@ -119,7 +119,7 @@
     </div>
     @endif
 
-    <!-- Search Bar - LIVE FILTERING WITHOUT SUBMIT BUTTON -->
+    <!-- Search Bar with Filter Options -->
     <div class="mb-4 md:mb-6 px-4 md:px-0">
         <div class="flex flex-col md:flex-row gap-3">
             <div class="flex-1 relative">
@@ -129,7 +129,22 @@
                 <input type="text" 
                        id="liveSearchInput"
                        placeholder="Tafuta kwa jina la kampuni, mmiliki, barua pepe, namba ya simu, au kifurushi..." 
-                       class="w-full pl-10 pr-4 py-2 md:py-3 border border-gray-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm">
+                       class="w-full pl-10 pr-4 py-2 md:py-3 border border-gray-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm"
+                       autocomplete="off">
+                <button id="clearSearch" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 hidden">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            </div>
+            <div class="flex gap-2">
+                <select id="filterStatus" class="px-3 py-2 md:py-3 border border-gray-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-white">
+                    <option value="all">Zote</option>
+                    <option value="verified">Imethibitishwa</option>
+                    <option value="pending">Inasubiri</option>
+                    <option value="approved">Mtumiaji Ameidhinishwa</option>
+                    <option value="free_trial">Free Trial</option>
+                    <option value="active_package">Kifurushi Kinachotumika</option>
+                    <option value="expired_package">Kifurushi Kimeisha</option>
+                </select>
             </div>
         </div>
         <div id="searchStatus" class="mt-2 text-sm text-gray-600 hidden"></div>
@@ -151,7 +166,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Mobile Cards View -->
         <div class="md:hidden" id="mobileCardsContainer">
             @forelse ($companies as $index => $company)
@@ -160,7 +174,10 @@
                  data-owner="{{ strtolower($company->owner_name) }}"
                  data-phone="{{ strtolower($company->phone) }}"
                  data-email="{{ strtolower($company->email) }}"
-                 data-package="{{ strtolower($company->package ?? '') }}">
+                 data-package="{{ strtolower($company->package ?? '') }}"
+                 data-verified="{{ $company->is_verified ? 'verified' : 'pending' }}"
+                 data-approved="{{ $company->is_user_approved ? 'approved' : 'pending' }}"
+                 data-package-status="{{ $company->package_end && \Carbon\Carbon::parse($company->package_end)->gte(now()) ? 'active' : 'expired' }}">
                 <!-- Header -->
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex items-center space-x-2">
@@ -179,7 +196,12 @@
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between items-center">
                         <span class="text-xs text-gray-600">Simu:</span>
-                        <span class="text-xs font-medium">{{ $company->phone }}</span>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-medium">{{ $company->phone }}</span>
+                            <a href="tel:{{ $company->phone }}" class="text-emerald-600 hover:text-emerald-700 transition-colors">
+                                <i class="fas fa-phone-alt text-xs"></i>
+                            </a>
+                        </div>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-xs text-gray-600">Kifurushi:</span>
@@ -234,6 +256,10 @@
                     @endif
 
                     <div class="flex space-x-2">
+                        <a href="tel:{{ $company->phone }}" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-2 py-2 rounded-lg flex items-center justify-center space-x-1 hover:from-blue-600 hover:to-blue-700 transition-all">
+                            <i class="fas fa-phone-alt text-xs"></i>
+                            <span>Piga Simu</span>
+                        </a>
                         <button class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-xs px-2 py-2 rounded-lg info-btn flex items-center justify-center space-x-1" data-target="modal-{{ $company->id }}">
                             <i class="fas fa-info-circle text-xs"></i>
                             <span>Taarifa</span>
@@ -261,27 +287,14 @@
             <table class="w-full">
                 <thead>
                     <tr class="bg-gray-50/80 border-b border-gray-100">
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            #
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            Kampuni
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            Mmiliki
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            Kifurushi
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            Muda Uliobaki
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            Usajili
-                        </th>
-                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                            Vitendo
-                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">#</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Kampuni</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Mmiliki</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Simu</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Kifurushi</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Muda Uliobaki</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Usajili</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Vitendo</th>
                     </tr>
                 </thead>
                 <tbody id="desktopTableBody" class="divide-y divide-gray-100">
@@ -291,13 +304,15 @@
                         data-owner="{{ strtolower($company->owner_name) }}"
                         data-phone="{{ strtolower($company->phone) }}"
                         data-email="{{ strtolower($company->email) }}"
-                        data-package="{{ strtolower($company->package ?? '') }}">
-                        <!-- Serial Number -->
+                        data-package="{{ strtolower($company->package ?? '') }}"
+                        data-verified="{{ $company->is_verified ? 'verified' : 'pending' }}"
+                        data-approved="{{ $company->is_user_approved ? 'approved' : 'pending' }}"
+                        data-package-status="{{ $company->package_end && \Carbon\Carbon::parse($company->package_end)->gte(now()) ? 'active' : 'expired' }}">
+                        
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-600 font-medium">{{ $companies->firstItem() + $index }}</div>
                         </td>
 
-                        <!-- Company Information -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center space-x-3">
                                 <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-lg flex items-center justify-center">
@@ -306,25 +321,31 @@
                                 <div>
                                     <div class="text-sm font-semibold text-gray-900">{{ $company->company_name }}</div>
                                     <div class="text-xs text-gray-500 flex items-center space-x-1 mt-1">
-                                        <i class="fas fa-phone text-gray-400 text-xs"></i>
-                                        <span>{{ $company->phone }}</span>
+                                        <i class="fas fa-map-marker-alt text-gray-400 text-xs"></i>
+                                        <span>{{ $company->region ?? 'Mkoa haujabainishwa' }}</span>
                                     </div>
                                 </div>
                             </div>
                         </td>
 
-                        <!-- Owner Information -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 font-medium">{{ $company->owner_name }}</div>
                             <div class="text-xs text-gray-500">{{ $company->email }}</div>
                         </td>
 
-                        <!-- Package -->
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <button
-                                class="inline-flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 set-package-btn
-                                    @if($company->package) bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200
-                                    @else bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200 @endif"
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-900">{{ $company->phone }}</span>
+                                <a href="tel:{{ $company->phone }}" class="text-emerald-600 hover:text-emerald-700 transition-colors" title="Piga simu">
+                                    <i class="fas fa-phone-alt text-sm"></i>
+                                </a>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button class="inline-flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 set-package-btn
+                                @if($company->package) bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200
+                                @else bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200 @endif"
                                 data-target="package-modal-{{ $company->id }}">
                                 <i class="fas fa-box-open text-xs"></i>
                                 <span>{{ $company->package ?? 'Hakuna' }}</span>
@@ -332,7 +353,6 @@
                             </button>
                         </td>
 
-                        <!-- Remaining Days -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($company->package && $company->package_start && $company->package_end)
                                 @php $remaining = floor(now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false)); @endphp
@@ -357,7 +377,6 @@
                             @endif
                         </td>
 
-                        <!-- Registration Date -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 font-medium">
                                 {{ $company->created_at->format('d M, Y') }}
@@ -367,7 +386,6 @@
                             </div>
                         </td>
 
-                        <!-- Actions -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex flex-col space-y-2">
                                 @if(!$company->is_user_approved)
@@ -394,6 +412,10 @@
                                 @endif
 
                                 <div class="flex space-x-2">
+                                    <a href="tel:{{ $company->phone }}" class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-2">
+                                        <i class="fas fa-phone-alt text-xs"></i>
+                                        <span>Piga</span>
+                                    </a>
                                     <button class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs px-3 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md info-btn flex items-center justify-center space-x-2" data-target="modal-{{ $company->id }}">
                                         <i class="fas fa-info-circle text-xs"></i>
                                         <span>Taarifa</span>
@@ -404,11 +426,11 @@
                                     </button>
                                 </div>
                             </div>
-                        </td>
+                        </tr>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
+                        <td colspan="8" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                     <i class="fas fa-building text-gray-400 text-2xl"></i>
@@ -420,10 +442,10 @@
                     </tr>
                     @endforelse
                 </tbody>
-            </table>
+                  </table>
         </div>
 
-        <!-- Table Footer -->
+        <!-- Pagination -->
         <div id="paginationContainer" class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-100 bg-gray-50/50">
             @if($companies->hasPages())
             <div class="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
@@ -443,7 +465,6 @@
 @foreach ($companies as $company)
 <div id="modal-{{ $company->id }}" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50 px-4">
     <div class="bg-white rounded-lg md:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] md:max-h-[80vh] overflow-hidden animate-scale-in">
-        <!-- Header -->
         <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 md:px-6 py-3 md:py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2 md:space-x-3">
@@ -461,10 +482,8 @@
             </div>
         </div>
 
-        <!-- Content -->
         <div class="p-4 md:p-6 overflow-y-auto max-h-[calc(90vh-120px)] md:max-h-[calc(80vh-120px)]">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <!-- Company Information -->
                 <div class="space-y-3 md:space-y-4">
                     <h6 class="font-semibold text-gray-900 text-xs md:text-sm uppercase tracking-wide flex items-center space-x-2">
                         <i class="fas fa-info-circle text-emerald-600 text-xs md:text-sm"></i>
@@ -486,7 +505,6 @@
                     </div>
                 </div>
 
-                <!-- System Information -->
                 <div class="space-y-3 md:space-y-4">
                     <h6 class="font-semibold text-gray-900 text-xs md:text-sm uppercase tracking-wide flex items-center space-x-2">
                         <i class="fas fa-cog text-emerald-600 text-xs md:text-sm"></i>
@@ -516,7 +534,6 @@
                             </div>
                         @endif
 
-                        <!-- Status -->
                         <div class="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b border-gray-100">
                             <span class="text-xs md:text-sm text-gray-600 mb-1 md:mb-0">Hali ya Kampuni:</span>
                             @if($company->is_verified)
@@ -549,9 +566,16 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Call Button in Modal -->
+            <div class="mt-4 md:mt-6 pt-4 border-t border-gray-100">
+                <a href="tel:{{ $company->phone }}" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2">
+                    <i class="fas fa-phone-alt"></i>
+                    <span>Piga Simu kwa {{ $company->owner_name }}</span>
+                </a>
+            </div>
         </div>
 
-        <!-- Footer -->
         <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-100">
             <div class="flex justify-end">
                 <button class="px-4 md:px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors close-btn flex items-center space-x-2" data-target="modal-{{ $company->id }}">
@@ -566,7 +590,6 @@
 <!-- Package Assignment Modal -->
 <div id="package-modal-{{ $company->id }}" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50 px-4">
     <div class="bg-white rounded-lg md:rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in">
-        <!-- Header -->
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-4 md:px-6 py-3 md:py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2 md:space-x-3">
@@ -584,11 +607,9 @@
             </div>
         </div>
 
-        <!-- Form -->
         <form action="{{ route('admin.setPackageTime', $company->id) }}" method="POST" class="p-4 md:p-6 space-y-4 md:space-y-6">
             @csrf
             
-            <!-- Package Selection Dropdown -->
             <select name="package" class="w-full border border-gray-300 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-xs md:text-sm">
                 <option value="Free Trial 14 days" {{ $company->package == 'Free Trial 14 days' ? 'selected' : '' }}>📅 Free Trial - Siku 14 (TZS 0)</option>
                 <option value="30 days" {{ $company->package == '30 days' ? 'selected' : '' }}>🚀 Siku 30 - TZS 15,000</option>
@@ -596,7 +617,6 @@
                 <option value="366 days" {{ $company->package == '366 days' ? 'selected' : '' }}>👑 Siku 366 - TZS 150,000 (Punguzo: TZS 30,000)</option>
             </select>
 
-            <!-- Start Date -->
             <div class="space-y-2 md:space-y-3">
                 <label for="start_date" class="block text-xs md:text-sm font-semibold text-gray-900 flex items-center space-x-2">
                     <i class="fas fa-calendar-alt text-blue-600 text-xs md:text-sm"></i>
@@ -607,7 +627,6 @@
                        value="{{ $company->package_start ? \Carbon\Carbon::parse($company->package_start)->format('Y-m-d') : \Carbon\Carbon::today()->format('Y-m-d') }}">
             </div>
 
-            <!-- Action Buttons -->
             <div class="flex space-x-2 md:space-x-3 pt-4">
                 <button type="button" 
                         class="flex-1 px-3 md:px-4 py-2 md:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg md:rounded-xl transition-all duration-200 close-package-btn flex items-center justify-center space-x-1 md:space-x-2 text-xs md:text-sm font-medium"
@@ -629,7 +648,6 @@
 <!-- Delete Confirmation Modal -->
 <div id="delete-modal" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50 px-4">
     <div class="bg-white rounded-lg md:rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in">
-        <!-- Header -->
         <div class="bg-gradient-to-r from-red-600 to-red-700 px-4 md:px-6 py-3 md:py-4">
             <div class="flex items-center space-x-2 md:space-x-3">
                 <div class="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -642,7 +660,6 @@
             </div>
         </div>
 
-        <!-- Content -->
         <div class="p-4 md:p-6">
             <div class="text-center">
                 <div class="w-12 h-12 md:w-16 md:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
@@ -660,7 +677,6 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-100">
             <div class="flex space-x-2 md:space-x-3">
                 <button id="cancel-delete" class="flex-1 px-3 md:px-4 py-2 md:py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg md:rounded-xl transition-all duration-200 flex items-center justify-center space-x-1 md:space-x-2 text-xs md:text-sm font-medium">
@@ -680,7 +696,6 @@
     </div>
 </div>
 
-<!-- Enhanced Styles -->
 <style>
 @keyframes slideDown {
     from {
@@ -712,7 +727,6 @@
     animation: scaleIn 0.2s ease-out;
 }
 
-/* Custom scrollbar for modals */
 .overflow-y-auto::-webkit-scrollbar {
     width: 6px;
 }
@@ -731,7 +745,6 @@
     background: #94a3b8;
 }
 
-/* Mobile responsive adjustments */
 @media (max-width: 767px) {
     .text-\[10px\] {
         font-size: 10px;
@@ -743,10 +756,8 @@
 }
 </style>
 
-<!-- Enhanced JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Auto-hide success notification
     const notification = document.getElementById('success-notification');
     if (notification) {
         setTimeout(() => {
@@ -754,17 +765,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     }
 
-    // Initialize all modal handlers
     initializeModalHandlers();
     initializePackageModalHandlers();
     initializeDeleteHandlers();
-    
-    // Initialize live search
-    initializeLiveSearch();
+    initializeLiveSearchAndFilter();
 });
 
-function initializeLiveSearch() {
+function initializeLiveSearchAndFilter() {
     const searchInput = document.getElementById('liveSearchInput');
+    const filterSelect = document.getElementById('filterStatus');
+    const clearSearchBtn = document.getElementById('clearSearch');
     const mobileItems = document.querySelectorAll('#mobileCardsContainer .company-item');
     const desktopRows = document.querySelectorAll('#desktopTableBody .company-row');
     const visibleCountSpan = document.getElementById('visibleCount');
@@ -775,43 +785,69 @@ function initializeLiveSearch() {
     if (!searchInput) return;
     
     function filterCompanies() {
-        const term = searchInput.value.toLowerCase().trim();
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusFilter = filterSelect ? filterSelect.value : 'all';
         let visibleCount = 0;
         
-        // Filter mobile items
-        mobileItems.forEach(item => {
+        // Show/hide clear button
+        if (clearSearchBtn) {
+            if (searchTerm.length > 0) {
+                clearSearchBtn.classList.remove('hidden');
+            } else {
+                clearSearchBtn.classList.add('hidden');
+            }
+        }
+        
+        // Filter function for a single item
+        function matchesFilters(item) {
             const name = item.getAttribute('data-name') || '';
             const owner = item.getAttribute('data-owner') || '';
             const phone = item.getAttribute('data-phone') || '';
             const email = item.getAttribute('data-email') || '';
             const pkg = item.getAttribute('data-package') || '';
+            const verified = item.getAttribute('data-verified') || '';
+            const approved = item.getAttribute('data-approved') || '';
+            const packageStatus = item.getAttribute('data-package-status') || '';
             
-            const matches = term === '' || 
-                name.includes(term) || 
-                owner.includes(term) || 
-                phone.includes(term) || 
-                email.includes(term) || 
-                pkg.includes(term);
+            // Search match
+            const matchesSearch = searchTerm === '' || 
+                name.includes(searchTerm) || 
+                owner.includes(searchTerm) || 
+                phone.includes(searchTerm) || 
+                email.includes(searchTerm) || 
+                pkg.includes(searchTerm);
             
+            if (!matchesSearch) return false;
+            
+            // Status filter match
+            switch(statusFilter) {
+                case 'verified':
+                    return verified === 'verified';
+                case 'pending':
+                    return verified === 'pending';
+                case 'approved':
+                    return approved === 'approved';
+                case 'free_trial':
+                    return pkg.includes('free trial');
+                case 'active_package':
+                    return packageStatus === 'active';
+                case 'expired_package':
+                    return packageStatus === 'expired';
+                default:
+                    return true;
+            }
+        }
+        
+        // Filter mobile items
+        mobileItems.forEach(item => {
+            const matches = matchesFilters(item);
             item.style.display = matches ? '' : 'none';
             if (matches) visibleCount++;
         });
         
         // Filter desktop rows
         desktopRows.forEach(row => {
-            const name = row.getAttribute('data-name') || '';
-            const owner = row.getAttribute('data-owner') || '';
-            const phone = row.getAttribute('data-phone') || '';
-            const email = row.getAttribute('data-email') || '';
-            const pkg = row.getAttribute('data-package') || '';
-            
-            const matches = term === '' || 
-                name.includes(term) || 
-                owner.includes(term) || 
-                phone.includes(term) || 
-                email.includes(term) || 
-                pkg.includes(term);
-            
+            const matches = matchesFilters(row);
             row.style.display = matches ? '' : 'none';
         });
         
@@ -820,12 +856,26 @@ function initializeLiveSearch() {
             visibleCountSpan.textContent = visibleCount;
         }
         
-        // Show/hide pagination and status based on search
-        if (term !== '') {
+        // Show/hide pagination and status based on search/filter
+        const hasActiveFilters = searchTerm !== '' || statusFilter !== 'all';
+        
+        if (hasActiveFilters) {
             if (paginationDiv) paginationDiv.style.display = 'none';
             if (searchStatus) {
                 searchStatus.classList.remove('hidden');
-                searchStatus.innerHTML = `<i class="fas fa-search text-xs mr-1"></i> Matokeo: ${visibleCount} kati ya ${totalCountSpan ? totalCountSpan.textContent : '0'} makampuni`;
+                let filterText = '';
+                if (statusFilter !== 'all') {
+                    const filterLabels = {
+                        'verified': 'Imethibitishwa',
+                        'pending': 'Inasubiri',
+                        'approved': 'Watumiaji Walioidhinishwa',
+                        'free_trial': 'Free Trial',
+                        'active_package': 'Vifurushi Vinavyotumika',
+                        'expired_package': 'Vifurushi Vilivyokwisha'
+                    };
+                    filterText = ` | Filter: ${filterLabels[statusFilter] || statusFilter}`;
+                }
+                searchStatus.innerHTML = `<i class="fas fa-search text-xs mr-1"></i> Matokeo: ${visibleCount} kati ya ${totalCountSpan ? totalCountSpan.textContent : '0'} makampuni${filterText}`;
             }
         } else {
             if (paginationDiv) paginationDiv.style.display = '';
@@ -842,18 +892,26 @@ function initializeLiveSearch() {
         if (existingMobileEmpty) existingMobileEmpty.remove();
         if (existingDesktopEmpty) existingDesktopEmpty.remove();
         
-        if (visibleCount === 0 && term !== '') {
+        if (visibleCount === 0 && (searchTerm !== '' || statusFilter !== 'all')) {
             // Add empty message for mobile
             if (mobileContainer && !document.getElementById('mobile-empty-message')) {
                 const emptyMsg = document.createElement('div');
                 emptyMsg.id = 'mobile-empty-message';
                 emptyMsg.className = 'p-8 text-center';
+                let message = '';
+                if (searchTerm !== '' && statusFilter !== 'all') {
+                    message = `Hakuna kampuni inayolingana na "<strong>${escapeHtml(searchTerm)}</strong>" na filter "${statusFilter}"`;
+                } else if (searchTerm !== '') {
+                    message = `Hakuna kampuni inayolingana na "<strong>${escapeHtml(searchTerm)}</strong>"`;
+                } else {
+                    message = `Hakuna kampuni katika filter "${statusFilter}"`;
+                }
                 emptyMsg.innerHTML = `
                     <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-search text-gray-400 text-xl"></i>
                     </div>
                     <h3 class="text-gray-700 font-medium mb-2">Hakuna matokeo</h3>
-                    <p class="text-gray-500 text-sm">Hakuna kampuni inayolingana na "<strong>${escapeHtml(term)}</strong>"</p>
+                    <p class="text-gray-500 text-sm">${message}</p>
                 `;
                 mobileContainer.appendChild(emptyMsg);
             }
@@ -862,14 +920,22 @@ function initializeLiveSearch() {
             if (desktopContainer && !document.getElementById('desktop-empty-message')) {
                 const emptyRow = document.createElement('tr');
                 emptyRow.id = 'desktop-empty-message';
+                let message = '';
+                if (searchTerm !== '' && statusFilter !== 'all') {
+                    message = `Hakuna kampuni inayolingana na "${escapeHtml(searchTerm)}" na filter "${statusFilter}"`;
+                } else if (searchTerm !== '') {
+                    message = `Hakuna kampuni inayolingana na "${escapeHtml(searchTerm)}"`;
+                } else {
+                    message = `Hakuna kampuni katika filter "${statusFilter}"`;
+                }
                 emptyRow.innerHTML = `
-                    <td colspan="7" class="px-6 py-12 text-center">
+                    <td colspan="8" class="px-6 py-12 text-center">
                         <div class="flex flex-col items-center justify-center">
                             <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                                 <i class="fas fa-search text-gray-400 text-2xl"></i>
                             </div>
                             <h3 class="text-gray-700 font-medium mb-2">Hakuna matokeo</h3>
-                            <p class="text-gray-500 text-sm">Hakuna kampuni inayolingana na "<strong>${escapeHtml(term)}</strong>"</p>
+                            <p class="text-gray-500 text-sm">${message}</p>
                         </div>
                     </td>
                 `;
@@ -884,11 +950,22 @@ function initializeLiveSearch() {
         return div.innerHTML;
     }
     
+    // Clear search button handler
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            filterCompanies();
+            searchInput.focus();
+        });
+    }
+    
     searchInput.addEventListener('input', filterCompanies);
+    if (filterSelect) {
+        filterSelect.addEventListener('change', filterCompanies);
+    }
 }
 
 function initializeModalHandlers() {
-    // Info modal handlers
     document.querySelectorAll('.info-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.getAttribute('data-target');
@@ -905,7 +982,6 @@ function initializeModalHandlers() {
 }
 
 function initializePackageModalHandlers() {
-    // Package modal handlers
     document.querySelectorAll('.set-package-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.getAttribute('data-target');
@@ -922,7 +998,6 @@ function initializePackageModalHandlers() {
 }
 
 function initializeDeleteHandlers() {
-    // Delete confirmation handlers
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const companyName = btn.getAttribute('data-company');
@@ -935,7 +1010,6 @@ function initializeDeleteHandlers() {
         });
     });
 
-    // Cancel delete
     const cancelBtn = document.getElementById('cancel-delete');
     if (cancelBtn) {
         cancelBtn.addEventListener('click', () => {
@@ -943,7 +1017,6 @@ function initializeDeleteHandlers() {
         });
     }
 
-    // Backdrop click handlers for all modals
     document.querySelectorAll('[id^="modal-"], #delete-modal, [id^="package-modal-"]').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -981,7 +1054,6 @@ function closeNotification() {
     }
 }
 
-// Escape key to close modals
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         const openModals = document.querySelectorAll('[id^="modal-"]:not(.hidden), #delete-modal:not(.hidden), [id^="package-modal-"]:not(.hidden)');
