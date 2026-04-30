@@ -24,7 +24,6 @@
 
     <!-- Summary Boxes Section -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3 mb-4 md:mb-6 px-4 md:px-0">
-        <!-- Verified Companies -->
         <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
             <div class="flex items-center justify-between mb-1 md:mb-2">
                 <div class="w-6 h-6 md:w-8 md:h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -36,7 +35,6 @@
             <p class="text-base md:text-xl font-bold text-gray-900">{{ $verifiedCompanies }}</p>
         </div>
 
-        <!-- Approved Users -->
         <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
             <div class="flex items-center justify-between mb-1 md:mb-2">
                 <div class="w-6 h-6 md:w-8 md:h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -48,7 +46,6 @@
             <p class="text-base md:text-xl font-bold text-gray-900">{{ $approvedUsers }}</p>
         </div>
 
-        <!-- Active Packages -->
         <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
             <div class="flex items-center justify-between mb-1 md:mb-2">
                 <div class="w-6 h-6 md:w-8 md:h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
@@ -60,7 +57,6 @@
             <p class="text-base md:text-xl font-bold text-gray-900">{{ $activePackages }}</p>
         </div>
 
-        <!-- Expired Packages -->
         <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
             <div class="flex items-center justify-between mb-1 md:mb-2">
                 <div class="w-6 h-6 md:w-8 md:h-8 bg-red-100 rounded-lg flex items-center justify-center">
@@ -72,7 +68,6 @@
             <p class="text-base md:text-xl font-bold text-gray-900">{{ $expiredPackages }}</p>
         </div>
 
-        <!-- Free Trial -->
         <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
             <div class="flex items-center justify-between mb-1 md:mb-2">
                 <div class="w-6 h-6 md:w-8 md:h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -84,7 +79,6 @@
             <p class="text-base md:text-xl font-bold text-gray-900">{{ $freeTrialCompanies }}</p>
         </div>
 
-        <!-- Pending Approval -->
         <div class="bg-white rounded-lg md:rounded-xl shadow-sm border border-gray-100 p-2 md:p-3 hover:shadow-md transition-all duration-200">
             <div class="flex items-center justify-between mb-1 md:mb-2">
                 <div class="w-6 h-6 md:w-8 md:h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -119,35 +113,51 @@
     </div>
     @endif
 
-    <!-- Search Bar with Filter Options -->
+    <!-- Search Bar with Filter Options - SUBMIT FORM -->
     <div class="mb-4 md:mb-6 px-4 md:px-0">
-        <div class="flex flex-col md:flex-row gap-3">
-            <div class="flex-1 relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-gray-400 text-sm"></i>
+        <form method="GET" action="{{ route('admin.dashboard') }}" id="searchForm">
+            <div class="flex flex-col md:flex-row gap-3">
+                <div class="flex-1 relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400 text-sm"></i>
+                    </div>
+                    <input type="text" 
+                           name="search"
+                           id="searchInput"
+                           value="{{ request('search') }}"
+                           placeholder="Tafuta kwa jina la kampuni, mmiliki, barua pepe, namba ya simu, au kifurushi..." 
+                           class="w-full pl-10 pr-4 py-2 md:py-3 border border-gray-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm">
                 </div>
-                <input type="text" 
-                       id="liveSearchInput"
-                       placeholder="Tafuta kwa jina la kampuni, mmiliki, barua pepe, namba ya simu, au kifurushi..." 
-                       class="w-full pl-10 pr-4 py-2 md:py-3 border border-gray-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 text-sm"
-                       autocomplete="off">
-                <button id="clearSearch" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 hidden">
-                    <i class="fas fa-times-circle"></i>
-                </button>
+                <div class="flex gap-2">
+                    <select name="status" id="statusFilter" class="px-3 py-2 md:py-3 border border-gray-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-white">
+                        <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>Zote</option>
+                        <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Imethibitishwa</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Inasubiri</option>
+                        <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Mtumiaji Ameidhinishwa</option>
+                        <option value="free_trial" {{ request('status') == 'free_trial' ? 'selected' : '' }}>Free Trial</option>
+                        <option value="active_package" {{ request('status') == 'active_package' ? 'selected' : '' }}>Kifurushi Kinachotumika</option>
+                        <option value="expired_package" {{ request('status') == 'expired_package' ? 'selected' : '' }}>Kifurushi Kimeisha</option>
+                    </select>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl transition-all duration-200 flex items-center space-x-2">
+                        <i class="fas fa-search text-sm"></i>
+                        <span>Tafuta</span>
+                    </button>
+                    @if(request('search') || request('status'))
+                    <a href="{{ route('admin.dashboard') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl transition-all duration-200 flex items-center space-x-2">
+                        <i class="fas fa-times text-sm"></i>
+                        <span>Futa</span>
+                    </a>
+                    @endif
+                </div>
             </div>
-            <div class="flex gap-2">
-                <select id="filterStatus" class="px-3 py-2 md:py-3 border border-gray-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm bg-white">
-                    <option value="all">Zote</option>
-                    <option value="verified">Imethibitishwa</option>
-                    <option value="pending">Inasubiri</option>
-                    <option value="approved">Mtumiaji Ameidhinishwa</option>
-                    <option value="free_trial">Free Trial</option>
-                    <option value="active_package">Kifurushi Kinachotumika</option>
-                    <option value="expired_package">Kifurushi Kimeisha</option>
-                </select>
-            </div>
+        </form>
+        
+        @if(request('search') || request('status'))
+        <div class="mt-2 text-sm text-emerald-600">
+            <i class="fas fa-info-circle mr-1"></i>
+            Matokeo: {{ $companies->total() }} kampuni zimepatikana
         </div>
-        <div id="searchStatus" class="mt-2 text-sm text-gray-600 hidden"></div>
+        @endif
     </div>
 
     <!-- Main Content Card -->
@@ -159,25 +169,16 @@
                     <i class="fas fa-building mr-2 md:mr-3 text-emerald-600 text-sm md:text-base"></i>
                     Makampuni Yaliyosajiliwa
                 </h3>
-                <div class="flex items-center justify-between md:justify-normal space-x-4 mt-2 md:mt-0">
-                    <div class="text-xs md:text-sm text-gray-500">
-                        <span id="visibleCount">{{ $companies->total() }}</span> kati ya <span id="totalCount">{{ $totalCompanies }}</span>
-                    </div>
+                <div class="text-xs md:text-sm text-gray-500">
+                    {{ $companies->firstItem() }} - {{ $companies->lastItem() }} kati ya {{ $companies->total() }}
                 </div>
             </div>
         </div>
+
         <!-- Mobile Cards View -->
-        <div class="md:hidden" id="mobileCardsContainer">
+        <div class="md:hidden">
             @forelse ($companies as $index => $company)
-            <div class="company-item border-b border-gray-100 p-4 hover:bg-gray-50/50 transition-all duration-200"
-                 data-name="{{ strtolower($company->company_name) }}"
-                 data-owner="{{ strtolower($company->owner_name) }}"
-                 data-phone="{{ strtolower($company->phone) }}"
-                 data-email="{{ strtolower($company->email) }}"
-                 data-package="{{ strtolower($company->package ?? '') }}"
-                 data-verified="{{ $company->is_verified ? 'verified' : 'pending' }}"
-                 data-approved="{{ $company->is_user_approved ? 'approved' : 'pending' }}"
-                 data-package-status="{{ $company->package_end && \Carbon\Carbon::parse($company->package_end)->gte(now()) ? 'active' : 'expired' }}">
+            <div class="company-item border-b border-gray-100 p-4 hover:bg-gray-50/50 transition-all duration-200">
                 <!-- Header -->
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex items-center space-x-2">
@@ -189,7 +190,6 @@
                             <div class="text-xs text-gray-500">{{ $company->owner_name }}</div>
                         </div>
                     </div>
-                    <div class="text-xs text-gray-500">#{{ $companies->firstItem() + $index }}</div>
                 </div>
 
                 <!-- Details -->
@@ -223,10 +223,6 @@
                         @else
                             <span class="text-xs text-gray-500 italic">-</span>
                         @endif
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-600">Usajili:</span>
-                        <span class="text-xs font-medium">{{ $company->created_at->format('d/m/Y') }}</span>
                     </div>
                 </div>
 
@@ -283,7 +279,7 @@
         </div>
 
         <!-- Desktop Table View -->
-        <div class="hidden md:block overflow-x-auto" id="desktopTableContainer">
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full">
                 <thead>
                     <tr class="bg-gray-50/80 border-b border-gray-100">
@@ -297,22 +293,12 @@
                         <th class="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Vitendo</th>
                     </tr>
                 </thead>
-                <tbody id="desktopTableBody" class="divide-y divide-gray-100">
+                <tbody class="divide-y divide-gray-100">
                     @forelse ($companies as $index => $company)
-                    <tr class="company-row hover:bg-gray-50/50 transition-all duration-200 group"
-                        data-name="{{ strtolower($company->company_name) }}"
-                        data-owner="{{ strtolower($company->owner_name) }}"
-                        data-phone="{{ strtolower($company->phone) }}"
-                        data-email="{{ strtolower($company->email) }}"
-                        data-package="{{ strtolower($company->package ?? '') }}"
-                        data-verified="{{ $company->is_verified ? 'verified' : 'pending' }}"
-                        data-approved="{{ $company->is_user_approved ? 'approved' : 'pending' }}"
-                        data-package-status="{{ $company->package_end && \Carbon\Carbon::parse($company->package_end)->gte(now()) ? 'active' : 'expired' }}">
-                        
+                    <tr class="hover:bg-gray-50/50 transition-all duration-200 group">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-600 font-medium">{{ $companies->firstItem() + $index }}</div>
                         </td>
-
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center space-x-3">
                                 <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-lg flex items-center justify-center">
@@ -327,12 +313,10 @@
                                 </div>
                             </div>
                         </td>
-
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 font-medium">{{ $company->owner_name }}</div>
                             <div class="text-xs text-gray-500">{{ $company->email }}</div>
                         </td>
-
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center space-x-2">
                                 <span class="text-sm text-gray-900">{{ $company->phone }}</span>
@@ -341,7 +325,6 @@
                                 </a>
                             </div>
                         </td>
-
                         <td class="px-6 py-4 whitespace-nowrap">
                             <button class="inline-flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 set-package-btn
                                 @if($company->package) bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200
@@ -352,7 +335,6 @@
                                 <i class="fas fa-edit text-xs opacity-60"></i>
                             </button>
                         </td>
-
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($company->package && $company->package_start && $company->package_end)
                                 @php $remaining = floor(now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false)); @endphp
@@ -376,7 +358,6 @@
                                 <span class="text-sm text-gray-500 italic">Hakuna kifurushi</span>
                             @endif
                         </td>
-
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 font-medium">
                                 {{ $company->created_at->format('d M, Y') }}
@@ -385,7 +366,6 @@
                                 {{ $company->created_at->format('H:i') }}
                             </div>
                         </td>
-
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex flex-col space-y-2">
                                 @if(!$company->is_user_approved)
@@ -426,7 +406,7 @@
                                     </button>
                                 </div>
                             </div>
-                        </tr>
+                        </td>
                     </tr>
                     @empty
                     <tr>
@@ -442,11 +422,11 @@
                     </tr>
                     @endforelse
                 </tbody>
-                  </table>
+            </table>
         </div>
 
         <!-- Pagination -->
-        <div id="paginationContainer" class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-100 bg-gray-50/50">
+        <div class="px-4 md:px-6 py-3 md:py-4 border-t border-gray-100 bg-gray-50/50">
             @if($companies->hasPages())
             <div class="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
                 <div class="text-sm text-gray-600">
@@ -471,9 +451,9 @@
                     <div class="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <i class="fas fa-building text-white text-sm md:text-base"></i>
                     </div>
-                    <div class="min-w-0">
-                        <h5 class="font-semibold text-white text-sm md:text-lg truncate">Taarifa za Kampuni</h5>
-                        <p class="text-emerald-100 text-xs md:text-sm truncate">{{ $company->company_name }}</p>
+                    <div>
+                        <h5 class="font-semibold text-white text-sm md:text-lg">Taarifa za Kampuni</h5>
+                        <p class="text-emerald-100 text-xs md:text-sm">{{ $company->company_name }}</p>
                     </div>
                 </div>
                 <button class="text-white/80 hover:text-white transition-colors close-btn" data-target="modal-{{ $company->id }}">
@@ -486,89 +466,80 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div class="space-y-3 md:space-y-4">
                     <h6 class="font-semibold text-gray-900 text-xs md:text-sm uppercase tracking-wide flex items-center space-x-2">
-                        <i class="fas fa-info-circle text-emerald-600 text-xs md:text-sm"></i>
+                        <i class="fas fa-info-circle text-emerald-600"></i>
                         <span>Taarifa za Msingi</span>
                     </h6>
-                    <div class="space-y-2 md:space-y-3">
-                        @foreach([
-                            ['label' => 'Jina la Kampuni:', 'value' => $company->company_name],
-                            ['label' => 'Jina la Mmiliki:', 'value' => $company->owner_name],
-                            ['label' => 'Namba ya Simu:', 'value' => $company->phone],
-                            ['label' => 'Barua Pepe:', 'value' => $company->email],
-                            ['label' => 'Mkoa:', 'value' => $company->region ?? 'Haijabainishwa']
-                        ] as $item)
-                        <div class="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b border-gray-100">
-                            <span class="text-xs md:text-sm text-gray-600 mb-1 md:mb-0">{{ $item['label'] }}</span>
-                            <span class="text-xs md:text-sm font-medium text-gray-900 text-right">{{ $item['value'] }}</span>
+                    <div class="space-y-2">
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Jina la Kampuni:</span>
+                            <span class="text-sm font-medium">{{ $company->company_name }}</span>
                         </div>
-                        @endforeach
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Jina la Mmiliki:</span>
+                            <span class="text-sm font-medium">{{ $company->owner_name }}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Namba ya Simu:</span>
+                            <span class="text-sm font-medium">{{ $company->phone }}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Barua Pepe:</span>
+                            <span class="text-sm font-medium">{{ $company->email }}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Mkoa:</span>
+                            <span class="text-sm font-medium">{{ $company->region ?? 'Haijabainishwa' }}</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="space-y-3 md:space-y-4">
                     <h6 class="font-semibold text-gray-900 text-xs md:text-sm uppercase tracking-wide flex items-center space-x-2">
-                        <i class="fas fa-cog text-emerald-600 text-xs md:text-sm"></i>
+                        <i class="fas fa-cog text-emerald-600"></i>
                         <span>Mfumo wa Kitaalamu</span>
                     </h6>
-                    <div class="space-y-2 md:space-y-3">
-                        @foreach([
-                            ['label' => 'Kifurushi:', 'value' => $company->package ?? 'Haijawekwa'],
-                            ['label' => 'Tarehe ya Usajili:', 'value' => $company->created_at->format('d/m/Y H:i')]
-                        ] as $item)
-                        <div class="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b border-gray-100">
-                            <span class="text-xs md:text-sm text-gray-600 mb-1 md:mb-0">{{ $item['label'] }}</span>
-                            <span class="text-xs md:text-sm font-medium text-gray-900 text-right">{{ $item['value'] }}</span>
+                    <div class="space-y-2">
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Kifurushi:</span>
+                            <span class="text-sm font-medium">{{ $company->package ?? 'Haijawekwa' }}</span>
                         </div>
-                        @endforeach
-                        
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Tarehe ya Usajili:</span>
+                            <span class="text-sm font-medium">{{ $company->created_at->format('d/m/Y H:i') }}</span>
+                        </div>
                         @if($company->package && $company->package_start && $company->package_end)
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Muda Uliobaki:</span>
                             @php $remaining = floor(now()->diffInDays(\Carbon\Carbon::parse($company->package_end), false)); @endphp
-                            <div class="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b border-gray-100">
-                                <span class="text-xs md:text-sm text-gray-600 mb-1 md:mb-0">Muda Uliobaki:</span>
-                                <span class="text-xs md:text-sm font-medium text-gray-900 text-right">
-                                    @if($remaining > 0) Siku {{ $remaining }} zimebaki
-                                    @elseif($remaining === 0) Inaisha Leo
-                                    @else Kimeisha ({{ abs($remaining) }} siku)
-                                    @endif
-                                </span>
-                            </div>
+                            <span class="text-sm font-medium">
+                                @if($remaining > 0) Siku {{ $remaining }} zimebaki
+                                @elseif($remaining === 0) Inaisha Leo
+                                @else Kimeisha ({{ abs($remaining) }} siku)
+                                @endif
+                            </span>
+                        </div>
                         @endif
-
-                        <div class="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b border-gray-100">
-                            <span class="text-xs md:text-sm text-gray-600 mb-1 md:mb-0">Hali ya Kampuni:</span>
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Hali ya Kampuni:</span>
                             @if($company->is_verified)
-                            <span class="inline-flex items-center space-x-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
-                                <i class="fas fa-check-circle text-xs"></i>
-                                <span>Imethibitishwa</span>
-                            </span>
+                            <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs">Imethibitishwa</span>
                             @else
-                            <span class="inline-flex items-center space-x-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                                <i class="fas fa-times-circle text-xs"></i>
-                                <span>Haijathibitishwa</span>
-                            </span>
+                            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">Haijathibitishwa</span>
                             @endif
                         </div>
-
-                        <div class="flex flex-col md:flex-row md:justify-between md:items-center py-2 border-b border-gray-100">
-                            <span class="text-xs md:text-sm text-gray-600 mb-1 md:mb-0">Hali ya Mtumiaji:</span>
+                        <div class="flex justify-between py-2 border-b">
+                            <span class="text-sm text-gray-600">Hali ya Mtumiaji:</span>
                             @if($company->is_user_approved)
-                            <span class="inline-flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                <i class="fas fa-check-circle text-xs"></i>
-                                <span>Ameidhinishwa</span>
-                            </span>
+                            <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Ameidhinishwa</span>
                             @else
-                            <span class="inline-flex items-center space-x-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
-                                <i class="fas fa-clock text-xs"></i>
-                                <span>Inasubiri</span>
-                            </span>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">Inasubiri</span>
                             @endif
                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Call Button in Modal -->
-            <div class="mt-4 md:mt-6 pt-4 border-t border-gray-100">
+
+            <div class="mt-6 pt-4 border-t">
                 <a href="tel:{{ $company->phone }}" class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2">
                     <i class="fas fa-phone-alt"></i>
                     <span>Piga Simu kwa {{ $company->owner_name }}</span>
@@ -576,11 +547,10 @@
             </div>
         </div>
 
-        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-100">
+        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t">
             <div class="flex justify-end">
-                <button class="px-4 md:px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors close-btn flex items-center space-x-2" data-target="modal-{{ $company->id }}">
-                    <i class="fas fa-times text-xs"></i>
-                    <span>Funga</span>
+                <button class="px-4 md:px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors close-btn" data-target="modal-{{ $company->id }}">
+                    Funga
                 </button>
             </div>
         </div>
@@ -596,9 +566,9 @@
                     <div class="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg flex items-center justify-center">
                         <i class="fas fa-box-open text-white text-sm md:text-base"></i>
                     </div>
-                    <div class="min-w-0">
-                        <h5 class="font-semibold text-white text-sm md:text-lg truncate">Weka Kifurushi</h5>
-                        <p class="text-blue-100 text-xs md:text-sm truncate">{{ $company->company_name }}</p>
+                    <div>
+                        <h5 class="font-semibold text-white text-sm md:text-lg">Weka Kifurushi</h5>
+                        <p class="text-blue-100 text-xs md:text-sm">{{ $company->company_name }}</p>
                     </div>
                 </div>
                 <button class="text-white/80 hover:text-white transition-colors close-package-btn" data-target="package-modal-{{ $company->id }}">
@@ -609,35 +579,26 @@
 
         <form action="{{ route('admin.setPackageTime', $company->id) }}" method="POST" class="p-4 md:p-6 space-y-4 md:space-y-6">
             @csrf
-            
-            <select name="package" class="w-full border border-gray-300 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-xs md:text-sm">
+            <select name="package" class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 <option value="Free Trial 14 days" {{ $company->package == 'Free Trial 14 days' ? 'selected' : '' }}>📅 Free Trial - Siku 14 (TZS 0)</option>
                 <option value="30 days" {{ $company->package == '30 days' ? 'selected' : '' }}>🚀 Siku 30 - TZS 15,000</option>
-                <option value="180 days" {{ $company->package == '180 days' ? 'selected' : '' }}>⭐ Siku 180 - TZS 75,000 (Punguzo: TZS 15,000)</option>
-                <option value="366 days" {{ $company->package == '366 days' ? 'selected' : '' }}>👑 Siku 366 - TZS 150,000 (Punguzo: TZS 30,000)</option>
+                <option value="180 days" {{ $company->package == '180 days' ? 'selected' : '' }}>⭐ Siku 180 - TZS 75,000</option>
+                <option value="366 days" {{ $company->package == '366 days' ? 'selected' : '' }}>👑 Siku 366 - TZS 150,000</option>
             </select>
 
-            <div class="space-y-2 md:space-y-3">
-                <label for="start_date" class="block text-xs md:text-sm font-semibold text-gray-900 flex items-center space-x-2">
-                    <i class="fas fa-calendar-alt text-blue-600 text-xs md:text-sm"></i>
-                    <span>Tarehe ya Kuanza</span>
-                </label>
-                <input type="date" name="start_date" id="start_date" 
-                       class="w-full border border-gray-300 rounded-lg md:rounded-xl px-3 md:px-4 py-2 md:py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white text-xs md:text-sm"
+            <div>
+                <label class="block text-sm font-semibold text-gray-900 mb-2">Tarehe ya Kuanza</label>
+                <input type="date" name="start_date" 
+                       class="w-full border border-gray-300 rounded-lg px-3 md:px-4 py-2 md:py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                        value="{{ $company->package_start ? \Carbon\Carbon::parse($company->package_start)->format('Y-m-d') : \Carbon\Carbon::today()->format('Y-m-d') }}">
             </div>
 
-            <div class="flex space-x-2 md:space-x-3 pt-4">
-                <button type="button" 
-                        class="flex-1 px-3 md:px-4 py-2 md:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg md:rounded-xl transition-all duration-200 close-package-btn flex items-center justify-center space-x-1 md:space-x-2 text-xs md:text-sm font-medium"
-                        data-target="package-modal-{{ $company->id }}">
-                    <i class="fas fa-times text-xs"></i>
-                    <span>Ghairi</span>
+            <div class="flex space-x-3 pt-4">
+                <button type="button" class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors close-package-btn" data-target="package-modal-{{ $company->id }}">
+                    Ghairi
                 </button>
-                <button type="submit" 
-                        class="flex-1 px-3 md:px-4 py-2 md:py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg md:rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-1 md:space-x-2 text-xs md:text-sm font-medium">
-                    <i class="fas fa-check text-xs"></i>
-                    <span>Wasilisha</span>
+                <button type="submit" class="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg transition-all duration-200 shadow-sm hover:shadow-md">
+                    Wasilisha
                 </button>
             </div>
         </form>
@@ -651,9 +612,9 @@
         <div class="bg-gradient-to-r from-red-600 to-red-700 px-4 md:px-6 py-3 md:py-4">
             <div class="flex items-center space-x-2 md:space-x-3">
                 <div class="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-exclamation-triangle text-white text-sm md:text-base"></i>
+                    <i class="fas fa-exclamation-triangle text-white"></i>
                 </div>
-                <div class="min-w-0">
+                <div>
                     <h5 class="font-semibold text-white text-sm md:text-lg">Thibitisha Ufutaji</h5>
                     <p class="text-red-100 text-xs md:text-sm">Hatua hii haiwezi kutenduliwa</p>
                 </div>
@@ -662,33 +623,28 @@
 
         <div class="p-4 md:p-6">
             <div class="text-center">
-                <div class="w-12 h-12 md:w-16 md:h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-                    <i class="fas fa-trash text-red-600 text-base md:text-xl"></i>
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-trash text-red-600 text-xl"></i>
                 </div>
-                <h4 class="text-base md:text-lg font-semibold text-gray-900 mb-2">Unafuta Kampuni</h4>
-                <p class="text-gray-600 text-xs md:text-sm mb-3 md:mb-4">Una uhakika unataka kufuta kampuni ifuatayo?</p>
-                <div class="bg-red-50 border border-red-200 rounded-lg md:rounded-xl p-3 md:p-4 mb-3 md:mb-4">
-                    <p class="font-bold text-red-700 text-sm md:text-lg" id="delete-company-name"></p>
+                <h4 class="text-lg font-semibold text-gray-900 mb-2">Unafuta Kampuni</h4>
+                <p class="text-gray-600 mb-4">Una uhakika unataka kufuta kampuni ifuatayo?</p>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                    <p class="font-bold text-red-700 text-lg" id="delete-company-name"></p>
                 </div>
-                <p class="text-xs md:text-sm text-red-600 flex items-center justify-center space-x-1">
-                    <i class="fas fa-info-circle text-xs"></i>
-                    <span>Taarifa zote za kampuni hii zitafutwa kabisa</span>
-                </p>
+                <p class="text-sm text-red-600">Taarifa zote za kampuni hii zitafutwa kabisa</p>
             </div>
         </div>
 
-        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t border-gray-100">
-            <div class="flex space-x-2 md:space-x-3">
-                <button id="cancel-delete" class="flex-1 px-3 md:px-4 py-2 md:py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg md:rounded-xl transition-all duration-200 flex items-center justify-center space-x-1 md:space-x-2 text-xs md:text-sm font-medium">
-                    <i class="fas fa-times text-xs"></i>
-                    <span>Ghairi</span>
+        <div class="bg-gray-50 px-4 md:px-6 py-3 md:py-4 border-t">
+            <div class="flex space-x-3">
+                <button id="cancel-delete" class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+                    Ghairi
                 </button>
                 <form id="delete-form" method="POST" class="flex-1">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="w-full px-3 md:px-4 py-2 md:py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg md:rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center space-x-1 md:space-x-2 text-xs md:text-sm font-medium">
-                        <i class="fas fa-trash text-xs"></i>
-                        <span>Futa Kampuni</span>
+                    <button type="submit" class="w-full px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg transition-all duration-200">
+                        Futa Kampuni
                     </button>
                 </form>
             </div>
@@ -726,302 +682,53 @@
 .animate-scale-in {
     animation: scaleIn 0.2s ease-out;
 }
-
-.overflow-y-auto::-webkit-scrollbar {
-    width: 6px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-
-@media (max-width: 767px) {
-    .text-\[10px\] {
-        font-size: 10px;
-    }
-    
-    .text-\[11px\] {
-        font-size: 11px;
-    }
-}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const notification = document.getElementById('success-notification');
     if (notification) {
-        setTimeout(() => {
-            closeNotification();
-        }, 5000);
+        setTimeout(() => closeNotification(), 5000);
     }
 
     initializeModalHandlers();
     initializePackageModalHandlers();
     initializeDeleteHandlers();
-    initializeLiveSearchAndFilter();
 });
-
-function initializeLiveSearchAndFilter() {
-    const searchInput = document.getElementById('liveSearchInput');
-    const filterSelect = document.getElementById('filterStatus');
-    const clearSearchBtn = document.getElementById('clearSearch');
-    const mobileItems = document.querySelectorAll('#mobileCardsContainer .company-item');
-    const desktopRows = document.querySelectorAll('#desktopTableBody .company-row');
-    const visibleCountSpan = document.getElementById('visibleCount');
-    const totalCountSpan = document.getElementById('totalCount');
-    const paginationDiv = document.getElementById('paginationContainer');
-    const searchStatus = document.getElementById('searchStatus');
-    
-    if (!searchInput) return;
-    
-    function filterCompanies() {
-        const searchTerm = searchInput.value.toLowerCase().trim();
-        const statusFilter = filterSelect ? filterSelect.value : 'all';
-        let visibleCount = 0;
-        
-        // Show/hide clear button
-        if (clearSearchBtn) {
-            if (searchTerm.length > 0) {
-                clearSearchBtn.classList.remove('hidden');
-            } else {
-                clearSearchBtn.classList.add('hidden');
-            }
-        }
-        
-        // Filter function for a single item
-        function matchesFilters(item) {
-            const name = item.getAttribute('data-name') || '';
-            const owner = item.getAttribute('data-owner') || '';
-            const phone = item.getAttribute('data-phone') || '';
-            const email = item.getAttribute('data-email') || '';
-            const pkg = item.getAttribute('data-package') || '';
-            const verified = item.getAttribute('data-verified') || '';
-            const approved = item.getAttribute('data-approved') || '';
-            const packageStatus = item.getAttribute('data-package-status') || '';
-            
-            // Search match
-            const matchesSearch = searchTerm === '' || 
-                name.includes(searchTerm) || 
-                owner.includes(searchTerm) || 
-                phone.includes(searchTerm) || 
-                email.includes(searchTerm) || 
-                pkg.includes(searchTerm);
-            
-            if (!matchesSearch) return false;
-            
-            // Status filter match
-            switch(statusFilter) {
-                case 'verified':
-                    return verified === 'verified';
-                case 'pending':
-                    return verified === 'pending';
-                case 'approved':
-                    return approved === 'approved';
-                case 'free_trial':
-                    return pkg.includes('free trial');
-                case 'active_package':
-                    return packageStatus === 'active';
-                case 'expired_package':
-                    return packageStatus === 'expired';
-                default:
-                    return true;
-            }
-        }
-        
-        // Filter mobile items
-        mobileItems.forEach(item => {
-            const matches = matchesFilters(item);
-            item.style.display = matches ? '' : 'none';
-            if (matches) visibleCount++;
-        });
-        
-        // Filter desktop rows
-        desktopRows.forEach(row => {
-            const matches = matchesFilters(row);
-            row.style.display = matches ? '' : 'none';
-        });
-        
-        // Update visible count
-        if (visibleCountSpan) {
-            visibleCountSpan.textContent = visibleCount;
-        }
-        
-        // Show/hide pagination and status based on search/filter
-        const hasActiveFilters = searchTerm !== '' || statusFilter !== 'all';
-        
-        if (hasActiveFilters) {
-            if (paginationDiv) paginationDiv.style.display = 'none';
-            if (searchStatus) {
-                searchStatus.classList.remove('hidden');
-                let filterText = '';
-                if (statusFilter !== 'all') {
-                    const filterLabels = {
-                        'verified': 'Imethibitishwa',
-                        'pending': 'Inasubiri',
-                        'approved': 'Watumiaji Walioidhinishwa',
-                        'free_trial': 'Free Trial',
-                        'active_package': 'Vifurushi Vinavyotumika',
-                        'expired_package': 'Vifurushi Vilivyokwisha'
-                    };
-                    filterText = ` | Filter: ${filterLabels[statusFilter] || statusFilter}`;
-                }
-                searchStatus.innerHTML = `<i class="fas fa-search text-xs mr-1"></i> Matokeo: ${visibleCount} kati ya ${totalCountSpan ? totalCountSpan.textContent : '0'} makampuni${filterText}`;
-            }
-        } else {
-            if (paginationDiv) paginationDiv.style.display = '';
-            if (searchStatus) searchStatus.classList.add('hidden');
-        }
-        
-        // Show empty state message if no results
-        const mobileContainer = document.getElementById('mobileCardsContainer');
-        const desktopContainer = document.getElementById('desktopTableBody');
-        
-        // Remove existing empty messages
-        const existingMobileEmpty = document.getElementById('mobile-empty-message');
-        const existingDesktopEmpty = document.getElementById('desktop-empty-message');
-        if (existingMobileEmpty) existingMobileEmpty.remove();
-        if (existingDesktopEmpty) existingDesktopEmpty.remove();
-        
-        if (visibleCount === 0 && (searchTerm !== '' || statusFilter !== 'all')) {
-            // Add empty message for mobile
-            if (mobileContainer && !document.getElementById('mobile-empty-message')) {
-                const emptyMsg = document.createElement('div');
-                emptyMsg.id = 'mobile-empty-message';
-                emptyMsg.className = 'p-8 text-center';
-                let message = '';
-                if (searchTerm !== '' && statusFilter !== 'all') {
-                    message = `Hakuna kampuni inayolingana na "<strong>${escapeHtml(searchTerm)}</strong>" na filter "${statusFilter}"`;
-                } else if (searchTerm !== '') {
-                    message = `Hakuna kampuni inayolingana na "<strong>${escapeHtml(searchTerm)}</strong>"`;
-                } else {
-                    message = `Hakuna kampuni katika filter "${statusFilter}"`;
-                }
-                emptyMsg.innerHTML = `
-                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-search text-gray-400 text-xl"></i>
-                    </div>
-                    <h3 class="text-gray-700 font-medium mb-2">Hakuna matokeo</h3>
-                    <p class="text-gray-500 text-sm">${message}</p>
-                `;
-                mobileContainer.appendChild(emptyMsg);
-            }
-            
-            // Add empty message for desktop
-            if (desktopContainer && !document.getElementById('desktop-empty-message')) {
-                const emptyRow = document.createElement('tr');
-                emptyRow.id = 'desktop-empty-message';
-                let message = '';
-                if (searchTerm !== '' && statusFilter !== 'all') {
-                    message = `Hakuna kampuni inayolingana na "${escapeHtml(searchTerm)}" na filter "${statusFilter}"`;
-                } else if (searchTerm !== '') {
-                    message = `Hakuna kampuni inayolingana na "${escapeHtml(searchTerm)}"`;
-                } else {
-                    message = `Hakuna kampuni katika filter "${statusFilter}"`;
-                }
-                emptyRow.innerHTML = `
-                    <td colspan="8" class="px-6 py-12 text-center">
-                        <div class="flex flex-col items-center justify-center">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                                <i class="fas fa-search text-gray-400 text-2xl"></i>
-                            </div>
-                            <h3 class="text-gray-700 font-medium mb-2">Hakuna matokeo</h3>
-                            <p class="text-gray-500 text-sm">${message}</p>
-                        </div>
-                    </td>
-                `;
-                desktopContainer.appendChild(emptyRow);
-            }
-        }
-    }
-    
-    function escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    }
-    
-    // Clear search button handler
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            filterCompanies();
-            searchInput.focus();
-        });
-    }
-    
-    searchInput.addEventListener('input', filterCompanies);
-    if (filterSelect) {
-        filterSelect.addEventListener('change', filterCompanies);
-    }
-}
 
 function initializeModalHandlers() {
     document.querySelectorAll('.info-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
-            showModal(target);
-        });
+        btn.addEventListener('click', () => showModal(btn.dataset.target));
     });
-
     document.querySelectorAll('.close-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
-            hideModal(target);
-        });
+        btn.addEventListener('click', () => hideModal(btn.dataset.target));
     });
 }
 
 function initializePackageModalHandlers() {
     document.querySelectorAll('.set-package-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
-            showModal(target);
-        });
+        btn.addEventListener('click', () => showModal(btn.dataset.target));
     });
-
     document.querySelectorAll('.close-package-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.getAttribute('data-target');
-            hideModal(target);
-        });
+        btn.addEventListener('click', () => hideModal(btn.dataset.target));
     });
 }
 
 function initializeDeleteHandlers() {
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            const companyName = btn.getAttribute('data-company');
-            const companyId = btn.getAttribute('data-id');
-            
-            document.getElementById('delete-company-name').textContent = companyName;
-            document.getElementById('delete-form').action = "{{ route('admin.destroyCompany', ':id') }}".replace(':id', companyId);
-            
+            document.getElementById('delete-company-name').textContent = btn.dataset.company;
+            // Fix: Use the full URL directly instead of trying to generate it with Blade
+            document.getElementById('delete-form').action = '/admin/company/' + btn.dataset.id;
             showModal('delete-modal');
         });
     });
-
-    const cancelBtn = document.getElementById('cancel-delete');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-            hideModal('delete-modal');
-        });
-    }
-
+    
+    document.getElementById('cancel-delete')?.addEventListener('click', () => hideModal('delete-modal'));
+    
     document.querySelectorAll('[id^="modal-"], #delete-modal, [id^="package-modal-"]').forEach(modal => {
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                hideModal(modal.id);
-            }
+            if (e.target === modal) hideModal(modal.id);
         });
     });
 }
@@ -1047,19 +754,14 @@ function hideModal(modalId) {
 function closeNotification() {
     const notification = document.getElementById('success-notification');
     if (notification) {
-        notification.style.animation = 'slideDown 0.3s ease-out reverse';
-        setTimeout(() => {
-            notification.remove();
-        }, 300);
+        notification.remove();
     }
 }
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        const openModals = document.querySelectorAll('[id^="modal-"]:not(.hidden), #delete-modal:not(.hidden), [id^="package-modal-"]:not(.hidden)');
-        openModals.forEach(modal => {
-            hideModal(modal.id);
-        });
+        document.querySelectorAll('[id^="modal-"]:not(.hidden), #delete-modal:not(.hidden), [id^="package-modal-"]:not(.hidden)')
+            .forEach(modal => hideModal(modal.id));
     }
 });
 </script>

@@ -16,8 +16,9 @@ class AdminController extends Controller
      */
     public function dashboard(Request $request)
     {
-        // Get search query
+        // Get search and filter parameters
         $search = $request->input('search');
+        $status = $request->input('status');
         
         // Base query for companies
         $query = Company::query();
@@ -34,15 +35,42 @@ class AdminController extends Controller
             });
         }
         
-        // Get paginated results (this will respect the search filter)
-        $companies = $query->latest()->paginate(10);
-        
-        // Preserve search query in pagination links
-        if ($search) {
-            $companies->appends(['search' => $search]);
+        // Apply status filter
+        if ($status && $status != 'all') {
+            switch($status) {
+                case 'verified':
+                    $query->where('is_verified', true);
+                    break;
+                case 'pending':
+                    $query->where('is_verified', false);
+                    break;
+                case 'approved':
+                    $query->where('is_user_approved', true);
+                    break;
+                case 'free_trial':
+                    $query->where('package', 'Free Trial 14 days');
+                    break;
+                case 'active_package':
+                    $query->whereNotNull('package_end')
+                          ->where('package_end', '>=', Carbon::now());
+                    break;
+                case 'expired_package':
+                    $query->whereNotNull('package_end')
+                          ->where('package_end', '<', Carbon::now());
+                    break;
+            }
         }
         
-        // Calculate summary statistics from ALL companies (not filtered by search)
+        // Get paginated results (this will respect all filters)
+        $companies = $query->latest()->paginate(10);
+        
+        // Preserve search and status in pagination links
+        $companies->appends([
+            'search' => $search,
+            'status' => $status
+        ]);
+        
+        // Calculate summary statistics from ALL companies (not filtered)
         $totalCompanies = Company::count();
         $verifiedCompanies = Company::where('is_verified', true)->count();
         $approvedUsers = Company::where('is_user_approved', true)->count();
@@ -62,7 +90,8 @@ class AdminController extends Controller
             'activePackages',
             'expiredPackages',
             'freeTrialCompanies',
-            'search'
+            'search',
+            'status'
         ));
     }
 
@@ -139,23 +168,16 @@ class AdminController extends Controller
         $company->package_end = $end_date;
         $company->save();
 
-        // Calculate discount percentage
-        $discount = 0;
-        if ($package === '180 days') {
-            $monthlyPrice = 15000 * 6;
-            $discount = 15000;
-        } elseif ($package === '366 days') {
-            $monthlyPrice = 15000 * 12;
-            $discount = 30000;
-        }
-
         $priceMessage = $package !== 'Free Trial 14 days' 
             ? " (Bei: TZS " . number_format($prices[$package]) . ")" 
             : "";
         
-        $discountMessage = $discount > 0 
-            ? " Umepata punguzo la TZS " . number_format($discount) . "!" 
-            : "";
+        $discountMessage = "";
+        if ($package === '180 days') {
+            $discountMessage = " Umepata punguzo la TZS 15,000!";
+        } elseif ($package === '366 days') {
+            $discountMessage = " Umepata punguzo la TZS 30,000!";
+        }
 
         return redirect()->back()->with('success', 
             "Kifurushi cha {$company->company_name} kimewekwa: {$package}{$priceMessage}.{$discountMessage}"
@@ -280,31 +302,5 @@ class AdminController extends Controller
             ->paginate(10);
 
         return view('admin.active-packages', compact('activeCompanies'));
-    }
-
-    /**
-     * Ajax search for companies (real-time filtering)
-     */
-    public function searchCompanies(Request $request)
-    {
-        $search = $request->input('q');
-        
-        if (!$search || empty($search)) {
-            $companies = Company::latest()->take(20)->get();
-        } else {
-            $companies = Company::where('company_name', 'LIKE', "%{$search}%")
-                ->orWhere('owner_name', 'LIKE', "%{$search}%")
-                ->orWhere('email', 'LIKE', "%{$search}%")
-                ->orWhere('phone', 'LIKE', "%{$search}%")
-                ->orWhere('package', 'LIKE', "%{$search}%")
-                ->latest()
-                ->take(50)
-                ->get();
-        }
-        
-        return response()->json([
-            'companies' => $companies,
-            'count' => $companies->count()
-        ]);
     }
 }
