@@ -142,14 +142,27 @@ class MatumiziController extends Controller
     }
 
     /**
-     * Get total available for expenses (Faida ya Mauzo + Faida ya Marejesho)
+     * Get total MAPATO (Revenue/Income) - Total Sales Revenue
+     * This is the new limit for expenses
      */
-    private function getTotalAvailableForExpenses($companyId)
+    private function getTotalMapato($companyId)
     {
-        $salesProfit = $this->getSalesProfit($companyId);
-        $returnsProfit = $this->getReturnsProfit($companyId);
+        // Total revenue from all sales
+        $totalRevenue = Mauzo::where('company_id', $companyId)->sum('jumla');
         
-        return $salesProfit + $returnsProfit;
+        return $totalRevenue;
+    }
+
+    /**
+     * Get total available for expenses (based on MAPATO)
+     * Formula: Mapato (Total Revenue) - Current Expenses
+     */
+    private function getRemainingForExpenses($companyId)
+    {
+        $totalMapato = $this->getTotalMapato($companyId);
+        $currentExpenses = Matumizi::where('company_id', $companyId)->sum('gharama');
+        
+        return $totalMapato - $currentExpenses;
     }
 
     /**
@@ -185,11 +198,13 @@ class MatumiziController extends Controller
         $expensesCount = Matumizi::where('company_id', $company->id)->count();
         $averageExpense = $expensesCount > 0 ? $totalExpenses / $expensesCount : 0;
         
-        // Get available amount (Faida ya Mauzo + Faida ya Marejesho)
+        // Get MAPATO (Total Revenue) as the limit
+        $totalMapato = $this->getTotalMapato($company->id);
+        $remainingBalance = $totalMapato - $totalExpenses;
+        
+        // For reference - profits (just for display)
         $salesProfit = $this->getSalesProfit($company->id);
         $returnsProfit = $this->getReturnsProfit($company->id);
-        $availableForExpenses = $salesProfit + $returnsProfit;
-        $remainingBalance = $availableForExpenses - $totalExpenses;
 
         return view('matumizi.index', compact(
             'matumizi', 
@@ -198,15 +213,15 @@ class MatumiziController extends Controller
             'todayExpenses',
             'expensesCount',
             'averageExpense',
-            'availableForExpenses',
+            'totalMapato',
+            'remainingBalance',
             'salesProfit',
-            'returnsProfit',
-            'remainingBalance'
+            'returnsProfit'
         ));
     }
 
     /**
-     * Store new expense (with validation: cannot exceed Faida ya Mauzo + Faida ya Marejesho)
+     * Store new expense - With MAPATO limit
      */
     public function store(Request $request)
     {
@@ -224,23 +239,19 @@ class MatumiziController extends Controller
         // Calculate current total expenses
         $currentExpensesTotal = Matumizi::where('company_id', $companyId)->sum('gharama');
         
-        // Calculate total available (Faida ya Mauzo + Faida ya Marejesho)
-        $salesProfit = $this->getSalesProfit($companyId);
-        $returnsProfit = $this->getReturnsProfit($companyId);
-        $totalAvailable = $salesProfit + $returnsProfit;
+        // Calculate total MAPATO (Revenue from sales)
+        $totalMapato = $this->getTotalMapato($companyId);
         
-        // Calculate remaining
-        $remainingAvailable = $totalAvailable - $currentExpensesTotal;
+        // Calculate remaining based on MAPATO
+        $remainingAvailable = $totalMapato - $currentExpensesTotal;
 
-        // Check if the new expense would exceed available amount
+        // Check if the new expense would exceed MAPATO
         $newExpenseAmount = $request->gharama;
         
         if ($newExpenseAmount > $remainingAvailable) {
-            $errorMsg = "❌ HUWEZI KUZIDI! Matumizi ya " . number_format($newExpenseAmount) . " TZS yanazidi kiasi kinachoruhusiwa.\n\n" .
+            $errorMsg = "❌ HUWEZI KUZIDI! Matumizi ya " . number_format($newExpenseAmount) . " TZS yanazidi MAPATO yaliyopatikana.\n\n" .
                        "📊 Taarifa:\n" .
-                       "• Faida ya Mauzo: " . number_format($salesProfit) . " TZS\n" .
-                       "• Faida ya Marejesho: " . number_format($returnsProfit) . " TZS\n" .
-                       "• Jumla inayopatikana: " . number_format($totalAvailable) . " TZS\n" .
+                       "• MAPATO (Jumla ya Mauzo): " . number_format($totalMapato) . " TZS\n" .
                        "• Matumizi ya sasa: " . number_format($currentExpensesTotal) . " TZS\n" .
                        "• Unabakiwa na: " . number_format($remainingAvailable) . " TZS\n\n" .
                        "Tafadhali punguza kiasi!";
@@ -335,7 +346,7 @@ class MatumiziController extends Controller
     }
 
     /**
-     * Update expense
+     * Update expense - With MAPATO limit
      */
     public function update(Request $request, $id)
     {
@@ -360,14 +371,12 @@ class MatumiziController extends Controller
         // Only validate if increasing
         if ($difference > 0) {
             $currentExpensesTotal = Matumizi::where('company_id', $companyId)->sum('gharama');
-            $salesProfit = $this->getSalesProfit($companyId);
-            $returnsProfit = $this->getReturnsProfit($companyId);
-            $totalAvailable = $salesProfit + $returnsProfit;
+            $totalMapato = $this->getTotalMapato($companyId);
             // Subtract old amount because it's already counted
-            $remainingAvailable = $totalAvailable - ($currentExpensesTotal - $oldAmount);
+            $remainingAvailable = $totalMapato - ($currentExpensesTotal - $oldAmount);
             
             if ($difference > $remainingAvailable) {
-                $errorMsg = "❌ HUWEZI KUONGEZA! Ongezeko la " . number_format($difference) . " TZS linazidi kiasi kinachoruhusiwa.\n\n" .
+                $errorMsg = "❌ HUWEZI KUONGEZA! Ongezeko la " . number_format($difference) . " TZS linazidi MAPATO yaliyobaki.\n\n" .
                            "Unabakiwa na " . number_format($remainingAvailable) . " TZS tu!";
                 
                 if ($request->ajax()) {
