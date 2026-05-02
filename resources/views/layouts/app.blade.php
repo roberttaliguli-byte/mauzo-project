@@ -27,7 +27,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
 <style>
-    /* Custom Styles - NO TRANSPARENCY */
+    /* Custom Styles */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
     * {
@@ -43,7 +43,8 @@
     
     body {
         font-family: 'Inter', sans-serif;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        background-color: #f8fafc;
+        color: #1e293b;
         overflow-x: hidden;
         width: 100%;
         min-height: 100vh;
@@ -64,51 +65,7 @@
         }
     }
     
-    /* Color Modes - SOLID BACKGROUNDS, NO TRANSPARENCY */
-    .color-mode-light {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f8fafc;
-        --text-primary: #1e293b;
-        --text-secondary: #475569;
-        --text-muted: #64748b;
-        --border-color: #e2e8f0;
-        --sidebar-bg: #065f46;
-        --sidebar-text: #ffffff;
-        --sidebar-hover: #047857;
-        --hover-bg: #f1f5f9;
-        --card-bg: #ffffff;
-        --header-bg: #ffffff;
-        --input-bg: #ffffff;
-        --input-border: #cbd5e1;
-        --shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .color-mode-dark {
-        --bg-primary: #0f172a;
-        --bg-secondary: #1e293b;
-        --text-primary: #f1f5f9;
-        --text-secondary: #cbd5e6;
-        --text-muted: #94a3b8;
-        --border-color: #334155;
-        --sidebar-bg: #065f46;
-        --sidebar-text: #ffffff;
-        --sidebar-hover: #047857;
-        --hover-bg: #334155;
-        --card-bg: #1e293b;
-        --header-bg: #1e293b;
-        --input-bg: #334155;
-        --input-border: #475569;
-        --shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-    
-    /* Apply color variables */
-    .color-mode-light,
-    .color-mode-dark {
-        background-color: var(--bg-primary);
-        color: var(--text-primary);
-    }
-    
-    /* Sidebar Styles - SOLID BACKGROUND */
+    /* Sidebar Styles */
     .sidebar {
         position: fixed;
         top: 0;
@@ -122,7 +79,6 @@
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.15);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        background: #065f46; /* Solid fallback */
         background: linear-gradient(135deg, #065f46 0%, #047857 100%);
         color: white;
     }
@@ -167,7 +123,7 @@
         overflow-x: hidden;
     }
     
-    /* Mobile specific - SOLID OVERLAY (no transparency/blur) */
+    /* Mobile specific */
     @media (max-width: 1023px) {
         .sidebar {
             width: 280px;
@@ -179,7 +135,6 @@
             width: 100% !important;
         }
         
-        /* SOLID overlay - NO BLUR, NO TRANSPARENCY */
         .sidebar-open .main-container::before {
             content: '';
             position: fixed;
@@ -208,14 +163,14 @@
         }
     }
     
-    /* Header styles - SOLID */
+    /* Header styles */
     .app-header {
-        background-color: var(--header-bg);
-        border-bottom: 1px solid var(--border-color);
+        background-color: #ffffff;
+        border-bottom: 1px solid #e2e8f0;
         position: sticky;
         top: 0;
         z-index: 50;
-        box-shadow: var(--shadow);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
     /* Hamburger Menu */
@@ -237,7 +192,7 @@
         display: block;
         height: 3px;
         width: 100%;
-        background: currentColor;
+        background: #1e293b;
         border-radius: 3px;
         transition: all 0.3s ease;
         margin: 0;
@@ -287,7 +242,7 @@
         background: rgba(255,255,255,0.25);
     }
     
-    /* Sidebar items - SOLID hover */
+    /* Sidebar items */
     .sidebar-item {
         position: relative;
         transition: all 0.2s ease;
@@ -311,7 +266,7 @@
         background-color: rgba(255, 255, 255, 0.12);
     }
     
-    /* Active navigation item - SOLID */
+    /* Active navigation item */
     .active-nav-item {
         background-color: rgba(255, 255, 255, 0.18);
         position: relative;
@@ -343,7 +298,7 @@
         animation: blink 0.8s infinite;
     }
     
-    /* Package indicator - SOLID COLORS */
+    /* Package indicator */
     .package-critical {
         background-color: #dc2626;
         color: white;
@@ -359,111 +314,66 @@
         color: white;
     }
     
-    .color-mode-dark .package-critical {
-        background-color: #b91c1c;
-        color: #fee2e2;
-    }
-    
-    .color-mode-dark .package-warning {
-        background-color: #d97706;
-        color: #fef3c7;
-    }
-    
-    .color-mode-dark .package-good {
-        background-color: #059669;
-        color: #d1fae5;
-    }
-    
-    /* Dropdown menus - SOLID */
+    /* Dropdown menus */
     .dropdown-solid {
-        background-color: var(--card-bg);
-        border: 1px solid var(--border-color);
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 0.75rem;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
     }
     
-    /* Color mode toggle button */
-    .color-mode-toggle {
+    /* Auto-notification styles */
+    .auto-notification {
         position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        z-index: 100;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        z-index: 9999;
+        transition: transform 0.3s ease;
+        min-width: 300px;
+        max-width: 500px;
+        width: auto;
     }
     
-    .color-mode-btn {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background-color: var(--card-bg);
-        border: 1px solid var(--border-color);
-        box-shadow: var(--shadow);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-        color: var(--text-primary);
+    .auto-notification.show {
+        transform: translateX(-50%) translateY(0);
     }
     
-    .color-mode-btn:hover {
-        transform: scale(1.05);
-    }
-    
-    .color-mode-menu {
-        position: absolute;
-        bottom: 60px;
-        right: 0;
-        background-color: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 0.75rem;
-        padding: 0.5rem;
-        min-width: 140px;
-        box-shadow: var(--shadow);
-        z-index: 101;
-    }
-    
-    .color-mode-option {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-        border-radius: 0.5rem;
-        transition: background-color 0.2s;
-        color: var(--text-primary);
-    }
-    
-    .color-mode-option:hover {
-        background-color: var(--hover-bg);
+    @media (max-width: 640px) {
+        .auto-notification {
+            min-width: 280px;
+            max-width: 90vw;
+            top: 10px;
+        }
     }
     
     /* Utility classes */
     .text-primary {
-        color: var(--text-primary);
+        color: #1e293b;
     }
     
     .text-secondary {
-        color: var(--text-secondary);
+        color: #475569;
     }
     
     .border-color {
-        border-color: var(--border-color);
+        border-color: #e2e8f0;
     }
     
     .bg-secondary {
-        background-color: var(--bg-secondary);
+        background-color: #f8fafc;
     }
     
     .hover-bg:hover {
-        background-color: var(--hover-bg);
+        background-color: #f1f5f9;
     }
     
     .card-bg {
-        background-color: var(--card-bg);
+        background-color: #ffffff;
     }
     
     .header-bg {
-        background-color: var(--header-bg);
+        background-color: #ffffff;
     }
 </style>
     @stack('styles')
@@ -526,13 +436,72 @@
     $userInitial = $userName ? substr($userName, 0, 1) : 'B';
     $companyId = $currentCompany ? $currentCompany->id : 'default';
     $companyName = $currentCompany ? $currentCompany->company_name : 'Default Company';
+    $isExpired = $currentCompany && $currentCompany->package_end ? \Carbon\Carbon::parse($currentCompany->package_end)->isPast() : true;
 @endphp
 
 <body class="no-scroll-x" 
-      :class="[colorMode, sidebarOpen ? 'sidebar-open' : '']" 
       x-data="app()" 
       x-init="init()">
     
+<!-- Auto Notification - Shows every 10 minutes -->
+<div x-data="autoNotification()" 
+     x-init="initAutoNotification()"
+     class="auto-notification"
+     :class="{'show': isVisible}"
+     x-show="isVisible"
+     x-cloak>
+    <div class="bg-white rounded-lg shadow-2xl border-l-4 overflow-hidden" 
+         :class="{
+             'border-red-500': daysLeft <= 5,
+             'border-orange-500': daysLeft > 5 && daysLeft <= 10,
+             'border-green-500': daysLeft > 10
+         }">
+        <div class="p-4">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                    <i class="fas text-xl"
+                       :class="{
+                           'fa-exclamation-triangle text-red-500': daysLeft <= 5,
+                           'fa-clock text-orange-500': daysLeft > 5 && daysLeft <= 10,
+                           'fa-check-circle text-green-500': daysLeft > 10
+                       }"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-semibold text-gray-800 text-sm sm:text-base">
+                        Kumbusho la Kifurushi
+                    </h4>
+                    <p class="text-gray-600 text-xs sm:text-sm mt-1">
+                        Kifurushi chako cha <span class="font-medium" x-text="packageName"></span> 
+                        kina siku <span class="font-bold" :class="{'text-red-600': daysLeft <= 5, 'text-orange-600': daysLeft > 5 && daysLeft <= 10}" x-text="daysLeft"></span> 
+                        zimesalia kabla ya kuisha
+                    </p>
+                    <div class="mt-3 flex gap-2">
+                        <button @click="goToPayment()" 
+                                class="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-medium py-2 px-3 rounded-lg transition text-xs sm:text-sm">
+                            <i class="fas fa-shopping-cart mr-1"></i>
+                            Renew / Lipa Sasa
+                        </button>
+                        <button @click="dismiss()" 
+                                class="px-3 py-2 text-gray-500 hover:text-gray-700 text-xs sm:text-sm">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Progress bar -->
+        <div class="h-1 bg-gray-100">
+            <div class="h-full transition-all duration-[5000ms] linear"
+                 :class="{
+                     'bg-red-500': daysLeft <= 5,
+                     'bg-orange-500': daysLeft > 5 && daysLeft <= 10,
+                     'bg-green-500': daysLeft > 10
+                 }"
+                 x-bind:style="{ width: progressWidth }"></div>
+        </div>
+    </div>
+</div>
+
     <!-- Sidebar -->
     <aside class="sidebar flex flex-col"
            :class="{'open': sidebarOpen}">
@@ -579,9 +548,9 @@
                                     :class="{'active': sidebarOpen}"
                                     @click="toggleSidebar()"
                                     aria-label="Toggle Menu">
-                                <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
-                                <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
-                                <span :class="colorMode === 'color-mode-light' ? 'bg-gray-800' : 'bg-white'"></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
                             </button>
                             
                             <!-- Page Title -->
@@ -592,22 +561,24 @@
                         </div>
                         
                         <div class="flex items-center gap-1 sm:gap-2">
-                            <!-- Package Days Remaining with Email Icon -->
+                            <!-- Package Days Remaining Indicator -->
                             <div x-data="packageRemaining()" x-init="initPackageRemaining()" class="relative">
                                 <button @click="fetchPackageInfo()" 
-                                        class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100"
                                         :class="{
                                             'blink-critical': daysLeft <= 5 && daysLeft > 0,
                                             'blink-warning': daysLeft > 5 && daysLeft <= 10
                                         }"
                                         aria-label="Package Days Remaining">
-                                    <i class="fas fa-envelope text-lg"></i>
-                                    <template x-if="daysLeft <= 5 && daysLeft > 0">
-                                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-                                    </template>
+                                    <i class="fas fa-calendar-alt text-lg"></i>
+                                    <span class="absolute -top-1 -right-1 text-[10px] font-bold bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
+                                          x-show="daysLeft > 0 && daysLeft <= 30"
+                                          x-text="daysLeft"></span>
+                                    <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"
+                                          x-show="daysLeft <= 5 && daysLeft > 0"></span>
                                 </button>
 
-                                <!-- Package Info Tooltip - SOLID -->
+                                <!-- Package Info Tooltip -->
                                 <div x-show="showPackageInfo"
                                      @click.away="showPackageInfo = false"
                                      x-cloak
@@ -648,15 +619,13 @@
                                         <div class="text-xs text-secondary border-t border-color pt-2">
                                             Itaisha: <span class="font-medium" x-text="packageEndDate"></span>
                                         </div>
-                                        <template x-if="daysLeft <= 5 && daysLeft > 0">
-                                            <div class="mt-2 pt-2 border-t border-color">
-                                                <a href="{{ route('payment.package.selection') }}" 
-                                                   class="block w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium py-2 px-3 rounded hover:from-amber-600 hover:to-orange-600 transition">
-                                                    <i class="fas fa-shopping-cart mr-1"></i>
-                                                    Lipa Sasa
-                                                </a>
-                                            </div>
-                                        </template>
+                                        <div class="mt-2 pt-2 border-t border-color">
+                                            <a href="{{ route('payment.package.selection') }}" 
+                                               class="block w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-medium py-2 px-3 rounded hover:from-amber-600 hover:to-orange-600 transition">
+                                                <i class="fas fa-shopping-cart mr-1"></i>
+                                                Lipa / Renew Sasa
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -664,7 +633,7 @@
                             <!-- Alert Dropdown -->
                             <div x-data="alertDropdown()" x-init="initAlert()" class="relative">
                                 <button @click="toggleAlert()"
-                                    class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100"
                                     aria-label="Notifications">
                                     <i class="fas fa-bell text-lg"></i>
                                     <template x-if="lowStockCount > 0">
@@ -747,7 +716,7 @@
                                     <i class="fas fa-chevron-down text-xs text-secondary hidden sm:block"></i>
                                 </button>
                                 
-                                <!-- Profile Dropdown - SOLID -->
+                                <!-- Profile Dropdown -->
                                 <div x-show="profileOpen" 
                                      @click.away="profileOpen = false" 
                                      x-cloak
@@ -785,65 +754,12 @@
         </div>
     </div>
 
-    <!-- Color Mode Toggle -->
-    <div class="color-mode-toggle" x-data="{ colorMenuOpen: false }">
-        <button 
-            @click="colorMenuOpen = !colorMenuOpen"
-            class="color-mode-btn shadow-lg"
-            title="Badili Mwonekano"
-            aria-label="Change Appearance"
-        >
-            <i class="fas" :class="colorMode === 'color-mode-light' ? 'fa-sun' : 'fa-moon'"></i>
-        </button>
-        
-        <div 
-            x-show="colorMenuOpen" 
-            @click.away="colorMenuOpen = false"
-            x-transition
-            x-cloak
-            class="color-mode-menu"
-        >
-            <div 
-                class="color-mode-option"
-                @click="changeColorMode('light'); colorMenuOpen = false"
-            >
-                <div class="w-5 h-5 rounded-full bg-white border-2 border-gray-300"></div>
-                <span>Mwanga</span>
-                <i x-show="colorMode === 'color-mode-light'" class="fas fa-check ml-auto text-green-600"></i>
-            </div>
-            <div 
-                class="color-mode-option"
-                @click="changeColorMode('dark'); colorMenuOpen = false"
-            >
-                <div class="w-5 h-5 rounded-full bg-gray-800 border-2 border-gray-600"></div>
-                <span>Giza</span>
-                <i x-show="colorMode === 'color-mode-dark'" class="fas fa-check ml-auto text-green-600"></i>
-            </div>
-        </div>
-    </div>
-
     <script>
     function app() {
         return {
             sidebarOpen: false,
-            colorMode: 'color-mode-light',
             
             init() {
-                // Load saved color mode
-                const savedMode = localStorage.getItem('colorMode');
-                if (savedMode && (savedMode === 'color-mode-light' || savedMode === 'color-mode-dark')) {
-                    this.colorMode = savedMode;
-                } else {
-                    this.colorMode = 'color-mode-light';
-                    localStorage.setItem('colorMode', this.colorMode);
-                }
-                
-                // Apply color mode to body
-                document.body.className = document.body.className
-                    .replace(/color-mode-(light|dark)/g, '')
-                    .trim();
-                document.body.classList.add(this.colorMode);
-                
                 // Set sidebar state based on screen size
                 const isDesktop = window.innerWidth >= 1024;
                 this.sidebarOpen = isDesktop;
@@ -872,23 +788,192 @@
             
             closeSidebar() {
                 this.sidebarOpen = false;
-            },
-            
-            changeColorMode(mode) {
-                const newMode = `color-mode-${mode}`;
-                this.colorMode = newMode;
-                localStorage.setItem('colorMode', newMode);
-                
-                // Update body class
-                document.body.className = document.body.className
-                    .replace(/color-mode-(light|dark)/g, '')
-                    .trim();
-                document.body.classList.add(newMode);
             }
         }
     }
+ // Auto Notification Component - Shows on first 5 page refreshes, respects 2-minute cooldown
+function autoNotification() {
+    return {
+        isVisible: false,
+        daysLeft: {{ $daysLeft }},
+        packageName: '{{ $packageName }}',
+        packageEndDate: '{{ $packageEndDate }}',
+        progressWidth: '100%',
+        timeoutId: null,
+        refreshCount: 0,
+        maxRefreshes: 5,
+        lastRefreshTime: null,
+        cooldownMinutes: 2,
+        
+        initAutoNotification() {
+            this.calculateDaysLeft();
+            
+            // Load saved state from localStorage
+            this.loadSavedState();
+            
+            // Check if we should show notification on this refresh
+            if (this.daysLeft <= 30 && this.daysLeft > 0) {
+                this.checkAndShowOnRefresh();
+            }
+            
+            // Update days left every minute
+            setInterval(() => {
+                this.calculateDaysLeft();
+            }, 60 * 1000);
+        },
+        
+        loadSavedState() {
+            // Load refresh count from localStorage
+            const savedCount = localStorage.getItem('package_notification_refresh_count');
+            if (savedCount !== null) {
+                this.refreshCount = parseInt(savedCount);
+            } else {
+                this.refreshCount = 0;
+            }
+            
+            // Load last refresh time
+            const savedLastTime = localStorage.getItem('package_notification_last_refresh');
+            if (savedLastTime !== null) {
+                this.lastRefreshTime = parseInt(savedLastTime);
+            } else {
+                this.lastRefreshTime = null;
+            }
+            
+            console.log(`Current refresh count: ${this.refreshCount} of ${this.maxRefreshes}`);
+        },
+        
+        saveState() {
+            localStorage.setItem('package_notification_refresh_count', this.refreshCount.toString());
+            localStorage.setItem('package_notification_last_refresh', this.lastRefreshTime.toString());
+            localStorage.setItem('package_notification_days_left', this.daysLeft.toString());
+        },
+        
+        resetState() {
+            this.refreshCount = 0;
+            this.lastRefreshTime = null;
+            localStorage.removeItem('package_notification_refresh_count');
+            localStorage.removeItem('package_notification_last_refresh');
+            this.saveState();
+            console.log('Notification state reset');
+        },
+        
+        checkAndShowOnRefresh() {
+            const now = Date.now();
+            const twoMinutesInMs = this.cooldownMinutes * 60 * 1000;
+            
+            // Check if cooldown has passed since last refresh
+            let canShow = false;
+            
+            if (this.lastRefreshTime === null) {
+                // First refresh ever
+                canShow = true;
+            } else {
+                const timeSinceLastRefresh = now - this.lastRefreshTime;
+                
+                if (timeSinceLastRefresh >= twoMinutesInMs) {
+                    // Cooldown passed, reset counter and show
+                    console.log('Cooldown passed (2 minutes), resetting counter');
+                    this.refreshCount = 0;
+                    canShow = true;
+                } else if (this.refreshCount < this.maxRefreshes) {
+                    // Still within first 5 refreshes and within cooldown
+                    console.log(`Refresh ${this.refreshCount + 1} of ${this.maxRefreshes} within cooldown period`);
+                    canShow = true;
+                } else {
+                    // Exceeded max refreshes within cooldown period
+                    console.log(`Maximum refreshes (${this.maxRefreshes}) reached within 2 minutes. Waiting for cooldown.`);
+                    canShow = false;
+                }
+            }
+            
+            if (canShow) {
+                // Increment refresh count
+                this.refreshCount++;
+                this.lastRefreshTime = now;
+                this.saveState();
+                
+                console.log(`Showing notification on refresh ${this.refreshCount} of ${this.maxRefreshes}`);
+                
+                // Show the notification
+                setTimeout(() => {
+                    this.showNotification();
+                }, 500); // Small delay to ensure page is loaded
+            } else {
+                console.log('Notification not shown - cooldown active or max refreshes reached');
+            }
+        },
+        
+        calculateDaysLeft() {
+            // Fetch latest package info
+            fetch('/api/package-info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const oldDaysLeft = this.daysLeft;
+                        this.daysLeft = data.days_left;
+                        this.packageName = data.package_name;
+                        this.packageEndDate = data.end_date;
+                        
+                        // If package was renewed (days left increased significantly), reset state
+                        if (oldDaysLeft > 0 && this.daysLeft > oldDaysLeft + 10) {
+                            console.log('Package renewed, resetting notification state');
+                            this.resetState();
+                        }
+                        
+                        // If package expired, reset state
+                        if (this.daysLeft <= 0) {
+                            this.resetState();
+                            this.dismiss();
+                        }
+                        
+                        this.saveState();
+                    }
+                })
+                .catch(error => console.error('Error fetching package info:', error));
+        },
+        
+        showNotification() {
+            // Don't show if already showing
+            if (this.isVisible) return;
+            
+            // Don't show if days left > 30 or <= 0
+            if (this.daysLeft > 30 || this.daysLeft <= 0) return;
+            
+            this.isVisible = true;
+            this.progressWidth = '100%';
+            
+            // Start progress bar animation
+            setTimeout(() => {
+                this.progressWidth = '0%';
+            }, 100);
+            
+            // Auto hide after 5 seconds
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+            }
+            this.timeoutId = setTimeout(() => {
+                this.dismiss();
+            }, 5000);
+        },
+        
+        dismiss() {
+            this.isVisible = false;
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+                this.timeoutId = null;
+            }
+        },
+        
+        goToPayment() {
+            this.dismiss();
+            // Reset state after payment
+            this.resetState();
+            window.location.href = '{{ route("payment.package.selection") }}';
+        }
+    }
+}
     
-    // Package remaining functionality with email notifications
+    // Package remaining functionality
     function packageRemaining() {
         return {
             showPackageInfo: false,
@@ -955,7 +1040,6 @@
                     if (data.success) {
                         console.log('Email notification sent successfully');
                         this.notificationsSent = true;
-                        this.showNotification('Email imetumwa!', 'success');
                     }
                 })
                 .catch(error => console.error('Error sending email:', error));
@@ -971,10 +1055,6 @@
                 } else {
                     return 'Package inafanya kazi vizuri.';
                 }
-            },
-            
-            showNotification(message, type) {
-                console.log(message, type);
             }
         }
     }

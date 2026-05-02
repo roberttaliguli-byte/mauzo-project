@@ -683,7 +683,7 @@
                 <table class="w-full border-collapse text-sm">
                     <thead>
                         <tr class="bg-gray-100">
-                            <th class="border px-3 py-2 text-left text-gray-700">Tarehe</th>
+                            <th class="border px-3 py-2 text-left text-gray-700">Tarehe & Muda</th>
                             <th class="border px-3 py-2 text-left text-gray-700">Risiti</th>
                             <th class="border px-3 py-2 text-left text-gray-700">Bidhaa</th>
                             <th class="border px-3 py-2 text-left text-gray-700">Idadi</th>
@@ -734,13 +734,17 @@
             }
         @endphp
         <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
-            <td class="border px-3 py-2">
-                @if($itemDate === $today)
-                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>
-                @else
-                    {{ $item->created_at->format('d/m/Y') }}
-                @endif
-            </td>
+<td class="border px-3 py-2">
+    @if($itemDate === $today)
+        <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs whitespace-nowrap">
+            Leo {{ $item->created_at->format('H:i:s') }}
+        </span>
+    @else
+        <span class="whitespace-nowrap">
+            {{ $item->created_at->format('d/m/Y H:i:s') }}
+        </span>
+    @endif
+</td>
             <td class="border px-3 py-2 font-mono">
                 @if($item->receipt_no)
                     <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="{{ $item->receipt_no }}" title="Bonyeza kunakili">{{ substr($item->receipt_no, -8) }}</span>

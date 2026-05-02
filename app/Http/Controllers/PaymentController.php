@@ -22,49 +22,45 @@ class PaymentController extends Controller
         $this->pesapalService = $pesapalService;
     }
 
-    /**
-     * Show package selection page when package expired
-     */
-    public function showPackageSelection()
-    {
-        $user = Auth::user();
-        $company = $user->company;
 
-        if (!$company) {
-            return redirect()->route('dashboard')->with('error', 'Company not found');
-        }
+/**
+ * Show package selection page (always accessible for renewal)
+ */
+public function showPackageSelection()
+{
+    $user = Auth::user();
+    $company = $user->company;
 
-        // Check if package is expired
-        $isExpired = $company->package_end && Carbon::parse($company->package_end)->isPast();
-        
-        // If not expired, redirect to dashboard
-        if (!$isExpired && $company->package_end) {
-            return redirect()->route('dashboard')->with('info', 'Your package is still active');
-        }
-
-        $packages = [
-            '30 days' => [
-                'price' => 15000,
-                'days' => 30,
-                'description' => 'Monthly subscription - TZS 15,000',
-                'badge' => null
-            ],
-            '180 days' => [
-                'price' => 75000,
-                'days' => 180,
-                'description' => '6 months subscription - Save TZS 15,000 (Regular: TZS 90,000)',
-                'badge' => 'Save 16%'
-            ],
-            '366 days' => [
-                'price' => 150000,
-                'days' => 366,
-                'description' => '1 year subscription - Save TZS 30,000 (Regular: TZS 180,000)',
-                'badge' => 'Best Value'
-            ]
-        ];
-
-        return view('payments.package-selection', compact('company', 'packages', 'isExpired'));
+    if (!$company) {
+        return redirect()->route('dashboard')->with('error', 'Company not found');
     }
+
+    // REMOVED the expiration check - allow access anytime for renewal
+    // Users can now renew their package even before it expires
+
+    $packages = [
+        '30 days' => [
+            'price' => 15000,
+            'days' => 30,
+            'description' => 'Monthly subscription - TZS 15,000',
+            'badge' => null
+        ],
+        '180 days' => [
+            'price' => 75000,
+            'days' => 180,
+            'description' => '6 months subscription - Save TZS 15,000 (Regular: TZS 90,000)',
+            'badge' => 'Save 16%'
+        ],
+        '366 days' => [
+            'price' => 150000,
+            'days' => 366,
+            'description' => '1 year subscription - Save TZS 30,000 (Regular: TZS 180,000)',
+            'badge' => 'Best Value'
+        ]
+    ];
+
+    return view('payments.package-selection', compact('company', 'packages'));
+}
 
     /**
      * Show payment form for selected package
@@ -356,45 +352,53 @@ public function ipn(Request $request)
             ->header('ngrok-skip-browser-warning', 'true');
     }
 
-    /**
-     * Activate package after successful payment
-     */
-    protected function activatePackage($payment)
-    {
-        $company = $payment->company;
-        $start_date = Carbon::now();
-        
-        switch($payment->package_type) {
-            case '30 days':
-                $end_date = $start_date->copy()->addDays(30);
-                break;
-            case '180 days':
-                $end_date = $start_date->copy()->addDays(180);
-                break;
-            case '366 days':
-                $end_date = $start_date->copy()->addDays(366);
-                break;
-            default:
-                $end_date = $start_date->copy()->addDays(30);
-        }
-
-        $company->package = $payment->package_type;
-        $company->package_start = $start_date;
-        $company->package_end = $end_date;
-        $company->save();
-
-        $payment->update([
-            'payment_date' => now(),
-            'expiry_date' => $end_date
-        ]);
-
-        Log::info('Package activated', [
-            'company_id' => $company->id,
-            'package' => $payment->package_type,
-            'expiry' => $end_date
-        ]);
+ /**
+ * Activate package after successful payment (handles renewal correctly)
+ */
+protected function activatePackage($payment)
+{
+    $company = $payment->company;
+    $start_date = Carbon::now();
+    
+    // Calculate new end date
+    switch($payment->package_type) {
+        case '30 days':
+            $duration = 30;
+            break;
+        case '180 days':
+            $duration = 180;
+            break;
+        case '366 days':
+            $duration = 366;
+            break;
+        default:
+            $duration = 30;
     }
+    
+    $end_date = $start_date->copy()->addDays($duration);
+    
+    // Check if company has an existing package that hasn't expired yet
+    if ($company->package_end && Carbon::parse($company->package_end)->isFuture()) {
+        // Add new days to existing package
+        $end_date = Carbon::parse($company->package_end)->addDays($duration);
+    }
+    
+    $company->package = $payment->package_type;
+    $company->package_start = $start_date;
+    $company->package_end = $end_date;
+    $company->save();
 
+    $payment->update([
+        'payment_date' => now(),
+        'expiry_date' => $end_date
+    ]);
+
+    Log::info('Package activated/renewed', [
+        'company_id' => $company->id,
+        'package' => $payment->package_type,
+        'expiry' => $end_date
+    ]);
+}
     /**
      * Format phone number to international format
      */

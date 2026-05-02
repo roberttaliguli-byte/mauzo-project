@@ -442,11 +442,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     })->name('api.admin.new-companies');
 });
 
-// =========================
-// Payment routes (protected by auth)
-// =========================
+// Payment routes (protected by auth) - Allow access even if package not expired
 Route::middleware(['auth'])->group(function () {
-    // Package selection and payment
+    // Package selection - Always accessible for renewal
     Route::get('/package-selection', [App\Http\Controllers\PaymentController::class, 'showPackageSelection'])
         ->name('payment.package.selection');
     
