@@ -791,7 +791,7 @@
             }
         }
     }
- // Auto Notification Component - Shows on first 5 page refreshes, respects 2-minute cooldown
+ // Auto Notification Component - Shows on first 3 page refreshes, respects 2-minute cooldown
 function autoNotification() {
     return {
         isVisible: false,
@@ -801,7 +801,7 @@ function autoNotification() {
         progressWidth: '100%',
         timeoutId: null,
         refreshCount: 0,
-        maxRefreshes: 5,
+        maxRefreshes: 3,  // Changed from 5 to 3
         lastRefreshTime: null,
         cooldownMinutes: 2,
         
@@ -876,7 +876,7 @@ function autoNotification() {
                     this.refreshCount = 0;
                     canShow = true;
                 } else if (this.refreshCount < this.maxRefreshes) {
-                    // Still within first 5 refreshes and within cooldown
+                    // Still within first 3 refreshes and within cooldown
                     console.log(`Refresh ${this.refreshCount + 1} of ${this.maxRefreshes} within cooldown period`);
                     canShow = true;
                 } else {
