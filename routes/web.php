@@ -25,6 +25,7 @@ use App\Models\Bidhaa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\MengineyoController;
 use Illuminate\Support\Facades\Mail;
 // =========================
 // Public routes
@@ -513,3 +514,21 @@ Route::post('/pesapal/ipn', [App\Http\Controllers\PaymentController::class, 'ipn
     ->name('pesapal.ipn');
 
 Route::get('/pesapal/ipn', [App\Http\Controllers\PaymentController::class, 'ipn']);
+
+
+// Mengineyo Routes (Single Controller)
+Route::prefix('mengineyo')->name('mengineyo.')->group(function () {
+    Route::get('/', [MengineyoController::class, 'index'])->name('index');
+    
+    // Mengineyo (Other Income) Routes
+    Route::post('/store', [MengineyoController::class, 'storeMengineyo'])->name('store.mapato');
+    Route::put('/update/{id}', [MengineyoController::class, 'updateMengineyo'])->name('update.mapato');
+    Route::delete('/delete/{id}', [MengineyoController::class, 'destroyMengineyo'])->name('delete.mapato');
+    Route::get('/export-pdf', [MengineyoController::class, 'exportMengineyoPDF'])->name('export.mapato.pdf');
+    
+    // Banking Routes
+    Route::post('/banking/store', [MengineyoController::class, 'storeBanking'])->name('store.banking');
+    Route::put('/banking/update/{id}', [MengineyoController::class, 'updateBanking'])->name('update.banking');
+    Route::delete('/banking/delete/{id}', [MengineyoController::class, 'destroyBanking'])->name('delete.banking');
+    Route::get('/banking/export-pdf', [MengineyoController::class, 'exportBankingPDF'])->name('export.banking.pdf');
+});

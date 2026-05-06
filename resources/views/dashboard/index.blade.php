@@ -1,24 +1,24 @@
 @extends('layouts.app')
 
-@section('title', 'Mfumo wa Mauzo - Dashboard')
+@section('title', 'Dashboard | Mfumo wa Mauzo')
 
 @section('page-title')
     @php
-        // Get the user from either guard
+        // Get authenticated user from either guard
         $user = null;
-        if(Auth::guard('mfanyakazi')->check()) {
+        $userName = 'Mgeni';
+
+        if (Auth::guard('mfanyakazi')->check()) {
             $user = Auth::guard('mfanyakazi')->user();
             $userName = $user->jina ?? $user->username ?? 'Mfanyakazi';
-        } elseif(Auth::guard('web')->check()) {
+        } elseif (Auth::guard('web')->check()) {
             $user = Auth::guard('web')->user();
             $userName = $user->name ?? $user->username ?? 'Mmiliki';
-        } else {
-            $userName = 'Mgeni';
         }
-        
-        // Format name: first letter uppercase, rest lowercase
+
         $formattedName = ucwords(strtolower($userName));
     @endphp
+
     <div class="text-xl md:text-3xl font-bold text-gray-800 px-2">
         Karibu, {{ $formattedName }}
     </div>
@@ -26,7 +26,8 @@
 
 @section('content')
 <div class="space-y-3 md:space-y-6 px-2 md:px-0">
-    <!-- Financial Metrics Grid -->
+
+    {{-- Financial Metrics Grid --}}
     <div>
         <div class="flex items-center justify-between mb-2 md:mb-4">
             <h2 class="text-sm md:text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -37,10 +38,10 @@
                 {{ now()->format('d/m/Y') }}
             </span>
         </div>
-        
-        <!-- Mobile: 2 columns, Desktop: 4 columns -->
+
+        {{-- Metrics Cards: 2 columns on mobile, 4 on desktop --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
-            <!-- Mapato Leo -->
+            {{-- Today's Income --}}
             <div class="group relative">
                 <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
                 <div class="relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 p-2 md:p-4 rounded-lg shadow-md text-white">
@@ -60,7 +61,7 @@
                 </div>
             </div>
 
-            <!-- Matumizi Leo -->
+            {{-- Today's Expenses --}}
             <div class="group relative">
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-800 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
                 <div class="relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 p-2 md:p-4 rounded-lg shadow-md text-white">
@@ -80,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- Fedha Leo -->
+            {{-- Today's Cash Balance --}}
             <div class="group relative">
                 <div class="absolute inset-0 bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
                 <div class="relative bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 p-2 md:p-4 rounded-lg shadow-md text-white">
@@ -100,7 +101,7 @@
                 </div>
             </div>
 
-            <!-- Faida Halisi Leo -->
+            {{-- Today's Net Profit --}}
             <div class="group relative">
                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-emerald-700 rounded-lg blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
                 <div class="relative bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 p-2 md:p-4 rounded-lg shadow-md text-white">
@@ -111,12 +112,11 @@
                         <span class="text-[10px] md:text-xs text-white/70 font-medium">Faida Halisi</span>
                     </div>
                     @php
-                        // Use variables directly from controller
-                        $faidaMauzo = $faidaMauzo ?? 0;
-                        $faidaMarejesho = $faidaMarejesho ?? 0;
-                        $matumiziLeo = $matumiziLeo ?? 0;
-                        $jumlaFaida = $faidaMauzo + $faidaMarejesho;
-                        $faidaHalisiLeo = $jumlaFaida - $matumiziLeo;
+                        $faidaMauzo      = $faidaMauzo ?? 0;
+                        $faidaMarejesho  = $faidaMarejesho ?? 0;
+                        $matumiziLeo     = $matumiziLeo ?? 0;
+                        $jumlaFaida      = $faidaMauzo + $faidaMarejesho;
+                        $faidaHalisiLeo  = $jumlaFaida - $matumiziLeo;
                     @endphp
                     <div class="font-bold text-sm md:text-xl mb-0.5 md:mb-1">
                         <span class="text-xs md:text-base">{{ number_format($faidaHalisiLeo, 0) }}</span>
@@ -130,9 +130,9 @@
         </div>
     </div>
 
-    <!-- Stock Overview & Top Products -->
+    {{-- Stock Overview & Top Products --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-5">
-        <!-- Left Side: Stock Overview -->
+        {{-- Left: Stock Overview --}}
         <div class="bg-emerald-50 rounded-lg shadow-sm border border-gray-100 p-3 md:p-5">
             <div class="flex items-center justify-between mb-2 md:mb-4">
                 <h3 class="text-sm md:text-base font-bold text-gray-800 flex items-center gap-2">
@@ -143,7 +143,7 @@
                     <i class="fas fa-boxes mr-1"></i> Jumla
                 </span>
             </div>
-            
+
             <div class="grid grid-cols-3 gap-1 md:gap-3">
                 <div class="text-center p-1 md:p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
                     <div class="p-1 md:p-2 bg-white rounded-full shadow-sm inline-flex mb-1 md:mb-2">
@@ -152,7 +152,7 @@
                     <div class="text-xs md:text-lg font-bold text-gray-800">{{ number_format($jumlaBidhaa) }}</div>
                     <div class="text-[8px] md:text-xs text-gray-600 truncate">Aina za Bidhaa</div>
                 </div>
-                
+
                 <div class="text-center p-1 md:p-3 rounded-lg bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
                     <div class="p-1 md:p-2 bg-white rounded-full shadow-sm inline-flex mb-1 md:mb-2">
                         <i class="fas fa-layer-group text-green-600 text-[10px] md:text-base"></i>
@@ -160,7 +160,7 @@
                     <div class="text-xs md:text-lg font-bold text-gray-800">{{ number_format($jumlaIdadi, 2) }}</div>
                     <div class="text-[8px] md:text-xs text-gray-600 truncate">Jumla Idadi</div>
                 </div>
-                
+
                 <div class="text-center p-1 md:p-3 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200">
                     <div class="p-1 md:p-2 bg-white rounded-full shadow-sm inline-flex mb-1 md:mb-2">
                         <i class="fas fa-money-bill text-purple-600 text-[10px] md:text-base"></i>
@@ -171,7 +171,7 @@
             </div>
         </div>
 
-        <!-- Right Side: Top Products -->
+        {{-- Right: Top Selling Products --}}
         <div class="bg-purple-50 rounded-lg shadow-sm border border-gray-100 p-3 md:p-5">
             <div class="flex items-center justify-between mb-2 md:mb-4">
                 <h3 class="text-sm md:text-base font-bold text-gray-800 flex items-center gap-2">
@@ -182,7 +182,7 @@
                     <i class="fas fa-crown mr-1 text-[8px] md:text-xs"></i> Top 3
                 </span>
             </div>
-            
+
             <div class="space-y-2 md:space-y-3">
                 @forelse($bidhaaTopSales as $index => $bidhaa)
                     <div class="flex items-center justify-between p-2 md:p-3 rounded-lg bg-white/50 hover:bg-white transition-colors duration-200 border border-gray-100">
@@ -215,15 +215,15 @@
         </div>
     </div>
 
-    <!-- Stock Status & Debt Overview -->
+    {{-- Stock Status & Debt Overview --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-5">
-        <!-- Stock Status -->
+        {{-- Stock Status --}}
         <div class="bg-emerald-50 rounded-lg shadow-sm border border-gray-100 p-3 md:p-5">
             <h3 class="text-sm md:text-base font-bold text-gray-800 flex items-center gap-2 mb-2 md:mb-4">
                 <div class="w-1 h-4 md:w-2 md:h-5 bg-gradient-to-b from-emerald-500 to-teal-500 rounded-full"></div>
                 Hali ya Bidhaa
             </h3>
-            
+
             <div class="grid grid-cols-3 gap-1 md:gap-3">
                 <div class="text-center p-2 md:p-3 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
                     <div class="inline-flex p-1 md:p-2 rounded-full bg-green-100 text-green-600 mb-1">
@@ -232,7 +232,7 @@
                     <div class="text-xs md:text-lg font-bold text-gray-800">{{ number_format($bidhaaZilizopo) }}</div>
                     <div class="text-[8px] md:text-xs text-gray-600">Zilizopo</div>
                 </div>
-                
+
                 <div class="text-center p-2 md:p-3 rounded-lg bg-gradient-to-br from-red-50 to-rose-50 border border-red-200">
                     <div class="inline-flex p-1 md:p-2 rounded-full bg-red-100 text-red-600 mb-1">
                         <i class="fas fa-times-circle text-[10px] md:text-sm"></i>
@@ -240,7 +240,7 @@
                     <div class="text-xs md:text-lg font-bold text-gray-800">{{ number_format($bidhaaZimeisha) }}</div>
                     <div class="text-[8px] md:text-xs text-gray-600">Zimeisha</div>
                 </div>
-                
+
                 <div class="text-center p-2 md:p-3 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
                     <div class="inline-flex p-1 md:p-2 rounded-full bg-amber-100 text-amber-600 mb-1">
                         <i class="fas fa-exclamation-triangle text-[10px] md:text-sm"></i>
@@ -250,14 +250,14 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Debt Overview -->
+
+        {{-- Debt Overview --}}
         <div class="bg-purple-50 rounded-lg shadow-sm border border-gray-100 p-3 md:p-5">
             <h3 class="text-sm md:text-base font-bold text-gray-800 flex items-center gap-2 mb-2 md:mb-4">
                 <div class="w-1 h-4 md:w-2 md:h-5 bg-gradient-to-b from-rose-500 to-pink-500 rounded-full"></div>
                 Muhtasari wa Madeni
             </h3>
-            
+
             <div class="grid grid-cols-2 gap-2 md:gap-3">
                 <div class="text-center p-2 md:p-4 rounded-lg bg-gradient-to-br from-red-50 to-rose-50 border border-red-200">
                     <div class="inline-flex p-1 md:p-2 rounded-full bg-red-100 text-red-600 mb-1">
@@ -268,7 +268,7 @@
                     </div>
                     <div class="text-[8px] md:text-xs text-gray-600">Jumla ya Madeni</div>
                 </div>
-                
+
                 <div class="text-center p-2 md:p-4 rounded-lg bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200">
                     <div class="inline-flex p-1 md:p-2 rounded-full bg-amber-100 text-amber-600 mb-1">
                         <i class="fas fa-users text-[10px] md:text-sm"></i>
@@ -280,7 +280,7 @@
         </div>
     </div>
 
-    <!-- Performance Summary -->
+    {{-- Performance Summary --}}
     <div class="bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg p-3 md:p-5 shadow-md text-white">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-0">
             <div class="flex items-start gap-2 md:gap-3">
@@ -292,7 +292,7 @@
                     <p class="text-[10px] md:text-xs opacity-90">
                         @if($faidaHalisiLeo > 0)
                             <i class="fas fa-arrow-up mr-1"></i> Faida ya leo: {{ number_format($faidaHalisiLeo, 0) }} Tsh
-                        @else 
+                        @else
                             <i class="fas fa-exclamation-circle mr-1"></i> Hakuna faida ya leo
                         @endif
                     </p>
@@ -312,47 +312,45 @@
     </div>
 </div>
 
+{{-- Additional Styles --}}
 <style>
-    /* Mobile optimizations */
+    /* Mobile Touch Optimizations */
     @media (max-width: 640px) {
-        /* Better touch targets */
         .group:active {
             transform: scale(0.98);
             transition: transform 0.1s ease;
         }
-        
-        /* Remove hover effects on mobile */
+
         .group:hover .absolute {
             opacity: 0.2 !important;
         }
-        
+
         .group:hover .relative {
             transform: none !important;
         }
-        
-        /* Ensure text is readable */
+
         .text-\[8px\] {
             line-height: 1.2;
         }
-        
-        /* Better spacing for small screens */
+
         .gap-1 {
             gap: 0.25rem;
         }
     }
-    
-    /* Smooth transitions */
+
+    /* Smooth Transitions */
     .transition-all {
         transition: all 0.2s ease;
     }
-    
-    /* Ensure buttons are touch-friendly on mobile */
-    button, [role="button"] {
+
+    /* Touch-Friendly Tap Targets */
+    button,
+    [role="button"] {
         min-height: 44px;
         min-width: 44px;
     }
-    
-    /* Better hover effects on desktop */
+
+    /* Desktop Hover Effects */
     @media (min-width: 768px) {
         .group:hover .relative {
             transform: scale(1.05);
