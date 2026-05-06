@@ -791,7 +791,8 @@
             }
         }
     }
- // Auto Notification Component - Shows on first 3 page refreshes, respects 2-minute cooldown
+
+// Auto Notification Component - Shows once after 20 minutes
 function autoNotification() {
     return {
         isVisible: false,
@@ -800,10 +801,8 @@ function autoNotification() {
         packageEndDate: '{{ $packageEndDate }}',
         progressWidth: '100%',
         timeoutId: null,
-        refreshCount: 0,
-        maxRefreshes: 3,  // Changed from 5 to 3
-        lastRefreshTime: null,
-        cooldownMinutes: 2,
+        hasShown: false,
+        timerId: null,
         
         initAutoNotification() {
             this.calculateDaysLeft();
@@ -811,9 +810,9 @@ function autoNotification() {
             // Load saved state from localStorage
             this.loadSavedState();
             
-            // Check if we should show notification on this refresh
-            if (this.daysLeft <= 30 && this.daysLeft > 0) {
-                this.checkAndShowOnRefresh();
+            // Start timer if package has <= 30 days and notification not shown yet
+            if (this.daysLeft <= 30 && this.daysLeft > 0 && !this.hasShown) {
+                this.startTimer();
             }
             
             // Update days left every minute
@@ -823,83 +822,73 @@ function autoNotification() {
         },
         
         loadSavedState() {
-            // Load refresh count from localStorage
-            const savedCount = localStorage.getItem('package_notification_refresh_count');
-            if (savedCount !== null) {
-                this.refreshCount = parseInt(savedCount);
+            // Load hasShown from localStorage
+            const savedHasShown = localStorage.getItem('package_notification_has_shown');
+            if (savedHasShown !== null) {
+                this.hasShown = savedHasShown === 'true';
             } else {
-                this.refreshCount = 0;
+                this.hasShown = false;
             }
             
-            // Load last refresh time
-            const savedLastTime = localStorage.getItem('package_notification_last_refresh');
-            if (savedLastTime !== null) {
-                this.lastRefreshTime = parseInt(savedLastTime);
-            } else {
-                this.lastRefreshTime = null;
-            }
-            
-            console.log(`Current refresh count: ${this.refreshCount} of ${this.maxRefreshes}`);
-        },
-        
-        saveState() {
-            localStorage.setItem('package_notification_refresh_count', this.refreshCount.toString());
-            localStorage.setItem('package_notification_last_refresh', this.lastRefreshTime.toString());
-            localStorage.setItem('package_notification_days_left', this.daysLeft.toString());
-        },
-        
-        resetState() {
-            this.refreshCount = 0;
-            this.lastRefreshTime = null;
-            localStorage.removeItem('package_notification_refresh_count');
-            localStorage.removeItem('package_notification_last_refresh');
-            this.saveState();
-            console.log('Notification state reset');
-        },
-        
-        checkAndShowOnRefresh() {
-            const now = Date.now();
-            const twoMinutesInMs = this.cooldownMinutes * 60 * 1000;
-            
-            // Check if cooldown has passed since last refresh
-            let canShow = false;
-            
-            if (this.lastRefreshTime === null) {
-                // First refresh ever
-                canShow = true;
-            } else {
-                const timeSinceLastRefresh = now - this.lastRefreshTime;
+            // Check if timer was started and how much time is left
+            const savedStartTime = localStorage.getItem('package_notification_start_time');
+            if (savedStartTime !== null && !this.hasShown) {
+                const startTime = parseInt(savedStartTime);
+                const now = Date.now();
+                const twentyMinutes = 20 * 60 * 1000;
+                const elapsed = now - startTime;
                 
-                if (timeSinceLastRefresh >= twoMinutesInMs) {
-                    // Cooldown passed, reset counter and show
-                    console.log('Cooldown passed (2 minutes), resetting counter');
-                    this.refreshCount = 0;
-                    canShow = true;
-                } else if (this.refreshCount < this.maxRefreshes) {
-                    // Still within first 3 refreshes and within cooldown
-                    console.log(`Refresh ${this.refreshCount + 1} of ${this.maxRefreshes} within cooldown period`);
-                    canShow = true;
-                } else {
-                    // Exceeded max refreshes within cooldown period
-                    console.log(`Maximum refreshes (${this.maxRefreshes}) reached within 2 minutes. Waiting for cooldown.`);
-                    canShow = false;
+                if (elapsed < twentyMinutes) {
+                    // Timer still running, resume it
+                    const remaining = twentyMinutes - elapsed;
+                    console.log(`Resuming timer with ${Math.round(remaining / 1000)} seconds remaining`);
+                    this.timerId = setTimeout(() => {
+                        this.showNotification();
+                    }, remaining);
+                } else if (elapsed >= twentyMinutes && !this.hasShown) {
+                    // Time has passed but notification not shown yet
+                    this.showNotification();
                 }
             }
             
-            if (canShow) {
-                // Increment refresh count
-                this.refreshCount++;
-                this.lastRefreshTime = now;
-                this.saveState();
-                
-                console.log(`Showing notification on refresh ${this.refreshCount} of ${this.maxRefreshes}`);
-                
-                // Show the notification
-                setTimeout(() => {
-                    this.showNotification();
-                }, 500); // Small delay to ensure page is loaded
-            } else {
-                console.log('Notification not shown - cooldown active or max refreshes reached');
+            console.log(`Notification shown status: ${this.hasShown}`);
+        },
+        
+        saveState() {
+            localStorage.setItem('package_notification_has_shown', this.hasShown.toString());
+            localStorage.setItem('package_notification_days_left', this.daysLeft.toString());
+        },
+        
+        startTimer() {
+            // Clear any existing timer
+            if (this.timerId) {
+                clearTimeout(this.timerId);
+            }
+            
+            // Save start time
+            localStorage.setItem('package_notification_start_time', Date.now().toString());
+            
+            // Start 20 minute timer
+            console.log('Starting 20 minute timer for notification');
+            this.timerId = setTimeout(() => {
+                this.showNotification();
+            }, 20 * 60 * 1000); // 20 minutes
+        },
+        
+        resetState() {
+            this.hasShown = false;
+            if (this.timerId) {
+                clearTimeout(this.timerId);
+                this.timerId = null;
+            }
+            localStorage.removeItem('package_notification_has_shown');
+            localStorage.removeItem('package_notification_start_time');
+            this.saveState();
+            console.log('Notification state reset');
+            
+            // Restart timer if package still needs reminder
+            if (this.daysLeft <= 30 && this.daysLeft > 0) {
+                this.startTimer();
             }
         },
         
@@ -926,6 +915,12 @@ function autoNotification() {
                             this.dismiss();
                         }
                         
+                        // If package just entered warning zone (<=30 days) and notification not shown, start timer
+                        if (oldDaysLeft > 30 && this.daysLeft <= 30 && !this.hasShown) {
+                            console.log('Package entered warning zone, starting timer');
+                            this.startTimer();
+                        }
+                        
                         this.saveState();
                     }
                 })
@@ -933,11 +928,19 @@ function autoNotification() {
         },
         
         showNotification() {
-            // Don't show if already showing
+            // Don't show if already shown
+            if (this.hasShown) return;
+            
+            // Don't show if already visible
             if (this.isVisible) return;
             
             // Don't show if days left > 30 or <= 0
             if (this.daysLeft > 30 || this.daysLeft <= 0) return;
+            
+            this.hasShown = true;
+            this.saveState();
+            
+            console.log('Showing notification after 20 minutes');
             
             this.isVisible = true;
             this.progressWidth = '100%';
