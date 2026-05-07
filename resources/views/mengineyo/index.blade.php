@@ -7,21 +7,21 @@
 @section('content')
 <div class="flex flex-col lg:flex-row gap-6" id="app-container">
     
-    <!-- Notifications -->
+    <!-- Notifications - Auto dismiss after 3 seconds -->
     <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none">
         @if(session('success'))
-        <div class="rounded border border-emerald-200 bg-emerald-50 px-5 py-4 text-base font-medium text-emerald-800 mb-3 shadow-sm animate-fade-in">
+        <div id="success-notification" class="rounded border border-emerald-200 bg-emerald-50 px-5 py-4 text-base font-medium text-emerald-800 mb-3 shadow-sm animate-fade-in">
             <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
         </div>
         @endif
         @if(session('error'))
-        <div class="rounded border border-red-200 bg-red-50 px-5 py-4 text-base font-medium text-red-800 mb-3 shadow-sm">
+        <div id="error-notification" class="rounded border border-red-200 bg-red-50 px-5 py-4 text-base font-medium text-red-800 mb-3 shadow-sm animate-fade-in">
             <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
         </div>
         @endif
     </div>
 
-    <!-- LEFT SIDEBAR TABS - Mobile Bottom Sheet Style -->
+    <!-- LEFT SIDEBAR TABS -->
     <div class="lg:w-80 flex-shrink-0">
         <!-- Mobile Toggle Button -->
         <div class="lg:hidden mb-4">
@@ -46,10 +46,9 @@
             </button>
         </div>
         
-        <!-- Sidebar Menu - Hidden on mobile by default -->
+        <!-- Sidebar Menu -->
         <div id="mobileSidebar" class="hidden lg:block">
             <div class="bg-white rounded-xl shadow-lg overflow-hidden sticky top-4">
-                <!-- Sidebar Header -->
                 <div class="bg-gradient-to-br from-emerald-600 to-emerald-700 px-5 py-4">
                     <h3 class="text-white font-bold text-lg">
                         <i class="fas fa-chart-line mr-2"></i> Menu
@@ -57,7 +56,6 @@
                     <p class="text-emerald-100 text-sm mt-1">Chagua kategoria</p>
                 </div>
                 
-                <!-- Navigation Items -->
                 <div class="p-3 space-y-2">
                     <!-- Mapato Mengine Dropdown -->
                     <div x-data="{ open: {{ $tab === 'mapato' ? 'true' : 'false' }} }" class="rounded-lg overflow-hidden">
@@ -110,7 +108,7 @@
                     </div>
                 </div>
                 
-                <!-- Sidebar Footer Stats - Hidden on mobile -->
+                <!-- Sidebar Footer Stats -->
                 <div class="border-t p-4 bg-gray-50 hidden lg:block">
                     <div class="text-xs text-gray-500 mb-2">Summaries</div>
                     <div class="space-y-2">
@@ -136,12 +134,11 @@
         </div>
     </div>
 
-    <!-- RIGHT MAIN CONTENT - Mobile Optimized -->
+    <!-- RIGHT MAIN CONTENT -->
     <div class="flex-1 space-y-4 lg:space-y-6 overflow-x-hidden">
         
-        <!-- COMPACT STATS CARDS - Responsive Grid -->
+        <!-- COMPACT STATS CARDS - Keep original size -->
         <div class="grid grid-cols-4 gap-2 lg:gap-3">
-            <!-- Card 1: Jumla ya Mapato -->
             <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg p-2 lg:p-3 shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
@@ -157,7 +154,6 @@
                 </div>
             </div>
 
-            <!-- Card 2: Mapato Mengine -->
             <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-2 lg:p-3 shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
@@ -173,7 +169,6 @@
                 </div>
             </div>
 
-            <!-- Card 3: Jumla Kuu -->
             <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-2 lg:p-3 shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
@@ -189,7 +184,6 @@
                 </div>
             </div>
 
-            <!-- Card 4: Benki -->
             <div class="bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg p-2 lg:p-3 shadow-md">
                 <div class="flex items-center justify-between">
                     <div>
@@ -206,7 +200,7 @@
             </div>
         </div>
 
-        <!-- Filter Bar - Mobile Responsive -->
+        <!-- Filter Bar -->
         <div class="bg-white rounded-xl shadow p-3 lg:p-4">
             <form method="GET" action="{{ route('mengineyo.index') }}" class="flex flex-wrap gap-2 lg:gap-3">
                 <input type="hidden" name="tab" value="{{ $tab }}">
@@ -243,17 +237,14 @@
             </form>
         </div>
 
-        <!-- CONTENT BASED ON TAB AND ACTION - Mobile Optimized -->
+        <!-- CONTENT BASED ON TAB AND ACTION -->
         @if($tab === 'mapato')
-            <!-- MAPATO MENGINE SECTION -->
             @if(request('action') === 'view')
-                <!-- VIEW MODE: TABLE - Horizontal Scroll on Mobile -->
                 <div class="bg-white rounded-xl shadow overflow-hidden">
                     <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 lg:px-6 py-3 lg:py-4">
                         <h3 class="text-white font-bold text-base lg:text-lg">
                             <i class="fas fa-table-list mr-2"></i> Orodha ya Mapato Mengine
                         </h3>
-                    
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[500px] lg:min-w-full">
@@ -322,7 +313,6 @@
                     </div>
                 </div>
             @else
-                <!-- INSERT MODE: FORM - Mobile Optimized -->
                 <div class="bg-white rounded-xl shadow overflow-hidden">
                     <div class="bg-gradient-to-r from-emerald-600 to-emerald-700 px-4 lg:px-6 py-3 lg:py-4">
                         <h3 class="text-white font-bold text-base lg:text-lg">
@@ -369,14 +359,13 @@
         @endif
 
         @if($tab === 'banking')
-            <!-- BANKING SECTION - Mobile Optimized -->
             @if(request('action') === 'view')
                 <div class="bg-white rounded-xl shadow overflow-hidden">
                     <div class="bg-gradient-to-r from-amber-600 to-amber-700 px-4 lg:px-6 py-3 lg:py-4">
                         <h3 class="text-white font-bold text-base lg:text-lg">
                             <i class="fas fa-table-list mr-2"></i> Orodha ya Uwekaji Benki
                         </h3>
-                   </div>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[500px] lg:min-w-full">
                             <thead class="bg-gray-50">
@@ -444,13 +433,12 @@
                     </div>
                 </div>
             @else
-                <!-- INSERT MODE: BANKING FORM -->
                 <div class="bg-white rounded-xl shadow overflow-hidden">
                     <div class="bg-gradient-to-r from-amber-600 to-amber-700 px-4 lg:px-6 py-3 lg:py-4">
                         <h3 class="text-white font-bold text-base lg:text-lg">
                             <i class="fas fa-university mr-2"></i> Rekodi Uwekaji Benki
                         </h3>
-              </div>
+                    </div>
                     <div class="p-4 lg:p-6">
                         <form method="POST" action="{{ route('mengineyo.store.banking') }}" class="space-y-4 lg:space-y-5">
                             @csrf
@@ -512,16 +500,16 @@
         <div class="p-3 lg:p-4 border-b">
             <h3 class="text-base lg:text-lg font-bold">Rekebisha Mapato Mengine</h3>
         </div>
-        <form id="edit-mengineyo-form" method="POST" class="p-4 lg:p-5">
+        <form id="edit-mengineyo-form" method="POST">
             @csrf
             @method('PUT')
-            <div class="space-y-3 lg:space-y-4">
+            <div class="p-4 lg:p-5 space-y-3 lg:space-y-4">
                 <input type="text" name="chanzo" id="edit-chanzo" required placeholder="Chanzo" class="w-full px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm">
                 <input type="number" step="0.01" name="kiasi" id="edit-kiasi" required placeholder="Kiasi" class="w-full px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm">
                 <input type="date" name="tarehe" id="edit-tarehe" required class="w-full px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm">
                 <textarea name="maelezo" id="edit-maelezo" rows="3" placeholder="Maelezo" class="w-full px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm"></textarea>
             </div>
-            <div class="flex gap-2 lg:gap-3 mt-4 lg:mt-5">
+            <div class="flex gap-2 lg:gap-3 p-4 lg:p-5 pt-0">
                 <button type="button" onclick="closeModal('edit-mengineyo-modal')" class="flex-1 px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">Ghairi</button>
                 <button type="submit" class="flex-1 px-3 lg:px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">Hifadhi</button>
             </div>
@@ -536,13 +524,15 @@
         <div class="p-3 lg:p-4 border-b">
             <h3 class="text-base lg:text-lg font-bold">Futa Mapato Mengine</h3>
         </div>
-        <form id="delete-mengineyo-form" method="POST" class="p-4 lg:p-5">
+        <form id="delete-mengineyo-form" method="POST">
             @csrf
             @method('DELETE')
-            <p class="text-sm text-gray-600 mb-4">Je, una uhakika unataka kufuta <strong id="delete-mengineyo-name"></strong>?</p>
-            <div class="flex gap-2 lg:gap-3">
-                <button type="button" onclick="closeModal('delete-mengineyo-modal')" class="flex-1 px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">Ghairi</button>
-                <button type="submit" class="flex-1 px-3 lg:px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700">Futa</button>
+            <div class="p-4 lg:p-5">
+                <p class="text-sm text-gray-600 mb-4">Je, una uhakika unataka kufuta <strong id="delete-mengineyo-name"></strong>?</p>
+                <div class="flex gap-2 lg:gap-3">
+                    <button type="button" onclick="closeModal('delete-mengineyo-modal')" class="flex-1 px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">Ghairi</button>
+                    <button type="submit" class="flex-1 px-3 lg:px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700">Futa</button>
+                </div>
             </div>
         </form>
     </div>
@@ -555,10 +545,10 @@
         <div class="p-3 lg:p-4 border-b">
             <h3 class="text-base lg:text-lg font-bold">Rekebisha Uwekaji Benki</h3>
         </div>
-        <form id="edit-banking-form" method="POST" class="p-4 lg:p-5">
+        <form id="edit-banking-form" method="POST">
             @csrf
             @method('PUT')
-            <div class="space-y-3 lg:space-y-4">
+            <div class="p-4 lg:p-5 space-y-3 lg:space-y-4">
                 <select name="benki" id="edit-benki" required class="w-full px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white">
                     <option value="">Chagua Benki</option>
                     <option value="CRDB">CRDB</option>
@@ -572,7 +562,7 @@
                 <input type="date" name="tarehe" id="edit-banking-tarehe" required class="w-full px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm">
                 <textarea name="maelezo" id="edit-banking-maelezo" rows="3" placeholder="Maelezo" class="w-full px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm"></textarea>
             </div>
-            <div class="flex gap-2 lg:gap-3 mt-4 lg:mt-5">
+            <div class="flex gap-2 lg:gap-3 p-4 lg:p-5 pt-0">
                 <button type="button" onclick="closeModal('edit-banking-modal')" class="flex-1 px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">Ghairi</button>
                 <button type="submit" class="flex-1 px-3 lg:px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700">Hifadhi</button>
             </div>
@@ -587,13 +577,15 @@
         <div class="p-3 lg:p-4 border-b">
             <h3 class="text-base lg:text-lg font-bold">Futa Uwekaji Benki</h3>
         </div>
-        <form id="delete-banking-form" method="POST" class="p-4 lg:p-5">
+        <form id="delete-banking-form" method="POST">
             @csrf
             @method('DELETE')
-            <p class="text-sm text-gray-600 mb-4">Je, una uhakika unataka kufuta uwekaji wa <strong id="delete-banking-name"></strong>?</p>
-            <div class="flex gap-2 lg:gap-3">
-                <button type="button" onclick="closeModal('delete-banking-modal')" class="flex-1 px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">Ghairi</button>
-                <button type="submit" class="flex-1 px-3 lg:px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700">Futa</button>
+            <div class="p-4 lg:p-5">
+                <p class="text-sm text-gray-600 mb-4">Je, una uhakika unataka kufuta uwekaji wa <strong id="delete-banking-name"></strong>?</p>
+                <div class="flex gap-2 lg:gap-3">
+                    <button type="button" onclick="closeModal('delete-banking-modal')" class="flex-1 px-3 lg:px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white hover:bg-gray-50">Ghairi</button>
+                    <button type="submit" class="flex-1 px-3 lg:px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700">Futa</button>
+                </div>
             </div>
         </form>
     </div>
@@ -610,19 +602,12 @@
 }
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 
-/* Mobile optimizations */
 @media (max-width: 1023px) {
     input, select, textarea, button {
-        font-size: 16px !important; /* Prevents zoom on focus in iOS */
-    }
-    
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        font-size: 16px !important;
     }
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -644,12 +629,41 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
 <script>
+// Auto dismiss notifications after 3 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const successNotification = document.getElementById('success-notification');
+    const errorNotification = document.getElementById('error-notification');
+    
+    if (successNotification) {
+        setTimeout(() => {
+            successNotification.style.opacity = '0';
+            successNotification.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                if (successNotification && successNotification.remove) {
+                    successNotification.remove();
+                }
+            }, 500);
+        }, 3000);
+    }
+    
+    if (errorNotification) {
+        setTimeout(() => {
+            errorNotification.style.opacity = '0';
+            errorNotification.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                if (errorNotification && errorNotification.remove) {
+                    errorNotification.remove();
+                }
+            }, 500);
+        }, 3000);
+    }
+});
+
 function toggleMobileSidebar() {
     const sidebar = document.getElementById('mobileSidebar');
     sidebar.classList.toggle('hidden');
 }
 
-// Close sidebar when clicking a link on mobile
 document.querySelectorAll('#mobileSidebar a').forEach(link => {
     link.addEventListener('click', () => {
         if (window.innerWidth < 1024) {
