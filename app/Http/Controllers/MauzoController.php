@@ -753,31 +753,50 @@ public function storeBarcode(Request $request)
         }
     }
 
-    // ------------------- DELETE SALE -------------------
-    public function destroy($id)
-    {
-        $user = $this->getAuthUser();
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized access', 'notification' => 'Unauthorized!'], 401);
-        }
-        $companyId = $user->company_id;
-        $mauzo = Mauzo::where('id', $id)->where('company_id', $companyId)->first();
-        if (!$mauzo) {
-            return response()->json(['success' => false, 'message' => 'Rekodi ya mauzo haipatikani', 'notification' => 'Rekodi haipo!'], 404);
-        }
-
-        try {
-            DB::beginTransaction();
-            $bidhaa = $mauzo->bidhaa;
-            if ($bidhaa) $bidhaa->increment('idadi', $mauzo->idadi);
-            $mauzo->delete();
-            DB::commit();
-            return response()->json(['success' => true, 'message' => 'Rekodi ya mauzo imefutwa kikamilifu! Stock imerudishwa.', 'notification' => 'Rekodi imefutwa! Stock imerudishwa.', 'stock_restored' => $mauzo->idadi, 'product_name' => $bidhaa->jina ?? 'Unknown']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Kuna tatizo katika kufuta mauzo: ' . $e->getMessage(), 'notification' => 'Kuna tatizo!'], 500);
+// ------------------- DELETE SALE -------------------
+public function destroy($id)
+{
+    $user = $this->getAuthUser();
+    if (!$user) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized access', 'notification' => 'Unauthorized!'], 401);
+    }
+    
+    // ADD PERMISSION CHECK HERE
+    $isMfanyakazi = Auth::guard('mfanyakazi')->check();
+    $hasFullAccess = true;
+    
+    if($isMfanyakazi) {
+        $mfanyakaziUser = Auth::guard('mfanyakazi')->user();
+        $hasFullAccess = ($mfanyakaziUser->uwezo ?? 'mdogo') === 'mkubwa';
+        
+        // Block delete if mfanyakazi mdogo
+        if(!$hasFullAccess) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Huna ruhusa ya kufuta mauzo! Wasiliana na msimamizi wako.', 
+                'notification' => 'Huna ruhusa!'
+            ], 403);
         }
     }
+    
+    $companyId = $user->company_id;
+    $mauzo = Mauzo::where('id', $id)->where('company_id', $companyId)->first();
+    if (!$mauzo) {
+        return response()->json(['success' => false, 'message' => 'Rekodi ya mauzo haipatikani', 'notification' => 'Rekodi haipo!'], 404);
+    }
+
+    try {
+        DB::beginTransaction();
+        $bidhaa = $mauzo->bidhaa;
+        if ($bidhaa) $bidhaa->increment('idadi', $mauzo->idadi);
+        $mauzo->delete();
+        DB::commit();
+        return response()->json(['success' => true, 'message' => 'Rekodi ya mauzo imefutwa kikamilifu! Stock imerudishwa.', 'notification' => 'Rekodi imefutwa! Stock imerudishwa.', 'stock_restored' => $mauzo->idadi, 'product_name' => $bidhaa->jina ?? 'Unknown']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['success' => false, 'message' => 'Kuna tatizo katika kufuta mauzo: ' . $e->getMessage(), 'notification' => 'Kuna tatizo!'], 500);
+    }
+}
 
     // ------------------- RECEIPT PRINTING / DATA -------------------
     public function getReceiptForPrint($receiptNo)
@@ -863,57 +882,113 @@ public function storeBarcode(Request $request)
         return response()->json(['success' => true, 'product' => ['id' => $product->id, 'jina' => $product->jina, 'bei_kuuza' => $product->bei_kuuza, 'bei_nunua' => $product->bei_nunua, 'idadi' => $product->idadi, 'aina' => $product->aina, 'kipimo' => $product->kipimo, 'barcode' => $product->barcode]]);
     }
 
-    // ------------------- FILTERED SALES (AJAX) -------------------
-    public function getFilteredSales(Request $request)
-    {
-        $user = $this->getAuthUser();
-        if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
-        $companyId = $user->company_id;
-        $query = Mauzo::with('bidhaa')->where('company_id', $companyId);
-        if ($request->search) {
-            $search = $request->search;
-            $query->whereHas('bidhaa', fn($q) => $q->where('jina', 'like', "%{$search}%"))
-                  ->orWhere('receipt_no', 'like', "%{$search}%")
-                  ->orWhere('lipa_kwa', 'like', "%{$search}%");
-        }
-        if ($request->start_date) $query->whereDate('created_at', '>=', $request->start_date);
-        if ($request->end_date) $query->whereDate('created_at', '<=', $request->end_date);
-        $sales = $query->orderBy('created_at', 'desc')->get();
-        $html = '';
-        $today = Carbon::today()->format('Y-m-d');
-        foreach ($sales as $item) {
-            $itemDate = $item->created_at->format('Y-m-d');
-            $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
-            $actualDiscount = $this->actualDiscount($item);
-            $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
-            $total = $item->jumla;
-            $paymentMethod = match($item->lipa_kwa) {
-                'cash' => '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>',
-                'lipa_namba' => '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>',
-                'bank' => '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>',
-                default => '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>',
-            };
-            $html .= '<tr class="sales-row" data-product="'.strtolower($item->bidhaa->jina).'" data-date="'.$itemDate.'" data-id="'.$item->id.'">
-                <td class="border px-3 py-2">'.($itemDate === $today ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs">Leo</span>' : $item->created_at->format('d/m/Y')).'</td>
-                <td class="border px-3 py-2 font-mono">'.($item->receipt_no ? '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="'.$item->receipt_no.'">'.substr($item->receipt_no, -8).'</span>' : '<span class="text-gray-400 text-xs">-</span>').'</td>
-                <td class="border px-3 py-2">'.$item->bidhaa->jina.'</td>
-                <td class="border px-3 py-2 text-center">'.number_format($item->idadi, 2).'</td>
-                <td class="border px-3 py-2 text-right">'.number_format($item->bei, 2).'</td>
-                <td class="border px-3 py-2 text-right">'.number_format($actualDiscount, 2).'</td>
-                <td class="border px-3 py-2 text-right">'.number_format($faida, 2).'</td>
-                <td class="border px-3 py-2 text-center">'.$paymentMethod.'</td>
-                <td class="border px-3 py-2 text-right">'.number_format($total, 2).'</td>
-                <td class="border px-3 py-2 text-center">
-                    <div class="flex gap-1 justify-center">
-                        '.($item->receipt_no ? '<button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg text-xs" data-receipt-no="'.$item->receipt_no.'"><i class="fas fa-print mr-1"></i></button>' : '').'
-                        <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg text-xs" data-id="'.$item->id.'" data-product-name="'.$item->bidhaa->jina.'" data-quantity="'.$item->idadi.'"><i class="fas fa-trash mr-1"></i></button>
-                    </div>
-                </td>
-             </tr>';
-        }
-        if (!$html) $html = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Hakuna mauzo yaliyopatikana kwenye filter hii.</td></tr>';
-        return response()->json(['success' => true, 'html' => $html]);
+// ------------------- FILTERED SALES (AJAX) -------------------
+public function getFilteredSales(Request $request)
+{
+    $user = $this->getAuthUser();
+    if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+    $companyId = $user->company_id;
+    
+    // ADD PERMISSION CHECK HERE
+    $isMfanyakazi = Auth::guard('mfanyakazi')->check();
+    $hasFullAccess = true;
+    
+    if($isMfanyakazi) {
+        $mfanyakaziUser = Auth::guard('mfanyakazi')->user();
+        $hasFullAccess = ($mfanyakaziUser->uwezo ?? 'mdogo') === 'mkubwa';
     }
+    
+    $query = Mauzo::with('bidhaa')->where('company_id', $companyId);
+    
+    if ($request->search) {
+        $search = $request->search;
+        $query->whereHas('bidhaa', fn($q) => $q->where('jina', 'like', "%{$search}%"))
+              ->orWhere('receipt_no', 'like', "%{$search}%")
+              ->orWhere('lipa_kwa', 'like', "%{$search}%");
+    }
+    if ($request->start_date) $query->whereDate('created_at', '>=', $request->start_date);
+    if ($request->end_date) $query->whereDate('created_at', '<=', $request->end_date);
+    
+    $sales = $query->orderBy('created_at', 'desc')->get();
+    $html = '';
+    $today = Carbon::today()->format('Y-m-d');
+    
+    foreach ($sales as $item) {
+        $itemDate = $item->created_at->format('Y-m-d');
+        $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
+        $actualDiscount = $this->actualDiscount($item);
+        $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
+        $total = $item->jumla;
+        
+        $paymentMethod = match($item->lipa_kwa) {
+            'cash' => '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>',
+            'lipa_namba' => '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>',
+            'bank' => '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>',
+            default => '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>',
+        };
+        
+        // Build product column with aina and kipimo
+        $productColumn = '<div class="flex flex-col">
+            <span class="font-medium">' . e($item->bidhaa->jina) . '</span>';
+        if($item->bidhaa->aina || $item->bidhaa->kipimo) {
+            $productColumn .= '<div class="flex flex-wrap gap-1 mt-1">';
+            if($item->bidhaa->aina) {
+                $productColumn .= '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
+                    <i class="fas fa-tag mr-1"></i>' . e($item->bidhaa->aina) . '</span>';
+            }
+            if($item->bidhaa->kipimo) {
+                $productColumn .= '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
+                    <i class="fas fa-ruler mr-1"></i>' . e($item->bidhaa->kipimo) . '</span>';
+            }
+            $productColumn .= '</div>';
+        }
+        $productColumn .= '</div>';
+        
+        // Build actions column - MODIFIED: Only show delete button if hasFullAccess
+        $actionsColumn = '<div class="flex gap-1 justify-center">';
+        if($item->receipt_no) {
+            $actionsColumn .= '<button type="button" class="print-single-receipt bg-blue-200 hover:bg-blue-400 text-gray-700 px-2 py-1 rounded-lg text-xs" data-receipt-no="' . $item->receipt_no . '">
+                <i class="fas fa-print mr-1"></i>
+            </button>';
+        }
+        
+        // ONLY ADD DELETE BUTTON IF USER HAS FULL ACCESS
+        if($hasFullAccess) {
+            $actionsColumn .= '<button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg text-xs" 
+                data-id="' . $item->id . '" 
+                data-product-name="' . e($item->bidhaa->jina) . '" 
+                data-quantity="' . $item->idadi . '">
+                <i class="fas fa-trash mr-1"></i>
+            </button>';
+        } else {
+            // Show disabled lock button for mfanyakazi mdogo
+            $actionsColumn .= '<button type="button" class="bg-gray-200 text-gray-500 px-2 py-1 rounded-lg text-xs cursor-not-allowed" disabled title="Huna ruhusa ya kufuta">
+                <i class="fas fa-lock mr-1"></i>
+            </button>';
+        }
+        $actionsColumn .= '</div>';
+        
+        $html .= '<tr class="sales-row" data-product="'.strtolower($item->bidhaa->jina).'" data-date="'.$itemDate.'" data-id="'.$item->id.'">
+            <td class="border px-3 py-2">'.($itemDate === $today ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded font-semibold text-xs whitespace-nowrap">Leo '.$item->created_at->format('H:i:s').'</span>' : '<span class="whitespace-nowrap">'.$item->created_at->format('d/m/Y H:i:s').'</span>').'</td>
+            <td class="border px-3 py-2 font-mono">'.($item->receipt_no ? '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs copy-receipt cursor-pointer" data-receipt="'.$item->receipt_no.'">'.substr($item->receipt_no, -8).'</span>' : '<span class="text-gray-400 text-xs">-</span>').'</td>
+            <td class="border px-3 py-2">'.$productColumn.'</td>
+            <td class="border px-3 py-2 text-center">'.number_format($item->idadi, 2).'</td>
+            <td class="border px-3 py-2 text-right">'.number_format($item->bei, 2).'</td>
+            <td class="border px-3 py-2 text-right">'.number_format($actualDiscount, 2).'</td>
+            <td class="border px-3 py-2 text-right">'.number_format($faida, 2).'</td>
+            <td class="border px-3 py-2 text-center">'.$paymentMethod.'</td>
+            <td class="border px-3 py-2 text-right">'.number_format($total, 2).'</td>
+            <td class="border px-3 py-2 text-center">'.$actionsColumn.'</td>
+        <tr>';
+    }
+    
+    if (!$html) {
+        $colspan = 10;
+        $html = '<tr><td colspan="'.$colspan.'" class="text-center py-4 text-gray-500">Hakuna mauzo yaliyopatikana kwenye filter hii.</td></tr>';
+    }
+    
+    return response()->json(['success' => true, 'html' => $html]);
+}
 
     // ------------------- SEND RECEIPT SMS -------------------
     public function sendReceiptSmsSimple(Request $request)

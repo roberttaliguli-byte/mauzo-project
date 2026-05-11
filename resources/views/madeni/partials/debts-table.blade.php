@@ -12,7 +12,7 @@
                 <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
                 <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
                 <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
-            </tr>
+            </td>
         </thead>
         <tbody id="debts-tbody" class="divide-y divide-gray-100">
             @forelse($madeni as $deni)
@@ -65,14 +65,26 @@
                                 <i class="fas fa-money-bill-wave"></i>
                             </button>
                             @endif
-                            <button class="edit-debt-btn text-amber-600 hover:text-amber-800 p-1 rounded-full hover:bg-amber-50"
-                                    data-id="{{ $deni->id }}" title="Badili Deni">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="delete-debt-btn text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
-                                    data-id="{{ $deni->id }}" data-name="{{ $deni->jina_mkopaji }}" title="Futa Deni">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            
+                            {{-- Only show Edit and Delete buttons if user has full access --}}
+                            @if($hasFullAccess)
+                                <button class="edit-debt-btn text-amber-600 hover:text-amber-800 p-1 rounded-full hover:bg-amber-50"
+                                        data-id="{{ $deni->id }}" title="Badili Deni">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-debt-btn text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
+                                        data-id="{{ $deni->id }}" data-name="{{ $deni->jina_mkopaji }}" title="Futa Deni">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            @else
+                                {{-- Show disabled icons for mfanyakazi mdogo --}}
+                                <button class="text-gray-300 p-1 rounded-full cursor-not-allowed" disabled title="Huna ruhusa ya kubadilisha">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-gray-300 p-1 rounded-full cursor-not-allowed" disabled title="Huna ruhusa ya kufuta">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            @endif
                         </div>
                     </td>
                 </tr>

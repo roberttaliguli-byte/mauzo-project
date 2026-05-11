@@ -41,205 +41,225 @@ class MadeniController extends Controller
         ];
     }
     
-/**
- * Main index page
- */
-public function index(Request $request)
-{
-    $companyId = $this->getCompanyId();
-    $today = $this->getTodayRange();
-    
-    // Today's statistics
-    $todayDebts = Madeni::where('company_id', $companyId)
-        ->whereBetween('created_at', $today)
-        ->sum('jumla');
+    /**
+     * Check if user has full access (not mfanyakazi mdogo)
+     */
+    private function hasFullAccess()
+    {
+        if (Auth::guard('mfanyakazi')->check()) {
+            $user = Auth::guard('mfanyakazi')->user();
+            return ($user->uwezo ?? 'mdogo') === 'mkubwa';
+        }
         
-    // Total repayments received today (mapato)
-    $todayRepayments = Marejesho::where('company_id', $companyId)
-        ->whereBetween('tarehe', $today)
-        ->sum('kiasi');
+        // Boss or admin always has full access
+        return true;
+    }
     
-    // Calculate ACTUAL PROFIT from today's repayments using FIFO method
-    $todayMarejeshos = Marejesho::where('company_id', $companyId)
-        ->whereBetween('tarehe', $today)
-        ->with(['madeni.bidhaa'])
-        ->orderBy('tarehe', 'asc') // Process in chronological order
-        ->get();
+    /**
+     * Main index page
+     */
+    public function index(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        $today = $this->getTodayRange();
         
-    $faidaMarejesho = 0;
-    $totalRepaidToday = 0;
-    
-    // Track each debt's repayment progress
-    $debtProgress = []; // Track cost recovery and profit for each debt
-    
-    foreach($todayMarejeshos as $marejesho) {
-        if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
-            $debt = $marejesho->madeni;
-            $debtId = $debt->id;
-            $repaymentAmount = $marejesho->kiasi;
-            $totalRepaidToday += $repaymentAmount;
+        // CHECK USER PERMISSIONS
+        $hasFullAccess = $this->hasFullAccess();
+        $isMfanyakazi = Auth::guard('mfanyakazi')->check();
+        
+        // Today's statistics
+        $todayDebts = Madeni::where('company_id', $companyId)
+            ->whereBetween('created_at', $today)
+            ->sum('jumla');
             
-            // Initialize debt tracking if not exists
-            if (!isset($debtProgress[$debtId])) {
-                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                $sellingPrice = $debt->jumla; // Total selling price
-                $quantity = $debt->idadi;
-                $totalCost = $buyingPrice * $quantity;
+        // Total repayments received today (mapato)
+        $todayRepayments = Marejesho::where('company_id', $companyId)
+            ->whereBetween('tarehe', $today)
+            ->sum('kiasi');
+        
+        // Calculate ACTUAL PROFIT from today's repayments using FIFO method
+        $todayMarejeshos = Marejesho::where('company_id', $companyId)
+            ->whereBetween('tarehe', $today)
+            ->with(['madeni.bidhaa'])
+            ->orderBy('tarehe', 'asc') // Process in chronological order
+            ->get();
+            
+        $faidaMarejesho = 0;
+        $totalRepaidToday = 0;
+        
+        // Track each debt's repayment progress
+        $debtProgress = []; // Track cost recovery and profit for each debt
+        
+        foreach($todayMarejeshos as $marejesho) {
+            if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+                $debt = $marejesho->madeni;
+                $debtId = $debt->id;
+                $repaymentAmount = $marejesho->kiasi;
+                $totalRepaidToday += $repaymentAmount;
                 
-                $debtProgress[$debtId] = [
-                    'total_cost' => $totalCost,
-                    'total_selling_price' => $sellingPrice,
-                    'recovered_so_far' => 0,
-                    'profit_so_far' => 0,
-                    'remaining_to_recover' => $totalCost,
-                    'is_cost_recovered' => false
-                ];
-            }
-            
-            $progress = &$debtProgress[$debtId];
-            $remainingAmount = $repaymentAmount;
-            
-            // Stage 1: Recover cost first
-            if (!$progress['is_cost_recovered']) {
-                $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
-                
-                if ($remainingAmount <= $remainingToRecover) {
-                    // All goes to cost recovery
-                    $progress['recovered_so_far'] += $remainingAmount;
-                    $progress['remaining_to_recover'] = $progress['total_cost'] - $progress['recovered_so_far'];
-                    // No profit from this repayment
-                    $profitFromThis = 0;
-                    $remainingAmount = 0;
-                } else {
-                    // Part goes to cost recovery, rest will go to profit
-                    $costPortion = $remainingToRecover;
-                    $progress['recovered_so_far'] += $costPortion;
-                    $progress['remaining_to_recover'] = 0;
-                    $progress['is_cost_recovered'] = true;
+                // Initialize debt tracking if not exists
+                if (!isset($debtProgress[$debtId])) {
+                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                    $sellingPrice = $debt->jumla; // Total selling price
+                    $quantity = $debt->idadi;
+                    $totalCost = $buyingPrice * $quantity;
                     
-                    $remainingAmount -= $costPortion;
-                    $profitFromThis = 0; // Will handle remaining in Stage 2
+                    $debtProgress[$debtId] = [
+                        'total_cost' => $totalCost,
+                        'total_selling_price' => $sellingPrice,
+                        'recovered_so_far' => 0,
+                        'profit_so_far' => 0,
+                        'remaining_to_recover' => $totalCost,
+                        'is_cost_recovered' => false
+                    ];
                 }
+                
+                $progress = &$debtProgress[$debtId];
+                $remainingAmount = $repaymentAmount;
+                
+                // Stage 1: Recover cost first
+                if (!$progress['is_cost_recovered']) {
+                    $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+                    
+                    if ($remainingAmount <= $remainingToRecover) {
+                        // All goes to cost recovery
+                        $progress['recovered_so_far'] += $remainingAmount;
+                        $progress['remaining_to_recover'] = $progress['total_cost'] - $progress['recovered_so_far'];
+                        // No profit from this repayment
+                        $profitFromThis = 0;
+                        $remainingAmount = 0;
+                    } else {
+                        // Part goes to cost recovery, rest will go to profit
+                        $costPortion = $remainingToRecover;
+                        $progress['recovered_so_far'] += $costPortion;
+                        $progress['remaining_to_recover'] = 0;
+                        $progress['is_cost_recovered'] = true;
+                        
+                        $remainingAmount -= $costPortion;
+                        $profitFromThis = 0; // Will handle remaining in Stage 2
+                    }
+                }
+                
+                // Stage 2: After cost recovered, remaining is profit
+                if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
+                    // All remaining is profit
+                    $progress['profit_so_far'] += $remainingAmount;
+                    $profitFromThis = $remainingAmount;
+                    $faidaMarejesho += $remainingAmount;
+                    $remainingAmount = 0;
+                }
+                
+                // Debug log
+                \Log::info('Repayment FIFO Calculation:', [
+                    'debt_id' => $debtId,
+                    'bidhaa' => $debt->bidhaa->jina,
+                    'repayment' => $repaymentAmount,
+                    'total_cost' => $progress['total_cost'],
+                    'total_selling' => $progress['total_selling_price'],
+                    'recovered_so_far' => $progress['recovered_so_far'],
+                    'profit_so_far' => $progress['profit_so_far'],
+                    'profit_from_this' => $profitFromThis ?? 0,
+                    'remaining_amount' => $remainingAmount
+                ]);
             }
-            
-            // Stage 2: After cost recovered, remaining is profit
-            if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
-                // All remaining is profit
-                $progress['profit_so_far'] += $remainingAmount;
-                $profitFromThis = $remainingAmount;
-                $faidaMarejesho += $remainingAmount;
-                $remainingAmount = 0;
-            }
-            
-            // Debug log
-            \Log::info('Repayment FIFO Calculation:', [
-                'debt_id' => $debtId,
-                'bidhaa' => $debt->bidhaa->jina,
-                'repayment' => $repaymentAmount,
-                'total_cost' => $progress['total_cost'],
-                'total_selling' => $progress['total_selling_price'],
-                'recovered_so_far' => $progress['recovered_so_far'],
-                'profit_so_far' => $progress['profit_so_far'],
-                'profit_from_this' => $profitFromThis ?? 0,
-                'remaining_amount' => $remainingAmount
-            ]);
         }
-    }
-    
-    // Log totals for verification
-    \Log::info('Today Repayments Summary:', [
-        'totalRepayments' => $todayRepayments,
-        'totalProfit' => $faidaMarejesho,
-        'totalCostRecovered' => $todayRepayments - $faidaMarejesho,
-        'verification' => ($todayRepayments - $faidaMarejesho) . ' (cost) + ' . $faidaMarejesho . ' (profit) = ' . $todayRepayments
-    ]);
-    
-    // Calculate ACTUAL PROFIT from today's sales (mauzo) - for optional display
-    $todayMauzos = Mauzo::where('company_id', $companyId)
-        ->whereBetween('created_at', $today)
-        ->with('bidhaa')
-        ->get();
         
-    $faidaMauzo = 0;
-    foreach($todayMauzos as $mauzo) {
-        if ($mauzo->bidhaa) {
-            $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-            $sellingPrice = $mauzo->bei;
-            $quantity = $mauzo->idadi;
+        // Log totals for verification
+        \Log::info('Today Repayments Summary:', [
+            'totalRepayments' => $todayRepayments,
+            'totalProfit' => $faidaMarejesho,
+            'totalCostRecovered' => $todayRepayments - $faidaMarejesho,
+            'verification' => ($todayRepayments - $faidaMarejesho) . ' (cost) + ' . $faidaMarejesho . ' (profit) = ' . $todayRepayments
+        ]);
+        
+        // Calculate ACTUAL PROFIT from today's sales (mauzo) - for optional display
+        $todayMauzos = Mauzo::where('company_id', $companyId)
+            ->whereBetween('created_at', $today)
+            ->with('bidhaa')
+            ->get();
             
-            $totalDiscount = 0;
-            if ($mauzo->punguzo_aina === 'bidhaa') {
-                $totalDiscount = $mauzo->punguzo * $quantity;
-            } else {
-                $totalDiscount = $mauzo->punguzo;
+        $faidaMauzo = 0;
+        foreach($todayMauzos as $mauzo) {
+            if ($mauzo->bidhaa) {
+                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                $sellingPrice = $mauzo->bei;
+                $quantity = $mauzo->idadi;
+                
+                $totalDiscount = 0;
+                if ($mauzo->punguzo_aina === 'bidhaa') {
+                    $totalDiscount = $mauzo->punguzo * $quantity;
+                } else {
+                    $totalDiscount = $mauzo->punguzo;
+                }
+                
+                $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+                $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
+                $totalBuyingCost = $buyingPrice * $quantity;
+                $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+                $faidaMauzo += $profit;
             }
-            
-            $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
-            $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
-            $totalBuyingCost = $buyingPrice * $quantity;
-            $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
-            $faidaMauzo += $profit;
         }
-    }
+            
+        $todayNewBorrowers = Madeni::where('company_id', $companyId)
+            ->whereBetween('created_at', $today)
+            ->distinct('jina_mkopaji')
+            ->count('jina_mkopaji');
+            
+        $todayPending = Madeni::where('company_id', $companyId)
+            ->whereBetween('created_at', $today)
+            ->where('baki', '>', 0)
+            ->count();
         
-    $todayNewBorrowers = Madeni::where('company_id', $companyId)
-        ->whereBetween('created_at', $today)
-        ->distinct('jina_mkopaji')
-        ->count('jina_mkopaji');
+        // Get all borrowers with their total debts (for grouping)
+        $borrowers = Madeni::where('company_id', $companyId)
+            ->select('jina_mkopaji', 'simu', DB::raw('COUNT(*) as total_debts'), DB::raw('SUM(baki) as total_balance'))
+            ->where('baki', '>', 0)
+            ->groupBy('jina_mkopaji', 'simu')
+            ->orderBy('total_balance', 'desc')
+            ->get();
         
-    $todayPending = Madeni::where('company_id', $companyId)
-        ->whereBetween('created_at', $today)
-        ->where('baki', '>', 0)
-        ->count();
-    
-    // Get all borrowers with their total debts (for grouping)
-    $borrowers = Madeni::where('company_id', $companyId)
-        ->select('jina_mkopaji', 'simu', DB::raw('COUNT(*) as total_debts'), DB::raw('SUM(baki) as total_balance'))
-        ->where('baki', '>', 0)
-        ->groupBy('jina_mkopaji', 'simu')
-        ->orderBy('total_balance', 'desc')
-        ->get();
-    
-    // Get all products for dropdown with aina and kipimo
-    $bidhaa = Bidhaa::where('company_id', $companyId)
-        ->where('idadi', '>', 0)
-        ->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi')
-        ->orderBy('jina')
-        ->get();
-    
-    // Get paginated debts (for initial load) with bidhaa including aina and kipimo
-    $query = Madeni::with(['bidhaa' => function($query) {
-        $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
-    }])->where('company_id', $companyId);
-    
-    if ($request->filter === 'active') {
-        $query->where('baki', '>', 0);
-    } elseif ($request->filter === 'paid') {
-        $query->where('baki', '<=', 0);
+        // Get all products for dropdown with aina and kipimo
+        $bidhaa = Bidhaa::where('company_id', $companyId)
+            ->where('idadi', '>', 0)
+            ->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi')
+            ->orderBy('jina')
+            ->get();
+        
+        // Get paginated debts (for initial load) with bidhaa including aina and kipimo
+        $query = Madeni::with(['bidhaa' => function($query) {
+            $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
+        }])->where('company_id', $companyId);
+        
+        if ($request->filter === 'active') {
+            $query->where('baki', '>', 0);
+        } elseif ($request->filter === 'paid') {
+            $query->where('baki', '<=', 0);
+        }
+        
+        $madeni = $query->orderBy('created_at', 'desc')->paginate(20);
+        
+        // Get recent repayments with bidhaa including aina and kipimo
+        $marejesho = Marejesho::with(['madeni.bidhaa' => function($query) {
+            $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
+        }])->where('company_id', $companyId)
+            ->orderBy('tarehe', 'desc')
+            ->paginate(15, ['*'], 'history_page');
+        
+        return view('madeni.index', compact(
+            'madeni',
+            'marejesho',
+            'bidhaa',
+            'borrowers',
+            'todayDebts',
+            'todayRepayments',
+            'faidaMarejesho',
+            'faidaMauzo',
+            'todayNewBorrowers',
+            'todayPending',
+            'hasFullAccess',
+            'isMfanyakazi'
+        ));
     }
-    
-    $madeni = $query->orderBy('created_at', 'desc')->paginate(20);
-    
-    // Get recent repayments with bidhaa including aina and kipimo
-    $marejesho = Marejesho::with(['madeni.bidhaa' => function($query) {
-        $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
-    }])->where('company_id', $companyId)
-        ->orderBy('tarehe', 'desc')
-        ->paginate(15, ['*'], 'history_page');
-    
-    return view('madeni.index', compact(
-        'madeni',
-        'marejesho',
-        'bidhaa',
-        'borrowers',
-        'todayDebts',
-        'todayRepayments',
-        'faidaMarejesho',
-        'faidaMauzo',
-        'todayNewBorrowers',
-        'todayPending'
-    ));
-}
     
     /**
      * AJAX search for debts (unpaginated)
@@ -247,6 +267,9 @@ public function index(Request $request)
     public function search(Request $request)
     {
         $companyId = $this->getCompanyId();
+        
+        // Add permission check for search results
+        $hasFullAccess = $this->hasFullAccess();
         
         $query = Madeni::with(['bidhaa' => function($query) {
             $query->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi');
@@ -281,10 +304,11 @@ public function index(Request $request)
         
         return response()->json([
             'success' => true,
-            'debts' => $debts
+            'debts' => $debts,
+            'hasFullAccess' => $hasFullAccess
         ]);
     }
-    
+        
     /**
      * Get debts for a specific borrower
      */

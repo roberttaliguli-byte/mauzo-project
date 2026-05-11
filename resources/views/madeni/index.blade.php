@@ -321,7 +321,8 @@
 
         <!-- Debts Table Container (Dynamic) -->
         <div id="debts-container" class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            @include('madeni.partials.debts-table', ['madeni' => $madeni])
+            
+            @include('madeni.partials.debts-table', ['madeni' => $madeni, 'hasFullAccess' => $hasFullAccess])
         </div>
 
         <!-- Clear Filter Button (Hidden by default) -->
@@ -950,120 +951,133 @@ toggleBorrowerSummary() {
         }
     }
 
-    renderSearchResults(debts, searchTerm) {
-        const container = document.getElementById('debts-container');
-        const searchInfo = document.getElementById('search-info');
-        const searchCount = document.getElementById('search-count');
+renderSearchResults(debts, searchTerm) {
+    const container = document.getElementById('debts-container');
+    const searchInfo = document.getElementById('search-info');
+    const searchCount = document.getElementById('search-count');
+    const hasFullAccess = window.hasFullAccess || false; // Get permission from window
+    
+    if (debts.length === 0) {
+        container.innerHTML = `
+            <div class="p-8 text-center text-gray-500">
+                <i class="fas fa-search text-3xl mb-2 text-gray-300"></i>
+                <p>Hakuna madeni yanayolingana na utafutaji wako</p>
+                <p class="text-xs text-gray-400 mt-1">Jaribu maneno mengine</p>
+            </div>
+        `;
+        searchInfo.classList.remove('hidden');
+        searchCount.textContent = '0';
+    } else {
+        let tableHtml = `
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-emerald-50">
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Bidhaa</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Aina</th>
+                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Kipimo</th>
+                            <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
+                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
+                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
+                            <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+        `;
         
-        if (debts.length === 0) {
-            container.innerHTML = `
-                <div class="p-8 text-center text-gray-500">
-                    <i class="fas fa-search text-3xl mb-2 text-gray-300"></i>
-                    <p>Hakuna madeni yanayolingana na utafutaji wako</p>
-                    <p class="text-xs text-gray-400 mt-1">Jaribu maneno mengine</p>
-                </div>
-            `;
-            searchInfo.classList.remove('hidden');
-            searchCount.textContent = '0';
-        } else {
-            let tableHtml = `
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="bg-emerald-50">
-                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
-                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
-                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Bidhaa</th>
-                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Aina</th>
-                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Kipimo</th>
-                                <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
-                                <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
-                                <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
-                                <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-            `;
-            
-            debts.forEach(debt => {
-                const statusClass = debt.baki <= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-                const statusIcon = debt.baki <= 0 ? '<i class="fas fa-check ml-1 text-xs"></i>' : '';
-                
-                tableHtml += `
-                    <tr class="debt-row hover:bg-gray-50" data-debt='${JSON.stringify(debt).replace(/'/g, "&apos;")}'>
-                        <td class="px-4 py-2">
-                            <div class="text-sm text-gray-900">${new Date(debt.created_at).toLocaleDateString()}</div>
-                            <div class="text-xs text-gray-500">Kutakiwa: ${new Date(debt.tarehe_malipo).toLocaleDateString()}</div>
-                        </td>
-                        <td class="px-4 py-2">
-                            <div class="font-medium text-gray-900 text-sm">${debt.jina_mkopaji}</div>
-                            ${debt.simu ? `<div class="text-xs text-emerald-600">${debt.simu}</div>` : ''}
-                        </td>
-                        <td class="px-4 py-2">
-                            <span class="text-sm text-gray-700">${debt.bidhaa?.jina || 'N/A'}</span>
-                            ${debt.punguzo > 0 ? `<div class="text-xs text-gray-500">Punguzo: ${parseFloat(debt.punguzo).toLocaleString()}</div>` : ''}
-                        </td>
-                        <td class="px-4 py-2">
-                            <span class="text-sm text-gray-600">${debt.bidhaa?.aina || 'N/A'}</span>
-                        </td>
-                        <td class="px-4 py-2">
-                            <span class="text-sm text-gray-600">${debt.bidhaa?.kipimo || 'N/A'}</span>
-                        </td>
-                        <td class="px-4 py-2 text-center">
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                ${debt.idadi}
-                            </span>
-                        </td>
-                        <td class="px-4 py-2 text-right">
-                            <div class="text-sm font-bold text-gray-900">${parseFloat(debt.jumla).toLocaleString()}</div>
-                        </td>
-                        <td class="px-4 py-2 text-right">
-                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold ${statusClass}">
-                                ${parseFloat(debt.baki).toLocaleString()}
-                                ${statusIcon}
-                            </span>
-                        </td>
-                        <td class="px-4 py-2 text-center print:hidden">
-                            <div class="flex justify-center space-x-2">
-                                ${debt.baki > 0 ? `
-                                <button class="pay-debt-btn text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
-                                        data-id="${debt.id}" title="Lipa Deni">
-                                    <i class="fas fa-money-bill-wave"></i>
-                                </button>
-                                ` : ''}
-                                <button class="edit-debt-btn text-amber-600 hover:text-amber-800 p-1 rounded-full hover:bg-amber-50"
-                                        data-id="${debt.id}" title="Badili Deni">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="delete-debt-btn text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
-                                        data-id="${debt.id}" data-name="${debt.jina_mkopaji}" title="Futa Deni">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
+        debts.forEach(debt => {
+            const statusClass = debt.baki <= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+            const statusIcon = debt.baki <= 0 ? '<i class="fas fa-check ml-1 text-xs"></i>' : '';
             
             tableHtml += `
-                        </tbody>
-                    </table>
-                </div>
-                <div class="search-results-counter">
-                    <i class="fas fa-search mr-1"></i> Imepatikana matokeo ${debts.length} kwa utafutaji "${searchTerm}"
-                </div>
+                <tr class="debt-row hover:bg-gray-50" data-debt='${JSON.stringify(debt).replace(/'/g, "&apos;")}'>
+                    <td class="px-4 py-2">
+                        <div class="text-sm text-gray-900">${new Date(debt.created_at).toLocaleDateString()}</div>
+                        <div class="text-xs text-gray-500">Kutakiwa: ${new Date(debt.tarehe_malipo).toLocaleDateString()}</div>
+                    </td>
+                    <td class="px-4 py-2">
+                        <div class="font-medium text-gray-900 text-sm">${debt.jina_mkopaji}</div>
+                        ${debt.simu ? `<div class="text-xs text-emerald-600">${debt.simu}</div>` : ''}
+                    </td>
+                    <td class="px-4 py-2 hidden md:table-cell">
+                        <span class="text-sm text-gray-700">${debt.bidhaa?.jina || 'N/A'}</span>
+                        ${debt.punguzo > 0 ? `<div class="text-xs text-gray-500">Punguzo: ${parseFloat(debt.punguzo).toLocaleString()}</div>` : ''}
+                    </td>
+                    <td class="px-4 py-2 hidden md:table-cell">
+                        <span class="text-sm text-gray-600">${debt.bidhaa?.aina || 'N/A'}</span>
+                    </td>
+                    <td class="px-4 py-2 hidden md:table-cell">
+                        <span class="text-sm text-gray-600">${debt.bidhaa?.kipimo || 'N/A'}</span>
+                    </td>
+                    <td class="px-4 py-2 text-center">
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                            ${debt.idadi}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                        <div class="text-sm font-bold text-gray-900">${parseFloat(debt.jumla).toLocaleString()}</div>
+                    </td>
+                    <td class="px-4 py-2 text-right">
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold ${statusClass}">
+                            ${parseFloat(debt.baki).toLocaleString()}
+                            ${statusIcon}
+                        </span>
+                    </td>
+                    <td class="px-4 py-2 text-center print:hidden">
+                        <div class="flex justify-center space-x-2">
+                            ${debt.baki > 0 ? `
+                            <button class="pay-debt-btn text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
+                                    data-id="${debt.id}" title="Lipa Deni">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </button>
+                            ` : ''}
+                            
+                            ${hasFullAccess ? `
+                            <button class="edit-debt-btn text-amber-600 hover:text-amber-800 p-1 rounded-full hover:bg-amber-50"
+                                    data-id="${debt.id}" title="Badili Deni">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-debt-btn text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
+                                    data-id="${debt.id}" data-name="${debt.jina_mkopaji}" title="Futa Deni">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            ` : `
+                            <button class="text-gray-300 p-1 rounded-full cursor-not-allowed" disabled title="Huna ruhusa ya kubadilisha">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-gray-300 p-1 rounded-full cursor-not-allowed" disabled title="Huna ruhusa ya kufuta">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            `}
+                        </div>
+                    </td>
+                </tr>
             `;
-            
-            container.innerHTML = tableHtml;
-            searchInfo.classList.remove('hidden');
-            searchCount.textContent = debts.length;
-            
-            // Re-bind debt actions for new rows
+        });
+        
+        tableHtml += `
+                    </tbody>
+                </table>
+            </div>
+            <div class="search-results-counter">
+                <i class="fas fa-search mr-1"></i> Imepatikana matokeo ${debts.length} kwa utafutaji "${searchTerm}"
+            </div>
+        `;
+        
+        container.innerHTML = tableHtml;
+        searchInfo.classList.remove('hidden');
+        searchCount.textContent = debts.length;
+        
+        // Re-bind debt actions for new rows
+        if (hasFullAccess) {
             this.bindDebtActions();
         }
-        
-        document.getElementById('clear-filter-container').classList.remove('hidden');
     }
+    
+    document.getElementById('clear-filter-container').classList.remove('hidden');
+}
 
     filterByBorrower(borrowerName) {
         document.getElementById('search-input').value = borrowerName;

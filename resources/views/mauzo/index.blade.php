@@ -153,8 +153,8 @@
     <div class="sm:col-span-1 lg:col-span-2">
         <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Bei</label>
         <select id="price-type-select" name="bei_type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-            <option value="rejareja">Rejareja (Kawaida)</option>
-            <option value="jumla">Jumla (Wholesale)</option>
+            <option value="rejareja">Rejareja</option>
+            <option value="jumla">Jumla</option>
         </select>
     </div>
 
@@ -795,9 +795,12 @@
                         <i class="fas fa-print mr-1"></i>
                     </button>
                     @endif
+                    
+                    @if($hasFullAccess)
                     <button type="button" class="delete-sale-btn bg-red-200 hover:bg-red-400 text-gray-700 px-2 py-1 rounded-lg flex items-center justify-center transition text-xs" data-id="{{ $item->id }}" data-product-name="{{ $item->bidhaa->jina }}" data-quantity="{{ $item->idadi }}">
                         <i class="fas fa-trash mr-1"></i>
                     </button>
+                    @endif
                 </div>
             </td>
         </tr>
@@ -807,7 +810,7 @@
         </tr>
     @endforelse
 </tbody>
-                </table>
+   </table>
             </div>
 
             <!-- Pagination -->
@@ -1711,51 +1714,37 @@ constructor() {
         });
     }
 
-    async deleteSale(saleId) {
-        if (!saleId) return;
-
-        try {
-            const response = await fetch(`/mauzo/${saleId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showNotification('Mauzo yamefutwa kikamilifu! Stock imerudishwa.', 'success');
-                
-                const row = document.querySelector(`.sales-row[data-id="${saleId}"]`);
-                if (row) {
-                    row.remove();
-                    
-                    const rows = document.querySelectorAll('.sales-row');
-                    if (rows.length === 0) {
-                        const tbody = document.getElementById('sales-tbody');
-                        if (tbody) {
-                            tbody.innerHTML = `
-                                <tr>
-                                    <td colspan="${this.isMfanyakazi ? '9' : '10'}" class="text-center py-4 text-gray-500 text-xs">
-                                        Hakuna mauzo yaliyorekodiwa bado.
-                                    </td>
-                                </tr>
-                            `;
-                        }
-                    }
-                }
-                
-                this.updateFinancialData();
-            } else {
-                this.showNotification(data.message || 'Kuna tatizo kufuta mauzo!', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kufuta mauzo!', 'error');
-        }
+async deleteSale(saleId) {
+    // ADD THIS CHECK AT THE BEGINNING
+    if (this.isMfanyakazi && !this.hasFullAccess) {
+        this.showNotification('Huna ruhusa ya kufuta mauzo! Wasiliana na msimamizi wako.', 'error');
+        return;
     }
+    
+    if (!saleId) return;
+
+    try {
+        const response = await fetch(`/mauzo/${saleId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            this.showNotification('Mauzo yamefutwa kikamilifu! Stock imerudishwa.', 'success');
+            // ... rest of the code
+        } else {
+            this.showNotification(data.message || 'Kuna tatizo kufuta mauzo!', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        this.showNotification('Kuna tatizo kufuta mauzo!', 'error');
+    }
+}
 
     clearOtherCompanyCarts() {
         const keysToRemove = [];
