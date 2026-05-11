@@ -20,6 +20,7 @@ class BidhaaHistory extends Model
         'idadi_iliyobaki',
         'bei_nunua',
         'bei_kuuza',
+        'bei_uzo_jumla',
         'aina_ya_shughuli',
         'maelezo',
         'mtumiaji_id',
@@ -31,6 +32,7 @@ class BidhaaHistory extends Model
         'idadi_iliyobaki' => 'decimal:2',
         'bei_nunua' => 'decimal:2',
         'bei_kuuza' => 'decimal:2',
+        'bei_uzo_jumla' => 'decimal:2',
         'created_at' => 'datetime',
     ];
 

@@ -115,51 +115,61 @@
     <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-4" id="sales-form">
         @csrf
 
-        <!-- Row 1: Product, Quantity, Price, Stock -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
-            <!-- Product Selection - 5 columns -->
-            <div class="sm:col-span-2 lg:col-span-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Bidhaa</label>
-                <div class="relative">
-                    <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                    <select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
-                        <option value="">Chagua Bidhaa...</option>
-                        @foreach($bidhaa as $item)
-                        <option
-                            value="{{ $item->id }}"
-                            data-bei="{{ $item->bei_kuuza }}"
-                            data-stock="{{ $item->idadi }}"
-                            data-jina="{{ e($item->jina) }}"
-                            data-aina="{{ e($item->aina) }}"
-                            data-kipimo="{{ e($item->kipimo) }}"
-                            data-bei-nunua="{{ $item->bei_nunua }}"
-                            data-barcode="{{ $item->barcode }}"
-                        >
-                            {{ $item->jina }} ({{ $item->aina }}) - {{ $item->kipimo }} - Stock: {{ $item->idadi }}
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <!-- Quantity - 2 columns -->
-            <div class="sm:col-span-1 lg:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Idadi</label>
-                <input type="number" name="idadi" id="quantity-input" placeholder="0.00" min="0.01" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-            </div>
-
-            <!-- Price - 2 columns -->
-            <div class="sm:col-span-1 lg:col-span-3">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Bei (Tsh)</label>
-                <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
-            </div>
-
-            <!-- Stock - 3 columns -->
-            <div class="sm:col-span-2 lg:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Stock</label>
-                <input type="number" id="stock-input" readonly step="0.01" class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
-            </div>
+<!-- Row 1: Product, Quantity, Price Type, Price, Stock -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+    <!-- Product Selection - 4 columns -->
+    <div class="sm:col-span-2 lg:col-span-4">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Bidhaa</label>
+        <div class="relative">
+            <input type="text" id="bidhaaSearch" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+<select id="bidhaaSelect" name="bidhaa_id" size="5" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200 hidden absolute top-full left-0 right-0 z-10 bg-white shadow-lg max-h-60 overflow-y-auto">
+    <option value="">Chagua Bidhaa...</option>
+    @foreach($bidhaa as $item)
+    <option
+        value="{{ $item->id }}"
+        data-bei-rejareja="{{ $item->bei_kuuza }}"
+        data-bei-jumla="{{ $item->bei_uzo_jumla ?? 0 }}"
+        data-stock="{{ $item->idadi }}"
+        data-jina="{{ e($item->jina) }}"
+        data-aina="{{ e($item->aina) }}"
+        data-kipimo="{{ e($item->kipimo) }}"
+        data-bei-nunua="{{ $item->bei_nunua }}"
+        data-barcode="{{ $item->barcode }}"
+    >
+        {{ $item->jina }} ({{ $item->aina }}) - Rejareja: {{ number_format($item->bei_kuuza, 0) }} | Jumla: {{ $item->bei_uzo_jumla ? number_format($item->bei_uzo_jumla, 0) : 'N/A' }} - Stock: {{ number_format($item->idadi, 2) }}
+    </option>
+    @endforeach
+</select>
         </div>
+    </div>
+
+    <!-- Quantity - 2 columns -->
+    <div class="sm:col-span-1 lg:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Idadi</label>
+        <input type="number" name="idadi" id="quantity-input" placeholder="0.00" min="0.01" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+    </div>
+
+    <!-- Price Type Dropdown - 2 columns (Rejareja/Jumla) -->
+    <div class="sm:col-span-1 lg:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Bei</label>
+        <select id="price-type-select" name="bei_type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+            <option value="rejareja">Rejareja (Kawaida)</option>
+            <option value="jumla">Jumla (Wholesale)</option>
+        </select>
+    </div>
+
+    <!-- Price - 2 columns -->
+    <div class="sm:col-span-1 lg:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Bei (Tsh)</label>
+        <input type="number" name="bei" id="price-input" readonly class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
+    </div>
+
+    <!-- Stock - 2 columns -->
+    <div class="sm:col-span-2 lg:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Stock</label>
+        <input type="number" id="stock-input" readonly step="0.01" class="w-full bg-gray-100 border border-gray-300 rounded-lg p-2 text-sm">
+    </div>
+</div>
 
         <!-- Row 2: Discount Type, Discount Amount, Total, Payment Method, Customer -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
@@ -1186,6 +1196,9 @@
     @endforeach
 </select>
 <input type="hidden" name="mteja_id" id="kopesha-mteja-id" value="">
+<!-- Add this hidden input in the kopesha modal form -->
+<input type="hidden" name="bei_type" id="kopesha-bei-type" value="rejareja">
+
 </div>
 
             <div>
@@ -1756,102 +1769,7 @@ constructor() {
         keysToRemove.forEach(key => localStorage.removeItem(key));
     }
 
-    updateTotals() {
-        const quantityInput = document.getElementById('quantity-input');
-        const priceInput = document.getElementById('price-input');
-        const discountInput = document.getElementById('punguzo-input');
-        const totalInput = document.getElementById('total-input');
-        const punguzoAinaInput = document.getElementById('punguzo-aina-input');
-        const punguzoType = document.getElementById('punguzo-type');
-        
-        if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
 
-        const quantity = parseFloat(quantityInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const discount = parseFloat(discountInput.value) || 0;
-        const discountType = punguzoType.value;
-        
-        const baseTotal = quantity * price;
-        const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
-        const finalTotal = baseTotal - actualDiscount;
-        
-        totalInput.value = Math.max(0, finalTotal).toFixed(2);
-        punguzoAinaInput.value = discountType;
-        
-        const kopeshaIdadi = document.getElementById('kopesha-idadi');
-        const kopeshaJumla = document.getElementById('kopesha-jumla');
-        const kopeshaBaki = document.getElementById('kopesha-baki');
-        const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
-        const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
-        
-        if (kopeshaIdadi) kopeshaIdadi.value = quantity.toFixed(2);
-        if (kopeshaJumla) kopeshaJumla.value = finalTotal.toFixed(2);
-        if (kopeshaBaki) kopeshaBaki.value = finalTotal.toFixed(2);
-        if (kopeshaPunguzo) kopeshaPunguzo.value = discount.toFixed(2);
-        if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
-    }
-
-    addToCart() {
-        const bidhaaSelect = document.getElementById('bidhaaSelect');
-        const quantityInput = document.getElementById('quantity-input');
-        const priceInput = document.getElementById('price-input');
-        const discountInput = document.getElementById('punguzo-input');
-        const punguzoType = document.getElementById('punguzo-type');
-        const totalInput = document.getElementById('total-input');
-        
-        if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
-
-        const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
-        const quantity = parseFloat(quantityInput.value) || 0;
-        const price = parseFloat(priceInput.value) || 0;
-        const discount = parseFloat(discountInput.value) || 0;
-        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
-        const total = parseFloat(totalInput.value) || 0;
-        
-        if (!selectedOption.value || quantity < 0.01) {
-            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-            return;
-        }
-
-        const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
-        const baseTotal = price * quantity;
-        const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
-        const profit = ((price - buyingPrice) * quantity) - actualDiscount;
-        
-        const calculatedTotal = baseTotal - actualDiscount;
-        if (Math.abs(calculatedTotal - total) > 0.01) {
-            this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal.toFixed(2)}, Ilioingizwa: ${total.toFixed(2)}`, 'error');
-            return;
-        }
-
-        const productName = selectedOption.dataset.jina;
-        const barcode = selectedOption.dataset.barcode || '';
-        const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
-
-        const cartItem = {
-            jina: productName,
-            bei: price,
-            idadi: quantity,
-            punguzo: discount,
-            punguzo_aina: discountType,
-            actual_discount: actualDiscount,
-            jumla: total,
-            profit: profit,
-            bidhaa_id: selectedOption.value,
-            barcode: barcode,
-            timestamp: new Date().toISOString(),
-            company_id: this.companyId,
-            company_name: companyName
-        };
-
-        this.cart.push(cartItem);
-        this.saveCart();
-        this.updateCartCount();
-        this.updateCartDisplay();
-        
-        this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
-        this.resetForm();
-    }
 
     updateCartDisplay() {
         const emptyMessage = document.getElementById('empty-cart-message');
@@ -2403,24 +2321,330 @@ handleCustomerSelection(selectElement, modalType) {
         if (baruaPepeField) baruaPepeField.value = baruaPepe;
         if (anapoishiField) anapoishiField.value = anapoishi;
     }
+    // Update product details when product is selected
+updateProductDetails() {
+    const select = document.getElementById('bidhaaSelect');
+    const priceInput = document.getElementById('price-input');
+    const stockInput = document.getElementById('stock-input');
+    const quantityInput = document.getElementById('quantity-input');
+    const priceTypeSelect = document.getElementById('price-type-select');
+    
+    if (!select || !priceInput || !stockInput) return;
 
-    bindEvents() {
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const tab = e.target.closest('.tab-button').dataset.tab;
-                if (tab) {
-                    this.showTab(tab);
-                }
-            });
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (selectedOption && selectedOption.value) {
+        // Use the correct data attributes
+        const retailPrice = parseFloat(selectedOption.dataset.beiRejareja) || 0;
+        const wholesalePrice = parseFloat(selectedOption.dataset.beiJumla) || 0;
+        const stock = parseFloat(selectedOption.dataset.stock) || 0;
+        
+        console.log('Product selected - Retail:', retailPrice, 'Wholesale:', wholesalePrice);
+        
+        // Check if wholesale price exists and is different from retail
+        const hasWholesale = wholesalePrice > 0 && wholesalePrice !== retailPrice;
+        
+        // Enable/disable wholesale option based on availability
+        const jumlaOption = priceTypeSelect.querySelector('option[value="jumla"]');
+        if (jumlaOption) {
+            jumlaOption.disabled = !hasWholesale;
+            if (!hasWholesale) {
+                jumlaOption.title = 'Bei ya jumla haijapatikana kwa bidhaa hii';
+            } else {
+                jumlaOption.title = '';
+            }
+        }
+        
+        // Set default price (rejareja by default)
+        priceTypeSelect.value = 'rejareja';
+        priceInput.value = retailPrice.toFixed(2);
+        
+        // If only wholesale exists but no retail (unlikely but handle)
+        if (retailPrice === 0 && wholesalePrice > 0) {
+            priceTypeSelect.value = 'jumla';
+            priceInput.value = wholesalePrice.toFixed(2);
+        }
+        
+        stockInput.value = stock.toFixed(2);
+        
+        // Update kopesha modal values
+        const kopeshaBidhaaId = document.getElementById('kopesha-bidhaa-id');
+        const kopeshaBei = document.getElementById('kopesha-bei');
+        if (kopeshaBidhaaId) kopeshaBidhaaId.value = selectedOption.value;
+        if (kopeshaBei) kopeshaBei.value = priceInput.value;
+        
+        if (quantityInput && parseFloat(quantityInput.value) > stock) {
+            quantityInput.value = stock.toFixed(2);
+        }
+    } else {
+        priceInput.value = '';
+        stockInput.value = '';
+        if (quantityInput) quantityInput.value = '';
+    }
+    
+    this.updateTotals();
+}
+
+// Handle price type change
+bindPriceTypeChange() {
+    const priceTypeSelect = document.getElementById('price-type-select');
+    if (!priceTypeSelect) return;
+    
+    priceTypeSelect.addEventListener('change', () => {
+        const select = document.getElementById('bidhaaSelect');
+        const selectedOption = select.options[select.selectedIndex];
+        const priceInput = document.getElementById('price-input');
+        
+        if (selectedOption && selectedOption.value) {
+            // Use the correct data attributes
+            const retailPrice = parseFloat(selectedOption.dataset.beiRejareja) || 0;
+            const wholesalePrice = parseFloat(selectedOption.dataset.beiJumla) || 0;
+            
+            console.log('Price type changed to:', priceTypeSelect.value);
+            console.log('Retail:', retailPrice, 'Wholesale:', wholesalePrice);
+            
+            if (priceTypeSelect.value === 'jumla' && wholesalePrice > 0) {
+                priceInput.value = wholesalePrice.toFixed(2);
+            } else {
+                priceInput.value = retailPrice.toFixed(2);
+            }
+            
+            // Update kopesha modal price
+            const kopeshaBei = document.getElementById('kopesha-bei');
+            if (kopeshaBei) kopeshaBei.value = priceInput.value;
+            
+            // Update kopesha bei_type hidden field
+            const kopeshaBeiType = document.getElementById('kopesha-bei-type');
+            if (kopeshaBeiType) kopeshaBeiType.value = priceTypeSelect.value;
+            
+            this.updateTotals();
+        }
+    });
+}
+
+// Update bindSalesFormEvents to include price type change
+bindSalesFormEvents() {
+    const bidhaaSelect = document.getElementById('bidhaaSelect');
+    const quantityInput = document.getElementById('quantity-input');
+    const discountInput = document.getElementById('punguzo-input');
+    const punguzoType = document.getElementById('punguzo-type');
+    const kopeshaBtn = document.getElementById('kopesha-btn');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    const salesForm = document.getElementById('sales-form');
+
+    if (!salesForm) return;
+
+    if (bidhaaSelect) {
+        bidhaaSelect.addEventListener('change', () => {
+            this.updateProductDetails();
+        });
+    }
+
+    // Bind price type change
+    this.bindPriceTypeChange();
+
+    if (quantityInput) {
+        quantityInput.addEventListener('input', () => {
+            this.updateTotals();
+        });
+    }
+
+    if (discountInput) {
+        discountInput.addEventListener('input', () => {
+            this.updateTotals();
+        });
+    }
+
+    if (punguzoType) {
+        punguzoType.addEventListener('change', () => {
+            this.updateTotals();
+        });
+    }
+
+    if (kopeshaBtn) {
+        kopeshaBtn.addEventListener('click', () => {
+            const priceTypeSelect = document.getElementById('price-type-select');
+            const beiTypeInput = document.getElementById('kopesha-bei-type');
+            if (beiTypeInput && priceTypeSelect) {
+                beiTypeInput.value = priceTypeSelect.value;
+            }
+            this.openKopeshaModal('regular');
+        });
+    }
+
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', () => {
+            this.addToCart();
+        });
+    }
+
+    salesForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const hasDoubleSale = await this.checkDoubleSale();
+        
+        if (hasDoubleSale) {
+            this.pendingSaleData = { 
+                form: salesForm, 
+                type: 'regular'
+            };
+            this.showDoubleSaleModal();
+            return;
+        }
+        
+        await this.processSale(salesForm, 'regular');
+    });
+}
+
+// Update addToCart to include price type
+addToCart() {
+    const bidhaaSelect = document.getElementById('bidhaaSelect');
+    const quantityInput = document.getElementById('quantity-input');
+    const priceInput = document.getElementById('price-input');
+    const discountInput = document.getElementById('punguzo-input');
+    const punguzoType = document.getElementById('punguzo-type');
+    const totalInput = document.getElementById('total-input');
+    const priceTypeSelect = document.getElementById('price-type-select');
+    
+    if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
+
+    const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const discount = parseFloat(discountInput.value) || 0;
+    const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+    const total = parseFloat(totalInput.value) || 0;
+    const priceType = priceTypeSelect ? priceTypeSelect.value : 'rejareja';
+    
+    if (!selectedOption.value || quantity < 0.01) {
+        this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+        return;
+    }
+
+    const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
+    const baseTotal = price * quantity;
+    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+    const profit = ((price - buyingPrice) * quantity) - actualDiscount;
+    
+    const calculatedTotal = baseTotal - actualDiscount;
+    if (Math.abs(calculatedTotal - total) > 0.01) {
+        this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal.toFixed(2)}, Ilioingizwa: ${total.toFixed(2)}`, 'error');
+        return;
+    }
+
+    const productName = selectedOption.dataset.jina;
+    const barcode = selectedOption.dataset.barcode || '';
+    const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
+
+    const cartItem = {
+        jina: productName,
+        bei: price,
+        idadi: quantity,
+        punguzo: discount,
+        punguzo_aina: discountType,
+        actual_discount: actualDiscount,
+        jumla: total,
+        profit: profit,
+        bidhaa_id: selectedOption.value,
+        barcode: barcode,
+        bei_type: priceType,
+        timestamp: new Date().toISOString(),
+        company_id: this.companyId,
+        company_name: companyName
+    };
+
+    this.cart.push(cartItem);
+    this.saveCart();
+    this.updateCartCount();
+    this.updateCartDisplay();
+    
+    this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
+    this.resetForm();
+}
+
+// Update processSale to include bei_type
+async processSale(form, type) {
+    const formData = new FormData(form);
+    
+    const punguzoType = document.getElementById('punguzo-type');
+    if (punguzoType) {
+        formData.append('punguzo_aina', punguzoType.value);
+    }
+    
+    const priceTypeSelect = document.getElementById('price-type-select');
+    if (priceTypeSelect) {
+        formData.append('bei_type', priceTypeSelect.value);
+        console.log('Submitting with bei_type:', priceTypeSelect.value);
+    }
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: formData
         });
 
-        this.bindSalesFormEvents();
-        this.bindBarcodeEvents();
-        this.bindSearchEvents();
-        this.bindModalEvents();
-        this.bindCartEvents();
-        this.bindDeleteEvents();
+        let data = {};
+        try {
+            data = await response.json();
+        } catch (jsonError) {
+            console.warn("Response is not JSON");
+        }
+
+        if (response.ok) {
+            this.showNotification('Mauzo yamehifadhiwa kikamilifu! Namba ya risiti: ' + (data.receipt_no || 'N/A'), 'success');
+            this.resetForm();
+            this.updateStockDisplay(formData.get('bidhaa_id'));
+            this.updateFinancialData();
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
     }
+}
+
+// Add to init method
+init() {
+    this.bindEvents();
+    this.updateCartCount();
+    this.setTodayDate();
+    this.initBidhaaSearch();
+    this.initBarcodeRows();
+    this.initCartDisplay();
+    this.initCustomerSelection();
+    this.clearOtherCompanyCarts();
+    this.bindDeleteSaleEvents();
+    this.initReceiptLookup();
+    this.bindSearchEvents();
+    this.bindPriceTypeChange(); // ADD THIS LINE
+}
+
+bindEvents() {
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const tab = e.target.closest('.tab-button').dataset.tab;
+            if (tab) {
+                this.showTab(tab);
+            }
+        });
+    });
+
+    this.bindSalesFormEvents();
+    this.bindBarcodeEvents();
+    this.bindSearchEvents();
+    this.bindModalEvents();
+    this.bindCartEvents();
+    this.bindDeleteEvents();
+}
 
     initBidhaaSearch() {
         const bidhaaSearch = document.getElementById('bidhaaSearch');
@@ -2486,105 +2710,110 @@ handleCustomerSelection(selectElement, modalType) {
         }
     }
 
-    bindSalesFormEvents() {
-        const bidhaaSelect = document.getElementById('bidhaaSelect');
-        const quantityInput = document.getElementById('quantity-input');
-        const discountInput = document.getElementById('punguzo-input');
-        const punguzoType = document.getElementById('punguzo-type');
-        const kopeshaBtn = document.getElementById('kopesha-btn');
-        const addToCartBtn = document.getElementById('add-to-cart-btn');
-        const salesForm = document.getElementById('sales-form');
 
-        if (!salesForm) return;
+// Update updateTotals to use current price
+updateTotals() {
+    const quantityInput = document.getElementById('quantity-input');
+    const priceInput = document.getElementById('price-input');
+    const discountInput = document.getElementById('punguzo-input');
+    const totalInput = document.getElementById('total-input');
+    const punguzoAinaInput = document.getElementById('punguzo-aina-input');
+    const punguzoType = document.getElementById('punguzo-type');
+    
+    if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
 
-        if (bidhaaSelect) {
-            bidhaaSelect.addEventListener('change', () => {
-                this.updateProductDetails();
-            });
-        }
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const discount = parseFloat(discountInput.value) || 0;
+    const discountType = punguzoType.value;
+    
+    const baseTotal = quantity * price;
+    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+    const finalTotal = baseTotal - actualDiscount;
+    
+    totalInput.value = Math.max(0, finalTotal).toFixed(2);
+    punguzoAinaInput.value = discountType;
+    
+    const kopeshaIdadi = document.getElementById('kopesha-idadi');
+    const kopeshaJumla = document.getElementById('kopesha-jumla');
+    const kopeshaBaki = document.getElementById('kopesha-baki');
+    const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
+    const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
+    const kopeshaBei = document.getElementById('kopesha-bei');
+    
+    if (kopeshaIdadi) kopeshaIdadi.value = quantity.toFixed(2);
+    if (kopeshaJumla) kopeshaJumla.value = finalTotal.toFixed(2);
+    if (kopeshaBaki) kopeshaBaki.value = finalTotal.toFixed(2);
+    if (kopeshaPunguzo) kopeshaPunguzo.value = discount.toFixed(2);
+    if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
+    if (kopeshaBei) kopeshaBei.value = price.toFixed(2);
+}
 
-        if (quantityInput) {
-            quantityInput.addEventListener('input', () => {
-                this.updateTotals();
-            });
-        }
+// Update addToCart to include price type
+addToCart() {
+    const bidhaaSelect = document.getElementById('bidhaaSelect');
+    const quantityInput = document.getElementById('quantity-input');
+    const priceInput = document.getElementById('price-input');
+    const discountInput = document.getElementById('punguzo-input');
+    const punguzoType = document.getElementById('punguzo-type');
+    const totalInput = document.getElementById('total-input');
+    const priceTypeSelect = document.getElementById('price-type-select');
+    
+    if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
 
-        if (discountInput) {
-            discountInput.addEventListener('input', () => {
-                this.updateTotals();
-            });
-        }
-
-        if (punguzoType) {
-            punguzoType.addEventListener('change', () => {
-                this.updateTotals();
-            });
-        }
-
-        if (kopeshaBtn) {
-            kopeshaBtn.addEventListener('click', () => {
-                this.openKopeshaModal('regular');
-            });
-        }
-
-        if (addToCartBtn) {
-            addToCartBtn.addEventListener('click', () => {
-                this.addToCart();
-            });
-        }
-
-        salesForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const hasDoubleSale = await this.checkDoubleSale();
-            
-            if (hasDoubleSale) {
-                this.pendingSaleData = { 
-                    form: salesForm, 
-                    type: 'regular'
-                };
-                this.showDoubleSaleModal();
-                return;
-            }
-            
-            await this.processSale(salesForm, 'regular');
-        });
+    const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
+    const quantity = parseFloat(quantityInput.value) || 0;
+    const price = parseFloat(priceInput.value) || 0;
+    const discount = parseFloat(discountInput.value) || 0;
+    const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+    const total = parseFloat(totalInput.value) || 0;
+    const priceType = priceTypeSelect ? priceTypeSelect.value : 'rejareja';
+    
+    if (!selectedOption.value || quantity < 0.01) {
+        this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+        return;
     }
 
-    updateProductDetails() {
-        const select = document.getElementById('bidhaaSelect');
-        const priceInput = document.getElementById('price-input');
-        const stockInput = document.getElementById('stock-input');
-        const quantityInput = document.getElementById('quantity-input');
-        
-        if (!select || !priceInput || !stockInput) return;
-
-        const selectedOption = select.options[select.selectedIndex];
-        
-        if (selectedOption.value) {
-            const price = parseFloat(selectedOption.dataset.bei) || 0;
-            const stock = parseFloat(selectedOption.dataset.stock) || 0;
-            const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
-            
-            priceInput.value = price.toFixed(2);
-            stockInput.value = stock.toFixed(2);
-            
-            const kopeshaBidhaaId = document.getElementById('kopesha-bidhaa-id');
-            const kopeshaBei = document.getElementById('kopesha-bei');
-            if (kopeshaBidhaaId) kopeshaBidhaaId.value = selectedOption.value;
-            if (kopeshaBei) kopeshaBei.value = price.toFixed(2);
-            
-            if (quantityInput && parseFloat(quantityInput.value) > stock) {
-                quantityInput.value = stock.toFixed(2);
-            }
-        } else {
-            priceInput.value = '';
-            stockInput.value = '';
-            quantityInput.value = '';
-        }
-        
-        this.updateTotals();
+    const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
+    const baseTotal = price * quantity;
+    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+    const profit = ((price - buyingPrice) * quantity) - actualDiscount;
+    
+    const calculatedTotal = baseTotal - actualDiscount;
+    if (Math.abs(calculatedTotal - total) > 0.01) {
+        this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal.toFixed(2)}, Ilioingizwa: ${total.toFixed(2)}`, 'error');
+        return;
     }
+
+    const productName = selectedOption.dataset.jina;
+    const barcode = selectedOption.dataset.barcode || '';
+    const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
+
+    const cartItem = {
+        jina: productName,
+        bei: price,
+        idadi: quantity,
+        punguzo: discount,
+        punguzo_aina: discountType,
+        actual_discount: actualDiscount,
+        jumla: total,
+        profit: profit,
+        bidhaa_id: selectedOption.value,
+        barcode: barcode,
+        bei_type: priceType, // ADD THIS
+        timestamp: new Date().toISOString(),
+        company_id: this.companyId,
+        company_name: companyName
+    };
+
+    this.cart.push(cartItem);
+    this.saveCart();
+    this.updateCartCount();
+    this.updateCartDisplay();
+    
+    this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
+    this.resetForm();
+}
 
     async checkDoubleSale() {
         const bidhaaId = document.getElementById('bidhaaSelect').value;
@@ -2642,49 +2871,6 @@ handleCustomerSelection(selectElement, modalType) {
                 closeModal();
             }
         });
-    }
-
-    async processSale(form, type) {
-        const formData = new FormData(form);
-        
-        const punguzoType = document.getElementById('punguzo-type');
-        if (punguzoType) {
-            formData.append('punguzo_aina', punguzoType.value);
-        }
-
-        try {
-            const response = await fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: formData
-            });
-
-            let data = {};
-            try {
-                data = await response.json();
-            } catch (jsonError) {
-                console.warn("Response is not JSON");
-            }
-
-            if (response.ok) {
-                this.showNotification('Mauzo yamehifadhiwa kikamilifu! Namba ya risiti: ' + data.receipt_no, 'success');
-                this.resetForm();
-                this.updateStockDisplay(formData.get('bidhaa_id'));
-                this.updateFinancialData();
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
-            }
-
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
-        }
     }
 
     updateStockDisplay(bidhaaId) {
@@ -3076,6 +3262,7 @@ clearBarcodeRow(row) {
     }
 }
 
+// Update fetchBidhaaByBarcode method
 fetchBidhaaByBarcode(input) {
     const barcode = input.value.trim();
     if (!barcode) return;
@@ -3087,6 +3274,10 @@ fetchBidhaaByBarcode(input) {
     const quantityInput = row.querySelector('.quantity-input');
     const punguzoInput = row.querySelector('.punguzo-input');
     const totalInput = row.querySelector('.total-input');
+    
+    // Optional: Add price type selector for barcode rows if needed
+    const priceTypeSelect = document.getElementById('price-type-select');
+    const useWholesale = priceTypeSelect && priceTypeSelect.value === 'jumla';
 
     row.classList.add('opacity-50', 'pointer-events-none');
     
@@ -3113,8 +3304,15 @@ fetchBidhaaByBarcode(input) {
             const product = data.product;
             
             if (productName) productName.value = product.jina || '';
+            
+            // Determine which price to use
+            let priceToUse = parseFloat(product.bei_kuuza) || 0;
+            if (useWholesale && product.bei_uzo_jumla && parseFloat(product.bei_uzo_jumla) > 0) {
+                priceToUse = parseFloat(product.bei_uzo_jumla);
+            }
+            
             if (productPrice) {
-                productPrice.value = (parseFloat(product.bei_kuuza) || 0).toFixed(2);
+                productPrice.value = priceToUse.toFixed(2);
             }
             
             if (stockInput) {
@@ -3156,10 +3354,8 @@ fetchBidhaaByBarcode(input) {
     })
     .catch(error => {
         row.classList.remove('opacity-50', 'pointer-events-none');
-        
         console.error('Error fetching product:', error);
         this.showNotification('Kuna tatizo kwenye kutafuta bidhaa!', 'error');
-        
         this.clearBarcodeRow(row);
     });
 }

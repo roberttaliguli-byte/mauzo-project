@@ -274,6 +274,7 @@ Route::post('/send-receipt-sms', [MauzoController::class, 'sendReceiptSms'])->na
     // ================================
     Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
     Route::post('/bidhaa', [BidhaaController::class, 'store'])->name('bidhaa.store');
+    Route::delete('/bidhaa/delete-all', [BidhaaController::class, 'deleteAll'])->name('bidhaa.deleteAll');
     Route::put('/bidhaa/{id}', [BidhaaController::class, 'update'])->name('bidhaa.update');
     Route::delete('/bidhaa/{id}', [BidhaaController::class, 'destroy'])->name('bidhaa.destroy');
     Route::get('/bidhaa/search', [BidhaaController::class, 'searchAll'])->name('bidhaa.search');
@@ -285,8 +286,8 @@ Route::post('/send-receipt-sms', [MauzoController::class, 'sendReceiptSms'])->na
     Route::get('/bidhaa/taarifa', [BidhaaController::class, 'taarifa'])->name('bidhaa.taarifa');
     Route::get('/bidhaa/export-details/{id}', [BidhaaController::class, 'exportProductDetails'])->name('bidhaa.export-details');
     Route::get('/bidhaa/search-products', [BidhaaController::class, 'searchProducts'])->name('bidhaa.search-products');
-    
-    // ================================
+    // Add this route with your other bidhaa routes
+   // ================================
     // Madeni Routes (accessible by both)
     // ================================
     Route::prefix('madeni')->group(function () {

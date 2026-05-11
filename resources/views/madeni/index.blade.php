@@ -199,15 +199,23 @@
     </div>
 </div>
 
-    <!-- Borrowers Summary (Grouped) -->
-    @if($borrowers->count() > 0)
-    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div class="p-3 bg-emerald-50 border-b border-emerald-200">
-            <h3 class="text-sm font-semibold text-emerald-800 flex items-center">
-                <i class="fas fa-users mr-2"></i>
-                Muhtasari wa Wakopaji (Waliopo na Madeni)
-            </h3>
-        </div>
+
+<!-- Borrowers Summary (Grouped) - Hidden until user clicks Show -->
+<div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+    <div class="p-3 bg-emerald-50 border-b border-emerald-200 flex justify-between items-center">
+        <h3 class="text-sm font-semibold text-emerald-800 flex items-center">
+            <i class="fas fa-users mr-2"></i>
+            Muhtasari wa Wakopaji (Waliopo na Madeni)
+        </h3>
+        <button onclick="toggleBorrowerSummary()" 
+                class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-full transition flex items-center gap-1" id="toggle-summary-btn">
+            <i class="fas fa-eye mr-1"></i>
+            <span>Onyesha</span>
+        </button>
+    </div>
+    
+    <!-- Hidden by default -->
+    <div id="borrower-summary-content" class="hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
@@ -241,7 +249,7 @@
                             <span class="font-bold text-red-600">{{ number_format($borrower->total_balance, 2) }} TZS</span>
                         </td>
                         <td class="px-4 py-2 text-center">
-                            <button onclick="filterByBorrower('{{ $borrower->jina_mkopaji }}')" 
+                            <button onclick="showBorrowerDetails('{{ $borrower->jina_mkopaji }}')" 
                                     class="text-emerald-600 hover:text-emerald-800 p-1 rounded-full hover:bg-emerald-50"
                                     title="Onyesha madeni ya {{ $borrower->jina_mkopaji }}">
                                 <i class="fas fa-eye"></i>
@@ -253,7 +261,7 @@
             </table>
         </div>
     </div>
-    @endif
+</div>
 
     <!-- Tabs -->
     <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
@@ -828,6 +836,7 @@ class MadeniManager {
         this.setTodayDate();
         this.autoDismissNotifications();
         this.setupAjaxForms();
+        this.initBorrowerSummaryToggle();
     }
 
     getSavedTab() {
@@ -886,6 +895,40 @@ class MadeniManager {
             }
         });
     }
+
+// Add to MadeniManager class
+initBorrowerSummaryToggle() {
+    const savedState = localStorage.getItem('borrower_summary_visible');
+    const content = document.getElementById('borrower-summary-content');
+    const btn = document.getElementById('toggle-summary-btn');
+    
+    if (!content || !btn) return;
+    
+    if (savedState === 'true') {
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i><span>Ficha</span>';
+    } else {
+        content.classList.add('hidden');
+        btn.innerHTML = '<i class="fas fa-eye mr-1"></i><span>Onyesha</span>';
+    }
+}
+
+toggleBorrowerSummary() {
+    const content = document.getElementById('borrower-summary-content');
+    const btn = document.getElementById('toggle-summary-btn');
+    
+    if (!content || !btn) return;
+    
+    if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i><span>Ficha</span>';
+        localStorage.setItem('borrower_summary_visible', 'true');
+    } else {
+        content.classList.add('hidden');
+        btn.innerHTML = '<i class="fas fa-eye mr-1"></i><span>Onyesha</span>';
+        localStorage.setItem('borrower_summary_visible', 'false');
+    }
+}
 
     async performSearch(searchTerm, filter = null) {
         try {
@@ -1860,7 +1903,12 @@ function exportDebtReportExcel() {
     const url = `${window.location.pathname}/report/excel?start_date=${startDate}&end_date=${endDate}&report_type=${reportType}&status=${status}`;
     window.location.href = url;
 }
-
+// Global wrapper for toggleBorrowerSummary
+function toggleBorrowerSummary() {
+    if (window.madeniManager) {
+        window.madeniManager.toggleBorrowerSummary();
+    }
+}
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     window.madeniManager = new MadeniManager();
