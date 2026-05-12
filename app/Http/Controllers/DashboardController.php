@@ -31,32 +31,70 @@ class DashboardController extends Controller
         
         $today = Carbon::today();
         
-        // --- STOCK / INVENTORY METRICS ---
+        // Get all data needed for the dashboard
+        $todaysMauzos = $this->getTodaysMauzos($companyId, $today);
+        $todaysMarejeshos = $this->getTodaysMarejeshos($companyId, $today);
+        $todaysMatumizi = $this->getTodaysMatumizi($companyId, $today);
+        
+        // All time data
+        $allTimeMauzos = $this->getAllTimeMauzos($companyId);
+        $allTimeMarejeshos = $this->getAllTimeMarejeshos($companyId);
+        $allMatumizi = $this->getAllMatumizi($companyId);
+        
+        // Calculate financial metrics
+        $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
+        $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
+        $mapatoLeo = $mapatoMauzo + $mapatoMadeni;
+        $matumiziLeo = $todaysMatumizi->sum('gharama');
+        $fedhaLeo = $mapatoLeo - $matumiziLeo;
+        
+        // Calculate profit
+        $faidaMauzo = $this->calculateCashSalesProfit($todaysMauzos);
+        $faidaMarejesho = $this->calculateDebtRepaymentProfit($todaysMarejeshos);
+        $jumlaFaida = $faidaMauzo + $faidaMarejesho;
+        $faidaHalisiLeo = $jumlaFaida - $matumiziLeo;
+        
+        // Inventory metrics
         $inventoryMetrics = $this->getInventoryMetrics($companyId);
         
-        // --- TOP SELLING PRODUCTS ---
-        $topProducts = $this->getTopSellingProducts($companyId);
+        // Top selling products
+        $bidhaaTopSales = $this->getTopSellingProducts($companyId);
         
-        // --- TODAY'S FINANCIALS ---
-        $todayFinancials = $this->getTodayFinancials($companyId, $today);
-        
-        // --- ALL-TIME FINANCIALS ---
-        $allTimeFinancials = $this->getAllTimeFinancials($companyId);
-        
-        // --- DEBT SUMMARY ---
+        // Debt summary
         $debtSummary = $this->getDebtSummary($companyId);
         
-        // Combine all data for the view
-        $dashboardData = array_merge(
-            compact('company', 'companyId'),
-            $inventoryMetrics,
-            $topProducts,
-            $todayFinancials,
-            $allTimeFinancials,
-            $debtSummary
-        );
+        // All time totals
+        $totalMapato = $allTimeMauzos->sum('jumla') + $allTimeMarejeshos->sum('kiasi');
+        $totalMatumizi = $allMatumizi->sum('gharama');
+        $jumlaKuu = $totalMapato - $totalMatumizi;
         
-        return view('dashboard.index', $dashboardData);
+        return view('dashboard.index', array_merge(
+            compact(
+                'company',
+                'companyId',
+                'todaysMauzos',
+                'todaysMarejeshos',
+                'todaysMatumizi',
+                'allTimeMauzos',
+                'allTimeMarejeshos',
+                'allMatumizi',
+                'mapatoLeo',
+                'mapatoMauzo',
+                'mapatoMadeni',
+                'matumiziLeo',
+                'fedhaLeo',
+                'faidaMauzo',
+                'faidaMarejesho',
+                'jumlaFaida',
+                'faidaHalisiLeo',
+                'jumlaKuu',
+                'totalMapato',
+                'totalMatumizi'
+            ),
+            $inventoryMetrics,
+            compact('bidhaaTopSales'),
+            $debtSummary
+        ));
     }
     
     /**
@@ -106,26 +144,85 @@ class DashboardController extends Controller
     }
     
     /**
+     * Get today's sales
+     */
+    private function getTodaysMauzos($companyId, $today)
+    {
+        return Mauzo::whereHas('bidhaa', fn($q) => $q->where('company_id', $companyId))
+            ->with('bidhaa')
+            ->whereDate('created_at', $today)
+            ->get();
+    }
+    
+    /**
+     * Get today's debt repayments
+     */
+    private function getTodaysMarejeshos($companyId, $today)
+    {
+        return Marejesho::with(['madeni.bidhaa'])
+            ->whereHas('madeni', fn($q) => $q->where('company_id', $companyId))
+            ->whereDate('tarehe', $today)
+            ->get();
+    }
+    
+    /**
+     * Get today's expenses
+     */
+    private function getTodaysMatumizi($companyId, $today)
+    {
+        return Matumizi::where('company_id', $companyId)
+            ->whereDate('created_at', $today)
+            ->get();
+    }
+    
+    /**
+     * Get all time sales
+     */
+    private function getAllTimeMauzos($companyId)
+    {
+        return Mauzo::whereHas('bidhaa', fn($q) => $q->where('company_id', $companyId))
+            ->with('bidhaa')
+            ->get();
+    }
+    
+    /**
+     * Get all time debt repayments
+     */
+    private function getAllTimeMarejeshos($companyId)
+    {
+        return Marejesho::whereHas('madeni', fn($q) => $q->where('company_id', $companyId))
+            ->get();
+    }
+    
+    /**
+     * Get all time expenses
+     */
+    private function getAllMatumizi($companyId)
+    {
+        return Matumizi::where('company_id', $companyId)->get();
+    }
+    
+    /**
      * Get inventory metrics
      */
     private function getInventoryMetrics($companyId)
     {
-        return [
-            'jumlaBidhaa' => Bidhaa::where('company_id', $companyId)->count(),
-            'jumlaIdadi' => Bidhaa::where('company_id', $companyId)->sum('idadi'),
-            'thamani' => Bidhaa::where('company_id', $companyId)
-                ->selectRaw('SUM(idadi * bei_nunua) as jumla')
-                ->value('jumla'),
-            'bidhaaZilizopo' => Bidhaa::where('company_id', $companyId)
-                ->where('idadi', '>', 0)
-                ->count(),
-            'bidhaaZimeisha' => Bidhaa::where('company_id', $companyId)
-                ->where('idadi', 0)
-                ->count(),
-            'bidhaaKaribiaKuisha' => Bidhaa::where('company_id', $companyId)
-                ->where('idadi', '<', 10)
-                ->count(),
-        ];
+        $bidhaaZote = Bidhaa::where('company_id', $companyId)->get();
+        $jumlaBidhaa = $bidhaaZote->count();
+        $jumlaIdadi = $bidhaaZote->sum('idadi');
+        $thamani = $bidhaaZote->sum(fn($b) => $b->idadi * ($b->bei_nunua ?? 0));
+        $bidhaaZilizopo = $bidhaaZote->where('idadi', '>', 0)->count();
+        $bidhaaZimeisha = $bidhaaZote->where('idadi', 0)->count();
+        $bidhaaKaribiaKuisha = $bidhaaZote->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
+        
+        return compact(
+            'jumlaBidhaa',
+            'jumlaIdadi',
+            'thamani',
+            'bidhaaZilizopo',
+            'bidhaaZimeisha',
+            'bidhaaKaribiaKuisha'
+        );
     }
     
     /**
@@ -133,117 +230,19 @@ class DashboardController extends Controller
      */
     private function getTopSellingProducts($companyId)
     {
-        return [
-            'bidhaaTopSales' => Bidhaa::where('company_id', $companyId)
-                ->withSum('mauzos', 'idadi')
-                ->orderByDesc('mauzos_sum_idadi')
-                ->take(3)
-                ->get()
-        ];
-    }
-    
-    /**
-     * Get today's financial metrics
-     */
-    private function getTodayFinancials($companyId, $today)
-    {
-        // Cash sales today
-        $mauzoLeo = $this->getTodayCashSales($companyId, $today);
-        
-        // Debt repayments today
-        $mapatoMadeni = $this->getTodayDebtRepayments($companyId, $today);
-        
-        // Total revenue today
-        $mapatoLeo = $mauzoLeo + $mapatoMadeni;
-        
-        // Expenses today
-        $matumiziLeo = $this->getTodayExpenses($companyId, $today);
-        
-        // Net cash today
-        $fedhaLeo = $mapatoLeo - $matumiziLeo;
-        
-        // Profit calculations
-        $profitData = $this->getTodayProfit($companyId, $today);
-        
-        return [
-            'mauzoLeo' => $mauzoLeo,
-            'mapatoMadeni' => $mapatoMadeni,
-            'mapatoLeo' => $mapatoLeo,
-            'matumiziLeo' => $matumiziLeo,
-            'fedhaLeo' => $fedhaLeo,
-            'faidaMauzo' => $profitData['faidaMauzo'],
-            'faidaMarejesho' => $profitData['faidaMarejesho'],
-            'jumlaFaida' => $profitData['jumlaFaida'],
-            'faidaHalisiLeo' => $profitData['faidaHalisiLeo']
-        ];
-    }
-    
-    /**
-     * Get today's cash sales
-     */
-    private function getTodayCashSales($companyId, $today)
-    {
-        return Mauzo::whereHas('bidhaa', fn($q) => $q->where('company_id', $companyId))
-            ->whereDate('created_at', $today)
-            ->sum(DB::raw('(bei - punguzo) * idadi'));
-    }
-    
-    /**
-     * Get today's debt repayments
-     */
-    private function getTodayDebtRepayments($companyId, $today)
-    {
-        return Marejesho::whereHas('madeni', function($q) use ($companyId) {
-                $q->where('company_id', $companyId);
-            })
-            ->whereDate('tarehe', $today)
-            ->sum('kiasi');
-    }
-    
-    /**
-     * Get today's expenses
-     */
-    private function getTodayExpenses($companyId, $today)
-    {
-        return Matumizi::where('company_id', $companyId)
-            ->whereDate('created_at', $today)
-            ->sum('gharama');
-    }
-    
-    /**
-     * Get today's profit calculations
-     */
-    private function getTodayProfit($companyId, $today)
-    {
-        // Profit from cash sales
-        $faidaMauzo = $this->calculateCashSalesProfit($companyId, $today);
-        
-        // Profit from debt repayments
-        $faidaMarejesho = $this->calculateDebtRepaymentProfit($companyId, $today);
-        
-        $jumlaFaida = $faidaMauzo + $faidaMarejesho;
-        $matumiziLeo = $this->getTodayExpenses($companyId, $today);
-        $faidaHalisiLeo = $jumlaFaida - $matumiziLeo;
-        
-        return [
-            'faidaMauzo' => $faidaMauzo,
-            'faidaMarejesho' => $faidaMarejesho,
-            'jumlaFaida' => $jumlaFaida,
-            'faidaHalisiLeo' => $faidaHalisiLeo
-        ];
+        return Bidhaa::where('company_id', $companyId)
+            ->withSum('mauzos', 'idadi')
+            ->orderByDesc('mauzos_sum_idadi')
+            ->take(3)
+            ->get();
     }
     
     /**
      * Calculate profit from cash sales
      */
-    private function calculateCashSalesProfit($companyId, $today)
+    private function calculateCashSalesProfit($mauzosLeo)
     {
         $faidaMauzo = 0;
-        
-        $mauzosLeo = Mauzo::with('bidhaa')
-            ->whereHas('bidhaa', fn($q) => $q->where('company_id', $companyId))
-            ->whereDate('created_at', $today)
-            ->get();
         
         foreach ($mauzosLeo as $mauzo) {
             if ($mauzo->bidhaa) {
@@ -276,18 +275,14 @@ class DashboardController extends Controller
     /**
      * Calculate profit from debt repayments using FIFO method
      */
-    private function calculateDebtRepaymentProfit($companyId, $today)
+    private function calculateDebtRepaymentProfit($marejeshosLeo)
     {
         $faidaMarejesho = 0;
         $debtProgress = [];
         
-        $marejeshosLeo = Marejesho::with(['madeni.bidhaa'])
-            ->whereHas('madeni', fn($q) => $q->where('company_id', $companyId))
-            ->whereDate('tarehe', $today)
-            ->orderBy('tarehe', 'asc')
-            ->get();
+        $sortedMarejeshos = $marejeshosLeo->sortBy('tarehe');
         
-        foreach ($marejeshosLeo as $marejesho) {
+        foreach ($sortedMarejeshos as $marejesho) {
             if (!isset($marejesho->madeni) || !isset($marejesho->madeni->bidhaa)) {
                 continue;
             }
@@ -353,6 +348,7 @@ class DashboardController extends Controller
             $progress['is_cost_recovered'] = true;
             
             $profit = $remainingAmount - $costPortion;
+            $remainingAmount = 0;
         }
         
         // Stage 2: Cost already recovered, all is profit
@@ -361,31 +357,6 @@ class DashboardController extends Controller
         }
         
         return $profit;
-    }
-    
-    /**
-     * Get all-time financial metrics
-     */
-    private function getAllTimeFinancials($companyId)
-    {
-        $allMauzos = Mauzo::whereHas('bidhaa', fn($q) => $q->where('company_id', $companyId))->get();
-        $allMarejeshos = Marejesho::whereHas('madeni', function($q) use ($companyId) {
-            $q->where('company_id', $companyId);
-        })->get();
-        
-        $totalCashSales = $allMauzos->sum('jumla');
-        $totalDebtRepayments = $allMarejeshos->sum('kiasi');
-        $totalMapato = $totalCashSales + $totalDebtRepayments;
-        $totalMatumizi = Matumizi::where('company_id', $companyId)->sum('gharama');
-        $jumlaKuu = $totalMapato - $totalMatumizi;
-        
-        return [
-            'allMauzos' => $allMauzos,
-            'allMarejeshos' => $allMarejeshos,
-            'totalMapato' => $totalMapato,
-            'totalMatumizi' => $totalMatumizi,
-            'jumlaKuu' => $jumlaKuu
-        ];
     }
     
     /**
