@@ -132,6 +132,39 @@
                             <span class="truncate">{{ $company->email ?? 'Hakuna' }}</span>
                         </div>
                     </div>
+                    <!-- Add this in the Mobile View section -->
+<div class="px-4 py-3">
+    <div class="text-xs font-medium text-amber-700 mb-1">Aina ya Biashara</div>
+    <div class="text-sm text-gray-900">
+        @php
+            $businessLabels = [
+                'retail_shop' => 'Retail Shop / Duka',
+                'mini_market' => 'Mini Market',
+                'supermarket' => 'Supermarket',
+                'pharmacy' => 'Pharmacy / Dawa',
+                'hardware' => 'Hardware',
+                'stationery' => 'Stationery',
+                'restaurant' => 'Restaurant',
+                'hotel' => 'Hotel',
+                'bar' => 'Bar / Vinywaji',
+                'clothes_shop' => 'Duka la Nguo',
+                'shoes_shop' => 'Duka la Viatu',
+                'furniture' => 'Furniture',
+                'cosmetics' => 'Cosmetics',
+                'electronics' => 'Electronics',
+                'salon' => 'Salon / Kinyozi',
+                'spare_parts' => 'Spare Parts',
+                'wholesale' => 'Jumla / Wholesale',
+                'bakery' => 'Bakery',
+                'grocery' => 'Grocery',
+                'other' => 'Nyingine'
+            ];
+        @endphp
+        <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
+            {{ $businessLabels[$company->business_type ?? 'other'] ?? $company->business_type ?? 'Haijabainishwa' }}
+        </span>
+    </div>
+</div>
                 </div>
 
                 <!-- Desktop View: Grid 2 Columns with Amber labels -->
@@ -184,6 +217,37 @@
                         </svg>
                         {{ $company->email ?? 'Hakuna' }}
                     </div>
+                    <!-- Add this in the Info Tab - Desktop View -->
+<div class="font-medium text-amber-700">Aina ya Biashara</div>
+<div class="text-gray-900">
+    @php
+        $businessLabels = [
+            'retail_shop' => 'Retail Shop / Duka',
+            'mini_market' => 'Mini Market',
+            'supermarket' => 'Supermarket',
+            'pharmacy' => 'Pharmacy / Dawa',
+            'hardware' => 'Hardware',
+            'stationery' => 'Stationery',
+            'restaurant' => 'Restaurant',
+            'hotel' => 'Hotel',
+            'bar' => 'Bar / Vinywaji',
+            'clothes_shop' => 'Duka la Nguo',
+            'shoes_shop' => 'Duka la Viatu',
+            'furniture' => 'Furniture',
+            'cosmetics' => 'Cosmetics',
+            'electronics' => 'Electronics',
+            'salon' => 'Salon / Kinyozi',
+            'spare_parts' => 'Spare Parts',
+            'wholesale' => 'Jumla / Wholesale',
+            'bakery' => 'Bakery',
+            'grocery' => 'Grocery',
+            'other' => 'Nyingine'
+        ];
+    @endphp
+    <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
+        {{ $businessLabels[$company->business_type ?? 'other'] ?? $company->business_type ?? 'Haijabainishwa' }}
+    </span>
+</div>
                 </div>
             </div>
         </div>
@@ -307,6 +371,40 @@
                                     <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
+                            <!-- Add this after the email field or before the submit button -->
+<div>
+    <label class="block font-medium mb-1 text-xs sm:text-sm text-amber-700">
+        Aina ya Biashara <span class="text-orange-600">*</span>
+    </label>
+    <select name="business_type" 
+            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 @error('business_type') border-orange-500 @enderror" 
+            required>
+        <option value="">Chagua Aina ya Biashara</option>
+        <option value="retail_shop" {{ old('business_type', $company->business_type ?? '') == 'retail_shop' ? 'selected' : '' }}>Retail Shop / Duka</option>
+        <option value="mini_market" {{ old('business_type', $company->business_type ?? '') == 'mini_market' ? 'selected' : '' }}>Mini Market</option>
+        <option value="supermarket" {{ old('business_type', $company->business_type ?? '') == 'supermarket' ? 'selected' : '' }}>Supermarket</option>
+        <option value="pharmacy" {{ old('business_type', $company->business_type ?? '') == 'pharmacy' ? 'selected' : '' }}>Pharmacy / Dawa</option>
+        <option value="hardware" {{ old('business_type', $company->business_type ?? '') == 'hardware' ? 'selected' : '' }}>Hardware</option>
+        <option value="stationery" {{ old('business_type', $company->business_type ?? '') == 'stationery' ? 'selected' : '' }}>Stationery</option>
+        <option value="restaurant" {{ old('business_type', $company->business_type ?? '') == 'restaurant' ? 'selected' : '' }}>Restaurant</option>
+        <option value="hotel" {{ old('business_type', $company->business_type ?? '') == 'hotel' ? 'selected' : '' }}>Hotel</option>
+        <option value="bar" {{ old('business_type', $company->business_type ?? '') == 'bar' ? 'selected' : '' }}>Bar / Vinywaji</option>
+        <option value="clothes_shop" {{ old('business_type', $company->business_type ?? '') == 'clothes_shop' ? 'selected' : '' }}>Duka la Nguo</option>
+        <option value="shoes_shop" {{ old('business_type', $company->business_type ?? '') == 'shoes_shop' ? 'selected' : '' }}>Duka la Viatu</option>
+        <option value="furniture" {{ old('business_type', $company->business_type ?? '') == 'furniture' ? 'selected' : '' }}>Furniture</option>
+        <option value="cosmetics" {{ old('business_type', $company->business_type ?? '') == 'cosmetics' ? 'selected' : '' }}>Cosmetics</option>
+        <option value="electronics" {{ old('business_type', $company->business_type ?? '') == 'electronics' ? 'selected' : '' }}>Electronics</option>
+        <option value="salon" {{ old('business_type', $company->business_type ?? '') == 'salon' ? 'selected' : '' }}>Salon / Kinyozi</option>
+        <option value="spare_parts" {{ old('business_type', $company->business_type ?? '') == 'spare_parts' ? 'selected' : '' }}>Spare Parts</option>
+        <option value="wholesale" {{ old('business_type', $company->business_type ?? '') == 'wholesale' ? 'selected' : '' }}>Jumla / Wholesale</option>
+        <option value="bakery" {{ old('business_type', $company->business_type ?? '') == 'bakery' ? 'selected' : '' }}>Bakery</option>
+        <option value="grocery" {{ old('business_type', $company->business_type ?? '') == 'grocery' ? 'selected' : '' }}>Grocery</option>
+        <option value="other" {{ old('business_type', $company->business_type ?? '') == 'other' ? 'selected' : '' }}>Nyingine</option>
+    </select>
+    @error('business_type')
+        <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
+    @enderror
+</div>
                             
                             <!-- LOGO FIELD COMPLETELY REMOVED -->
                         </div>

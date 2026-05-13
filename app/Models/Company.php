@@ -1,20 +1,28 @@
-<?php   
+<?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+
 class Company extends Model
 {
     use HasFactory;
 
-// In App\Models\Company.php - Add these to $fillable array
-protected $fillable = [
-    'company_name', 'owner_name', 'owner_gender', 'owner_dob',
-    'location', 'region', 'phone', 'email',
-    'is_verified', 'package', 'database_name', 
-    'package_start', 'package_end', 'is_user_approved' // Add these
-];
+    protected $fillable = [
+        'company_name', 'owner_name', 'owner_gender', 'owner_dob',
+        'location', 'region', 'phone', 'email', 'business_type', 'hear_about_us',
+        'is_verified', 'package', 'database_name', 
+        'package_start', 'package_end', 'is_user_approved'
+    ];
+
+    // Cast dates
+    protected $casts = [
+        'owner_dob' => 'date',
+        'package_start' => 'datetime',
+        'package_end' => 'datetime',
+    ];
 
     public function users()
     {
@@ -22,44 +30,39 @@ protected $fillable = [
     }
 
     public function user()
-{
-    return $this->hasOne(\App\Models\User::class, 'company_id');
-}
+    {
+        return $this->hasOne(\App\Models\User::class, 'company_id');
+    }
 
-
-    // Relationships to data
-public function bidhaa()
-{
-    return $this->hasMany(\App\Models\Bidhaa::class);
-}
+    public function bidhaa()
+    {
+        return $this->hasMany(\App\Models\Bidhaa::class);
+    }
 
     public function wateja()
     {
         return $this->hasMany(Mteja::class);
     }
 
-
-public function wafanyakazi()
-{
-    return $this->hasMany(\App\Models\Wafanyakazi::class);
-}
+    public function wafanyakazi()
+    {
+        return $this->hasMany(\App\Models\Wafanyakazi::class);
+    }
 
     public function masaplaya()
-{
-    return $this->hasMany(\App\Models\Masaplaya::class);
-}
-/**
- * Get SMS logs for this company
- */
-public function smsLogs()
-{
-    return $this->hasMany(SmsLog::class);
-}
+    {
+        return $this->hasMany(\App\Models\Masaplaya::class);
+    }
+
+    public function smsLogs()
+    {
+        return $this->hasMany(SmsLog::class);
+    }
 
     public function matumizi()
-{
-    return $this->hasMany(\App\Models\Matumizi::class);
-}
+    {
+        return $this->hasMany(\App\Models\Matumizi::class);
+    }
 
     public function manunuzi()
     {
@@ -75,150 +78,131 @@ public function smsLogs()
     {
         return $this->hasMany(\App\Models\Madeni::class);
     }
+
     public function marejeshos()
     {
         return $this->hasMany(\App\Models\Marejesho::class);
     }
-    
-// Add relationship
-public function loginHistories()
-{
-    return $this->hasMany(LoginHistory::class);
-}
 
-// Check if company is active (any user active in last 10 minutes)
-public function isActive()
-{
-    // Check both users and employees
-    $hasActiveUser = $this->users()
-        ->where('last_activity_at', '>=', now()->subMinutes(10))
-        ->exists();
-    
-    $hasActiveEmployee = false;
-    
-    // Check if wafanyakazi relationship exists
-    if (method_exists($this, 'wafanyakazi')) {
-        $hasActiveEmployee = $this->wafanyakazi()
+    public function loginHistories()
+    {
+        return $this->hasMany(LoginHistory::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    // Helper method to check if company has active package
+    public function hasActivePackage()
+    {
+        return $this->package_end && Carbon::parse($this->package_end)->isFuture();
+    }
+
+    // Helper to get days left
+    public function getDaysLeftAttribute()
+    {
+        if (!$this->package_end) {
+            return 0;
+        }
+        return Carbon::now()->diffInDays(Carbon::parse($this->package_end), false);
+    }
+
+    public function getPackagePriceAttribute()
+    {
+        $prices = [
+            'Free Trial 14 days' => 0,
+            '30 days' => 15000,
+            '180 days' => 75000,
+            '366 days' => 150000
+        ];
+        return $prices[$this->package] ?? 0;
+    }
+
+    public function getPackagePriceFormattedAttribute()
+    {
+        $price = $this->package_price;
+        return $price > 0 ? 'TZS ' . number_format($price) : 'Bure';
+    }
+
+    // Check if company is active (any user active in last 10 minutes)
+    public function isActive()
+    {
+        $hasActiveUser = $this->users()
             ->where('last_activity_at', '>=', now()->subMinutes(10))
             ->exists();
+        
+        $hasActiveEmployee = false;
+        if (method_exists($this, 'wafanyakazi')) {
+            $hasActiveEmployee = $this->wafanyakazi()
+                ->where('last_activity_at', '>=', now()->subMinutes(10))
+                ->exists();
+        }
+        
+        return $hasActiveUser || $hasActiveEmployee;
     }
-    
-    return $hasActiveUser || $hasActiveEmployee;
-}
 
-// Get active users count for this company
-public function getActiveUsersCount()
-{
-    $activeUsers = $this->users()
-        ->where('last_activity_at', '>=', now()->subMinutes(10))
-        ->count();
-    
-    $activeEmployees = 0;
-    
-    // Check if wafanyakazi relationship exists
-    if (method_exists($this, 'wafanyakazi')) {
-        $activeEmployees = $this->wafanyakazi()
+    public function getActiveUsersCount()
+    {
+        $activeUsers = $this->users()
             ->where('last_activity_at', '>=', now()->subMinutes(10))
             ->count();
+        
+        $activeEmployees = 0;
+        if (method_exists($this, 'wafanyakazi')) {
+            $activeEmployees = $this->wafanyakazi()
+                ->where('last_activity_at', '>=', now()->subMinutes(10))
+                ->count();
+        }
+        
+        return $activeUsers + $activeEmployees;
     }
-    
-    return $activeUsers + $activeEmployees;
-}
 
-public function getTotalUsersCount()
-{
-    $usersCount = $this->users()->count();
-    
-    $employeesCount = 0;
-    
-    // Check if wafanyakazi relationship exists
-    if (method_exists($this, 'wafanyakazi')) {
-        $employeesCount = $this->wafanyakazi()->count();
+    public function getTotalUsersCount()
+    {
+        $usersCount = $this->users()->count();
+        $employeesCount = 0;
+        if (method_exists($this, 'wafanyakazi')) {
+            $employeesCount = $this->wafanyakazi()->count();
+        }
+        return $usersCount + $employeesCount;
     }
-    
-    return $usersCount + $employeesCount;
-}
 
-// Get total login count
-public function getTotalLoginCount()
-{
-    return $this->loginHistories()->count();
-}
+    public function getTotalLoginCount()
+    {
+        return $this->loginHistories()->count();
+    }
 
-// Get last login date
-public function getLastLoginDate()
-{
-    return $this->loginHistories()->max('login_at');
-}
+    public function getLastLoginDate()
+    {
+        return $this->loginHistories()->max('login_at');
+    }
 
-// Get daily active users for today
-public function getDailyActiveUsers()
-{
-    return $this->loginHistories()
-        ->whereDate('login_at', today())
-        ->distinct('user_id')
-        ->count('user_id');
-}
-
-// Get weekly activity data for chart
-public function getWeeklyActivity()
-{
-    $data = [];
-    for ($i = 6; $i >= 0; $i--) {
-        $date = now()->subDays($i);
-        $count = $this->loginHistories()
-            ->whereDate('login_at', $date)
+    public function getDailyActiveUsers()
+    {
+        return $this->loginHistories()
+            ->whereDate('login_at', today())
             ->distinct('user_id')
             ->count('user_id');
-        
-        $data[] = [
-            'date' => $date->format('Y-m-d'),
-            'day' => $date->format('D'),
-            'active_users' => $count
-        ];
     }
-    return $data;
-}
-// In app/Models/Company.php
 
-public function payments()
-{
-    return $this->hasMany(Payment::class);
-}
-
-// Helper method to check if company has active package
-public function hasActivePackage()
-{
-    return $this->package_end && Carbon::parse($this->package_end)->isFuture();
-}
-
-// Helper to get days left
-public function getDaysLeftAttribute()
-{
-    if (!$this->package_end) {
-        return 0;
+    public function getWeeklyActivity()
+    {
+        $data = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $count = $this->loginHistories()
+                ->whereDate('login_at', $date)
+                ->distinct('user_id')
+                ->count('user_id');
+            
+            $data[] = [
+                'date' => $date->format('Y-m-d'),
+                'day' => $date->format('D'),
+                'active_users' => $count
+            ];
+        }
+        return $data;
     }
-    
-    return Carbon::now()->diffInDays(Carbon::parse($this->package_end), false);
-}
-
-// In App\Models\Company.php - Add helper method
-public function getPackagePriceAttribute()
-{
-    $prices = [
-        'Free Trial 14 days' => 0,
-        '30 days' => 15000,
-        '180 days' => 75000,
-        '366 days' => 150000
-    ];
-    
-    return $prices[$this->package] ?? 0;
-}
-
-public function getPackagePriceFormattedAttribute()
-{
-    $price = $this->package_price;
-    return $price > 0 ? 'TZS ' . number_format($price) : 'Bure';
-}
-
 }

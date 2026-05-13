@@ -53,6 +53,7 @@ class CompanyController extends Controller
                 'region'       => 'required|string|max:100',
                 'location'     => 'required|string|max:255',
                 'phone'        => 'required|string|max:20',
+                'business_type' => 'required|string|max:100',
                 'email'        => [
                     'required',
                     'email',
@@ -61,7 +62,8 @@ class CompanyController extends Controller
                     Rule::unique('companies', 'email')->ignore($company->id)
                 ]
             ], [
-                'email.unique' => 'Barua pepe hii tayari imesajiliwa na kampuni nyingine. Tafadhali tumia barua pepe nyingine.'
+                'email.unique' => 'Barua pepe hii tayari imesajiliwa na kampuni nyingine. Tafadhali tumia barua pepe nyingine.',
+                'business_type.required' => 'Tafadhali chagua aina ya biashara.'
             ]);
 
             // Check if email is being changed
@@ -90,6 +92,17 @@ class CompanyController extends Controller
                 ]);
             }
 
+            // Log business type change if it changed
+            if ($company->business_type !== $validated['business_type']) {
+                Log::info('Company business type changed', [
+                    'user_id' => $user->id,
+                    'company_id' => $company->id,
+                    'old_business_type' => $company->business_type,
+                    'new_business_type' => $validated['business_type'],
+                    'ip' => $request->ip()
+                ]);
+            }
+
             // Update ONLY this specific company's data
             $company->company_name = $validated['company_name'];
             $company->owner_name = $validated['owner_name'];
@@ -99,6 +112,7 @@ class CompanyController extends Controller
             $company->location = $validated['location'];
             $company->phone = $validated['phone'];
             $company->email = $validated['email'];
+            $company->business_type = $validated['business_type'];
 
             // Save the changes
             $company->save();
@@ -126,6 +140,15 @@ class CompanyController extends Controller
                     ->withInput()
                     ->with('active_tab', 'edit')
                     ->with('error', '❌ ' . $errors->first('email'));
+            }
+            
+            if ($errors->has('business_type')) {
+                return redirect()
+                    ->back()
+                    ->withErrors($e->validator)
+                    ->withInput()
+                    ->with('active_tab', 'edit')
+                    ->with('error', '❌ ' . $errors->first('business_type'));
             }
             
             return redirect()

@@ -21,6 +21,7 @@ use App\Http\Controllers\ReportController as MainReportController;
 use App\Http\Controllers\UserReportController;
 use App\Http\Controllers\AdminCompanyActivityController;
 use App\Http\Controllers\Admin\CompanyActivityController;
+use App\Http\Controllers\Admin\CompanyStatisticsController;
 use App\Models\Bidhaa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -354,6 +355,18 @@ Route::middleware(['auth', 'role:admin'])
         // Companies
         Route::get('/makampuni', [AdminController::class, 'makampuni'])->name('makampuni');
 
+        // Company Statistics
+        Route::get('/company-statistics', [App\Http\Controllers\Admin\CompanyStatisticsController::class, 'index'])
+            ->name('company-statistics');
+
+        // ADD THIS API ROUTE HERE - After company-statistics, before reports group
+        Route::get('/api/companies-data', function() {
+            $companies = App\Models\Company::orderBy('created_at', 'desc')
+                ->get(['id', 'company_name', 'owner_name', 'phone', 'email', 'business_type', 'hear_about_us', 'created_at', 'is_verified']);
+            
+            return response()->json(['companies' => $companies]);
+        })->name('api.companies-data');
+
         // Reports - ALL in ONE group
         Route::prefix('reports')->group(function () {
             // Existing report routes
@@ -365,7 +378,6 @@ Route::middleware(['auth', 'role:admin'])
             Route::get('/download-companies', [MainReportController::class, 'downloadCompaniesReport'])
                 ->name('reports.download-companies');
 
-            // CRITICAL: Company Activity Routes - Make sure these are present
             Route::get('/company-activity', [\App\Http\Controllers\Admin\CompanyActivityController::class, 'index'])
                 ->name('reports.company-activity');
             

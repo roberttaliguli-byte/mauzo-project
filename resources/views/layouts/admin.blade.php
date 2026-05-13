@@ -472,6 +472,12 @@
         'description' => 'Tuma na fuatilia SMS za makampuni'
       ],
       [
+    'route' => 'admin.company-statistics',  // This stays the same
+    'icon' => 'fas fa-chart-pie', 
+    'label' => 'Takwimu za Makampuni',
+    'description' => 'Angalia aina za biashara na vyanzo vya usajili'
+],
+      [
         'route' => 'password.change', 
         'icon' => 'fas fa-key', 
         'label' => 'Badili Neno Siri',
@@ -484,6 +490,7 @@
         'logout' => true,
         'description' => 'Toka kwenye mfumo'
       ],
+
   ];
   $currentRoute = request()->route()->getName();
 @endphp

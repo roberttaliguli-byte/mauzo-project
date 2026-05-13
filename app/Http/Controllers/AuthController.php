@@ -36,6 +36,47 @@ class AuthController extends Controller
             "Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"
         ];
 
+        $businessTypes = [
+            'retail_shop' => 'Retail Shop / Duka',
+            'mini_market' => 'Mini Market',
+            'supermarket' => 'Supermarket',
+            'pharmacy' => 'Pharmacy / Dawa',
+            'hardware' => 'Hardware',
+            'stationery' => 'Stationery',
+            'restaurant' => 'Restaurant',
+            'hotel' => 'Hotel',
+            'bar' => 'Bar / Vinywaji',
+            'clothes_shop' => 'Duka la Nguo',
+            'shoes_shop' => 'Duka la Viatu',
+            'furniture' => 'Furniture',
+            'cosmetics' => 'Cosmetics',
+            'electronics' => 'Electronics',
+            'salon' => 'Salon / Kinyozi',
+            'spare_parts' => 'Spare Parts',
+            'wholesale' => 'Jumla / Wholesale',
+            'bakery' => 'Bakery',
+            'grocery' => 'Grocery',
+            'other' => 'Nyingine'
+        ];
+
+        $hearAboutUsOptions = [
+            'friend' => 'Rafiki',
+            'social_media' => 'Social Media',
+            'facebook' => 'Facebook',
+            'instagram' => 'Instagram',
+            'tiktok' => 'TikTok',
+            'youtube' => 'YouTube',
+            'google' => 'Google Search',
+            'whatsapp' => 'WhatsApp',
+            'old_system' => 'Nilitumia Mfumo Mwingine',
+            'invited' => 'Nimealikwa',
+            'advertisement' => 'Tangazo',
+            'website' => 'Website',
+            'customer_referral' => 'Mteja Aliyenielekeza',
+            'event' => 'Event / Maonesho',
+            'other' => 'Nyingine'
+        ];
+
         // Preserve old input for returning to specific step
         $oldInput = $request->old();
         $currentStep = $oldInput ? 1 : 1; // Default to step 1
@@ -45,8 +86,8 @@ class AuthController extends Controller
             $errors = session()->get('errors')->getBag('default');
             
             // Check which fields have errors to determine step
-            $step1Fields = ['company_name', 'owner_name', 'owner_gender', 'owner_dob'];
-            $step2Fields = ['location', 'region', 'phone', 'company_email'];
+            $step1Fields = ['company_name', 'owner_name'];
+            $step2Fields = ['location', 'region', 'phone', 'company_email', 'business_type', 'hear_about_us'];
             $step3Fields = ['username', 'password'];
             
             foreach ($errors->keys() as $field) {
@@ -63,7 +104,7 @@ class AuthController extends Controller
             }
         }
 
-        return view('auth.register', compact('regions', 'currentStep'));
+        return view('auth.register', compact('regions', 'businessTypes', 'hearAboutUsOptions', 'currentStep'));
     }
 
     /**
@@ -72,35 +113,42 @@ class AuthController extends Controller
     public function registerPost(Request $request)
     {
         $validated = $request->validate([
+            // Step 1
             'company_name' => 'required|string|max:255',
             'owner_name'   => 'required|string|max:255',
-            'owner_gender' => ['required', Rule::in(['male', 'female', 'other'])],
-            'owner_dob'    => 'required|date',
+            // Step 2
             'location'     => 'required|string|max:255',
             'region'       => 'required|string|max:255',
             'phone'        => 'required|string|max:50',
             'company_email' => 'required|email|max:255|unique:users,email',
+            'business_type' => 'required|string|max:100',
+            'hear_about_us' => 'required|string|max:100',
+            // Step 3
             'username'     => 'required|string|max:50|unique:users,username',
             'password'     => 'required|string|min:6|confirmed',
         ], [
             'company_email.unique' => 'Barua pepe hii tayari imesajiliwa.',
             'username.unique' => 'Jina la mtumiaji tayari limetumika.',
+            'business_type.required' => 'Tafadhali chagua aina ya biashara.',
+            'hear_about_us.required' => 'Tafadhali chagua umetusikia wapi.',
         ]);
 
         // Set default package dates for free trial
         $now = Carbon::now();
         $packageEnd = $now->copy()->addDays(14); // 14 days free trial
 
-        // Create the company with default package
+        // Create the company with default values for gender and dob
         $company = Company::create([
             'company_name' => $validated['company_name'],
             'owner_name'   => $validated['owner_name'],
-            'owner_gender' => $validated['owner_gender'],
-            'owner_dob'    => $validated['owner_dob'],
+            'owner_gender' => 'male', // Default value for existing schema
+            'owner_dob'    => '2000-01-01', // Default value for existing schema
             'location'     => $validated['location'],
             'region'       => $validated['region'],
             'phone'        => $validated['phone'],
             'email'        => $validated['company_email'],
+            'business_type' => $validated['business_type'],
+            'hear_about_us' => $validated['hear_about_us'],
             'is_user_approved' => 0,
             'package' => 'Free Trial 14 days',
             'package_start' => $now,
@@ -183,7 +231,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Handle login attempts
+     * Handle login attempts - MODIFIED: Username persists on error
      */
     public function loginPost(Request $request)
     {
@@ -195,6 +243,9 @@ class AuthController extends Controller
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
+
+        // Store username temporarily in case of failure (for persistence)
+        $enteredUsername = $credentials['username'];
 
         // 1️⃣ Admin login (role = 'admin') - NO TRACKING
         if (Auth::guard('web')->attempt([
@@ -233,26 +284,26 @@ class AuthController extends Controller
             if ($user->role !== 'boss') {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Huna ruhusa ya kuingia hapa.'])
-                    ->onlyInput('username');
+                    ->withInput(['username' => $enteredUsername]); // Persist username
             }
 
             // Validate boss has company and is approved
             if (!$user->company_id || !$user->company) {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Akaunti yako haijaunganishwa na kampuni yoyote. Wasiliana na msimamizi.'])
-                    ->onlyInput('username');
+                    ->withInput(['username' => $enteredUsername]); // Persist username
             }
 
             if (!$user->company->is_user_approved) {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Kampuni yako haijaidhinishwa bado.'])
-                    ->onlyInput('username');
+                    ->withInput(['username' => $enteredUsername]); // Persist username
             }
 
             if (!$user->is_approved) {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Akaunti yako haijaidhinishwa bado.'])
-                    ->onlyInput('username');
+                    ->withInput(['username' => $enteredUsername]); // Persist username
             }
 
             // Clear company-specific cache for this new login
@@ -289,14 +340,14 @@ class AuthController extends Controller
             if ($mfanyakazi->getini !== 'ingia') {
                 Auth::guard('mfanyakazi')->logout();
                 return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
-                    ->onlyInput('username');
+                    ->withInput(['username' => $enteredUsername]); // Persist username
             }
 
             // Check if employee has company_id
             if (!$mfanyakazi->company_id) {
                 Auth::guard('mfanyakazi')->logout();
                 return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
-                    ->onlyInput('username');
+                    ->withInput(['username' => $enteredUsername]); // Persist username
             }
 
             // ✅ CHECK COMPANY PACKAGE EXPIRY
@@ -308,7 +359,7 @@ class AuthController extends Controller
                 
                 return back()->withErrors([
                     'login' => 'Samahani, kifurushi cha kampuni kimeisha muda. Wasiliana na mwajiri wako.'
-                ])->onlyInput('username');
+                ])->withInput(['username' => $enteredUsername]); // Persist username
             }
 
             // Clear company-specific cache for this new login
@@ -332,9 +383,9 @@ class AuthController extends Controller
                 ->with('success', 'Umeingia kama Mfanyakazi!');
         }
 
-        // 4️⃣ Login failed
+        // 4️⃣ Login failed - Return with username persisted
         return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
-            ->onlyInput('username');
+            ->withInput(['username' => $enteredUsername]); // Persist the entered username
     }
 
     /**
@@ -554,9 +605,6 @@ class AuthController extends Controller
         foreach ($cachePatterns as $pattern) {
             Cache::forget($pattern);
         }
-        
-        // If using cache tags (Redis), you can do:
-        // Cache::tags(["company_{$companyId}"])->flush();
     }
 
     /**

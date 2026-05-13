@@ -1,237 +1,214 @@
-@extends('layouts.guest')
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>MauzoSheetAI | Ingia kwenye Mfumo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background: linear-gradient(135deg, #b45309 0%, #4d2401 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        .glass-card {
+            background: rgba(250, 248, 248, 0.95);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(245, 243, 241, 0.2);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+        }
+        .btn-gold {
+            background: linear-gradient(100deg, #d97706, #b45309);
+            transition: all 0.25s;
+        }
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -8px rgba(217, 119, 6, 0.4);
+        }
+        .input-focus:focus {
+            ring: 2px solid #f59e0b;
+            border-color: #f59e0b;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .form-input:focus {
+            border-color: #d97706;
+            ring: 2px solid #fef3c7;
+        }
+        /* Custom utility for absolute positioned corners */
+        .corner-top-left { position: absolute; top: 24px; left: 28px; z-index: 20; }
+        .corner-top-right { position: absolute; top: 24px; right: 28px; z-index: 20; }
+        .corner-bottom-left { position: absolute; bottom: 24px; left: 28px; z-index: 20; }
+        .corner-bottom-right { position: absolute; bottom: 24px; right: 28px; z-index: 20; }
+        
+        /* responsive adjustments for small screens */
+        @media (max-width: 640px) {
+            .corner-top-left { top: 16px; left: 16px; }
+            .corner-top-right { top: 16px; right: 16px; }
+            .corner-bottom-left { bottom: 16px; left: 16px; }
+            .corner-bottom-right { bottom: 16px; right: 16px; }
+            .brand-text { font-size: 0.9rem; }
+            .logo-img { height: 32px; width: auto; }
+        }
+        
+        /* smooth hover effect for rudi nyumbani */
+        .rudi-link {
+            transition: all 0.2s ease;
+        }
+        .rudi-link:hover {
+            color: #f59e0b;
+            transform: translateX(-2px);
+        }
+    </style>
+</head>
+<body class="relative flex items-center justify-center p-4 min-h-screen">
 
-@section('title', 'Ingia')
-
-@section('content')
-<div class="max-w-sm mx-auto">
-  
-  <!-- Add meta tags to prevent caching -->
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  
-  <!-- Header Section -->
-  <div class="text-center mb-6">
-    <div class="flex justify-center mb-3">
-      <div class="relative">
-        <div class="absolute inset-0 bg-green-400/20 rounded-full blur-lg"></div>
-        <div class="relative h-12 w-12 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center shadow-md">
-          <i class="fas fa-lock text-white text-lg"></i>
-        </div>
-      </div>
+    <!-- ========================================= -->
+    <!-- TOP LEFT: Mauzo Sheet AI na Logo -->
+    <!-- ========================================= -->
+    <div class="corner-top-left flex items-center gap-3 bg-water backdrop-blur-sm rounded-2xl px-4 py-2">
+          <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="h-7 w-auto rounded-lg" onerror="this.src='https://placehold.co/40x40/d97706/white?text=M'; this.onerror=null;">
+       
+            <span class="text-bold-white">Mauzosheetai</span>
+     
     </div>
-    <h1 class="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-amber-500 bg-clip-text text-transparent mb-1">
-      Karibu Tena
-    </h1>
-    <p class="text-gray-300 text-sm">Ingia kwenye mfumo</p>
-  </div>
 
-  <form method="POST" action="{{ route('login.post') }}" class="space-y-4" autocomplete="off">
-    @csrf
+    <!-- ========================================= -->
+    <!-- TOP RIGHT: Rudi Nyumbani (home link) -->
+    <!-- ========================================= -->
+    <div class="corner-top-right">
+        <a href="{{ route('landing') }}" class="rudi-link flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-2xl px-5 py-2.5 shadow-md border border-amber-200/60 text-gray-700 font-semibold text-sm transition-all hover:bg-white hover:shadow-lg">
+            <i class="fas fa-home text-amber-600"></i>
+            <span>Rudi Nyumbani</span>
+        </a>
+    </div>
 
-    {{-- Success Alert --}}
-    @if(session('success'))
-    <div id="success-alert" class="relative p-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg animate-fade-in">
-      <div class="flex items-center gap-2">
-        <div class="flex-shrink-0">
-          <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-            <i class="fas fa-check text-white text-xs"></i>
-          </div>
+    <!-- ========================================= -->
+    <!-- BOTTOM LEFT: footer word / footer credit   -->
+    <!-- ========================================= -->
+    <div class="corner-bottom-left">
+        <div class="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-2 shadow-sm border border-amber-100/50 text-gray-600 text-xs font-medium flex items-center gap-2">
+            <i class="far fa-copyright text-amber-600"></i>
+            <span>2025 MauzoSheetAI | Haki zote zimehifadhiwa</span>
         </div>
-        <div class="flex-1">
-          <p class="text-xs font-medium">{{ session('success') }}</p>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- BOTTOM RIGHT: Black Sciences Technology     -->
+    <!-- ========================================= -->
+    <div class="corner-bottom-right">
+        <div class="bg-black/80 backdrop-blur-sm rounded-xl px-4 py-2 shadow-md border border-amber-500/30 flex items-center gap-2">
+            <i class="fas fa-microchip text-amber-400 text-xs"></i>
+            <span class="text-white text-xs font-medium tracking-wide">imetengenezwa na : Black Sciences Technology</span>
         </div>
-      </div>
-      <div class="absolute bottom-0 left-0 h-1 bg-white/30 rounded-full animate-progress"></div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- CENTERED LOGIN CARD                        -->
+    <!-- ========================================= -->
+    <div class="w-full max-w-md relative z-10">
+        <div class="glass-card rounded-3xl p-7 shadow-xl animate-fade-in">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-water flex items-center justify-center mx-auto mb-4 shadow-md border border-water">
+                    <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI" class="h-14 w-auto rounded-xl" onerror="this.src='https://placehold.co/80x80/d97706/white?text=M'">
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Karibu Tena</h1>
+                <p class="text-gray-500 text-sm mt-1">Ingia kwenye akaunti yako</p>
+            </div>
+
+            <!-- Success Alert -->
+            @if(session('success'))
+            <div id="success-alert" class="mb-4 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 text-emerald-800 text-sm animate-fade-in">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-check-circle text-emerald-600"></i>
+                        <p>{{ session('success') }}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-emerald-600"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <script>setTimeout(() => { let el = document.getElementById('success-alert'); if(el) el.remove(); }, 5000);</script>
+            @endif
+
+            @if($errors->has('login') || session('error'))
+            <div class="mb-4 p-3 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-sm animate-fade-in">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle text-red-500"></i>
+                        <p>{{ $errors->first('login') ?? session('error') }}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-600"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('login.post') }}" class="space-y-5" autocomplete="off">
+                @csrf
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-user text-amber-600 mr-2"></i>Jina la Mtumiaji
+                    </label>
+                    <input type="text" name="username" value="{{ old('username') }}" required autofocus
+                           placeholder="Weka jina lako"
+                           class="w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label class="text-sm font-semibold text-gray-700">
+                            <i class="fas fa-key text-amber-600 mr-2"></i>Neno la Siri
+                        </label>
+                        <a href="{{ route('password.request') }}" class="text-xs text-amber-600 hover:text-amber-700 font-medium">Umesahau?</a>
+                    </div>
+                    <input type="password" name="password" required
+                           placeholder="Weka neno la siri"
+                           class="w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all">
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
+                        <span class="text-sm text-gray-600">Kumbuka mimi</span>
+                    </label>
+                    <a href="{{ route('register') }}" class="text-sm text-amber-600 font-semibold hover:text-amber-700">
+                        Sajili <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+
+                <button type="submit" class="btn-gold w-full py-3 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 shadow-md">
+                    <i class="fas fa-sign-in-alt"></i> Ingia Sasa
+                </button>
+            </form>
+
+            <div class="text-center mt-6 pt-4 border-t border-gray-100">
+                <a href="{{ route('landing') }}" class="text-gray-500 hover:text-amber-600 text-sm transition flex items-center justify-center gap-1">
+                    <i class="fas fa-arrow-left"></i> Rudi kwenye Mwanzo
+                </a>
+            </div>
+        </div>
     </div>
 
     <script>
-      setTimeout(() => {
-        const alert = document.getElementById('success-alert');
-        if (alert) {
-          alert.style.transition = "all 0.5s ease";
-          alert.style.opacity = "0";
-          alert.style.transform = "translateY(-10px)";
-          setTimeout(() => alert.remove(), 500);
-        }
-      }, 3000);
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameInput = document.querySelector('input[name="username"]');
+            const passwordInput = document.querySelector('input[name="password"]');
+            if(usernameInput) usernameInput.value = '';
+            if(passwordInput) passwordInput.value = '';
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+        });
     </script>
-    @endif
-
-    {{-- Error Alert --}}
-    @if($errors->has('login'))
-    <div class="relative p-3 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg animate-fade-in">
-      <div class="flex items-center gap-2">
-        <div class="flex-shrink-0">
-          <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-            <i class="fas fa-exclamation-triangle text-white text-xs"></i>
-          </div>
-        </div>
-        <div class="flex-1">
-          <p class="text-xs font-medium">{{ $errors->first('login') }}</p>
-        </div>
-      </div>
-    </div>
-    @endif
-
-    {{-- Page Expired Error --}}
-    @if(session('error'))
-    <div class="relative p-3 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg animate-fade-in">
-      <div class="flex items-center gap-2">
-        <div class="flex-shrink-0">
-          <div class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-            <i class="fas fa-clock text-white text-xs"></i>
-          </div>
-        </div>
-        <div class="flex-1">
-          <p class="text-xs font-medium">{{ session('error') }}</p>
-        </div>
-      </div>
-    </div>
-    @endif
-
-    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
-      <div class="space-y-4">
-        <!-- Username Field -->
-        <div class="group">
-          <label for="username" class="block text-xs font-semibold text-gray-200 mb-2 flex items-center gap-2">
-            <i class="fas fa-user-circle text-yellow-400 text-xs"></i>
-            Jina la Mtumiaji
-          </label>
-          <div class="relative">
-            <input id="username" name="username" value="{{ old('username') }}" required autofocus
-                   placeholder="Weka jina la kuingia"
-                   class="w-full rounded-lg py-3 px-10 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 group-hover:border-yellow-400 text-sm"
-                   autocomplete="off">
-            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-yellow-400 transition-colors text-sm">
-              <i class="fas fa-user"></i>
-            </div>
-          </div>
-          @error('username') 
-          <div class="flex items-center gap-1 text-red-400 text-xs mt-1">
-            <i class="fas fa-exclamation-circle text-xs"></i>
-            {{ $message }}
-          </div>
-          @enderror
-        </div>
-
-        <!-- Password Field -->
-        <div class="group">
-          <div class="flex items-center justify-between mb-2">
-            <label for="password" class="text-xs font-semibold text-gray-200 flex items-center gap-2">
-              <i class="fas fa-lock text-yellow-400 text-xs"></i>
-              Neno la Siri
-            </label>
-            <!-- Forget Password Link -->
-            <a href="{{ route('password.request') }}" 
-               class="text-xs text-amber-400 hover:text-amber-300 font-medium transition-colors duration-300 flex items-center gap-1 group">
-              <i class="fas fa-key text-xs"></i>
-              Umesahau?
-            </a>
-          </div>
-          <div class="relative">
-            <input id="password" name="password" type="password" required
-                   placeholder="Weka neno la siri"
-                   class="w-full rounded-lg py-3 px-10 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-300 group-hover:border-yellow-400 text-sm"
-                   autocomplete="new-password">
-            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-yellow-400 transition-colors text-sm">
-              <i class="fas fa-key"></i>
-            </div>
-          </div>
-          @error('password') 
-          <div class="flex items-center gap-1 text-red-400 text-xs mt-1">
-            <i class="fas fa-exclamation-circle text-xs"></i>
-            {{ $message }}
-          </div>
-          @enderror
-        </div>
-
-        <!-- Remember Me & Register -->
-        <div class="flex items-center justify-between pt-2">
-          <label class="inline-flex items-center gap-2 cursor-pointer group">
-            <div class="relative">
-              <input type="checkbox" name="remember" class="sr-only peer">
-              <div class="w-4 h-4 bg-gray-700 border-2 border-gray-600 rounded peer-checked:bg-yellow-500 peer-checked:border-yellow-500 transition-all duration-200 group-hover:border-yellow-400"></div>
-              <div class="absolute inset-0 flex items-center justify-center text-white text-xs opacity-0 peer-checked:opacity-100 transition-opacity">
-                <i class="fas fa-check"></i>
-              </div>
-            </div>
-            <span class="text-gray-300 text-xs group-hover:text-white transition-colors">Kumbuka mimi</span>
-          </label>
-
-          <a href="{{ route('register') }}" class="text-yellow-400 hover:text-yellow-300 font-semibold text-xs transition-colors duration-300 flex items-center gap-1 group">
-            Sajili
-            <i class="fas fa-arrow-right group-hover:translate-x-0.5 transition-transform text-xs"></i>
-          </a>
-        </div>
-      </div>
-
-      <!-- Login Button -->
-      <div class="mt-6">
-        <button type="submit" 
-                class="w-full py-3 rounded-lg bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-bold hover:from-yellow-600 hover:to-amber-600 transition-all duration-300 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg flex items-center justify-center gap-2 group text-sm">
-          <i class="fas fa-sign-in-alt group-hover:scale-110 transition-transform text-xs"></i>
-          Ingia Sasa
-        </button>
-      </div>
-    </div>
-  </form>
-
-  <!-- Additional Links -->
-  <div class="flex justify-center gap-6 text-xs mt-6">
-    <a href="{{ route('landing') }}" class="text-white/90 hover:text-yellow-400 font-semibold transition-colors duration-300 flex items-center gap-1 group">
-      <i class="fas fa-home group-hover:scale-110 transition-transform text-xs"></i> Rudi Home
-    </a>
-  </div>
-</div>
-
-<!-- JavaScript for Session Handling -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Clear form fields on page load
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    
-    // Prevent form resubmission on page refresh
-    if (window.history.replaceState) {
-        window.history.replaceState(null, null, window.location.href);
-    }
-    
-    // Check if page was loaded from cache (user pressed back button after logout)
-    if (performance.navigation.type === 2) {
-        // User came via back button, force a fresh page load
-        location.reload(true);
-    }
-    
-    // Add beforeunload event to clean up
-    window.addEventListener('beforeunload', function() {
-        // Send a beacon to clean up session data
-        navigator.sendBeacon('/cleanup-session');
-    });
-});
-
-// Prevent back button after logout
-window.onpageshow = function(event) {
-    if (event.persisted) {
-        window.location.reload();
-    }
-};
-</script>
-
-<style>
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
-  }
-  .animate-progress {
-    animation: progress 3s linear forwards;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes progress {
-    from { width: 100%; }
-    to { width: 0%; }
-  }
-</style>
-@endsection
+</body>
+</html>
