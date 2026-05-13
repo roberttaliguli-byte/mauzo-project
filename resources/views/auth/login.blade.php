@@ -23,15 +23,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            padding: 0.75rem;
         }
 
-        /* Glass card effect */
+        /* Glass card effect - compact */
         .glass-card {
-            background: rgba(250, 248, 248, 0.96);
+            background: rgba(250, 248, 248, 0.97);
             backdrop-filter: blur(4px);
             border: 1px solid rgba(245, 243, 241, 0.3);
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 12px 25px -10px rgba(0, 0, 0, 0.12);
         }
 
         /* Gold gradient button */
@@ -41,27 +41,19 @@
         }
 
         .btn-gold:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -8px rgba(217, 119, 6, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px -6px rgba(217, 119, 6, 0.4);
         }
 
-        /* Input focus styling */
-        .input-focus:focus {
-            ring: 2px solid #f59e0b;
-            border-color: #f59e0b;
-        }
-
-        /* Fade in animation */
         .animate-fade-in {
-            animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.35s ease-out;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(-8px);
+                transform: translateY(-6px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -69,57 +61,62 @@
         }
 
         /* Form input styling */
-        .form-input:focus {
-            border-color: #d97706;
-            ring: 2px solid #fef3c7;
+        .form-input {
+            transition: all 0.2s ease;
         }
 
-        /* Mobile-optimized header bar - unified top row */
+        .form-input:focus {
+            border-color: #d97706;
+            outline: none;
+            box-shadow: 0 0 0 2px #fed7aa;
+        }
+
+        /* Mobile-optimized top bar - compact */
         .mobile-top-bar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 30;
-            background: rgba(0, 0, 0, 0.65);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.6rem 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        /* Bottom info bar - fixed on mobile for easy access */
+        /* Bottom fixed bar - compact */
         .mobile-bottom-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             z-index: 30;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 0.6rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            font-size: 0.7rem;
+            gap: 0.4rem;
+            font-size: 0.65rem;
         }
 
-        /* Logo + brand area */
+        /* Brand styling - compact */
         .brand-container {
             display: flex;
             align-items: center;
-            gap: 0.7rem;
+            gap: 0.6rem;
         }
 
         .brand-logo {
-            height: 36px;
+            height: 32px;
             width: auto;
-            border-radius: 10px;
+            border-radius: 8px;
             background: white;
             padding: 2px;
         }
@@ -128,43 +125,36 @@
             font-weight: 700;
             color: white;
             letter-spacing: -0.2px;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
-        /* Home link button refined */
+        /* Home link - compact */
         .home-link {
             background: rgba(255, 255, 255, 0.9);
             border-radius: 40px;
-            padding: 0.4rem 0.9rem;
+            padding: 0.35rem 0.85rem;
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
+            gap: 5px;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #78350f;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .home-link i {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #d97706;
         }
 
-        .home-link:hover {
-            background: white;
-            transform: scale(1.02);
-        }
-
-        /* Bottom elements styling */
+        /* Bottom badges - compact */
         .copyright-badge, .tech-badge {
             display: flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+            gap: 5px;
             border-radius: 40px;
-            padding: 0.3rem 0.9rem;
+            padding: 0.25rem 0.75rem;
         }
 
         .copyright-badge {
@@ -182,150 +172,228 @@
             font-weight: 500;
         }
 
-        /* Card container spacing */
+        /* Main card container - COMPACT SIZE for mobile */
         .login-card-wrapper {
             width: 100%;
-            max-width: 28rem;
-            margin: 4.5rem auto 5rem;
+            max-width: 20rem;
+            margin: 4rem auto 4.8rem;
             position: relative;
             z-index: 10;
         }
 
-        /* Responsive tweaks for very small screens */
-        @media (max-width: 500px) {
-            .mobile-bottom-bar {
-                flex-direction: column;
-                text-align: center;
-                gap: 0.4rem;
-                padding: 0.5rem 0.8rem;
-            }
-
-            .brand-text {
-                font-size: 0.85rem;
-            }
-
-            .home-link span {
-                display: inline;
-            }
-
-            .login-card-wrapper {
-                margin: 5rem auto 5.5rem;
-            }
-
-            .glass-card {
-                padding: 1.5rem;
-            }
+        /* Card inner padding reduced */
+        .glass-card {
+            padding: 1.2rem !important;
         }
 
-        @media (max-width: 380px) {
-            .home-link span {
-                display: none;
-            }
+        /* Logo area compact */
+        .logo-area {
+            margin-bottom: 0.75rem !important;
+        }
+        
+        .logo-circle {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .logo-img-small {
+            height: 2rem;
+            width: auto;
+        }
 
-            .home-link {
-                padding: 0.4rem 0.7rem;
-            }
+        h1 {
+            font-size: 1.35rem !important;
+        }
+        
+        .subtitle {
+            font-size: 0.7rem !important;
+            margin-top: 0.2rem !important;
+        }
 
+        /* Form spacing reduced */
+        label {
+            font-size: 0.7rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        input {
+            padding: 0.6rem 0.75rem !important;
+            font-size: 0.8rem !important;
+        }
+        
+        .btn-gold {
+            padding: 0.5rem 1rem !important;
+            font-size: 0.8rem !important;
+        }
+        
+        .footer-link {
+            margin-top: 0.75rem !important;
+            padding-top: 0.75rem !important;
+            font-size: 0.7rem !important;
+        }
+        
+        /* Alert messages compact */
+        .alert-message {
+            padding: 0.5rem 0.75rem !important;
+            margin-bottom: 0.75rem !important;
+            font-size: 0.7rem !important;
+        }
+        
+        /* Icons slightly smaller */
+        .fa, .fas, .far {
+            font-size: 0.75rem;
+        }
+        
+        label i {
+            margin-right: 0.25rem;
+        }
+        
+        .checkbox-label {
+            font-size: 0.7rem !important;
+        }
+        
+        .forgot-link, .register-link {
+            font-size: 0.7rem !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .login-card-wrapper {
+                max-width: 18.5rem;
+            }
+            
+            .glass-card {
+                padding: 1rem !important;
+            }
+            
             .brand-text {
                 font-size: 0.8rem;
             }
+            
+            .home-link span {
+                display: inline;
+            }
+            
+            .mobile-bottom-bar {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .copyright-badge, .tech-badge {
+                padding: 0.2rem 0.6rem;
+                font-size: 0.6rem;
+            }
         }
-
-        /* hover effect for rudi link inside card */
-        .rudi-link-inline {
-            transition: all 0.2s ease;
+        
+        @media (max-width: 380px) {
+            .login-card-wrapper {
+                max-width: 17rem;
+            }
+            
+            .home-link span {
+                display: none;
+            }
+            
+            .home-link {
+                padding: 0.35rem 0.7rem;
+            }
+            
+            .brand-text {
+                font-size: 0.75rem;
+            }
         }
-
-        .rudi-link-inline:hover {
+        
+        /* Link hover effect */
+        .hover-link:hover {
             color: #d97706;
-            transform: translateX(-2px);
         }
     </style>
 </head>
 <body>
 
     <!-- ========================================= -->
-    <!-- UNIFIED MOBILE-FIRST TOP BAR              -->
+    <!-- FIXED MOBILE-OPTIMIZED TOP BAR            -->
     <!-- ========================================= -->
     <div class="mobile-top-bar">
         <div class="brand-container">
-            <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="brand-logo" onerror="this.src='https://placehold.co/80x80/d97706/white?text=M'; this.onerror=null;">
+            <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="brand-logo" onerror="this.src='https://placehold.co/60x60/d97706/white?text=M'; this.onerror=null;">
             <span class="brand-text">MauzoSheetAI</span>
         </div>
         <a href="{{ route('landing') }}" class="home-link">
             <i class="fas fa-home"></i>
-            <span>Rudi Nyumbani</span>
+            <span>Nyumbani</span>
         </a>
     </div>
 
     <!-- ========================================= -->
-    <!-- BOTTOM FIXED BAR (copyright + tech)       -->
+    <!-- FIXED BOTTOM BAR (copyright + tech)       -->
     <!-- ========================================= -->
     <div class="mobile-bottom-bar">
         <div class="copyright-badge">
             <i class="far fa-copyright text-amber-600 text-xs"></i>
-            <span>2025 MauzoSheetAI | Haki zote zimehifadhiwa</span>
+            <span>2025 MauzoSheetAI</span>
         </div>
         <div class="tech-badge">
             <i class="fas fa-microchip text-amber-400 text-xs"></i>
-            <span>imetengenezwa na : Black Sciences Technology</span>
+            <span>Black Sciences Technology</span>
         </div>
     </div>
 
     <!-- ========================================= -->
-    <!-- CENTERED LOGIN CARD (MAIN CONTENT)        -->
+    <!-- COMPACT LOGIN CARD                        -->
     <!-- ========================================= -->
     <div class="login-card-wrapper">
-        <div class="glass-card rounded-3xl p-6 md:p-7 shadow-xl animate-fade-in">
+        <div class="glass-card rounded-2xl shadow-xl animate-fade-in">
             
-            <!-- Icon & title section with better spacing -->
-            <div class="text-center mb-6">
-                <div class="w-20 h-20 bg-amber-50 flex items-center justify-center mx-auto mb-4 rounded-2xl shadow-sm border border-amber-100">
-                    <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI" class="h-14 w-auto rounded-xl" onerror="this.src='https://placehold.co/80x80/d97706/white?text=M'">
+            <!-- Header with logo - compact -->
+            <div class="text-center logo-area">
+                <div class="logo-circle w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl flex items-center justify-center mx-auto shadow-sm border border-amber-200">
+                    <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI" class="logo-img-small h-8 w-auto rounded-lg" onerror="this.src='https://placehold.co/50x50/d97706/white?text=M'">
                 </div>
-                <h1 class="text-2xl font-extrabold text-gray-800 tracking-tight">Karibu Tena</h1>
-                <p class="text-gray-500 text-sm mt-1">Ingia kwenye akaunti yako</p>
+                <h1 class="text-xl font-extrabold text-gray-800 tracking-tight mt-1">Karibu Tena</h1>
+                <p class="subtitle text-gray-500 text-xs">Ingia kwenye akaunti yako</p>
             </div>
 
-            <!-- Success Alert with better readability -->
+            <!-- Success Alert - compact -->
             @if(session('success'))
-            <div id="success-alert" class="mb-5 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 text-emerald-800 text-sm animate-fade-in">
-                <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-check-circle text-emerald-600"></i>
-                        <p class="leading-relaxed">{{ session('success') }}</p>
+                <div id="success-alert" class="alert-message mb-3 p-2 rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 text-emerald-800 text-xs animate-fade-in">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas fa-check-circle text-emerald-600 text-xs"></i>
+                            <p class="leading-relaxed">{{ session('success') }}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 transition"><i class="fas fa-times text-xs"></i></button>
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 transition"><i class="fas fa-times"></i></button>
                 </div>
-            </div>
-            <script>setTimeout(() => { let el = document.getElementById('success-alert'); if(el) el.remove(); }, 5000);</script>
+                <script>setTimeout(() => { let el = document.getElementById('success-alert'); if(el) el.remove(); }, 5000);</script>
             @endif
 
-            <!-- Error Alert block -->
+            <!-- Error Alert - compact -->
             @if($errors->has('login') || session('error'))
-            <div class="mb-5 p-3 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-sm animate-fade-in">
-                <div class="flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-exclamation-triangle text-red-500"></i>
-                        <p class="leading-relaxed">{{ $errors->first('login') ?? session('error') }}</p>
+                <div class="alert-message mb-3 p-2 rounded-lg bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-xs animate-fade-in">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-xs"></i>
+                            <p class="leading-relaxed">{{ $errors->first('login') ?? session('error') }}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-800 transition"><i class="fas fa-times text-xs"></i></button>
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-800 transition"><i class="fas fa-times"></i></button>
                 </div>
-            </div>
             @endif
 
             <!-- Login Form -->
-            <form method="POST" action="{{ route('login.post') }}" class="space-y-5" autocomplete="off">
+            <form method="POST" action="{{ route('login.post') }}" class="space-y-3" autocomplete="off">
                 @csrf
 
                 <!-- Username field -->
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-user text-amber-600 mr-2"></i>Jina la Mtumiaji
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">
+                        <i class="fas fa-user text-amber-600 mr-1"></i>Jina la Mtumiaji
                     </label>
                     <input type="text" name="username" value="{{ old('username') }}" required autofocus
                            placeholder="Weka jina lako"
-                           class="w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all outline-none shadow-sm">
+                           class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none shadow-sm">
                     @error('username')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -333,37 +401,37 @@
 
                 <!-- Password field -->
                 <div>
-                    <div class="flex justify-between mb-2">
-                        <label class="text-sm font-semibold text-gray-700">
-                            <i class="fas fa-key text-amber-600 mr-2"></i>Neno la Siri
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs font-semibold text-gray-700">
+                            <i class="fas fa-key text-amber-600 mr-1"></i>Neno la Siri
                         </label>
-                        <a href="{{ route('password.request') }}" class="text-xs text-amber-600 hover:text-amber-700 font-medium transition">Umesahau?</a>
+                        <a href="{{ route('password.request') }}" class="forgot-link text-xs text-amber-600 hover:text-amber-700 font-medium transition">Umesahau?</a>
                     </div>
                     <input type="password" name="password" required
                            placeholder="Weka neno la siri"
-                           class="w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all outline-none shadow-sm">
+                           class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none shadow-sm">
                 </div>
 
                 <!-- Remember me & register link row -->
                 <div class="flex items-center justify-between flex-wrap gap-2">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
-                        <span class="text-sm text-gray-700">Kumbuka mimi</span>
+                    <label class="checkbox-label flex items-center gap-1.5 cursor-pointer">
+                        <input type="checkbox" name="remember" class="w-3.5 h-3.5 rounded border-gray-300 text-amber-600 focus:ring-amber-500">
+                        <span class="text-xs text-gray-700">Kumbuka mimi</span>
                     </label>
-                    <a href="{{ route('register') }}" class="text-sm text-amber-600 font-semibold hover:text-amber-700 transition flex items-center gap-1">
+                    <a href="{{ route('register') }}" class="register-link text-xs text-amber-600 font-semibold hover:text-amber-700 transition flex items-center gap-1">
                         Sajili <i class="fas fa-arrow-right text-xs"></i>
                     </a>
                 </div>
 
                 <!-- Submit button -->
-                <button type="submit" class="btn-gold w-full py-3 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 shadow-md mt-2">
-                    <i class="fas fa-sign-in-alt"></i> Ingia Sasa
+                <button type="submit" class="btn-gold w-full py-2 rounded-lg text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md mt-1">
+                    <i class="fas fa-sign-in-alt text-xs"></i> Ingia Sasa
                 </button>
             </form>
 
-            <!-- Back to landing helper link (clean and compact) -->
-            <div class="text-center mt-6 pt-4 border-t border-gray-100">
-                <a href="{{ route('landing') }}" class="rudi-link-inline inline-flex items-center gap-1 text-gray-500 hover:text-amber-600 text-sm font-medium transition">
+            <!-- Back to landing helper link - compact -->
+            <div class="footer-link text-center mt-2 pt-2 border-t border-gray-100">
+                <a href="{{ route('landing') }}" class="text-gray-500 hover:text-amber-600 text-xs transition flex items-center justify-center gap-1">
                     <i class="fas fa-arrow-left text-xs"></i> Rudi kwenye Mwanzo
                 </a>
             </div>
@@ -377,7 +445,6 @@
             const usernameInput = document.querySelector('input[name="username"]');
             const passwordInput = document.querySelector('input[name="password"]');
             if (usernameInput && !usernameInput.value.trim()) {
-                // ensure no stray values
                 usernameInput.value = '';
             }
             if (passwordInput) {
@@ -388,8 +455,8 @@
                 window.history.replaceState(null, null, window.location.href);
             }
 
-            // Add touch-friendly feedback for buttons on mobile (optional)
-            const btns = document.querySelectorAll('button, .home-link, .rudi-link-inline');
+            // Add touch-friendly feedback for buttons on mobile
+            const btns = document.querySelectorAll('button, .home-link, .footer-link a');
             btns.forEach(btn => {
                 btn.addEventListener('touchstart', function() {
                     this.style.opacity = '0.8';

@@ -23,15 +23,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
+            padding: 0.75rem;
         }
 
-        /* Glass card effect */
+        /* Glass card effect - more compact */
         .glass-card {
-            background: rgba(250, 248, 248, 0.96);
+            background: rgba(250, 248, 248, 0.97);
             backdrop-filter: blur(4px);
             border: 1px solid rgba(245, 243, 241, 0.3);
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 12px 25px -10px rgba(0, 0, 0, 0.12);
         }
 
         /* Gold gradient button */
@@ -41,8 +41,8 @@
         }
 
         .btn-gold:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -8px rgba(217, 119, 6, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px -6px rgba(217, 119, 6, 0.4);
         }
 
         .btn-outline-amber {
@@ -58,13 +58,13 @@
         }
 
         .animate-fade-in {
-            animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.35s ease-out;
         }
 
         @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(-8px);
+                transform: translateY(-6px);
             }
             to {
                 opacity: 1;
@@ -72,12 +72,12 @@
             }
         }
 
-        /* Step indicators */
+        /* Step indicators - smaller for compact design */
         .step-indicator-active {
             background: #d97706;
             border-color: #d97706;
             color: white;
-            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
+            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
         }
 
         .step-indicator-inactive {
@@ -100,52 +100,52 @@
             transition: all 0.3s ease;
         }
 
-        /* Mobile-optimized top bar - fixed */
+        /* Mobile-optimized top bar - compact */
         .mobile-top-bar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 30;
-            background: rgba(0, 0, 0, 0.65);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.6rem 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        /* Bottom fixed bar */
+        /* Bottom fixed bar - compact */
         .mobile-bottom-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             z-index: 30;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 0.6rem 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            font-size: 0.7rem;
+            gap: 0.4rem;
+            font-size: 0.65rem;
         }
 
-        /* Brand styling */
+        /* Brand styling - compact */
         .brand-container {
             display: flex;
             align-items: center;
-            gap: 0.7rem;
+            gap: 0.6rem;
         }
 
         .brand-logo {
-            height: 36px;
+            height: 32px;
             width: auto;
-            border-radius: 10px;
+            border-radius: 8px;
             background: white;
             padding: 2px;
         }
@@ -154,41 +154,36 @@
             font-weight: 700;
             color: white;
             letter-spacing: -0.2px;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
-        /* Home link */
+        /* Home link - compact */
         .home-link {
             background: rgba(255, 255, 255, 0.9);
             border-radius: 40px;
-            padding: 0.4rem 0.9rem;
+            padding: 0.35rem 0.85rem;
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
+            gap: 5px;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #78350f;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .home-link i {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #d97706;
         }
 
-        .home-link:hover {
-            background: white;
-            transform: scale(1.02);
-        }
-
-        /* Bottom badges */
+        /* Bottom badges - compact */
         .copyright-badge, .tech-badge {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             border-radius: 40px;
-            padding: 0.3rem 0.9rem;
+            padding: 0.25rem 0.75rem;
         }
 
         .copyright-badge {
@@ -206,13 +201,94 @@
             font-weight: 500;
         }
 
-        /* Main card container */
+        /* Main card container - COMPACT SIZE for mobile */
         .register-card-wrapper {
             width: 100%;
-            max-width: 28rem;
-            margin: 4.5rem auto 5rem;
+            max-width: 22rem;
+            margin: 4rem auto 4.8rem;
             position: relative;
             z-index: 10;
+        }
+
+        /* Card inner padding reduced */
+        .glass-card {
+            padding: 1.2rem !important;
+        }
+
+        /* Logo area compact */
+        .logo-area {
+            margin-bottom: 0.75rem !important;
+        }
+        
+        .logo-circle {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .logo-img-small {
+            height: 2rem;
+            width: auto;
+        }
+
+        h1 {
+            font-size: 1.35rem !important;
+        }
+        
+        .subtitle {
+            font-size: 0.7rem !important;
+            margin-top: 0.2rem !important;
+        }
+
+        /* Form spacing reduced */
+        .form-space-y > div {
+            margin-bottom: 0.75rem;
+        }
+        
+        label {
+            font-size: 0.7rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        input, select {
+            padding: 0.6rem 0.75rem !important;
+            font-size: 0.8rem !important;
+        }
+        
+        .step-indicator {
+            width: 1.8rem;
+            height: 1.8rem;
+            font-size: 0.8rem;
+        }
+        
+        .step-connector {
+            width: 1.2rem;
+        }
+        
+        .progress-steps {
+            margin-bottom: 1rem !important;
+        }
+        
+        .btn-gold, .btn-outline-amber {
+            padding: 0.5rem 1rem !important;
+            font-size: 0.75rem !important;
+        }
+        
+        .nav-buttons {
+            margin-top: 1rem !important;
+        }
+        
+        .footer-link {
+            margin-top: 0.75rem !important;
+            padding-top: 0.75rem !important;
+            font-size: 0.7rem !important;
+        }
+        
+        /* Alert messages compact */
+        .alert-message {
+            padding: 0.5rem 0.75rem !important;
+            margin-bottom: 0.75rem !important;
+            font-size: 0.7rem !important;
         }
 
         /* Error styling */
@@ -221,44 +297,81 @@
             background-color: #fef2f2 !important;
         }
 
-        /* Responsive tweaks */
-        @media (max-width: 500px) {
-            .mobile-bottom-bar {
-                flex-direction: column;
-                text-align: center;
-                gap: 0.4rem;
-                padding: 0.5rem 0.8rem;
-            }
-
-            .brand-text {
-                font-size: 0.85rem;
-            }
-
-            .home-link span {
-                display: inline;
-            }
-
-            .register-card-wrapper {
-                margin: 5rem auto 5.5rem;
-            }
-
-            .glass-card {
-                padding: 1.5rem;
-            }
+        /* Grid gap reduced */
+        .grid-gap-sm {
+            gap: 0.5rem !important;
+        }
+        
+        /* Icons slightly smaller */
+        .fa, .fas, .far {
+            font-size: 0.75rem;
+        }
+        
+        label i {
+            margin-right: 0.25rem;
         }
 
-        @media (max-width: 380px) {
-            .home-link span {
-                display: none;
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .register-card-wrapper {
+                max-width: 20rem;
             }
-
-            .home-link {
-                padding: 0.4rem 0.7rem;
+            
+            .glass-card {
+                padding: 1rem !important;
             }
-
+            
             .brand-text {
                 font-size: 0.8rem;
             }
+            
+            .home-link span {
+                display: inline;
+            }
+            
+            .mobile-bottom-bar {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+            
+            .copyright-badge, .tech-badge {
+                padding: 0.2rem 0.6rem;
+                font-size: 0.6rem;
+            }
+        }
+        
+        @media (max-width: 380px) {
+            .register-card-wrapper {
+                max-width: 18.5rem;
+            }
+            
+            .home-link span {
+                display: none;
+            }
+            
+            .home-link {
+                padding: 0.35rem 0.7rem;
+            }
+            
+            .brand-text {
+                font-size: 0.75rem;
+            }
+            
+            .step-indicator {
+                width: 1.6rem;
+                height: 1.6rem;
+                font-size: 0.7rem;
+            }
+        }
+        
+        /* Two column grid tighter */
+        .grid-cols-2 {
+            gap: 0.5rem;
+        }
+        
+        /* Space between form elements */
+        .space-y-3 {
+            margin-top: 0.5rem;
         }
     </style>
 </head>
@@ -269,12 +382,12 @@
     <!-- ========================================= -->
     <div class="mobile-top-bar">
         <div class="brand-container">
-            <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="brand-logo" onerror="this.src='https://placehold.co/80x80/d97706/white?text=M'; this.onerror=null;">
+            <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="brand-logo" onerror="this.src='https://placehold.co/60x60/d97706/white?text=M'; this.onerror=null;">
             <span class="brand-text">MauzoSheetAI</span>
         </div>
         <a href="{{ route('landing') }}" class="home-link">
             <i class="fas fa-home"></i>
-            <span>Rudi Nyumbani</span>
+            <span>Nyumbani</span>
         </a>
     </div>
 
@@ -284,132 +397,132 @@
     <div class="mobile-bottom-bar">
         <div class="copyright-badge">
             <i class="far fa-copyright text-amber-600 text-xs"></i>
-            <span>2025 MauzoSheetAI | Haki zote zimehifadhiwa</span>
+            <span>2025 MauzoSheetAI</span>
         </div>
         <div class="tech-badge">
             <i class="fas fa-microchip text-amber-400 text-xs"></i>
-            <span>imetengenezwa na : Black Sciences Technology</span>
+            <span>Black Sciences Technology</span>
         </div>
     </div>
 
     <!-- ========================================= -->
-    <!-- MAIN REGISTRATION CARD                    -->
+    <!-- COMPACT REGISTRATION CARD                 -->
     <!-- ========================================= -->
     <div class="register-card-wrapper">
-        <div class="glass-card rounded-3xl p-6 md:p-7 shadow-xl animate-fade-in">
+        <div class="glass-card rounded-2xl shadow-xl animate-fade-in">
             
-            <!-- Header with logo -->
-            <div class="text-center mb-5">
-                <div class="w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md border border-amber-200">
-                    <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI" class="h-14 w-auto rounded-xl" onerror="this.src='https://placehold.co/80x80/d97706/white?text=M'">
+            <!-- Header with logo - compact -->
+            <div class="text-center logo-area">
+                <div class="logo-circle w-12 h-12 bg-gradient-to-br from-amber-100 to-orange-100 rounded-xl flex items-center justify-center mx-auto shadow-sm border border-amber-200">
+                    <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI" class="logo-img-small h-8 w-auto rounded-lg" onerror="this.src='https://placehold.co/50x50/d97706/white?text=M'">
                 </div>
-                <h1 class="text-2xl font-extrabold text-gray-800 tracking-tight">Sajili Kampuni</h1>
-                <p class="text-gray-500 text-sm mt-1">Anza kutumia MauzoSheet leo</p>
+                <h1 class="text-xl font-extrabold text-gray-800 tracking-tight mt-1">Sajili Kampuni</h1>
+                <p class="subtitle text-gray-500 text-xs">Anza kutumia MauzoSheet leo</p>
             </div>
 
-            <!-- Success Notification -->
+            <!-- Success Notification - compact -->
             @if(session('success'))
-                <div id="success-notification" class="mb-4 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 text-emerald-800 text-sm animate-fade-in">
+                <div id="success-notification" class="alert-message mb-3 p-2 rounded-lg bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 text-emerald-800 text-xs animate-fade-in">
                     <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2"><i class="fas fa-check-circle text-emerald-600"></i><p class="leading-relaxed">{{ session('success') }}</p></div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 transition"><i class="fas fa-times"></i></button>
+                        <div class="flex items-center gap-1.5"><i class="fas fa-check-circle text-emerald-600 text-xs"></i><p class="leading-relaxed">{{ session('success') }}</p></div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 transition"><i class="fas fa-times text-xs"></i></button>
                     </div>
                 </div>
                 <script>setTimeout(() => { let el = document.getElementById('success-notification'); if(el) el.remove(); }, 5000);</script>
             @endif
 
-            <!-- Error Notification -->
+            <!-- Error Notification - compact -->
             @if(session('error'))
-                <div class="mb-4 p-3 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-sm animate-fade-in">
+                <div class="alert-message mb-3 p-2 rounded-lg bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-xs animate-fade-in">
                     <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2"><i class="fas fa-exclamation-circle text-red-500"></i><p class="leading-relaxed">{{ session('error') }}</p></div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-800 transition"><i class="fas fa-times"></i></button>
+                        <div class="flex items-center gap-1.5"><i class="fas fa-exclamation-circle text-red-500 text-xs"></i><p class="leading-relaxed">{{ session('error') }}</p></div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-800 transition"><i class="fas fa-times text-xs"></i></button>
                     </div>
                 </div>
             @endif
 
-            <!-- Validation Errors -->
+            <!-- Validation Errors - compact -->
             @if ($errors->any())
-                <div id="validation-errors" class="mb-4 p-3 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-sm animate-fade-in">
+                <div id="validation-errors" class="alert-message mb-3 p-2 rounded-lg bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-xs animate-fade-in">
                     <div class="flex items-start justify-between gap-2">
-                        <div class="flex items-start gap-2 flex-1"><i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i><div>@foreach ($errors->all() as $error)<p class="mb-1 last:mb-0">{{ $error }}</p>@endforeach</div></div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 ml-2 hover:text-red-800"><i class="fas fa-times"></i></button>
+                        <div class="flex items-start gap-1.5 flex-1"><i class="fas fa-exclamation-triangle text-red-500 text-xs mt-0.5"></i><div>@foreach ($errors->all() as $error)<p class="mb-0.5 last:mb-0">{{ $error }}</p>@endforeach</div></div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 ml-1 hover:text-red-800"><i class="fas fa-times text-xs"></i></button>
                     </div>
                 </div>
                 <script>setTimeout(() => { let el = document.getElementById('validation-errors'); if(el) el.remove(); }, 8000);</script>
             @endif
 
-            <!-- Progress Steps - refined for mobile -->
-            <div class="flex justify-center mb-6">
-                <div class="flex items-center space-x-2">
+            <!-- Progress Steps - compact -->
+            <div class="progress-steps flex justify-center mb-3">
+                <div class="flex items-center space-x-1.5">
                     @foreach([1, 2, 3] as $step)
                         <div class="flex items-center">
-                            <div class="step-indicator w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all duration-300
+                            <div class="step-indicator w-7 h-7 rounded-full flex items-center justify-center border-2 text-xs font-bold transition-all duration-300
                                 @if($step == ($currentStep ?? 1)) step-indicator-active @else step-indicator-inactive @endif">
                                 {{ $step }}
                             </div>
                             @if($step < 3)
-                                <div class="w-6 h-0.5 bg-amber-200 mx-1"></div>
+                                <div class="step-connector w-4 h-0.5 bg-amber-200 mx-0.5"></div>
                             @endif
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            <!-- Multi-step Form -->
-            <form id="multiStepForm" method="POST" action="{{ route('register.post') }}" class="space-y-5">
+            <!-- Multi-step Form - compact spacing -->
+            <form id="multiStepForm" method="POST" action="{{ route('register.post') }}" class="space-y-3">
                 @csrf
 
-                <!-- STEP 1 - Company & Owner -->
+                <!-- STEP 1 - Company & Owner (compact) -->
                 <div class="step step-transition @if(($currentStep ?? 1) != 1) hidden @endif" data-step="1">
-                    <div class="space-y-4">
+                    <div class="space-y-2.5">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-building text-amber-600 mr-2"></i>Jina la Kampuni</label>
-                            <input name="company_name" value="{{ old('company_name') }}" required placeholder="Mfano: MauzoShop Ltd" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none shadow-sm">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-building text-amber-600 mr-1"></i>Jina la Kampuni</label>
+                            <input name="company_name" value="{{ old('company_name') }}" required placeholder="Mfano: MauzoShop Ltd" class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none shadow-sm">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-user-tie text-amber-600 mr-2"></i>Jina la Mmiliki</label>
-                            <input name="owner_name" value="{{ old('owner_name') }}" required placeholder="Jina kamili la mmiliki" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none shadow-sm">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-user-tie text-amber-600 mr-1"></i>Jina la Mmiliki</label>
+                            <input name="owner_name" value="{{ old('owner_name') }}" required placeholder="Jina kamili la mmiliki" class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none shadow-sm">
                         </div>
                         <input type="hidden" name="owner_gender" value="male">
                         <input type="hidden" name="owner_dob" value="2000-01-01">
                     </div>
-                    <div class="mt-6 flex justify-between items-center">
+                    <div class="nav-buttons mt-3 flex justify-between items-center">
                         <div class="text-gray-400 text-xs"><i class="fas fa-info-circle mr-1"></i>Hatua <span class="text-amber-600 font-semibold">1</span>/3</div>
-                        <button type="button" data-action="next" class="btn-gold py-2.5 px-6 rounded-xl text-white font-semibold text-sm shadow-md flex items-center gap-2">Endelea <i class="fas fa-arrow-right"></i></button>
+                        <button type="button" data-action="next" class="btn-gold py-1.5 px-4 rounded-lg text-white font-semibold text-xs shadow-md flex items-center gap-1.5">Endelea <i class="fas fa-arrow-right text-xs"></i></button>
                     </div>
                 </div>
 
-                <!-- STEP 2 - Contact & Business Details -->
+                <!-- STEP 2 - Contact & Business Details (compact grid) -->
                 <div class="step step-transition @if(($currentStep ?? 1) != 2) hidden @endif" data-step="2">
-                    <div class="space-y-3">
-                        <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-2.5">
+                        <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i>Mahali</label>
-                                <input name="location" value="{{ old('location') }}" required placeholder="Eneo" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <label class="block text-xs font-semibold text-gray-700 mb-0.5"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i>Mahali</label>
+                                <input name="location" value="{{ old('location') }}" required placeholder="Eneo" class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-2 py-1.5 text-xs focus:ring-2 focus:ring-amber-400">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-map-pin text-amber-600 mr-1"></i>Mkoa</label>
-                                <select name="region" required class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <label class="block text-xs font-semibold text-gray-700 mb-0.5"><i class="fas fa-map-pin text-amber-600 mr-1"></i>Mkoa</label>
+                                <select name="region" required class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-2 py-1.5 text-xs focus:ring-2 focus:ring-amber-400">
                                     <option value="">Chagua</option>
                                     @php $regions = ["Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi","Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mwanza","Mbeya","Morogoro","Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","Simiyu","Singida","Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"]; @endphp
                                     @foreach($regions as $region)<option value="{{ $region }}" {{ old('region')==$region ? 'selected' : '' }}>{{ $region }}</option>@endforeach
                                 </select>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-phone-alt text-amber-600 mr-1"></i>Simu</label>
-                                <input name="phone" value="{{ old('phone') }}" required placeholder="07XXXXXXXX" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <label class="block text-xs font-semibold text-gray-700 mb-0.5"><i class="fas fa-phone-alt text-amber-600 mr-1"></i>Simu</label>
+                                <input name="phone" value="{{ old('phone') }}" required placeholder="07XXXXXXXX" class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-2 py-1.5 text-xs focus:ring-2 focus:ring-amber-400">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-envelope text-amber-600 mr-1"></i>Barua Pepe</label>
-                                <input name="company_email" type="email" value="{{ old('company_email') }}" required placeholder="info@kampuni.com" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <label class="block text-xs font-semibold text-gray-700 mb-0.5"><i class="fas fa-envelope text-amber-600 mr-1"></i>Barua Pepe</label>
+                                <input name="company_email" type="email" value="{{ old('company_email') }}" required placeholder="info@kampuni.com" class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-2 py-1.5 text-xs focus:ring-2 focus:ring-amber-400">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-store text-amber-600 mr-1"></i>Aina ya Biashara</label>
-                            <select name="business_type" required class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                            <label class="block text-xs font-semibold text-gray-700 mb-0.5"><i class="fas fa-store text-amber-600 mr-1"></i>Aina ya Biashara</label>
+                            <select name="business_type" required class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-2 py-1.5 text-xs focus:ring-2 focus:ring-amber-400">
                                 <option value="">Chagua aina</option>
                                 <option value="retail_shop" {{ old('business_type')=='retail_shop' ? 'selected' : '' }}>Retail Shop / Duka</option>
                                 <option value="mini_market" {{ old('business_type')=='mini_market' ? 'selected' : '' }}>Mini Market</option>
@@ -426,8 +539,8 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-bullhorn text-amber-600 mr-1"></i>Umetusikia Wapi?</label>
-                            <select name="hear_about_us" required class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                            <label class="block text-xs font-semibold text-gray-700 mb-0.5"><i class="fas fa-bullhorn text-amber-600 mr-1"></i>Umetusikia Wapi?</label>
+                            <select name="hear_about_us" required class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-2 py-1.5 text-xs focus:ring-2 focus:ring-amber-400">
                                 <option value="">Chagua</option>
                                 <option value="friend" {{ old('hear_about_us')=='friend' ? 'selected' : '' }}>Rafiki</option>
                                 <option value="facebook" {{ old('hear_about_us')=='facebook' ? 'selected' : '' }}>Facebook</option>
@@ -441,42 +554,42 @@
                             </select>
                         </div>
                     </div>
-                    <div class="mt-6 flex justify-between items-center">
-                        <button type="button" data-action="prev" class="btn-outline-amber py-2.5 px-5 rounded-xl text-amber-700 font-semibold text-sm flex items-center gap-2 hover:bg-amber-600 hover:text-white transition"><i class="fas fa-arrow-left"></i> Rudi</button>
+                    <div class="nav-buttons mt-3 flex justify-between items-center">
+                        <button type="button" data-action="prev" class="btn-outline-amber py-1.5 px-3 rounded-lg text-amber-700 font-semibold text-xs flex items-center gap-1 hover:bg-amber-600 hover:text-white transition"><i class="fas fa-arrow-left text-xs"></i> Rudi</button>
                         <div class="text-gray-400 text-xs"><i class="fas fa-info-circle mr-1"></i>Hatua <span class="text-amber-600 font-semibold">2</span>/3</div>
-                        <button type="button" data-action="next" class="btn-gold py-2.5 px-6 rounded-xl text-white font-semibold text-sm shadow-md flex items-center gap-2">Endelea <i class="fas fa-arrow-right"></i></button>
+                        <button type="button" data-action="next" class="btn-gold py-1.5 px-4 rounded-lg text-white font-semibold text-xs shadow-md flex items-center gap-1.5">Endelea <i class="fas fa-arrow-right text-xs"></i></button>
                     </div>
                 </div>
 
-                <!-- STEP 3 - Account Credentials -->
+                <!-- STEP 3 - Account Credentials (compact) -->
                 <div class="step step-transition @if(($currentStep ?? 1) != 3) hidden @endif" data-step="3">
-                    <div class="space-y-4">
+                    <div class="space-y-2.5">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-user-circle text-amber-600 mr-2"></i>Jina la Mtumiaji</label>
-                            <input name="username" value="{{ old('username') }}" required placeholder="Jina la kuingia mfumo" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 outline-none shadow-sm">
+                            <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-user-circle text-amber-600 mr-1"></i>Jina la Mtumiaji</label>
+                            <input name="username" value="{{ old('username') }}" required placeholder="Jina la kuingia mfumo" class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 outline-none shadow-sm">
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-lock text-amber-600 mr-1"></i>Neno la Siri</label>
-                                <input type="password" name="password" required placeholder="Angalau herufi 6" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <label class="block text-xs font-semibold text-gray-700 mb-0.5"><i class="fas fa-lock text-amber-600 mr-1"></i>Neno la Siri</label>
+                                <input type="password" name="password" required placeholder="Angalau herufi 6" class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-2 py-1.5 text-xs focus:ring-2 focus:ring-amber-400">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-check-circle text-amber-600 mr-1"></i>Thibitisha</label>
-                                <input type="password" name="password_confirmation" required placeholder="Andika tena" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <label class="block text-xs font-semibold text-gray-700 mb-0.5"><i class="fas fa-check-circle text-amber-600 mr-1"></i>Thibitisha</label>
+                                <input type="password" name="password_confirmation" required placeholder="Andika tena" class="form-input w-full rounded-lg border border-gray-200 bg-white/90 text-gray-800 px-2 py-1.5 text-xs focus:ring-2 focus:ring-amber-400">
                             </div>
                         </div>
                     </div>
-                    <div class="mt-6 flex justify-between items-center">
-                        <button type="button" data-action="prev" class="btn-outline-amber py-2.5 px-5 rounded-xl text-amber-700 font-semibold text-sm flex items-center gap-2 hover:bg-amber-600 hover:text-white transition"><i class="fas fa-arrow-left"></i> Rudi</button>
+                    <div class="nav-buttons mt-3 flex justify-between items-center">
+                        <button type="button" data-action="prev" class="btn-outline-amber py-1.5 px-3 rounded-lg text-amber-700 font-semibold text-xs flex items-center gap-1 hover:bg-amber-600 hover:text-white transition"><i class="fas fa-arrow-left text-xs"></i> Rudi</button>
                         <div class="text-gray-400 text-xs"><i class="fas fa-info-circle mr-1"></i>Hatua <span class="text-amber-600 font-semibold">3</span>/3</div>
-                        <button type="submit" class="btn-gold py-2.5 px-6 rounded-xl text-white font-semibold text-sm shadow-md flex items-center gap-2"><i class="fas fa-check-circle"></i> Sajili</button>
+                        <button type="submit" class="btn-gold py-1.5 px-4 rounded-lg text-white font-semibold text-xs shadow-md flex items-center gap-1.5"><i class="fas fa-check-circle text-xs"></i> Sajili</button>
                     </div>
                 </div>
             </form>
 
-            <!-- Login redirect link -->
-            <div class="text-center mt-5 pt-4 border-t border-gray-100">
-                <p class="text-gray-500 text-sm">Una akaunti tayari? <a href="{{ route('login') }}" class="text-amber-600 font-semibold hover:text-amber-700 transition">Ingia hapa</a></p>
+            <!-- Login redirect link - compact -->
+            <div class="footer-link text-center mt-2 pt-2 border-t border-gray-100">
+                <p class="text-gray-500 text-xs">Una akaunti tayari? <a href="{{ route('login') }}" class="text-amber-600 font-semibold hover:text-amber-700 transition">Ingia hapa</a></p>
             </div>
         </div>
     </div>
@@ -520,7 +633,6 @@
                         input.classList.remove('border-red-400', 'bg-red-50');
                     }
                 });
-                // Password match validation on step 3
                 if (stepIndex === 2) {
                     const password = currentStepDiv.querySelector('input[name="password"]');
                     const confirm = currentStepDiv.querySelector('input[name="password_confirmation"]');
@@ -536,7 +648,6 @@
             
             updateSteps();
             
-            // Live password match check
             const step3Div = document.querySelector('.step[data-step="3"]');
             if (step3Div) {
                 const pwd = step3Div.querySelector('input[name="password"]');
