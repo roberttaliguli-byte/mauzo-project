@@ -9,180 +9,339 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background: linear-gradient(135deg, #b45309 0%, #4d2401 100%);
             min-height: 100vh;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
         }
+
+        /* Glass card effect */
         .glass-card {
-            background: rgba(250, 248, 248, 0.95);
+            background: rgba(250, 248, 248, 0.96);
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(245, 243, 241, 0.2);
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(245, 243, 241, 0.3);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
         }
+
+        /* Gold gradient button */
         .btn-gold {
             background: linear-gradient(100deg, #d97706, #b45309);
-            transition: all 0.25s;
+            transition: all 0.25s ease;
         }
+
         .btn-gold:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px -8px rgba(217, 119, 6, 0.4);
+            box-shadow: 0 10px 20px -8px rgba(217, 119, 6, 0.5);
         }
+
         .btn-outline-amber {
             border: 1.5px solid #d97706;
             background: transparent;
             transition: all 0.2s;
         }
+
         .btn-outline-amber:hover {
             background: #d97706;
             color: white;
             transform: translateY(-1px);
         }
+
         .animate-fade-in {
             animation: fadeIn 0.4s ease-out;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
+        /* Step indicators */
         .step-indicator-active {
             background: #d97706;
             border-color: #d97706;
             color: white;
             box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
         }
+
         .step-indicator-inactive {
             background: #FEF3C7;
             border-color: #FDE68A;
             color: #B45309;
         }
+
         .form-input {
             transition: all 0.2s ease;
         }
+
         .form-input:focus {
             border-color: #d97706;
-            ring: 2px solid #fef3c7;
             outline: none;
             box-shadow: 0 0 0 2px #fed7aa;
         }
+
         .step-transition {
             transition: all 0.3s ease;
         }
-        /* Corner elements styling matching login page */
-        .corner-top-left { position: absolute; top: 24px; left: 28px; z-index: 20; }
-        .corner-top-right { position: absolute; top: 24px; right: 28px; z-index: 20; }
-        .corner-bottom-left { position: absolute; bottom: 24px; left: 28px; z-index: 20; }
-        .corner-bottom-right { position: absolute; bottom: 24px; right: 28px; z-index: 20; }
-        
-        @media (max-width: 640px) {
-            .corner-top-left { top: 16px; left: 16px; }
-            .corner-top-right { top: 16px; right: 16px; }
-            .corner-bottom-left { bottom: 16px; left: 16px; }
-            .corner-bottom-right { bottom: 16px; right: 16px; }
-            .brand-text { font-size: 0.9rem; }
-            .logo-img { height: 32px; width: auto; }
+
+        /* Mobile-optimized top bar - fixed */
+        .mobile-top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 30;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        .rudi-link {
+
+        /* Bottom fixed bar */
+        .mobile-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 30;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+        }
+
+        /* Brand styling */
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+
+        .brand-logo {
+            height: 36px;
+            width: auto;
+            border-radius: 10px;
+            background: white;
+            padding: 2px;
+        }
+
+        .brand-text {
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.2px;
+            font-size: 1rem;
+        }
+
+        /* Home link */
+        .home-link {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 40px;
+            padding: 0.4rem 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #78350f;
             transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
-        .rudi-link:hover {
-            color: #f59e0b;
-            transform: translateX(-2px);
+
+        .home-link i {
+            font-size: 0.8rem;
+            color: #d97706;
         }
+
+        .home-link:hover {
+            background: white;
+            transform: scale(1.02);
+        }
+
+        /* Bottom badges */
+        .copyright-badge, .tech-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 40px;
+            padding: 0.3rem 0.9rem;
+        }
+
+        .copyright-badge {
+            background: rgba(255, 255, 255, 0.85);
+            color: #451a03;
+        }
+
+        .tech-badge {
+            background: #1c1917e6;
+            border: 1px solid #f59e0b30;
+        }
+
+        .tech-badge span {
+            color: #fde68a;
+            font-weight: 500;
+        }
+
+        /* Main card container */
+        .register-card-wrapper {
+            width: 100%;
+            max-width: 28rem;
+            margin: 4.5rem auto 5rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Error styling */
         input.border-red-400, select.border-red-400 {
             border-color: #f87171 !important;
             background-color: #fef2f2 !important;
         }
+
+        /* Responsive tweaks */
+        @media (max-width: 500px) {
+            .mobile-bottom-bar {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.4rem;
+                padding: 0.5rem 0.8rem;
+            }
+
+            .brand-text {
+                font-size: 0.85rem;
+            }
+
+            .home-link span {
+                display: inline;
+            }
+
+            .register-card-wrapper {
+                margin: 5rem auto 5.5rem;
+            }
+
+            .glass-card {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .home-link span {
+                display: none;
+            }
+
+            .home-link {
+                padding: 0.4rem 0.7rem;
+            }
+
+            .brand-text {
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
-<body class="relative flex items-center justify-center p-4 min-h-screen">
+<body>
 
     <!-- ========================================= -->
-    <!-- TOP LEFT: MauzoSheetAI na Logo (same as login) -->
+    <!-- FIXED MOBILE-OPTIMIZED TOP BAR            -->
     <!-- ========================================= -->
-    <div class="corner-top-left flex items-center gap-3 bg-white/70 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-sm">
-        <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="h-7 w-auto rounded-lg" onerror="this.src='https://placehold.co/40x40/d97706/white?text=M'; this.onerror=null;">
-        <span class="font-bold text-gray-800 text-sm tracking-tight">MauzoSheetAI</span>
-    </div>
-
-    <!-- ========================================= -->
-    <!-- TOP RIGHT: Rudi Nyumbani (home link) -->
-    <!-- ========================================= -->
-    <div class="corner-top-right">
-        <a href="{{ route('landing') }}" class="rudi-link flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-2xl px-5 py-2.5 shadow-md border border-amber-200/60 text-gray-700 font-semibold text-sm transition-all hover:bg-white hover:shadow-lg">
-            <i class="fas fa-home text-amber-600"></i>
+    <div class="mobile-top-bar">
+        <div class="brand-container">
+            <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="brand-logo" onerror="this.src='https://placehold.co/80x80/d97706/white?text=M'; this.onerror=null;">
+            <span class="brand-text">MauzoSheetAI</span>
+        </div>
+        <a href="{{ route('landing') }}" class="home-link">
+            <i class="fas fa-home"></i>
             <span>Rudi Nyumbani</span>
         </a>
     </div>
 
     <!-- ========================================= -->
-    <!-- BOTTOM LEFT: footer copyright -->
+    <!-- FIXED BOTTOM BAR (copyright + tech)       -->
     <!-- ========================================= -->
-    <div class="corner-bottom-left">
-        <div class="bg-white/70 backdrop-blur-sm rounded-xl px-4 py-2 shadow-sm border border-amber-100/50 text-gray-600 text-xs font-medium flex items-center gap-2">
-            <i class="far fa-copyright text-amber-600"></i>
+    <div class="mobile-bottom-bar">
+        <div class="copyright-badge">
+            <i class="far fa-copyright text-amber-600 text-xs"></i>
             <span>2025 MauzoSheetAI | Haki zote zimehifadhiwa</span>
         </div>
-    </div>
-
-    <!-- ========================================= -->
-    <!-- BOTTOM RIGHT: Black Sciences Technology     -->
-    <!-- ========================================= -->
-    <div class="corner-bottom-right">
-        <div class="bg-black/80 backdrop-blur-sm rounded-xl px-4 py-2 shadow-md border border-amber-500/30 flex items-center gap-2">
+        <div class="tech-badge">
             <i class="fas fa-microchip text-amber-400 text-xs"></i>
-            <span class="text-white text-xs font-medium tracking-wide">imetengenezwa na : Black Sciences Technology</span>
+            <span>imetengenezwa na : Black Sciences Technology</span>
         </div>
     </div>
 
     <!-- ========================================= -->
-    <!-- CENTERED REGISTRATION CARD                 -->
+    <!-- MAIN REGISTRATION CARD                    -->
     <!-- ========================================= -->
-    <div class="w-full max-w-md relative z-10">
-        <div class="glass-card rounded-3xl p-7 shadow-xl animate-fade-in">
+    <div class="register-card-wrapper">
+        <div class="glass-card rounded-3xl p-6 md:p-7 shadow-xl animate-fade-in">
+            
+            <!-- Header with logo -->
             <div class="text-center mb-5">
                 <div class="w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md border border-amber-200">
                     <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI" class="h-14 w-auto rounded-xl" onerror="this.src='https://placehold.co/80x80/d97706/white?text=M'">
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">Sajili Kampuni</h1>
+                <h1 class="text-2xl font-extrabold text-gray-800 tracking-tight">Sajili Kampuni</h1>
                 <p class="text-gray-500 text-sm mt-1">Anza kutumia MauzoSheet leo</p>
             </div>
 
-            <!-- Success & Error Notifications styled like login -->
+            <!-- Success Notification -->
             @if(session('success'))
                 <div id="success-notification" class="mb-4 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 text-emerald-800 text-sm animate-fade-in">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2"><i class="fas fa-check-circle text-emerald-600"></i><p>{{ session('success') }}</p></div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="text-emerald-600"><i class="fas fa-times"></i></button>
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2"><i class="fas fa-check-circle text-emerald-600"></i><p class="leading-relaxed">{{ session('success') }}</p></div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 transition"><i class="fas fa-times"></i></button>
                     </div>
                 </div>
                 <script>setTimeout(() => { let el = document.getElementById('success-notification'); if(el) el.remove(); }, 5000);</script>
             @endif
 
+            <!-- Error Notification -->
             @if(session('error'))
                 <div class="mb-4 p-3 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-sm animate-fade-in">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2"><i class="fas fa-exclamation-circle text-red-500"></i><p>{{ session('error') }}</p></div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600"><i class="fas fa-times"></i></button>
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2"><i class="fas fa-exclamation-circle text-red-500"></i><p class="leading-relaxed">{{ session('error') }}</p></div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-800 transition"><i class="fas fa-times"></i></button>
                     </div>
                 </div>
             @endif
 
+            <!-- Validation Errors -->
             @if ($errors->any())
                 <div id="validation-errors" class="mb-4 p-3 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 text-red-700 text-sm animate-fade-in">
-                    <div class="flex items-start justify-between">
+                    <div class="flex items-start justify-between gap-2">
                         <div class="flex items-start gap-2 flex-1"><i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i><div>@foreach ($errors->all() as $error)<p class="mb-1 last:mb-0">{{ $error }}</p>@endforeach</div></div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 ml-2"><i class="fas fa-times"></i></button>
+                        <button onclick="this.parentElement.parentElement.remove()" class="text-red-600 ml-2 hover:text-red-800"><i class="fas fa-times"></i></button>
                     </div>
                 </div>
                 <script>setTimeout(() => { let el = document.getElementById('validation-errors'); if(el) el.remove(); }, 8000);</script>
             @endif
 
-            <!-- Progress Steps - refined same style -->
+            <!-- Progress Steps - refined for mobile -->
             <div class="flex justify-center mb-6">
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-2">
                     @foreach([1, 2, 3] as $step)
                         <div class="flex items-center">
                             <div class="step-indicator w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm font-bold transition-all duration-300
@@ -190,28 +349,28 @@
                                 {{ $step }}
                             </div>
                             @if($step < 3)
-                                <div class="w-8 h-0.5 bg-amber-200 mx-1"></div>
+                                <div class="w-6 h-0.5 bg-amber-200 mx-1"></div>
                             @endif
                         </div>
                     @endforeach
                 </div>
             </div>
 
+            <!-- Multi-step Form -->
             <form id="multiStepForm" method="POST" action="{{ route('register.post') }}" class="space-y-5">
                 @csrf
 
-                <!-- STEP 1 - Company & Owner Basics -->
+                <!-- STEP 1 - Company & Owner -->
                 <div class="step step-transition @if(($currentStep ?? 1) != 1) hidden @endif" data-step="1">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-building text-amber-600 mr-2"></i>Jina la Kampuni</label>
-                            <input name="company_name" value="{{ old('company_name') }}" required placeholder="Mfano: MauzoShop Ltd" class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                            <input name="company_name" value="{{ old('company_name') }}" required placeholder="Mfano: MauzoShop Ltd" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none shadow-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-user-tie text-amber-600 mr-2"></i>Jina la Mmiliki</label>
-                            <input name="owner_name" value="{{ old('owner_name') }}" required placeholder="Jina kamili la mmiliki" class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+                            <input name="owner_name" value="{{ old('owner_name') }}" required placeholder="Jina kamili la mmiliki" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none shadow-sm">
                         </div>
-                        <!-- Hidden fields for gender/dob for database compatibility -->
                         <input type="hidden" name="owner_gender" value="male">
                         <input type="hidden" name="owner_dob" value="2000-01-01">
                     </div>
@@ -221,17 +380,17 @@
                     </div>
                 </div>
 
-                <!-- STEP 2 - Contact, Business Type & Source (grid layout for compactness) -->
+                <!-- STEP 2 - Contact & Business Details -->
                 <div class="step step-transition @if(($currentStep ?? 1) != 2) hidden @endif" data-step="2">
                     <div class="space-y-3">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-map-marker-alt text-amber-600 mr-1"></i>Mahali</label>
-                                <input name="location" value="{{ old('location') }}" required placeholder="Eneo" class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <input name="location" value="{{ old('location') }}" required placeholder="Eneo" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-map-pin text-amber-600 mr-1"></i>Mkoa</label>
-                                <select name="region" required class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <select name="region" required class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
                                     <option value="">Chagua</option>
                                     @php $regions = ["Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi","Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mwanza","Mbeya","Morogoro","Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","Simiyu","Singida","Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"]; @endphp
                                     @foreach($regions as $region)<option value="{{ $region }}" {{ old('region')==$region ? 'selected' : '' }}>{{ $region }}</option>@endforeach
@@ -241,16 +400,17 @@
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-phone-alt text-amber-600 mr-1"></i>Simu</label>
-                                <input name="phone" value="{{ old('phone') }}" required placeholder="07XXXXXXXX" class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <input name="phone" value="{{ old('phone') }}" required placeholder="07XXXXXXXX" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-envelope text-amber-600 mr-1"></i>Barua Pepe</label>
-                                <input name="company_email" type="email" value="{{ old('company_email') }}" required placeholder="info@kampuni.com" class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <input name="company_email" type="email" value="{{ old('company_email') }}" required placeholder="info@kampuni.com" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-store text-amber-600 mr-1"></i>Aina ya Biashara</label>
-                            <select name="business_type" required class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                            <select name="business_type" required class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <option value="">Chagua aina</option>
                                 <option value="retail_shop" {{ old('business_type')=='retail_shop' ? 'selected' : '' }}>Retail Shop / Duka</option>
                                 <option value="mini_market" {{ old('business_type')=='mini_market' ? 'selected' : '' }}>Mini Market</option>
                                 <option value="supermarket" {{ old('business_type')=='supermarket' ? 'selected' : '' }}>Supermarket</option>
@@ -267,7 +427,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-bullhorn text-amber-600 mr-1"></i>Umetusikia Wapi?</label>
-                            <select name="hear_about_us" required class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                            <select name="hear_about_us" required class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
                                 <option value="">Chagua</option>
                                 <option value="friend" {{ old('hear_about_us')=='friend' ? 'selected' : '' }}>Rafiki</option>
                                 <option value="facebook" {{ old('hear_about_us')=='facebook' ? 'selected' : '' }}>Facebook</option>
@@ -288,21 +448,21 @@
                     </div>
                 </div>
 
-                <!-- STEP 3 - Account Details -->
+                <!-- STEP 3 - Account Credentials -->
                 <div class="step step-transition @if(($currentStep ?? 1) != 3) hidden @endif" data-step="3">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2"><i class="fas fa-user-circle text-amber-600 mr-2"></i>Jina la Mtumiaji</label>
-                            <input name="username" value="{{ old('username') }}" required placeholder="Jina la kuingia mfumo" class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400">
+                            <input name="username" value="{{ old('username') }}" required placeholder="Jina la kuingia mfumo" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-4 py-3 focus:ring-2 focus:ring-amber-400 outline-none shadow-sm">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-lock text-amber-600 mr-1"></i>Neno la Siri</label>
-                                <input type="password" name="password" required placeholder="Angalau herufi 6" class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <input type="password" name="password" required placeholder="Angalau herufi 6" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1"><i class="fas fa-check-circle text-amber-600 mr-1"></i>Thibitisha</label>
-                                <input type="password" name="password_confirmation" required placeholder="Andika tena" class="form-input w-full rounded-xl border border-gray-200 bg-white/80 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
+                                <input type="password" name="password_confirmation" required placeholder="Andika tena" class="form-input w-full rounded-xl border border-gray-200 bg-white/90 text-gray-800 px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-400">
                             </div>
                         </div>
                     </div>
@@ -314,12 +474,14 @@
                 </div>
             </form>
 
+            <!-- Login redirect link -->
             <div class="text-center mt-5 pt-4 border-t border-gray-100">
                 <p class="text-gray-500 text-sm">Una akaunti tayari? <a href="{{ route('login') }}" class="text-amber-600 font-semibold hover:text-amber-700 transition">Ingia hapa</a></p>
             </div>
         </div>
     </div>
 
+    <!-- Multi-step Navigation & Validation Script -->
     <script>
         (function() {
             const form = document.getElementById('multiStepForm');
@@ -358,8 +520,8 @@
                         input.classList.remove('border-red-400', 'bg-red-50');
                     }
                 });
-                // Special password match validation on step 3
-                if (stepIndex === 2) { // step 3 index 2
+                // Password match validation on step 3
+                if (stepIndex === 2) {
                     const password = currentStepDiv.querySelector('input[name="password"]');
                     const confirm = currentStepDiv.querySelector('input[name="password_confirmation"]');
                     if (password && confirm && password.value !== confirm.value) {
@@ -374,7 +536,7 @@
             
             updateSteps();
             
-            // live password match remove error
+            // Live password match check
             const step3Div = document.querySelector('.step[data-step="3"]');
             if (step3Div) {
                 const pwd = step3Div.querySelector('input[name="password"]');
