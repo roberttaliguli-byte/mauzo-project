@@ -5,20 +5,19 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use App\Models\SmsLog;
 
 class SMSService
 {
     protected $baseUrl;
-    protected $username;
-    protected $password;
+    protected $token;
     protected $senderId;
 
     public function __construct()
     {
-        $this->baseUrl = config('sms.base_url', 'https://messaging-service.co.tz');
-        $this->username = config('sms.username');
-        $this->password = config('sms.password');
-        $this->senderId = config('sms.sender_id', 'MAUZO SHEET');
+        $this->baseUrl = config('sms.base_url');
+        $this->token = config('sms.token');
+        $this->senderId = config('sms.sender_id');
     }
 
     /**
@@ -29,200 +28,176 @@ class SMSService
         if (Auth::guard('mfanyakazi')->check()) {
             return Auth::guard('mfanyakazi')->user()->company_id;
         }
-        
+
         if (Auth::guard('web')->check()) {
             return Auth::guard('web')->user()->company_id;
         }
-        
+
         return null;
     }
 
+    /**
+     * Format Tanzania phone number
+     */
+    private function formatPhone($phone)
+    {
+        $phone = preg_replace('/[^0-9]/', '', $phone);
 
+        // 07XXXXXXXX -> 2557XXXXXXXX
+        if (substr($phone, 0, 1) == '0') {
+            $phone = '255' . substr($phone, 1);
+        }
 
+        // Remove +
+        $phone = str_replace('+', '', $phone);
 
+        return $phone;
+    }
 
     /**
-     * Send SMS to single or multiple recipients using GET method
+     * Send SMS
      */
     public function sendSms($to, $message, $reference = null)
     {
         try {
+
             $companyId = $this->getCompanyId();
-            
-            // Convert single recipient to array
+
             $recipients = is_array($to) ? $to : [$to];
-            
-            $results = [];
-            $allSuccessful = true;
-            
-            // Send one SMS at a time using GET method
+
+            $formattedRecipients = [];
+
             foreach ($recipients as $recipient) {
-                // Clean and format phone number
-                $phone = preg_replace('/[^0-9]/', '', $recipient);
-                if (substr($phone, 0, 1) == '0') {
-                    $phone = '255' . substr($phone, 1);
+                $formattedRecipients[] = $this->formatPhone($recipient);
+            }
+
+            $payload = [
+                'from' => $this->senderId,
+
+                'to' => $formattedRecipients,
+
+                'text' => $message,
+
+                'reference' => $reference ?? uniqid('SMS_'),
+            ];
+
+            Log::info('Sending Internet SMS', [
+                'payload' => $payload
+            ]);
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->token,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->post(
+                $this->baseUrl . '/api/sms/v2/text/single',
+                $payload
+            );
+
+            $responseData = $response->json();
+
+            Log::info('Internet SMS API Response', [
+                'status' => $response->status(),
+                'response' => $responseData
+            ]);
+
+            // SUCCESS
+            if (
+                $response->successful() &&
+                isset($responseData['messages'])
+            ) {
+
+                foreach ($responseData['messages'] as $sms) {
+
+                    SmsLog::create([
+                        'company_id' => $companyId,
+                        'recipient' => $sms['to'] ?? null,
+                        'message' => $sms['message'] ?? $message,
+                        'status' => $sms['status']['name'] ?? 'SENT',
+                        'status_description' => $sms['status']['description'] ?? '',
+                        'sms_count' => $sms['smsCount'] ?? 1,
+                        'reference' => $reference,
+                        'sent_at' => now(),
+                    ]);
                 }
-                
-                // URL encode parameters
-                $params = [
-                    'username' => $this->username,
-                    'password' => $this->password,
-                    'from' => $this->senderId,
-                    'to' => $phone,
-                    'text' => $message
-                ];
-                
-                $url = $this->baseUrl . "/link/sms/v1/text/single?" . http_build_query($params);
-                
-                Log::info('Sending SMS via GET', [
-                    'url' => $url,
-                    'recipient' => $phone
-                ]);
-                
-                $response = Http::withoutVerifying()->get($url);
-                
-                Log::info('SMS API Response', [
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                    'recipient' => $phone
-                ]);
-                
-                $responseData = $response->json();
-                $isSuccessful = $response->successful() && isset($responseData['messages']);
-                
-                if (!$isSuccessful) {
-                    $allSuccessful = false;
-                }
-                
-                // Get status info
-                $status = 'UNKNOWN';
-                $statusDescription = '';
-                $smsCount = 1;
-                
-                if ($isSuccessful && isset($responseData['messages'][0])) {
-                    $msg = $responseData['messages'][0];
-                    $status = $msg['status']['name'] ?? 'SENT';
-                    $statusDescription = $msg['status']['description'] ?? '';
-                    $smsCount = $msg['smsCount'] ?? 1;
-                } else {
-                    $status = 'FAILED';
-                    $statusDescription = $response->body();
-                }
-                
-                // Log the SMS
-                \App\Models\SmsLog::create([
-                    'company_id' => $companyId ?: null,
-                    'recipient' => $phone,
-                    'message' => $message,
-                    'status' => $status,
-                    'status_description' => $statusDescription,
-                    'sms_count' => $smsCount,
-                    'reference' => $reference,
-                    'sent_at' => now(),
-                ]);
-                
-                $results[] = [
-                    'to' => $phone,
-                    'success' => $isSuccessful,
-                    'status' => $status,
+
+                return [
+                    'success' => true,
+                    'message' => 'SMS sent successfully',
                     'data' => $responseData
                 ];
             }
-            
-            return [
-                'success' => $allSuccessful,
-                'message' => $allSuccessful ? 'SMS zimetumwa kikamilifu' : 'Baadhi ya SMS zimefanikiwa, zingine zimeshindwa',
-                'data' => $results
-            ];
-            
-        } catch (\Exception $e) {
-            Log::error('SMS sending failed: ' . $e->getMessage());
+
+            // FAILED
             return [
                 'success' => false,
-                'message' => 'Hitilafu ya mtandao: ' . $e->getMessage(),
+                'message' => 'SMS sending failed',
+                'data' => $responseData
+            ];
+
+        } catch (\Exception $e) {
+
+            Log::error('Internet SMS Error: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
                 'data' => null
             ];
         }
     }
 
     /**
-     * Test API connection
+     * Quick single SMS
+     */
+    public function sendSingle($phone, $message)
+    {
+        return $this->sendSms($phone, $message);
+    }
+
+    /**
+     * Test SMS connection
      */
     public function testConnection()
     {
-        try {
-            $params = [
-                'username' => $this->username,
-                'password' => $this->password,
-                'from' => $this->senderId,
-                'to' => '255712345678',
-                'text' => 'Test message from MAUZO system'
-            ];
-            
-            $url = $this->baseUrl . "/link/sms/v1/text/single?" . http_build_query($params);
-            
-            Log::info('Testing SMS connection', ['url' => $url]);
-            
-            $response = Http::withoutVerifying()->get($url);
-            
-            Log::info('SMS Test Response', [
-                'status' => $response->status(),
-                'body' => $response->body()
-            ]);
-            
-            if ($response->successful()) {
-                $data = $response->json();
-                if (isset($data['messages'])) {
-                    return [
-                        'success' => true,
-                        'message' => 'Unganisho la SMS linafanya kazi vizuri!',
-                        'data' => $data
-                    ];
-                }
-            }
-            
-            return [
-                'success' => false,
-                'message' => 'Hitilafu: ' . $response->body(),
-                'data' => null
-            ];
-            
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'message' => 'Test failed: ' . $e->getMessage(),
-                'data' => null
-            ];
-        }
+        return $this->sendSms(
+            '0712345678',
+            'Test SMS from MauzoSheetAI',
+            'TEST_SMS'
+        );
     }
 
     /**
-     * Get total SMS sent count
+     * Total SMS sent
      */
     public function getTotalSmsSent()
     {
         $companyId = $this->getCompanyId();
-        return \App\Models\SmsLog::where('company_id', $companyId)->count();
+
+        return SmsLog::where('company_id', $companyId)
+            ->count();
     }
 
     /**
-     * Get SMS sent count for today
+     * Today SMS sent
      */
     public function getTodaySmsSent()
     {
         $companyId = $this->getCompanyId();
-        return \App\Models\SmsLog::where('company_id', $companyId)
+
+        return SmsLog::where('company_id', $companyId)
             ->whereDate('sent_at', today())
             ->count();
     }
 
     /**
-     * Get SMS sent count for this month
+     * This month SMS sent
      */
     public function getMonthSmsSent()
     {
         $companyId = $this->getCompanyId();
-        return \App\Models\SmsLog::where('company_id', $companyId)
+
+        return SmsLog::where('company_id', $companyId)
             ->whereMonth('sent_at', now()->month)
             ->whereYear('sent_at', now()->year)
             ->count();

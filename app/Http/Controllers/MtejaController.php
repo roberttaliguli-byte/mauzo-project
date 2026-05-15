@@ -332,8 +332,8 @@ public function sendSms(Request $request)
     
     $formattedMessage = "KARIBU {$companyName}:\n\n" 
         . $userMessage . "\n\n---\n"
-        . "Karibu tena mteja wetu!\n"
-        . "Powered by www.mauzosheetai.co.tz";
+        
+        . "www.mauzosheetai.co.tz";
 
     $reference = 'REF_' . time() . '_' . uniqid();
 

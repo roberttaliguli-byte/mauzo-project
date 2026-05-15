@@ -220,88 +220,61 @@ class MatumiziController extends Controller
         ));
     }
 
-    /**
-     * Store new expense - With MAPATO limit
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'gharama' => 'required|numeric|min:0',
-            'maelezo' => 'nullable|string|max:500',
-            'aina' => 'nullable|string|max:255',
-            'aina_mpya' => 'nullable|string|max:255',
-            'tarehe' => 'nullable|date',
-        ]);
+/**
+ * Store new expense - NO LIMIT
+ */
+public function store(Request $request)
+{
+    $request->validate([
+        'gharama' => 'required|numeric|min:0',
+        'maelezo' => 'nullable|string|max:500',
+        'aina' => 'nullable|string|max:255',
+        'aina_mpya' => 'nullable|string|max:255',
+        'tarehe' => 'nullable|date',
+    ]);
 
-        $company = $this->getCompany();
-        $companyId = $company->id;
+    $company = $this->getCompany();
+    $companyId = $company->id;
 
-        // Calculate current total expenses
-        $currentExpensesTotal = Matumizi::where('company_id', $companyId)->sum('gharama');
-        
-        // Calculate total MAPATO (Revenue from sales)
-        $totalMapato = $this->getTotalMapato($companyId);
-        
-        // Calculate remaining based on MAPATO
-        $remainingAvailable = $totalMapato - $currentExpensesTotal;
+    // Determine the expense type (custom or existing)
+    $aina = $request->filled('aina_mpya')
+        ? $request->input('aina_mpya')
+        : $request->input('aina');
 
-        // Check if the new expense would exceed MAPATO
-        $newExpenseAmount = $request->gharama;
-        
-        if ($newExpenseAmount > $remainingAvailable) {
-            $errorMsg = "❌ HUWEZI KUZIDI! Matumizi ya " . number_format($newExpenseAmount) . " TZS yanazidi MAPATO yaliyopatikana.\n\n" .
-                       "📊 Taarifa:\n" .
-                       "• MAPATO (Jumla ya Mauzo): " . number_format($totalMapato) . " TZS\n" .
-                       "• Matumizi ya sasa: " . number_format($currentExpensesTotal) . " TZS\n" .
-                       "• Unabakiwa na: " . number_format($remainingAvailable) . " TZS\n\n" .
-                       "Tafadhali punguza kiasi!";
-            
-            if ($request->ajax()) {
-                return response()->json(['success' => false, 'message' => $errorMsg], 422);
-            }
-            return redirect()->back()->withErrors(['gharama' => $errorMsg])->withInput();
-        }
+    // If using a custom type, auto-register it
+    if ($request->filled('aina_mpya')) {
+        $existingAina = AinaZaMatumizi::where('company_id', $companyId)
+            ->where('jina', $request->aina_mpya)
+            ->first();
 
-        // Determine the expense type (custom or existing)
-        $aina = $request->filled('aina_mpya')
-            ? $request->input('aina_mpya')
-            : $request->input('aina');
-
-        // If using a custom type, auto-register it
-        if ($request->filled('aina_mpya')) {
-            $existingAina = AinaZaMatumizi::where('company_id', $companyId)
-                ->where('jina', $request->aina_mpya)
-                ->first();
-
-            if (!$existingAina) {
-                AinaZaMatumizi::create([
-                    'jina' => $request->aina_mpya,
-                    'maelezo' => 'Auto-generated from expense entry',
-                    'rangi' => 'bg-gray-100 text-gray-800 border border-gray-200',
-                    'kategoria' => 'mengineyo',
-                    'company_id' => $companyId,
-                ]);
-            }
-        }
-
-        $matumizi = $company->matumizi()->create([
-            'aina' => $aina,
-            'maelezo' => $request->maelezo,
-            'gharama' => $newExpenseAmount,
-            'created_at' => $request->tarehe ?: now(),
-        ]);
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => '✅ Matumizi yamehifadhiwa!',
-                'data' => $matumizi,
-                'remaining' => $remainingAvailable - $newExpenseAmount
+        if (!$existingAina) {
+            AinaZaMatumizi::create([
+                'jina' => $request->aina_mpya,
+                'maelezo' => 'Auto-generated from expense entry',
+                'rangi' => 'bg-gray-100 text-gray-800 border border-gray-200',
+                'kategoria' => 'mengineyo',
+                'company_id' => $companyId,
             ]);
         }
-
-        return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamehifadhiwa!');
     }
+
+    $matumizi = $company->matumizi()->create([
+        'aina' => $aina,
+        'maelezo' => $request->maelezo,
+        'gharama' => $request->gharama,
+        'created_at' => $request->tarehe ?: now(),
+    ]);
+
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => '✅ Matumizi yamehifadhiwa!',
+            'data' => $matumizi
+        ]);
+    }
+
+    return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamehifadhiwa!');
+}
 
     /**
      * Register new expense type
@@ -345,59 +318,37 @@ class MatumiziController extends Controller
         return redirect()->route('matumizi.index')->with('success', '✅ Aina mpya ya matumizi imesajiliwa!');
     }
 
-    /**
-     * Update expense - With MAPATO limit
-     */
-    public function update(Request $request, $id)
-    {
-        $companyId = $this->getCompanyId();
-        
-        $matumizi = Matumizi::findOrFail($id);
+/**
+ * Update expense - NO LIMIT
+ */
+public function update(Request $request, $id)
+{
+    $companyId = $this->getCompanyId();
+    
+    $matumizi = Matumizi::findOrFail($id);
 
-        if ($matumizi->company_id !== $companyId) {
-            abort(403, 'Huna ruhusa ya kubadilisha matumizi haya.');
-        }
-
-        $request->validate([
-            'aina' => 'required|string|max:255',
-            'maelezo' => 'nullable|string|max:500',
-            'gharama' => 'required|numeric|min:0',
-        ]);
-
-        $oldAmount = $matumizi->gharama;
-        $newAmount = $request->gharama;
-        $difference = $newAmount - $oldAmount;
-
-        // Only validate if increasing
-        if ($difference > 0) {
-            $currentExpensesTotal = Matumizi::where('company_id', $companyId)->sum('gharama');
-            $totalMapato = $this->getTotalMapato($companyId);
-            // Subtract old amount because it's already counted
-            $remainingAvailable = $totalMapato - ($currentExpensesTotal - $oldAmount);
-            
-            if ($difference > $remainingAvailable) {
-                $errorMsg = "❌ HUWEZI KUONGEZA! Ongezeko la " . number_format($difference) . " TZS linazidi MAPATO yaliyobaki.\n\n" .
-                           "Unabakiwa na " . number_format($remainingAvailable) . " TZS tu!";
-                
-                if ($request->ajax()) {
-                    return response()->json(['success' => false, 'message' => $errorMsg], 422);
-                }
-                return redirect()->back()->withErrors(['gharama' => $errorMsg]);
-            }
-        }
-
-        $matumizi->update($request->only('aina', 'maelezo', 'gharama'));
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => '✅ Matumizi yamerekebishwa!',
-                'data' => $matumizi
-            ]);
-        }
-
-        return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamerekebishwa!');
+    if ($matumizi->company_id !== $companyId) {
+        abort(403, 'Huna ruhusa ya kubadilisha matumizi haya.');
     }
+
+    $request->validate([
+        'aina' => 'required|string|max:255',
+        'maelezo' => 'nullable|string|max:500',
+        'gharama' => 'required|numeric|min:0',
+    ]);
+
+    $matumizi->update($request->only('aina', 'maelezo', 'gharama'));
+
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'message' => '✅ Matumizi yamerekebishwa!',
+            'data' => $matumizi
+        ]);
+    }
+
+    return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamerekebishwa!');
+}
 
     /**
      * Delete expense

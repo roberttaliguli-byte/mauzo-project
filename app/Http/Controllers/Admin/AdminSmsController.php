@@ -348,7 +348,7 @@ if ($company->phone) {
     $reference = 'ADMIN_BULK_' . $company->id . '_' . time();
     
     // Format message: greeting + message + footer
-    $message = "📢 UJUMBE KUTOKA KWA Msimamizi:\n\n" . $request->message . "\n\n---\nEndelea kufurahia huduma bora kupitia www.mauzosheetai.co.tz\nPowered by Blackscience Technology";
+    $message = "UJUMBE KUTOKA KWA Msimamizi:\n\n" . $request->message . "\n\n---\n visit: www.mauzosheetai.co.tz";
      
 $result = $this->smsService->sendSms($company->phone, $message, $reference);
     
