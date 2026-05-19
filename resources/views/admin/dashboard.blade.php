@@ -113,7 +113,7 @@
     </div>
     @endif
 
-    <!-- Search Bar with Filter Options - SUBMIT FORM -->
+    <!-- Search Bar with Filter Options -->
     <div class="mb-4 md:mb-6 px-4 md:px-0">
         <form method="GET" action="{{ route('admin.dashboard') }}" id="searchForm">
             <div class="flex flex-col md:flex-row gap-3">
@@ -179,7 +179,6 @@
         <div class="md:hidden">
             @forelse ($companies as $index => $company)
             <div class="company-item border-b border-gray-100 p-4 hover:bg-gray-50/50 transition-all duration-200">
-                <!-- Header -->
                 <div class="flex justify-between items-start mb-3">
                     <div class="flex items-center space-x-2">
                         <div class="w-8 h-8 bg-gradient-to-br from-emerald-100 to-blue-100 rounded-lg flex items-center justify-center">
@@ -192,7 +191,6 @@
                     </div>
                 </div>
 
-                <!-- Details -->
                 <div class="space-y-2 mb-4">
                     <div class="flex justify-between items-center">
                         <span class="text-xs text-gray-600">Simu:</span>
@@ -226,7 +224,6 @@
                     </div>
                 </div>
 
-                <!-- Actions -->
                 <div class="space-y-2">
                     @if(!$company->is_user_approved)
                         <form action="{{ route('admin.approveUser', $company->id) }}" method="POST" class="w-full">
@@ -441,7 +438,7 @@
     </div>
 </div>
 
-<!-- Company Details Modal -->
+<!-- Company Details Modal with Comments Section -->
 @foreach ($companies as $company)
 <div id="modal-{{ $company->id }}" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50 px-4">
     <div class="bg-white rounded-lg md:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] md:max-h-[80vh] overflow-hidden animate-scale-in">
@@ -537,6 +534,72 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Comments Section -->
+            @php
+                $companyComments = $company->comments()->with('user')->get();
+            @endphp
+            
+            <div class="mt-6 pt-4 border-t">
+                <div class="flex items-center justify-between mb-4">
+                    <h6 class="font-semibold text-gray-900 text-sm uppercase tracking-wide flex items-center space-x-2">
+                        <i class="fas fa-comments text-emerald-600"></i>
+                        <span>Maoni ya Msimamizi</span>
+                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">({{ $companyComments->count() }})</span>
+                    </h6>
+                </div>
+                
+                <div class="space-y-3 mb-4 max-h-48 overflow-y-auto bg-gray-50 rounded-lg p-3">
+                    @forelse($companyComments as $comment)
+                    <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user-shield text-emerald-600 text-xs"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-900">
+                                        {{ $comment->user->name ?? 'Msimamizi' }}
+                                        <span class="text-xs text-gray-500 font-normal">(Admin)</span>
+                                    </p>
+                                    <p class="text-xs text-gray-500">{{ $comment->created_at->format('d/m/Y H:i') }}</p>
+                                </div>
+                            </div>
+                            @if(Auth::id() == $comment->user_id)
+                            <form action="{{ route('admin.deleteComment', $comment->id) }}" method="POST" class="inline" onsubmit="return confirm('Una uhakika unataka kufuta maoni haya?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-500 hover:text-red-700 transition-colors" title="Futa maoni">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+                        <p class="text-sm text-gray-700">{{ nl2br(e($comment->comment)) }}</p>
+                    </div>
+                    @empty
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-slash text-gray-400 text-2xl mb-2"></i>
+                        <p class="text-gray-500 text-sm">Hakuna maoni bado. Andika maoni yako hapa chini.</p>
+                    </div>
+                    @endforelse
+                </div>
+                
+                <form action="{{ route('admin.addComment', $company->id) }}" method="POST" class="mt-3">
+                    @csrf
+                    <div class="flex flex-col space-y-2">
+                        <textarea name="comment" rows="3" 
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm resize-none"
+                            placeholder="Andika maoni yako hapa... (kwa mfano: Hii kampuni inahitaji kufuatiliwa, au imekamilisha usajili vizuri)"></textarea>
+                        <div class="flex justify-end">
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 text-sm">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Tuma Maoni</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
 
             <div class="mt-6 pt-4 border-t">
@@ -718,7 +781,6 @@ function initializeDeleteHandlers() {
     document.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.getElementById('delete-company-name').textContent = btn.dataset.company;
-            // Fix: Use the full URL directly instead of trying to generate it with Blade
             document.getElementById('delete-form').action = '/admin/company/' + btn.dataset.id;
             showModal('delete-modal');
         });

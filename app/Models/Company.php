@@ -83,6 +83,10 @@ class Company extends Model
     {
         return $this->hasMany(\App\Models\Marejesho::class);
     }
+        public function comments()
+    {
+        return $this->hasMany(CompanyComment::class)->latest();
+    }
 
     public function loginHistories()
     {

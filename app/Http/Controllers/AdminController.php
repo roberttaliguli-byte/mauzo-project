@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\CompanyComment;
+
 
 class AdminController extends Controller
 {
@@ -303,4 +305,43 @@ class AdminController extends Controller
 
         return view('admin.active-packages', compact('activeCompanies'));
     }
+
+
+/**
+ * Add a comment to a company
+ */
+public function addComment(Request $request, $id)
+{
+    $request->validate([
+        'comment' => 'required|string|min:2|max:1000'
+    ]);
+    
+    $company = Company::findOrFail($id);
+    
+    // Create comment using the logged-in admin user
+    $comment = new CompanyComment();
+    $comment->company_id = $company->id;
+    $comment->user_id = Auth::id(); // This will be the admin user
+    $comment->comment = $request->comment;
+    $comment->save();
+    
+    return redirect()->back()->with('success', 'Maoni yameongezwa kikamilifu!');
+}
+
+/**
+ * Delete a comment
+ */
+public function deleteComment($id)
+{
+    $comment = CompanyComment::findOrFail($id);
+    
+    // Check if the current admin owns this comment
+    if (Auth::id() !== $comment->user_id) {
+        return redirect()->back()->with('error', 'Huna ruhusa ya kufuta maoni haya!');
+    }
+    
+    $comment->delete();
+    
+    return redirect()->back()->with('success', 'Maoni yamefutwa kikamilifu!');
+}
 }

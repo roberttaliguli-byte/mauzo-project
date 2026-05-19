@@ -383,6 +383,11 @@ Route::middleware(['auth', 'role:admin'])
             
             Route::get('/company-activity/{id}/details', [\App\Http\Controllers\Admin\CompanyActivityController::class, 'getCompanyDetails'])
                 ->name('reports.company-activity.details');
+                Route::post('/company/{id}/comment', [AdminController::class, 'addComment'])
+    ->name('addComment');
+
+Route::delete('/comment/{id}', [AdminController::class, 'deleteComment'])
+    ->name('deleteComment');
         });
         // Change Password
         Route::get('/change-password', [AdminController::class, 'showChangePassword'])->name('password.show');
@@ -421,6 +426,7 @@ Route::middleware(['auth', 'role:admin'])
             Route::get('/bulk', [App\Http\Controllers\Admin\AdminSmsController::class, 'sendBulkForm'])->name('bulk');
             Route::post('/bulk', [App\Http\Controllers\Admin\AdminSmsController::class, 'sendBulk'])->name('bulk.post');
         });
+
     });
 
 // =========================
