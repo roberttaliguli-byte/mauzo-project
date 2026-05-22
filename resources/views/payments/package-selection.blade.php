@@ -70,11 +70,20 @@
                     </div>
                     @endif
 
+                    <!-- Coming Soon Badge for 30 days package -->
+                    @if($name == '30 days')
+                    <div class="absolute -top-2 -left-2 z-10">
+                        <span class="bg-gradient-to-r from-gray-500 to-gray-600 text-white text-[8px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded-full shadow-lg">
+                            <i class="fas fa-clock mr-1"></i> Coming Soon
+                        </span>
+                    </div>
+                    @endif
+
                     <!-- Package Card -->
-                    <div class="h-full bg-white rounded-lg md:rounded-xl border-2 overflow-hidden transition-all duration-300 border-emerald-200 hover:border-emerald-400 hover:shadow-lg">
+                    <div class="h-full bg-white rounded-lg md:rounded-xl border-2 overflow-hidden transition-all duration-300 {{ $name == '30 days' ? 'border-gray-300 opacity-75' : 'border-emerald-200 hover:border-emerald-400 hover:shadow-lg' }}">
                         
                         <!-- Header -->
-                        <div class="bg-gradient-to-r from-orange-600 to-amber-700 px-3 py-2 md:px-5 md:py-3">
+                        <div class="{{ $name == '30 days' ? 'bg-gradient-to-r from-gray-500 to-gray-600' : 'bg-gradient-to-r from-orange-600 to-amber-700' }} px-3 py-2 md:px-5 md:py-3">
                             <h3 class="text-sm md:text-lg font-bold text-white text-center">{{ $name }}</h3>
                         </div>
 
@@ -113,15 +122,27 @@
 
                         <!-- Action Button -->
                         <div class="px-3 py-2 md:px-5 md:py-4 bg-gray-50 border-t border-gray-100">
-                            <form action="{{ route('payment.form') }}" method="POST">
-                                @csrf
-                                <input type="hidden" name="package" value="{{ $name }}">
-                                <button type="submit" 
-                                    class="w-full bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold py-1.5 md:py-2.5 px-2 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md text-[9px] md:text-xs flex items-center justify-center space-x-1.5">
-                                    <i class="fas fa-shopping-cart text-[8px] md:text-xs"></i>
-                                    <span>Chagua Kifurushi</span>
+                            @if($name == '30 days')
+                                <!-- Coming Soon Button - Disabled -->
+                                <button type="button" 
+                                    class="w-full bg-gray-400 cursor-not-allowed text-white font-semibold py-1.5 md:py-2.5 px-2 rounded-lg text-[9px] md:text-xs flex items-center justify-center space-x-1.5"
+                                    disabled
+                                    onclick="showComingSoon()">
+                                    <i class="fas fa-hourglass-half text-[8px] md:text-xs"></i>
+                                    <span>Coming Soon</span>
                                 </button>
-                            </form>
+                            @else
+                                <!-- Active Packages -->
+                                <form action="{{ route('payment.form') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="package" value="{{ $name }}">
+                                    <button type="submit" 
+                                        class="w-full bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white font-semibold py-1.5 md:py-2.5 px-2 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-md text-[9px] md:text-xs flex items-center justify-center space-x-1.5">
+                                        <i class="fas fa-shopping-cart text-[8px] md:text-xs"></i>
+                                        <span>Chagua Kifurushi</span>
+                                    </button>
+                                </form>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -143,29 +164,29 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="border-b border-gray-200">
-                                <td class="py-2">30 days</td>
+                            <tr class="border-b border-gray-200 opacity-50">
+                                <td class="py-2">30 days <span class="text-gray-400 text-[8px] ml-1">(Coming Soon)</span></td>
                                 <td class="text-center">Mwezi 1</td>
                                 <td class="text-center font-medium">TZS 15,000</td>
-                                <td class="text-center">TZS 15000</td>
+                                <td class="text-center">TZS 15,000</td>
                                 <td class="text-center">-</td>
-                            </tr>
+                             </tr>
                             <tr class="border-b border-gray-200">
-                                <td class="py-2">180 days</td>
+                                <td class="py-2 font-semibold text-emerald-700">180 days <span class="text-emerald-600 text-[8px] ml-1">(Popular)</span></td>
                                 <td class="text-center">Miezi 6</td>
-                                <td class="text-center font-medium">TZS 75,000</td>
+                                <td class="text-center font-medium text-emerald-700">TZS 75,000</td>
                                 <td class="text-center">TZS 12,500</td>
                                 <td class="text-center text-green-600">Punguzo TZS 15,000</td>
-                            </tr>
+                             </tr>
                             <tr>
-                                <td class="py-2">366 days</td>
+                                <td class="py-2 font-semibold text-emerald-700">366 days <span class="text-emerald-600 text-[8px] ml-1">(Best Value)</span></td>
                                 <td class="text-center">Miezi 12</td>
-                                <td class="text-center font-medium">TZS 150,000</td>
+                                <td class="text-center font-medium text-emerald-700">TZS 150,000</td>
                                 <td class="text-center">TZS 12,500</td>
                                 <td class="text-center text-green-600">Punguzo TZS 30,000</td>
-                            </tr>
+                             </tr>
                         </tbody>
-                    </table>
+                     </table>
                 </div>
             </div>
 
@@ -181,6 +202,52 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript for Coming Soon notification -->
+<script>
+function showComingSoon() {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center space-x-2 animate-slide-up';
+    notification.innerHTML = `
+        <i class="fas fa-hourglass-half text-amber-400"></i>
+        <span class="text-sm">Kifurushi hiki kinakuja hivi karibuni! Jaribu vifurushi vingine.</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Add animation style
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translate(-50%, 20px);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+    }
+    
+    .animate-slide-up {
+        animation: slideUp 0.3s ease-out;
+    }
+`;
+document.head.appendChild(style);
+</script>
 
 <!-- Styles -->
 <style>
