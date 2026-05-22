@@ -171,55 +171,92 @@
     </div>
 </div>
 
-        <!-- Row 2: Discount Type, Discount Amount, Total, Payment Method, Customer -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
-            <!-- Discount Type -->
-            <div class="sm:col-span-1 lg:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Punguzo</label>
-                <select id="punguzo-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                    <option value="bidhaa">kwa bidhaa</option>
-                    <option value="jumla">Jumla</option>
-                </select>
-            </div>
+<!-- Row 2: Discount Type, Discount Amount, Total, Payment Method -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+    <!-- Discount Type -->
+    <div class="sm:col-span-1 lg:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Punguzo</label>
+        <select id="punguzo-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+            <option value="bidhaa">kwa bidhaa</option>
+            <option value="jumla">Jumla</option>
+        </select>
+    </div>
 
-            <!-- Discount Amount -->
-            <div class="sm:col-span-1 lg:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Punguzo (Tsh)</label>
-                <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-            </div>
+    <!-- Discount Amount -->
+    <div class="sm:col-span-1 lg:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Punguzo (Tsh)</label>
+        <input type="number" name="punguzo" id="punguzo-input" min="0" value="0" step="0.01" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+    </div>
 
-            <!-- Total -->
-            <div class="sm:col-span-1 lg:col-span-3">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Jumla (Tsh)</label>
-                <input type="number" name="jumla" id="total-input" readonly class="w-full bg-green-50 border border-green-300 rounded-lg p-2 text-sm font-bold text-gray-800">
-            </div>
+<!-- Total -->
+<div class="sm:col-span-1 lg:col-span-3">
+    <label class="block text-sm font-semibold text-gray-700 mb-1">Jumla (Tsh)</label>
+    <input type="number" name="jumla" id="total-input" readonly class="w-full bg-green-50 border border-green-300 rounded-lg p-2 text-sm font-bold text-gray-800">
+</div>
+<input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
 
-            <!-- Payment Method -->
-            <div class="sm:col-span-1 lg:col-span-2">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
-                <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                    <option value="cash">Cash</option>
-                    <option value="lipa_namba">Lipa Namba</option>
-                    <option value="bank">Bank</option>
-                </select>
-            </div>
+    <!-- Payment Method -->
+    <div class="sm:col-span-1 lg:col-span-2">
+        <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
+        <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+            <option value="cash">Cash</option>
+            <option value="lipa_namba">Lipa Namba</option>
+            <option value="bank">Bank</option>
+        </select>
+    </div>
 
-            <!-- Customer Selection -->
-            <div class="sm:col-span-2 lg:col-span-3">
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Mteja (si lazima)</label>
-                <select name="mteja_id" id="mteja_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                    <option value="">-- Chagua Mteja  --</option>
-                    @foreach($wateja as $mteja)
-                        <option value="{{ $mteja->id }}">{{ $mteja->jina }} - {{ $mteja->simu }}</option>
-                    @endforeach
-                </select>
-            </div>
+
+<!-- Customer Selection with integrated search and manual entry -->
+<div class="sm:col-span-2 lg:col-span-3">
+    <div class="flex items-center justify-between mb-1">
+        <label class="block text-sm font-semibold text-gray-700">
+            <i class="fas fa-user mr-1 text-gray-500"></i> Mteja / Simu
+        </label>
+        <div class="flex items-center">
+            <input type="checkbox" id="send_receipt_checkbox" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500">
+            <label for="send_receipt_checkbox" class="ml-2 text-xs font-medium text-gray-600 cursor-pointer whitespace-nowrap">
+                <i class="fas fa-envelope mr-1 text-green-600"></i> Tuma risiti kwa SMS
+            </label>
         </div>
+    </div>
+    
+    <!-- Integrated Customer Search/Input -->
+    <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-search text-gray-400 text-sm"></i>
+        </div>
+        <input type="text" id="customer_search" 
+               placeholder="Tafuta mteja kwa jina au simu, au weka namba mpya..." 
+               class="w-full border border-gray-300 rounded-lg p-2 pl-10 pr-10 text-sm focus:ring-2 focus:ring-green-200 focus:border-green-500"
+               autocomplete="off">
+        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+        </div>
+    </div>
+    
+    <!-- Dropdown for customer selection -->
+    <select id="customer_select" name="mteja_id" size="5" 
+            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200 hidden absolute z-10 bg-white shadow-lg max-h-60 overflow-y-auto mt-1">
+        <option value="">-- Tafuta au Chagua Mteja --</option>
+        @foreach($wateja as $mteja)
+            <option value="{{ $mteja->id }}" data-simu="{{ $mteja->simu }}" data-jina="{{ $mteja->jina }}">
+                {{ $mteja->jina }} - {{ $mteja->simu }}
+            </option>
+        @endforeach
+    </select>
+    
+    <!-- Hidden fields -->
+    <input type="hidden" name="mteja_id" id="selected_customer_id" value="">
+    <input type="hidden" name="send_receipt" id="send_receipt_hidden" value="0">
+    <input type="hidden" name="send_to_phone" id="send_to_phone_hidden" value="">
+    
+    <p class="text-xs text-gray-500 mt-1">
+        <i class="fas fa-info-circle mr-1"></i> 
+        chagua jina/namba ya simu
+    </p>
+</div>
+</div>
 
-        <!-- Hidden fields -->
-        <input type="hidden" name="baki" id="baki-input" value="0">
-        <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
-        <input type="hidden" name="check_double_sale" id="check-double-sale-input" value="1">
 
         <!-- Action Buttons Row -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2">
@@ -963,94 +1000,144 @@
         </div>
     </div>
 
-
     <!-- TAB 5: Kikapu -->
-    <div id="kikapu-tab-content" class="tab-content hidden">
-        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
-            <h2 class="text-lg font-bold mb-3 flex items-center text-gray-800">
-                <i class="fas fa-shopping-cart mr-2 text-blue-600"></i>
-                Bidhaa Zilizo Kwenye Kikapu
-            </h2>
+<div id="kikapu-tab-content" class="tab-content hidden">
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+        <h2 class="text-lg font-bold mb-3 flex items-center text-gray-800">
+            <i class="fas fa-shopping-cart mr-2 text-blue-600"></i>
+            Bidhaa Zilizo Kwenye Kikapu
+        </h2>
 
-            <div id="company-cart-warning" class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3 hidden">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm text-yellow-700">
-                            Bidhaa zilizokuwa kwenye kikapu zimeondolewa kwa sababu hazikuwa za kampuni yako.
-                        </p>
-                    </div>
+        <div id="company-cart-warning" class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-3 hidden">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
                 </div>
-            </div>
-
-            <div id="empty-cart-message" class="text-center text-gray-600 py-8">
-                <i class="fas fa-shopping-cart text-3xl text-gray-400 mb-3"></i>
-                <p class="text-sm">Hakuna bidhaa kwenye kikapu kwa sasa.</p>
-            </div>
-            
-            <div id="cart-content" class="hidden">
-                <div class="overflow-x-auto rounded-lg border border-gray-200">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-100 text-gray-700">
-                            <tr>
-                                <th class="border px-3 py-2 text-left">S/N</th>
-                                <th class="border px-3 py-2 text-left">Bidhaa</th>
-                                <th class="border px-3 py-2 text-left">Idadi</th>
-                                <th class="border px-3 py-2 text-left">Bei</th>
-                                <th class="border px-3 py-2 text-left">Punguzo</th>
-                                <th class="border px-3 py-2 text-left">Jumla</th>
-                                <th class="border px-3 py-2 text-left">Ondoa</th>
-                            </tr>
-                        </thead>
-                        <tbody id="cart-tbody">
-                            <!-- Cart items will be populated here by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="flex justify-between items-center my-3">
-                    <div class="font-semibold text-gray-800 text-base">
-                        Jumla ya gharama: 
-                        <span class="text-green-600" id="cart-total">0.00</span>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
-                    <select id="kikapu-lipa-kwa" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                        <option value="cash">Cash</option>
-                        <option value="lipa_namba">Lipa Namba</option>
-                        <option value="bank">Bank</option>
-                    </select>
-                </div>
-<div class="mb-3">
-    <label class="block text-sm font-semibold text-gray-700 mb-1">Mteja (si lazima)</label>
-    <select id="kikapu-mteja" class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-        <option value="">-- Mteja Asiyejulikana --</option>
-        @foreach($wateja as $mteja)
-            <option value="{{ $mteja->id }}">{{ $mteja->jina }} - {{ $mteja->simu }}</option>
-        @endforeach
-    </select>
-</div>
-                <div class="flex flex-wrap gap-2">
-                    <button id="clear-cart" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
-                        <i class="fas fa-trash mr-2"></i>
-                        Futa Kikapu
-                    </button>
-                    <button id="kikapu-kopesha-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
-                        <i class="fas fa-hand-holding-usd mr-2"></i>
-                        Kopesha
-                    </button>
-                    <button id="checkout-cart" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center transition text-sm">
-                        <i class="fas fa-check mr-2"></i>
-                        Uza bidhaa
-                    </button>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        Bidhaa zilizokuwa kwenye kikapu zimeondolewa kwa sababu hazikuwa za kampuni yako.
+                    </p>
                 </div>
             </div>
         </div>
+
+        <div id="empty-cart-message" class="text-center text-gray-600 py-8">
+            <i class="fas fa-shopping-cart text-3xl text-gray-400 mb-3"></i>
+            <p class="text-sm">Hakuna bidhaa kwenye kikapu kwa sasa.</p>
+        </div>
+        
+        <div id="cart-content" class="hidden">
+            <!-- Cart Table -->
+            <div class="overflow-x-auto rounded-lg border border-gray-200 mb-4">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th class="border px-3 py-2 text-left">S/N</th>
+                            <th class="border px-3 py-2 text-left">Bidhaa</th>
+                            <th class="border px-3 py-2 text-left">Idadi</th>
+                            <th class="border px-3 py-2 text-left">Bei</th>
+                            <th class="border px-3 py-2 text-left">Punguzo</th>
+                            <th class="border px-3 py-2 text-left">Jumla</th>
+                            <th class="border px-3 py-2 text-left">Ondoa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-tbody">
+                        <!-- Cart items will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Cart Total -->
+            <div class="flex justify-end items-center mb-4 p-3 bg-gray-50 rounded-lg">
+                <div class="font-semibold text-gray-800 text-lg">
+                    Jumla ya gharama: 
+                    <span class="text-green-600 font-bold" id="cart-total">0.00</span> /=
+                </div>
+            </div>
+            
+            <!-- 2x2 Grid for Payment Method and Customer Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Left Column: Payment Method -->
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-money-bill-wave mr-1 text-green-600"></i> Njia ya Malipo
+                    </label>
+                    <select id="kikapu-lipa-kwa" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+                        <option value="cash">💰 Cash</option>
+                        <option value="lipa_namba">📱 Lipa Namba</option>
+                        <option value="bank">🏦 Bank</option>
+                    </select>
+                </div>
+
+                <!-- Right Column: Customer Selection with SMS Option -->
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-semibold text-gray-700">
+                            <i class="fas fa-user mr-1 text-blue-600"></i> Mteja / Simu
+                        </label>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="kikapu-send-receipt-checkbox" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500">
+                            <label for="kikapu-send-receipt-checkbox" class="ml-2 text-xs font-medium text-gray-600 cursor-pointer whitespace-nowrap">
+                                <i class="fas fa-envelope mr-1 text-green-600"></i> Tuma SMS
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Integrated Customer Search/Input -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400 text-sm"></i>
+                        </div>
+                        <input type="text" id="kikapu_customer_search" 
+                               placeholder="Tafuta au weka namba mpya..." 
+                               class="w-full border border-gray-300 rounded-lg p-2 pl-10 pr-10 text-sm focus:ring-2 focus:ring-green-200 focus:border-green-500"
+                               autocomplete="off">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Dropdown for customer selection -->
+                    <select id="kikapu_customer_select" size="4" 
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200 hidden absolute z-10 bg-white shadow-lg max-h-48 overflow-y-auto mt-1">
+                        <option value="">-- Tafuta au Chagua Mteja --</option>
+                        @foreach($wateja as $mteja)
+                            <option value="{{ $mteja->id }}" data-simu="{{ $mteja->simu }}" data-jina="{{ $mteja->jina }}">
+                                {{ $mteja->jina }} - {{ $mteja->simu }}
+                            </option>
+                        @endforeach
+                    </select>
+                    
+                    <!-- Hidden fields -->
+                    <input type="hidden" id="kikapu_selected_customer_id" value="">
+                    <input type="hidden" id="kikapu_send_receipt_hidden" value="0">
+                    <input type="hidden" id="kikapu_send_to_phone_hidden" value="">
+                    
+                    <p class="text-xs text-gray-500 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i> 
+                        Chagua mteja au andika namba mpya (255XXXXXXXXX)
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Action Buttons Row -->
+            <div class="flex flex-wrap gap-2 justify-end">
+                <button id="clear-cart" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center transition text-sm">
+                    <i class="fas fa-trash mr-2"></i>
+                    Futa Kikapu
+                </button>
+                <button id="kikapu-kopesha-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg flex items-center transition text-sm">
+                    <i class="fas fa-hand-holding-usd mr-2"></i>
+                    Kopesha
+                </button>
+                <button id="checkout-cart" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg flex items-center transition text-sm font-semibold">
+                    <i class="fas fa-check mr-2"></i>
+                    Uza Bidhaa
+                </button>
+            </div>
+        </div>
     </div>
+</div>
 
     <!-- TAB 6: Risiti -->
     <div id="risiti-tab-content" class="tab-content hidden">
@@ -1539,42 +1626,40 @@
 @endpush
 
 @push('scripts')
+
 <script>
 class MauzoManager {
-constructor() {
-    // Get company ID from meta tag or data attribute
-    this.companyId = document.querySelector('meta[name="company-id"]')?.getAttribute('content') 
-                   || document.body.dataset.companyId
-                   || 'default';
-    
-    // Create unique cart key for this company
-    this.cartKey = `mauzo_cart_${this.companyId}`;
-    this.cart = JSON.parse(localStorage.getItem(this.cartKey)) || [];
-    this.bidhaaList = @json($bidhaa);
-    this.barcodeScanTimeout = null;
-    this.currentReceiptNo = null;
-    this.deleteCallback = null;
-    this.pendingSaleData = null;
-    this.currentKopeshaType = null;
-    this.currentSaleToDelete = null;
-    this.searchTimer = null;
-    
-    // ADD THESE TWO LINES
-    this.pendingSmsData = null;           // ← ADD THIS
-    this.pendingSmsReceiptNo = null;      // ← ADD THIS
-    
-    // Check if user is mfanyakazi
-    this.isMfanyakazi = document.body.hasAttribute('data-mfanyakazi') || false;
-    
-    // Restore tab state BEFORE init to ensure correct tab is shown
-    this.restoreTabState();
-    this.init();
-    
-    // MOVE THIS AFTER init() and wrap in setTimeout to ensure DOM is ready
-    setTimeout(() => {
-        this.setupSmsModalEvents();
-    }, 100);
-}
+    constructor() {
+        // Get company ID from meta tag or data attribute
+        this.companyId = document.querySelector('meta[name="company-id"]')?.getAttribute('content') 
+                       || document.body.dataset.companyId
+                       || 'default';
+        
+        // Create unique cart key for this company
+        this.cartKey = `mauzo_cart_${this.companyId}`;
+        this.cart = JSON.parse(localStorage.getItem(this.cartKey)) || [];
+        this.bidhaaList = @json($bidhaa);
+        this.barcodeScanTimeout = null;
+        this.currentReceiptNo = null;
+        this.deleteCallback = null;
+        this.pendingSaleData = null;
+        this.currentKopeshaType = null;
+        this.currentSaleToDelete = null;
+        this.searchTimer = null;
+        this.pendingSmsData = null;
+        this.pendingSmsReceiptNo = null;
+        
+        // Check if user is mfanyakazi
+        this.isMfanyakazi = document.body.hasAttribute('data-mfanyakazi') || false;
+        
+        // Restore tab state BEFORE init to ensure correct tab is shown
+        this.restoreTabState();
+        this.init();
+        
+        setTimeout(() => {
+            this.setupSmsModalEvents();
+        }, 100);
+    }
 
     init() {
         this.bindEvents();
@@ -1584,10 +1669,13 @@ constructor() {
         this.initBarcodeRows();
         this.initCartDisplay();
         this.initCustomerSelection();
+        this.initKikapuCustomerSearch(); 
         this.clearOtherCompanyCarts();
         this.bindDeleteSaleEvents();
         this.initReceiptLookup();
         this.bindSearchEvents();
+        this.bindPriceTypeChange();
+        this.bindSmsReceiptEvents();
     }
 
     // Helper function to calculate actual discount
@@ -1656,6 +1744,23 @@ constructor() {
         }
     }
 
+    bindEvents() {
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const tab = e.target.closest('.tab-button').dataset.tab;
+                if (tab) {
+                    this.showTab(tab);
+                }
+            });
+        });
+
+        this.bindSalesFormEvents();
+        this.bindBarcodeEvents();
+        this.bindSearchEvents();
+        this.bindModalEvents();
+        this.bindCartEvents();
+    }
+
     bindDeleteSaleEvents() {
         document.addEventListener('click', (e) => {
             if (e.target.closest('.delete-sale-btn')) {
@@ -1711,37 +1816,38 @@ constructor() {
         });
     }
 
-async deleteSale(saleId) {
-    // ADD THIS CHECK AT THE BEGINNING
-    if (this.isMfanyakazi && !this.hasFullAccess) {
-        this.showNotification('Huna ruhusa ya kufuta mauzo! Wasiliana na msimamizi wako.', 'error');
-        return;
-    }
-    
-    if (!saleId) return;
-
-    try {
-        const response = await fetch(`/mauzo/${saleId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            }
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-            this.showNotification('Mauzo yamefutwa kikamilifu! Stock imerudishwa.', 'success');
-            // ... rest of the code
-        } else {
-            this.showNotification(data.message || 'Kuna tatizo kufuta mauzo!', 'error');
+    async deleteSale(saleId) {
+        if (this.isMfanyakazi && !this.hasFullAccess) {
+            this.showNotification('Huna ruhusa ya kufuta mauzo! Wasiliana na msimamizi wako.', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Error:', error);
-        this.showNotification('Kuna tatizo kufuta mauzo!', 'error');
+        
+        if (!saleId) return;
+
+        try {
+            const response = await fetch(`/mauzo/${saleId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showNotification('Mauzo yamefutwa kikamilifu! Stock imerudishwa.', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                this.showNotification(data.message || 'Kuna tatizo kufuta mauzo!', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kufuta mauzo!', 'error');
+        }
     }
-}
 
     clearOtherCompanyCarts() {
         const keysToRemove = [];
@@ -1751,11 +1857,8 @@ async deleteSale(saleId) {
                 keysToRemove.push(key);
             }
         }
-        
         keysToRemove.forEach(key => localStorage.removeItem(key));
     }
-
-
 
     updateCartDisplay() {
         const emptyMessage = document.getElementById('empty-cart-message');
@@ -1770,7 +1873,6 @@ async deleteSale(saleId) {
         
         if (companyCart.length !== this.cart.length && companyWarning) {
             companyWarning.classList.remove('hidden');
-            
             if (companyCart.length === 0) {
                 this.cart = [];
                 this.saveCart();
@@ -1840,798 +1942,6 @@ async deleteSale(saleId) {
         }
     }
 
-    updateBarcodeRowTotal(row) {
-        const productPrice = row.querySelector('.product-price');
-        const quantityInput = row.querySelector('.quantity-input');
-        const punguzoInput = row.querySelector('.punguzo-input');
-        const stockInput = row.querySelector('.stock-input');
-        const totalInput = row.querySelector('.total-input');
-        const punguzoType = document.getElementById('punguzo-type');
-
-        if (!productPrice || !quantityInput || !totalInput || !punguzoType) return;
-
-        const price = parseFloat(productPrice.value) || 0;
-        const quantity = parseFloat(quantityInput.value) || 0;
-        const punguzo = parseFloat(punguzoInput.value) || 0;
-        const stock = stockInput ? parseFloat(stockInput.value) || 0 : 0;
-        const discountType = punguzoType.value;
-        
-        if (stock > 0 && quantity > stock) {
-            this.showNotification('Idadi uliyoiingiza inazidi idadi iliyopo!', 'error');
-            quantityInput.value = stock.toFixed(2);
-            return;
-        }
-        
-        const baseTotal = price * quantity;
-        const actualDiscount = this.calculateActualDiscount(punguzo, discountType, quantity);
-        const total = baseTotal - actualDiscount;
-        
-        totalInput.value = Math.max(0, total).toFixed(2);
-        this.updateBarcodeTotal();
-    }
-
-    async submitBarcodeSales() {
-        const items = [];
-        let hasValidItems = false;
-        const punguzoType = document.getElementById('punguzo-type');
-        const paymentMethodSelect = document.querySelector('#barcode-form select[name="lipa_kwa"]');
-        const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
-
-        if (!punguzoType) return;
-
-        const discountType = punguzoType.value;
-
-        document.querySelectorAll('.barcode-row').forEach(row => {
-            const barcodeInput = row.querySelector('.barcode-input');
-            const quantityInput = row.querySelector('.quantity-input');
-            const productName = row.querySelector('.product-name');
-            const productPrice = row.querySelector('.product-price');
-            const punguzoInput = row.querySelector('.punguzo-input');
-            const totalInput = row.querySelector('.total-input');
-            
-            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
-                const barcode = barcodeInput.value.trim();
-                const quantity = parseFloat(quantityInput.value) || 0;
-                const product = productName.value.trim();
-                const price = parseFloat(productPrice.value) || 0;
-                const punguzo = parseFloat(punguzoInput.value) || 0;
-                const jumla = parseFloat(totalInput.value) || 0;
-                
-                if (barcode && quantity > 0 && product && price > 0) {
-                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
-                    
-                    let actualDiscount = punguzo;
-                    if (discountType === 'bidhaa') {
-                        actualDiscount = punguzo * quantity;
-                    }
-                    
-                    items.push({
-                        barcode: barcode,
-                        bidhaa_id: bidhaa ? bidhaa.id : null,
-                        idadi: quantity,
-                        bei: price,
-                        punguzo: punguzo,
-                        punguzo_aina: discountType,
-                        jumla: jumla,
-                        total_before_discount: (price * quantity)
-                    });
-                    hasValidItems = true;
-                }
-            }
-        });
-
-        if (!hasValidItems) {
-            this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
-            return;
-        }
-
-        try {
-            const response = await fetch("{{ route('mauzo.store.barcode') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ 
-                    items: items, 
-                    punguzo_aina: discountType,
-                    lipa_kwa: paymentMethod
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-                this.clearBarcodeRows();
-                this.updateFinancialData();
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
-        }
-    }
-
-async checkoutCart() {
-    const companyCart = this.cart.filter(item => item.company_id === this.companyId);
-    
-    if (companyCart.length === 0) {
-        this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
-        return;
-    }
-
-    const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
-    const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
-    
-    // Get selected customer ID
-    const mtejaSelect = document.getElementById('kikapu-mteja');
-    const mtejaId = mtejaSelect ? mtejaSelect.value : null;
-
-    try {
-        const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'X-Company-ID': this.companyId
-            },
-            body: JSON.stringify({ 
-                items: companyCart,
-                company_id: this.companyId,
-                lipa_kwa: paymentMethod,
-                mteja_id: mtejaId   // <-- ADD THIS LINE
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-            this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-            this.clearCart();
-            this.updateFinancialData();
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
-    }
-}
-
-    prepareBarcodeKopeshaData() {
-        const items = [];
-        const punguzoType = document.getElementById('punguzo-type');
-        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
-        
-        document.querySelectorAll('.barcode-row').forEach(row => {
-            const barcodeInput = row.querySelector('.barcode-input');
-            const quantityInput = row.querySelector('.quantity-input');
-            const productName = row.querySelector('.product-name');
-            const productPrice = row.querySelector('.product-price');
-            const punguzoInput = row.querySelector('.punguzo-input');
-            const totalInput = row.querySelector('.total-input');
-            
-            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
-                const barcode = barcodeInput.value.trim();
-                const quantity = parseFloat(quantityInput.value) || 0;
-                const product = productName.value.trim();
-                const price = parseFloat(productPrice.value) || 0;
-                const punguzo = parseFloat(punguzoInput.value) || 0;
-                const jumla = parseFloat(totalInput.value) || 0;
-                
-                if (barcode && quantity > 0 && product && price > 0) {
-                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
-                    
-                    let actualDiscount = punguzo;
-                    if (discountType === 'bidhaa') {
-                        actualDiscount = punguzo * quantity;
-                    }
-                    
-                    items.push({
-                        barcode: barcode,
-                        bidhaa_id: bidhaa ? bidhaa.id : null,
-                        idadi: quantity,
-                        jina: product,
-                        bei: price,
-                        punguzo: punguzo,
-                        punguzo_aina: discountType,
-                        jumla: jumla,
-                        total_before_discount: (price * quantity),
-                        company_id: this.companyId
-                    });
-                }
-            }
-        });
-        
-        if (items.length > 0) {
-            document.getElementById('barcode-items-data').value = JSON.stringify(items);
-        }
-    }
-
-    prepareKikapuKopeshaData() {
-        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
-        
-        if (companyCart.length > 0) {
-            const items = companyCart.map(item => ({
-                bidhaa_id: item.bidhaa_id,
-                barcode: item.barcode,
-                idadi: item.idadi,
-                jina: item.jina,
-                bei: item.bei,
-                punguzo: item.punguzo,
-                punguzo_aina: item.punguzo_aina,
-                jumla: item.jumla,
-                profit: item.profit || 0,
-                company_id: this.companyId
-            }));
-            
-            document.getElementById('kikapu-items-data').value = JSON.stringify(items);
-        }
-    }
-
-    initCartDisplay() {
-        this.updateCartDisplay();
-    }
-
-initReceiptLookup() {
-    // Get all DOM elements
-    const searchInput = document.getElementById('search-receipt-input');
-    const printButton = document.getElementById('print-thermal-receipt');
-    const shareButton = document.getElementById('share-receipt-btn');
-    const smsButton = document.getElementById('sms-receipt-btn');
-    
-    // 1. Handle search input - search when Enter key is pressed
-    if (searchInput) {
-        searchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const receiptNo = searchInput.value.trim();
-                if (receiptNo) {
-                    this.lookupReceipt(receiptNo);
-                } else {
-                    this.showNotification('Tafadhali ingiza namba ya risiti', 'error');
-                }
-            }
-        });
-        
-        // Clear red border when user focuses on input
-        searchInput.addEventListener('focus', () => {
-            searchInput.classList.remove('border-red-500');
-        });
-        
-        // Optional: Add a search button or icon click handler
-        const searchIcon = searchInput.parentElement?.querySelector('.fa-search');
-        if (searchIcon) {
-            searchIcon.addEventListener('click', () => {
-                const receiptNo = searchInput.value.trim();
-                if (receiptNo) {
-                    this.lookupReceipt(receiptNo);
-                } else {
-                    this.showNotification('Tafadhali ingiza namba ya risiti', 'error');
-                }
-            });
-        }
-    }
-    
-    // 2. Handle Print button - print thermal receipt
-    if (printButton) {
-        printButton.addEventListener('click', () => {
-            if (this.currentReceiptNo) {
-                this.printThermalReceipt();
-            } else {
-                this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
-            }
-        });
-    }
-    
-    // 3. Handle Share button - share receipt via Web Share API or copy to clipboard
-    if (shareButton) {
-        shareButton.addEventListener('click', () => {
-            if (this.currentReceiptNo) {
-                this.shareReceipt(this.currentReceiptNo);
-            } else {
-                this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
-            }
-        });
-    }
-    
-    // 4. Handle SMS button - send receipt via SMS
-    if (smsButton) {
-        smsButton.addEventListener('click', () => {
-            if (this.currentReceiptNo) {
-                this.sendReceiptSms(this.currentReceiptNo);
-                
-            } else {
-                this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
-            }
-        });
-    }
-    
-    // 5. Handle receipt copy from the table (copy receipt number)
-    document.querySelectorAll('.copy-receipt').forEach(element => {
-        element.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const receiptNo = element.dataset.receipt;
-            if (receiptNo) {
-                navigator.clipboard.writeText(receiptNo).then(() => {
-                    this.showNotification('Namba ya risiti imenakiliwa!', 'success');
-                }).catch(() => {
-                    this.showNotification('Imeshindwa kunakili namba ya risiti', 'error');
-                });
-            }
-        });
-    });
-    
-    // 6. Handle print single receipt from the table
-    document.querySelectorAll('.print-single-receipt').forEach(button => {
-        button.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const receiptNo = button.dataset.receiptNo;
-            if (receiptNo) {
-                this.printSingleReceipt(receiptNo);
-            } else {
-                this.showNotification('Namba ya risiti haipatikani', 'error');
-            }
-        });
-    });
-    
-    // 7. Optional: Add keyboard shortcut (Ctrl+P) to print current receipt
-    document.addEventListener('keydown', (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-            if (this.currentReceiptNo && document.getElementById('risiti-tab-content') && 
-                !document.getElementById('risiti-tab-content').classList.contains('hidden')) {
-                e.preventDefault();
-                this.printThermalReceipt();
-            }
-        }
-    });
-    
-    // 8. Optional: Focus search input when Risiti tab is activated
-    const risitiTab = document.getElementById('risiti-tab');
-    if (risitiTab) {
-        risitiTab.addEventListener('click', () => {
-            setTimeout(() => {
-                if (searchInput) {
-                    searchInput.focus();
-                }
-            }, 100);
-        });
-    }
-}
-
-initCustomerSelection() {
-    // Fix: Target the correct select element IDs
-    const kopeshaSelect = document.getElementById('kopesha-mteja-select');
-    const barcodeSelect = document.getElementById('barcode-mteja-select');
-    const kikapuSelect = document.getElementById('kikapu-mteja-select');
-    
-    if (kopeshaSelect) {
-        kopeshaSelect.addEventListener('change', (e) => {
-            this.handleCustomerSelection(e.target, 'kopesha-mteja-select');
-        });
-    }
-    
-    if (barcodeSelect) {
-        barcodeSelect.addEventListener('change', (e) => {
-            this.handleCustomerSelection(e.target, 'barcode-mteja-select');
-        });
-    }
-    
-    if (kikapuSelect) {
-        kikapuSelect.addEventListener('change', (e) => {
-            this.handleCustomerSelection(e.target, 'kikapu-mteja-select');
-        });
-    }
-}
-
-handleCustomerSelection(selectElement, modalType) {
-    const selectedOption = selectElement.options[selectElement.selectedIndex];
-    let prefix = '';
-    let hiddenFieldId = '';
-    
-    if (modalType === 'kopesha-mteja-select') {
-        prefix = 'kopesha-';
-        hiddenFieldId = 'kopesha-mteja-id';
-    } else if (modalType === 'barcode-mteja-select') {
-        prefix = 'barcode-kopesha-';
-        hiddenFieldId = 'barcode-kopesha-mteja-id';
-    } else if (modalType === 'kikapu-mteja-select') {
-        prefix = 'kikapu-kopesha-';
-        hiddenFieldId = 'kikapu-kopesha-mteja-id';
-    }
-    
-    const hiddenField = document.getElementById(hiddenFieldId);
-    if (hiddenField) {
-        hiddenField.value = selectedOption.value === "" ? "" : selectedOption.value;
-    }
-    
-    if (selectedOption.value === "") {
-        this.clearCustomerFields(modalType);
-    } else {
-        const jina = selectedOption.dataset.jina || '';
-        const simu = selectedOption.dataset.simu || '';
-        const baruaPepe = selectedOption.dataset.barua_pepe || '';
-        const anapoishi = selectedOption.dataset.anapoishi || '';
-        this.populateCustomerFields(modalType, jina, simu, baruaPepe, anapoishi);
-    }
-}
-    clearCustomerFields(modalType) {
-        let prefix = '';
-          if (modalType === 'kopesha-mteja-select') prefix = 'kopesha-';  
-        else if (modalType === 'barcode-mteja-select') prefix = 'barcode-kopesha-';
-        else if (modalType === 'kikapu-mteja-select') prefix = 'kikapu-kopesha-';
-        
-        const fields = ['jina', 'simu', 'barua-pepe', 'anapoishi'];
-        fields.forEach(field => {
-            const element = document.getElementById(`${prefix}${field}`);
-            if (element) {
-                element.value = '';
-                if (field === 'jina' || field === 'simu') {
-                    element.required = true;
-                }
-            }
-        });
-    }
-
-    populateCustomerFields(modalType, jina, simu, baruaPepe, anapoishi) {
-        let prefix = '';
-        if (modalType === 'kopesha-mteja-select') prefix = 'kopesha-'; 
-        else if (modalType === 'barcode-mteja-select') prefix = 'barcode-kopesha-';
-        else if (modalType === 'kikapu-mteja-select') prefix = 'kikapu-kopesha-';
-        
-        const jinaField = document.getElementById(`${prefix}jina`);
-        const simuField = document.getElementById(`${prefix}simu`);
-        const baruaPepeField = document.getElementById(`${prefix}barua-pepe`);
-        const anapoishiField = document.getElementById(`${prefix}anapoishi`);
-        
-        if (jinaField) {
-            jinaField.value = jina;
-            jinaField.required = false;
-        }
-        if (simuField) {
-            simuField.value = simu;
-            simuField.required = false;
-        }
-        if (baruaPepeField) baruaPepeField.value = baruaPepe;
-        if (anapoishiField) anapoishiField.value = anapoishi;
-    }
-    // Update product details when product is selected
-updateProductDetails() {
-    const select = document.getElementById('bidhaaSelect');
-    const priceInput = document.getElementById('price-input');
-    const stockInput = document.getElementById('stock-input');
-    const quantityInput = document.getElementById('quantity-input');
-    const priceTypeSelect = document.getElementById('price-type-select');
-    
-    if (!select || !priceInput || !stockInput) return;
-
-    const selectedOption = select.options[select.selectedIndex];
-    
-    if (selectedOption && selectedOption.value) {
-        // Use the correct data attributes
-        const retailPrice = parseFloat(selectedOption.dataset.beiRejareja) || 0;
-        const wholesalePrice = parseFloat(selectedOption.dataset.beiJumla) || 0;
-        const stock = parseFloat(selectedOption.dataset.stock) || 0;
-        
-        console.log('Product selected - Retail:', retailPrice, 'Wholesale:', wholesalePrice);
-        
-        // Check if wholesale price exists and is different from retail
-        const hasWholesale = wholesalePrice > 0 && wholesalePrice !== retailPrice;
-        
-        // Enable/disable wholesale option based on availability
-        const jumlaOption = priceTypeSelect.querySelector('option[value="jumla"]');
-        if (jumlaOption) {
-            jumlaOption.disabled = !hasWholesale;
-            if (!hasWholesale) {
-                jumlaOption.title = 'Bei ya jumla haijapatikana kwa bidhaa hii';
-            } else {
-                jumlaOption.title = '';
-            }
-        }
-        
-        // Set default price (rejareja by default)
-        priceTypeSelect.value = 'rejareja';
-        priceInput.value = retailPrice.toFixed(2);
-        
-        // If only wholesale exists but no retail (unlikely but handle)
-        if (retailPrice === 0 && wholesalePrice > 0) {
-            priceTypeSelect.value = 'jumla';
-            priceInput.value = wholesalePrice.toFixed(2);
-        }
-        
-        stockInput.value = stock.toFixed(2);
-        
-        // Update kopesha modal values
-        const kopeshaBidhaaId = document.getElementById('kopesha-bidhaa-id');
-        const kopeshaBei = document.getElementById('kopesha-bei');
-        if (kopeshaBidhaaId) kopeshaBidhaaId.value = selectedOption.value;
-        if (kopeshaBei) kopeshaBei.value = priceInput.value;
-        
-        if (quantityInput && parseFloat(quantityInput.value) > stock) {
-            quantityInput.value = stock.toFixed(2);
-        }
-    } else {
-        priceInput.value = '';
-        stockInput.value = '';
-        if (quantityInput) quantityInput.value = '';
-    }
-    
-    this.updateTotals();
-}
-
-// Handle price type change
-bindPriceTypeChange() {
-    const priceTypeSelect = document.getElementById('price-type-select');
-    if (!priceTypeSelect) return;
-    
-    priceTypeSelect.addEventListener('change', () => {
-        const select = document.getElementById('bidhaaSelect');
-        const selectedOption = select.options[select.selectedIndex];
-        const priceInput = document.getElementById('price-input');
-        
-        if (selectedOption && selectedOption.value) {
-            // Use the correct data attributes
-            const retailPrice = parseFloat(selectedOption.dataset.beiRejareja) || 0;
-            const wholesalePrice = parseFloat(selectedOption.dataset.beiJumla) || 0;
-            
-            console.log('Price type changed to:', priceTypeSelect.value);
-            console.log('Retail:', retailPrice, 'Wholesale:', wholesalePrice);
-            
-            if (priceTypeSelect.value === 'jumla' && wholesalePrice > 0) {
-                priceInput.value = wholesalePrice.toFixed(2);
-            } else {
-                priceInput.value = retailPrice.toFixed(2);
-            }
-            
-            // Update kopesha modal price
-            const kopeshaBei = document.getElementById('kopesha-bei');
-            if (kopeshaBei) kopeshaBei.value = priceInput.value;
-            
-            // Update kopesha bei_type hidden field
-            const kopeshaBeiType = document.getElementById('kopesha-bei-type');
-            if (kopeshaBeiType) kopeshaBeiType.value = priceTypeSelect.value;
-            
-            this.updateTotals();
-        }
-    });
-}
-
-// Update bindSalesFormEvents to include price type change
-bindSalesFormEvents() {
-    const bidhaaSelect = document.getElementById('bidhaaSelect');
-    const quantityInput = document.getElementById('quantity-input');
-    const discountInput = document.getElementById('punguzo-input');
-    const punguzoType = document.getElementById('punguzo-type');
-    const kopeshaBtn = document.getElementById('kopesha-btn');
-    const addToCartBtn = document.getElementById('add-to-cart-btn');
-    const salesForm = document.getElementById('sales-form');
-
-    if (!salesForm) return;
-
-    if (bidhaaSelect) {
-        bidhaaSelect.addEventListener('change', () => {
-            this.updateProductDetails();
-        });
-    }
-
-    // Bind price type change
-    this.bindPriceTypeChange();
-
-    if (quantityInput) {
-        quantityInput.addEventListener('input', () => {
-            this.updateTotals();
-        });
-    }
-
-    if (discountInput) {
-        discountInput.addEventListener('input', () => {
-            this.updateTotals();
-        });
-    }
-
-    if (punguzoType) {
-        punguzoType.addEventListener('change', () => {
-            this.updateTotals();
-        });
-    }
-
-    if (kopeshaBtn) {
-        kopeshaBtn.addEventListener('click', () => {
-            const priceTypeSelect = document.getElementById('price-type-select');
-            const beiTypeInput = document.getElementById('kopesha-bei-type');
-            if (beiTypeInput && priceTypeSelect) {
-                beiTypeInput.value = priceTypeSelect.value;
-            }
-            this.openKopeshaModal('regular');
-        });
-    }
-
-    if (addToCartBtn) {
-        addToCartBtn.addEventListener('click', () => {
-            this.addToCart();
-        });
-    }
-
-    salesForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const hasDoubleSale = await this.checkDoubleSale();
-        
-        if (hasDoubleSale) {
-            this.pendingSaleData = { 
-                form: salesForm, 
-                type: 'regular'
-            };
-            this.showDoubleSaleModal();
-            return;
-        }
-        
-        await this.processSale(salesForm, 'regular');
-    });
-}
-
-// Update addToCart to include price type
-addToCart() {
-    const bidhaaSelect = document.getElementById('bidhaaSelect');
-    const quantityInput = document.getElementById('quantity-input');
-    const priceInput = document.getElementById('price-input');
-    const discountInput = document.getElementById('punguzo-input');
-    const punguzoType = document.getElementById('punguzo-type');
-    const totalInput = document.getElementById('total-input');
-    const priceTypeSelect = document.getElementById('price-type-select');
-    
-    if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
-
-    const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
-    const quantity = parseFloat(quantityInput.value) || 0;
-    const price = parseFloat(priceInput.value) || 0;
-    const discount = parseFloat(discountInput.value) || 0;
-    const discountType = punguzoType ? punguzoType.value : 'bidhaa';
-    const total = parseFloat(totalInput.value) || 0;
-    const priceType = priceTypeSelect ? priceTypeSelect.value : 'rejareja';
-    
-    if (!selectedOption.value || quantity < 0.01) {
-        this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-        return;
-    }
-
-    const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
-    const baseTotal = price * quantity;
-    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
-    const profit = ((price - buyingPrice) * quantity) - actualDiscount;
-    
-    const calculatedTotal = baseTotal - actualDiscount;
-    if (Math.abs(calculatedTotal - total) > 0.01) {
-        this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal.toFixed(2)}, Ilioingizwa: ${total.toFixed(2)}`, 'error');
-        return;
-    }
-
-    const productName = selectedOption.dataset.jina;
-    const barcode = selectedOption.dataset.barcode || '';
-    const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
-
-    const cartItem = {
-        jina: productName,
-        bei: price,
-        idadi: quantity,
-        punguzo: discount,
-        punguzo_aina: discountType,
-        actual_discount: actualDiscount,
-        jumla: total,
-        profit: profit,
-        bidhaa_id: selectedOption.value,
-        barcode: barcode,
-        bei_type: priceType,
-        timestamp: new Date().toISOString(),
-        company_id: this.companyId,
-        company_name: companyName
-    };
-
-    this.cart.push(cartItem);
-    this.saveCart();
-    this.updateCartCount();
-    this.updateCartDisplay();
-    
-    this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
-    this.resetForm();
-}
-
-// Update processSale to include bei_type
-async processSale(form, type) {
-    const formData = new FormData(form);
-    
-    const punguzoType = document.getElementById('punguzo-type');
-    if (punguzoType) {
-        formData.append('punguzo_aina', punguzoType.value);
-    }
-    
-    const priceTypeSelect = document.getElementById('price-type-select');
-    if (priceTypeSelect) {
-        formData.append('bei_type', priceTypeSelect.value);
-        console.log('Submitting with bei_type:', priceTypeSelect.value);
-    }
-
-    try {
-        const response = await fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: formData
-        });
-
-        let data = {};
-        try {
-            data = await response.json();
-        } catch (jsonError) {
-            console.warn("Response is not JSON");
-        }
-
-        if (response.ok) {
-            this.showNotification('Mauzo yamehifadhiwa kikamilifu! Namba ya risiti: ' + (data.receipt_no || 'N/A'), 'success');
-            this.resetForm();
-            this.updateStockDisplay(formData.get('bidhaa_id'));
-            this.updateFinancialData();
-            
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
-        }
-
-    } catch (error) {
-        console.error('Error:', error);
-        this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
-    }
-}
-
-// Add to init method
-init() {
-    this.bindEvents();
-    this.updateCartCount();
-    this.setTodayDate();
-    this.initBidhaaSearch();
-    this.initBarcodeRows();
-    this.initCartDisplay();
-    this.initCustomerSelection();
-    this.clearOtherCompanyCarts();
-    this.bindDeleteSaleEvents();
-    this.initReceiptLookup();
-    this.bindSearchEvents();
-    this.bindPriceTypeChange(); // ADD THIS LINE
-}
-
-bindEvents() {
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const tab = e.target.closest('.tab-button').dataset.tab;
-            if (tab) {
-                this.showTab(tab);
-            }
-        });
-    });
-
-    this.bindSalesFormEvents();
-    this.bindBarcodeEvents();
-    this.bindSearchEvents();
-    this.bindModalEvents();
-    this.bindCartEvents();
-    this.bindDeleteEvents();
-}
-
     initBidhaaSearch() {
         const bidhaaSearch = document.getElementById('bidhaaSearch');
         const bidhaaSelect = document.getElementById('bidhaaSelect');
@@ -2652,9 +1962,7 @@ bindEvents() {
                 const kipimo = options[i].dataset.kipimo?.toLowerCase() || '';
                 const searchText = `${jina} ${aina} ${kipimo}`;
 
-                options[i].style.display = searchText.includes(filter)
-                    ? ''
-                    : 'none';
+                options[i].style.display = searchText.includes(filter) ? '' : 'none';
             }
         });
 
@@ -2662,10 +1970,7 @@ bindEvents() {
             if (!bidhaaSelect.value) return;
 
             const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
-            bidhaaSearch.value =
-                `${selectedOption.dataset.jina} - ` +
-                `${selectedOption.dataset.aina} - ` +
-                `${selectedOption.dataset.kipimo}`;
+            bidhaaSearch.value = `${selectedOption.dataset.jina} - ${selectedOption.dataset.aina} - ${selectedOption.dataset.kipimo}`;
 
             bidhaaSelect.classList.add('hidden');
             this.updateProductDetails();
@@ -2678,128 +1983,312 @@ bindEvents() {
         });
     }
 
-    initBarcodeRows() {
-        document.querySelectorAll('.barcode-row').forEach(row => {
-            this.addBarcodeRowEvents(row);
-        });
+    updateProductDetails() {
+        const select = document.getElementById('bidhaaSelect');
+        const priceInput = document.getElementById('price-input');
+        const stockInput = document.getElementById('stock-input');
+        const quantityInput = document.getElementById('quantity-input');
+        const priceTypeSelect = document.getElementById('price-type-select');
         
-        const barcodeTab = document.getElementById('barcode-tab');
-        if (barcodeTab) {
-            barcodeTab.addEventListener('click', () => {
-                setTimeout(() => {
-                    const firstBarcodeInput = document.querySelector('.barcode-input');
-                    if (firstBarcodeInput) {
-                        firstBarcodeInput.focus();
-                    }
-                }, 100);
+        if (!select || !priceInput || !stockInput) return;
+
+        const selectedOption = select.options[select.selectedIndex];
+        
+        if (selectedOption && selectedOption.value) {
+            const retailPrice = parseFloat(selectedOption.dataset.beiRejareja) || 0;
+            const wholesalePrice = parseFloat(selectedOption.dataset.beiJumla) || 0;
+            const stock = parseFloat(selectedOption.dataset.stock) || 0;
+            
+            const hasWholesale = wholesalePrice > 0 && wholesalePrice !== retailPrice;
+            
+            const jumlaOption = priceTypeSelect.querySelector('option[value="jumla"]');
+            if (jumlaOption) {
+                jumlaOption.disabled = !hasWholesale;
+                if (!hasWholesale) {
+                    jumlaOption.title = 'Bei ya jumla haijapatikana kwa bidhaa hii';
+                } else {
+                    jumlaOption.title = '';
+                }
+            }
+            
+            priceTypeSelect.value = 'rejareja';
+            priceInput.value = retailPrice.toFixed(2);
+            
+            if (retailPrice === 0 && wholesalePrice > 0) {
+                priceTypeSelect.value = 'jumla';
+                priceInput.value = wholesalePrice.toFixed(2);
+            }
+            
+            stockInput.value = stock.toFixed(2);
+            
+            const kopeshaBidhaaId = document.getElementById('kopesha-bidhaa-id');
+            const kopeshaBei = document.getElementById('kopesha-bei');
+            if (kopeshaBidhaaId) kopeshaBidhaaId.value = selectedOption.value;
+            if (kopeshaBei) kopeshaBei.value = priceInput.value;
+            
+            if (quantityInput && parseFloat(quantityInput.value) > stock) {
+                quantityInput.value = stock.toFixed(2);
+            }
+        } else {
+            priceInput.value = '';
+            stockInput.value = '';
+            if (quantityInput) quantityInput.value = '';
+        }
+        
+        this.updateTotals();
+    }
+
+    bindPriceTypeChange() {
+        const priceTypeSelect = document.getElementById('price-type-select');
+        if (!priceTypeSelect) return;
+        
+        priceTypeSelect.addEventListener('change', () => {
+            const select = document.getElementById('bidhaaSelect');
+            const selectedOption = select.options[select.selectedIndex];
+            const priceInput = document.getElementById('price-input');
+            
+            if (selectedOption && selectedOption.value) {
+                const retailPrice = parseFloat(selectedOption.dataset.beiRejareja) || 0;
+                const wholesalePrice = parseFloat(selectedOption.dataset.beiJumla) || 0;
+                
+                if (priceTypeSelect.value === 'jumla' && wholesalePrice > 0) {
+                    priceInput.value = wholesalePrice.toFixed(2);
+                } else {
+                    priceInput.value = retailPrice.toFixed(2);
+                }
+                
+                const kopeshaBei = document.getElementById('kopesha-bei');
+                if (kopeshaBei) kopeshaBei.value = priceInput.value;
+                
+                const kopeshaBeiType = document.getElementById('kopesha-bei-type');
+                if (kopeshaBeiType) kopeshaBeiType.value = priceTypeSelect.value;
+                
+                this.updateTotals();
+            }
+        });
+    }
+
+    updateTotals() {
+        const quantityInput = document.getElementById('quantity-input');
+        const priceInput = document.getElementById('price-input');
+        const discountInput = document.getElementById('punguzo-input');
+        const totalInput = document.getElementById('total-input');
+        const punguzoAinaInput = document.getElementById('punguzo-aina-input');
+        const punguzoType = document.getElementById('punguzo-type');
+        
+        if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
+
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const discount = parseFloat(discountInput.value) || 0;
+        const discountType = punguzoType.value;
+        
+        const baseTotal = quantity * price;
+        const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+        const finalTotal = baseTotal - actualDiscount;
+        
+        totalInput.value = Math.max(0, finalTotal).toFixed(2);
+        punguzoAinaInput.value = discountType;
+        
+        const kopeshaIdadi = document.getElementById('kopesha-idadi');
+        const kopeshaJumla = document.getElementById('kopesha-jumla');
+        const kopeshaBaki = document.getElementById('kopesha-baki');
+        const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
+        const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
+        const kopeshaBei = document.getElementById('kopesha-bei');
+        
+        if (kopeshaIdadi) kopeshaIdadi.value = quantity.toFixed(2);
+        if (kopeshaJumla) kopeshaJumla.value = finalTotal.toFixed(2);
+        if (kopeshaBaki) kopeshaBaki.value = finalTotal.toFixed(2);
+        if (kopeshaPunguzo) kopeshaPunguzo.value = discount.toFixed(2);
+        if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
+        if (kopeshaBei) kopeshaBei.value = price.toFixed(2);
+    }
+
+    bindSalesFormEvents() {
+        const bidhaaSelect = document.getElementById('bidhaaSelect');
+        const quantityInput = document.getElementById('quantity-input');
+        const discountInput = document.getElementById('punguzo-input');
+        const punguzoType = document.getElementById('punguzo-type');
+        const kopeshaBtn = document.getElementById('kopesha-btn');
+        const addToCartBtn = document.getElementById('add-to-cart-btn');
+        const salesForm = document.getElementById('sales-form');
+
+        if (!salesForm) return;
+
+        if (bidhaaSelect) {
+            bidhaaSelect.addEventListener('change', () => {
+                this.updateProductDetails();
             });
         }
+
+        this.bindPriceTypeChange();
+
+        if (quantityInput) {
+            quantityInput.addEventListener('input', () => {
+                this.updateTotals();
+            });
+        }
+
+        if (discountInput) {
+            discountInput.addEventListener('input', () => {
+                this.updateTotals();
+            });
+        }
+
+        if (punguzoType) {
+            punguzoType.addEventListener('change', () => {
+                this.updateTotals();
+            });
+        }
+
+        if (kopeshaBtn) {
+            kopeshaBtn.addEventListener('click', () => {
+                const priceTypeSelect = document.getElementById('price-type-select');
+                const beiTypeInput = document.getElementById('kopesha-bei-type');
+                if (beiTypeInput && priceTypeSelect) {
+                    beiTypeInput.value = priceTypeSelect.value;
+                }
+                this.openKopeshaModal('regular');
+            });
+        }
+
+        if (addToCartBtn) {
+            addToCartBtn.addEventListener('click', () => {
+                this.addToCart();
+            });
+        }
+
+        salesForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const hasDoubleSale = await this.checkDoubleSale();
+            
+            if (hasDoubleSale) {
+                this.pendingSaleData = { 
+                    form: salesForm, 
+                    type: 'regular'
+                };
+                this.showDoubleSaleModal();
+                return;
+            }
+            
+            await this.processSale(salesForm, 'regular');
+        });
     }
 
+    addToCart() {
+        const bidhaaSelect = document.getElementById('bidhaaSelect');
+        const quantityInput = document.getElementById('quantity-input');
+        const priceInput = document.getElementById('price-input');
+        const discountInput = document.getElementById('punguzo-input');
+        const punguzoType = document.getElementById('punguzo-type');
+        const totalInput = document.getElementById('total-input');
+        const priceTypeSelect = document.getElementById('price-type-select');
+        
+        if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
 
-// Update updateTotals to use current price
-updateTotals() {
-    const quantityInput = document.getElementById('quantity-input');
-    const priceInput = document.getElementById('price-input');
-    const discountInput = document.getElementById('punguzo-input');
-    const totalInput = document.getElementById('total-input');
-    const punguzoAinaInput = document.getElementById('punguzo-aina-input');
-    const punguzoType = document.getElementById('punguzo-type');
-    
-    if (!quantityInput || !priceInput || !totalInput || !punguzoAinaInput || !punguzoType) return;
+        const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
+        const quantity = parseFloat(quantityInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const discount = parseFloat(discountInput.value) || 0;
+        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+        const total = parseFloat(totalInput.value) || 0;
+        const priceType = priceTypeSelect ? priceTypeSelect.value : 'rejareja';
+        
+        if (!selectedOption.value || quantity < 0.01) {
+            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+            return;
+        }
 
-    const quantity = parseFloat(quantityInput.value) || 0;
-    const price = parseFloat(priceInput.value) || 0;
-    const discount = parseFloat(discountInput.value) || 0;
-    const discountType = punguzoType.value;
-    
-    const baseTotal = quantity * price;
-    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
-    const finalTotal = baseTotal - actualDiscount;
-    
-    totalInput.value = Math.max(0, finalTotal).toFixed(2);
-    punguzoAinaInput.value = discountType;
-    
-    const kopeshaIdadi = document.getElementById('kopesha-idadi');
-    const kopeshaJumla = document.getElementById('kopesha-jumla');
-    const kopeshaBaki = document.getElementById('kopesha-baki');
-    const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
-    const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
-    const kopeshaBei = document.getElementById('kopesha-bei');
-    
-    if (kopeshaIdadi) kopeshaIdadi.value = quantity.toFixed(2);
-    if (kopeshaJumla) kopeshaJumla.value = finalTotal.toFixed(2);
-    if (kopeshaBaki) kopeshaBaki.value = finalTotal.toFixed(2);
-    if (kopeshaPunguzo) kopeshaPunguzo.value = discount.toFixed(2);
-    if (kopeshaPunguzoAina) kopeshaPunguzoAina.value = discountType;
-    if (kopeshaBei) kopeshaBei.value = price.toFixed(2);
-}
+        const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
+        const baseTotal = price * quantity;
+        const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
+        const profit = ((price - buyingPrice) * quantity) - actualDiscount;
+        
+        const calculatedTotal = baseTotal - actualDiscount;
+        if (Math.abs(calculatedTotal - total) > 0.01) {
+            this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal.toFixed(2)}, Ilioingizwa: ${total.toFixed(2)}`, 'error');
+            return;
+        }
 
-// Update addToCart to include price type
-addToCart() {
-    const bidhaaSelect = document.getElementById('bidhaaSelect');
-    const quantityInput = document.getElementById('quantity-input');
-    const priceInput = document.getElementById('price-input');
-    const discountInput = document.getElementById('punguzo-input');
-    const punguzoType = document.getElementById('punguzo-type');
-    const totalInput = document.getElementById('total-input');
-    const priceTypeSelect = document.getElementById('price-type-select');
-    
-    if (!bidhaaSelect || !quantityInput || !priceInput || !totalInput) return;
+        const productName = selectedOption.dataset.jina;
+        const barcode = selectedOption.dataset.barcode || '';
+        const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
 
-    const selectedOption = bidhaaSelect.options[bidhaaSelect.selectedIndex];
-    const quantity = parseFloat(quantityInput.value) || 0;
-    const price = parseFloat(priceInput.value) || 0;
-    const discount = parseFloat(discountInput.value) || 0;
-    const discountType = punguzoType ? punguzoType.value : 'bidhaa';
-    const total = parseFloat(totalInput.value) || 0;
-    const priceType = priceTypeSelect ? priceTypeSelect.value : 'rejareja';
-    
-    if (!selectedOption.value || quantity < 0.01) {
-        this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-        return;
+        const cartItem = {
+            jina: productName,
+            bei: price,
+            idadi: quantity,
+            punguzo: discount,
+            punguzo_aina: discountType,
+            actual_discount: actualDiscount,
+            jumla: total,
+            profit: profit,
+            bidhaa_id: selectedOption.value,
+            barcode: barcode,
+            bei_type: priceType,
+            timestamp: new Date().toISOString(),
+            company_id: this.companyId,
+            company_name: companyName
+        };
+
+        this.cart.push(cartItem);
+        this.saveCart();
+        this.updateCartCount();
+        this.updateCartDisplay();
+        
+        this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
+        this.resetForm();
     }
 
-    const buyingPrice = parseFloat(selectedOption.dataset.beiNunua) || 0;
-    const baseTotal = price * quantity;
-    const actualDiscount = this.calculateActualDiscount(discount, discountType, quantity);
-    const profit = ((price - buyingPrice) * quantity) - actualDiscount;
-    
-    const calculatedTotal = baseTotal - actualDiscount;
-    if (Math.abs(calculatedTotal - total) > 0.01) {
-        this.showNotification(`Hesabu si sahihi! Inatarajiwa: ${calculatedTotal.toFixed(2)}, Ilioingizwa: ${total.toFixed(2)}`, 'error');
-        return;
+    async processSale(form, type) {
+        const formData = new FormData(form);
+        
+        const punguzoType = document.getElementById('punguzo-type');
+        if (punguzoType) {
+            formData.append('punguzo_aina', punguzoType.value);
+        }
+        
+        const priceTypeSelect = document.getElementById('price-type-select');
+        if (priceTypeSelect) {
+            formData.append('bei_type', priceTypeSelect.value);
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: formData
+            });
+
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                console.warn("Response is not JSON");
+            }
+
+            if (response.ok) {
+                this.showNotification('Mauzo yamehifadhiwa kikamilifu! Namba ya risiti: ' + (data.receipt_no || 'N/A'), 'success');
+                this.resetForm();
+                this.updateStockDisplay(formData.get('bidhaa_id'));
+                this.updateFinancialData();
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
+        }
     }
-
-    const productName = selectedOption.dataset.jina;
-    const barcode = selectedOption.dataset.barcode || '';
-    const companyName = document.querySelector('meta[name="company-name"]')?.getAttribute('content') || '';
-
-    const cartItem = {
-        jina: productName,
-        bei: price,
-        idadi: quantity,
-        punguzo: discount,
-        punguzo_aina: discountType,
-        actual_discount: actualDiscount,
-        jumla: total,
-        profit: profit,
-        bidhaa_id: selectedOption.value,
-        barcode: barcode,
-        bei_type: priceType, // ADD THIS
-        timestamp: new Date().toISOString(),
-        company_id: this.companyId,
-        company_name: companyName
-    };
-
-    this.cart.push(cartItem);
-    this.saveCart();
-    this.updateCartCount();
-    this.updateCartDisplay();
-    
-    this.showNotification('Bidhaa imeongezwa kwenye kikapu!', 'success');
-    this.resetForm();
-}
 
     async checkDoubleSale() {
         const bidhaaId = document.getElementById('bidhaaSelect').value;
@@ -2859,6 +2348,45 @@ addToCart() {
         });
     }
 
+resetForm() {
+    const salesForm = document.getElementById('sales-form');
+    if (!salesForm) return;
+
+    salesForm.reset();
+    
+    const bidhaaSearch = document.getElementById('bidhaaSearch');
+    const priceInput = document.getElementById('price-input');
+    const stockInput = document.getElementById('stock-input');
+    const totalInput = document.getElementById('total-input');
+    const quantityInput = document.getElementById('quantity-input');
+    const discountInput = document.getElementById('punguzo-input');
+    const punguzoType = document.getElementById('punguzo-type');
+    
+    // Clear customer search fields
+    const customerSearch = document.getElementById('customer_search');
+    const customerSelect = document.getElementById('customer_select');
+    const selectedCustomerId = document.getElementById('selected_customer_id');
+    const sendReceiptCheckbox = document.getElementById('send_receipt_checkbox');
+    const sendReceiptHidden = document.getElementById('send_receipt_hidden');
+    const sendToPhoneHidden = document.getElementById('send_to_phone_hidden');
+    
+    if (bidhaaSearch) bidhaaSearch.value = '';
+    if (priceInput) priceInput.value = '';
+    if (stockInput) stockInput.value = '';
+    if (totalInput) totalInput.value = '';
+    if (quantityInput) quantityInput.value = '';
+    if (discountInput) discountInput.value = 0;
+    if (punguzoType) punguzoType.value = 'bidhaa';
+    
+    // Clear customer fields
+    if (customerSearch) customerSearch.value = '';
+    if (customerSelect) customerSelect.value = '';
+    if (selectedCustomerId) selectedCustomerId.value = '';
+    if (sendReceiptCheckbox) sendReceiptCheckbox.checked = false;
+    if (sendReceiptHidden) sendReceiptHidden.value = '0';
+    if (sendToPhoneHidden) sendToPhoneHidden.value = '';
+}
+
     updateStockDisplay(bidhaaId) {
         const quantity = parseFloat(document.getElementById('quantity-input').value) || 0;
         const stockInput = document.getElementById('stock-input');
@@ -2911,1310 +2439,1848 @@ addToCart() {
         }
     }
 
-    resetForm() {
-        const salesForm = document.getElementById('sales-form');
-        if (!salesForm) return;
-
-        salesForm.reset();
-        
-        const bidhaaSearch = document.getElementById('bidhaaSearch');
-        const priceInput = document.getElementById('price-input');
-        const stockInput = document.getElementById('stock-input');
-        const totalInput = document.getElementById('total-input');
-        const quantityInput = document.getElementById('quantity-input');
-        const discountInput = document.getElementById('punguzo-input');
-        const punguzoType = document.getElementById('punguzo-type');
-        
-        if (bidhaaSearch) bidhaaSearch.value = '';
-        if (priceInput) priceInput.value = '';
-        if (stockInput) stockInput.value = '';
-        if (totalInput) totalInput.value = '';
-        if (quantityInput) quantityInput.value = '';
-        if (discountInput) discountInput.value = 0;
-        if (punguzoType) punguzoType.value = 'bidhaa';
-    }
-openKopeshaModal(type) {
-    this.currentKopeshaType = type;
-    
-    let isValid = false;
-    let modalId = '';
-    
-    if (type === 'regular') {
-        modalId = 'kopesha-modal';
-        const bidhaaId = document.getElementById('bidhaaSelect')?.value;
-        const quantity = document.getElementById('quantity-input')?.value;
-        const totalInput = document.getElementById('total-input');
-        const priceInput = document.getElementById('price-input');
-        const punguzoInput = document.getElementById('punguzo-input');
-        const punguzoType = document.getElementById('punguzo-type');
-        
-        if (bidhaaId && quantity && parseFloat(quantity) > 0) {
-            isValid = true;
-            
-            const kopeshaBidhaaId = document.getElementById('kopesha-bidhaa-id');
-            const kopeshaIdadi = document.getElementById('kopesha-idadi');
-            const kopeshaJumla = document.getElementById('kopesha-jumla');
-            const kopeshaBaki = document.getElementById('kopesha-baki');
-            const kopeshaBei = document.getElementById('kopesha-bei');
-            const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
-            const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
-            
-            if (kopeshaBidhaaId) kopeshaBidhaaId.value = bidhaaId;
-            if (kopeshaIdadi) kopeshaIdadi.value = parseFloat(quantity).toFixed(2);
-            if (kopeshaJumla && totalInput) kopeshaJumla.value = totalInput.value;
-            if (kopeshaBaki && totalInput) kopeshaBaki.value = totalInput.value;
-            if (kopeshaBei && priceInput) kopeshaBei.value = priceInput.value;
-            if (kopeshaPunguzo && punguzoInput) kopeshaPunguzo.value = punguzoInput.value || '0.00';
-            if (kopeshaPunguzoAina && punguzoType) kopeshaPunguzoAina.value = punguzoType.value;
-        } else {
-            this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
-            return;
-        }
-    } else if (type === 'barcode') {
-        modalId = 'kopesha-barcode-modal';
-        const rows = document.querySelectorAll('.barcode-row');
-        let validRows = false;
-        let validCount = 0;
-        
-        rows.forEach(row => {
-            const barcode = row.querySelector('.barcode-input')?.value.trim();
-            const productName = row.querySelector('.product-name')?.value.trim();
-            const quantity = row.querySelector('.quantity-input')?.value;
-            
-            if (barcode && productName && quantity && parseFloat(quantity) > 0) {
-                validRows = true;
-                validCount++;
-            }
+    initBarcodeRows() {
+        document.querySelectorAll('.barcode-row').forEach(row => {
+            this.addBarcodeRowEvents(row);
         });
         
-        if (validRows) {
-            isValid = true;
-            this.prepareBarcodeKopeshaData();
-            this.showNotification(`Bidhaa ${validCount} zitatumika kwa mkopo`, 'success');
-        } else {
-            this.showNotification('Tafadhali ingiza angalau bidhaa moja kwa usahihi!', 'error');
-            return;
+        const barcodeTab = document.getElementById('barcode-tab');
+        if (barcodeTab) {
+            barcodeTab.addEventListener('click', () => {
+                setTimeout(() => {
+                    const firstBarcodeInput = document.querySelector('.barcode-input');
+                    if (firstBarcodeInput) {
+                        firstBarcodeInput.focus();
+                    }
+                }, 100);
+            });
         }
-    } else if (type === 'kikapu') {
-        modalId = 'kikapu-kopesha-modal';
-        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+    }
+
+    addBarcodeRow() {
+        const tbody = document.getElementById('barcode-tbody');
+        if (!tbody) return;
+
+        const newRow = document.createElement('tr');
+        newRow.className = 'barcode-row hover:bg-gray-50 transition-colors';
+        newRow.innerHTML = `
+            <td class="px-3 py-2">
+                <input type="text" name="barcode[]" placeholder="Scan barcode" 
+                       class="barcode-input border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg p-2 w-full text-sm transition-all" 
+                       autocomplete="off" />
+            </td>
+            <td class="px-3 py-2">
+                <input type="text" name="jina[]" readonly placeholder="Jina la Bidhaa" 
+                       class="product-name border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
+            </td>
+            <td class="px-3 py-2">
+                <input type="number" name="bei[]" readonly placeholder="Bei" step="0.01" value="0.00"
+                       class="product-price border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
+            </td>
+            <td class="px-3 py-2">
+                <input type="number" name="idadi[]" min="0.01" step="0.01" value="1.00" placeholder="Idadi" 
+                       class="quantity-input border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg p-2 w-full text-sm" />
+            </td>
+            <td class="px-3 py-2">
+                <input type="number" name="stock[]" readonly placeholder="Baki" step="0.01" value="0.00"
+                       class="stock-input border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
+            </td>
+            <td class="px-3 py-2">
+                <input type="number" name="punguzo[]" min="0" value="0.00" placeholder="Punguzo" step="0.01"
+                       class="punguzo-input border border-gray-300 rounded-lg p-2 w-full text-sm" />
+            </td>
+            <td class="px-3 py-2">
+                <input type="number" name="jumla[]" readonly placeholder="Jumla" step="0.01" value="0.00"
+                       class="total-input border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm font-semibold" />
+            </td>
+            <td class="px-3 py-2 text-center">
+                <button type="button" class="remove-barcode-row text-red-500 hover:text-red-700 p-2 rounded-full transition transform hover:scale-110" title="Futa bidhaa">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
         
-        if (companyCart.length > 0) {
-            isValid = true;
-            this.prepareKikapuKopeshaData();
-            this.showNotification(`Bidhaa ${companyCart.length} kwenye kikapu zitatumika kwa mkopo`, 'success');
-        } else {
-            this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
-            return;
+        tbody.appendChild(newRow);
+        this.addBarcodeRowEvents(newRow);
+        
+        const newBarcodeInput = newRow.querySelector('.barcode-input');
+        if (newBarcodeInput) {
+            setTimeout(() => newBarcodeInput.focus(), 100);
         }
+        
+        newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    if (isValid && modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            if (type === 'regular') this.clearCustomerFields('mteja-select');
-            else if (type === 'barcode') this.clearCustomerFields('barcode-mteja-select');
-            else if (type === 'kikapu') this.clearCustomerFields('kikapu-mteja-select');
-            
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const dateInput = modal.querySelector('input[name="tarehe_malipo"]');
-            if (dateInput) {
-                dateInput.value = tomorrow.toISOString().split('T')[0];
-            }
-            
-            modal.classList.remove('hidden');
-        }
-    }
-}
+    addBarcodeRowEvents(row) {
+        const barcodeInput = row.querySelector('.barcode-input');
+        const quantityInput = row.querySelector('.quantity-input');
+        const punguzoInput = row.querySelector('.punguzo-input');
+        const removeBtn = row.querySelector('.remove-barcode-row');
 
-bindBarcodeEvents() {
-    const addBarcodeRowBtn = document.getElementById('add-barcode-row');
-    const barcodeForm = document.getElementById('barcode-form');
-    const clearBarcodeFormBtn = document.getElementById('clear-barcode-form');
-    const kopeshaBarcodeBtn = document.getElementById('kopesha-barcode-btn');
-    const testBarcodeBtn = document.getElementById('test-barcode-btn');
-
-    if (addBarcodeRowBtn) {
-        addBarcodeRowBtn.addEventListener('click', () => {
-            this.addBarcodeRow();
-        });
-    }
-
-    if (barcodeForm) {
-        barcodeForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await this.submitBarcodeSales();
-        });
-    }
-
-    if (clearBarcodeFormBtn) {
-        clearBarcodeFormBtn.addEventListener('click', () => {
-            this.showConfirmation(
-                'Unahakika unataka kufuta bidhaa zote zilizoscan?',
-                () => {
-                    this.clearBarcodeRows();
-                    this.showNotification('Bidhaa zote zimefutwa!', 'success');
+        if (barcodeInput) {
+            barcodeInput.addEventListener('input', (e) => {
+                if (this.barcodeScanTimeout) {
+                    clearTimeout(this.barcodeScanTimeout);
                 }
-            );
-        });
-    }
+                
+                this.barcodeScanTimeout = setTimeout(() => {
+                    const value = e.target.value.trim();
+                    if (value.length >= 8) {
+                        this.fetchBidhaaByBarcode(e.target);
+                    }
+                }, 300);
+            });
+            
+            barcodeInput.addEventListener('paste', (e) => {
+                setTimeout(() => {
+                    const value = barcodeInput.value.trim();
+                    if (value.length >= 8) {
+                        this.fetchBidhaaByBarcode(barcodeInput);
+                    }
+                }, 50);
+            });
+            
+            barcodeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = barcodeInput.value.trim();
+                    if (value.length >= 8) {
+                        this.fetchBidhaaByBarcode(barcodeInput);
+                    }
+                }
+            });
+        }
 
-    if (kopeshaBarcodeBtn) {
-        kopeshaBarcodeBtn.addEventListener('click', () => {
-            this.openKopeshaModal('barcode');
-        });
-    }
-
-    if (testBarcodeBtn) {
-        testBarcodeBtn.addEventListener('click', () => {
-            this.testBarcodeLookup();
-        });
-    }
-    
-    const punguzoType = document.getElementById('punguzo-type');
-    if (punguzoType) {
-        punguzoType.addEventListener('change', () => {
-            document.querySelectorAll('.barcode-row').forEach(row => {
+        if (quantityInput) {
+            quantityInput.addEventListener('input', () => {
                 this.updateBarcodeRowTotal(row);
             });
-        });
-    }
-}
-
-addBarcodeRow() {
-    const tbody = document.getElementById('barcode-tbody');
-    if (!tbody) return;
-
-    const newRow = document.createElement('tr');
-    newRow.className = 'barcode-row hover:bg-gray-50 transition-colors';
-    newRow.innerHTML = `
-        <td class="px-3 py-2">
-            <input type="text" name="barcode[]" placeholder="Scan barcode" 
-                   class="barcode-input border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg p-2 w-full text-sm transition-all" 
-                   autocomplete="off" />
-        </td>
-        <td class="px-3 py-2">
-            <input type="text" name="jina[]" readonly placeholder="Jina la Bidhaa" 
-                   class="product-name border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
-        </td>
-        <td class="px-3 py-2">
-            <input type="number" name="bei[]" readonly placeholder="Bei" step="0.01" value="0.00"
-                   class="product-price border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
-        </td>
-        <td class="px-3 py-2">
-            <input type="number" name="idadi[]" min="0.01" step="0.01" value="1.00" placeholder="Idadi" 
-                   class="quantity-input border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg p-2 w-full text-sm" />
-        </td>
-        <td class="px-3 py-2">
-            <input type="number" name="stock[]" readonly placeholder="Baki" step="0.01" value="0.00"
-                   class="stock-input border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm" />
-        </td>
-        <td class="px-3 py-2">
-            <input type="number" name="punguzo[]" min="0" value="0.00" placeholder="Punguzo" step="0.01"
-                   class="punguzo-input border border-gray-300 rounded-lg p-2 w-full text-sm" />
-        </td>
-        <td class="px-3 py-2">
-            <input type="number" name="jumla[]" readonly placeholder="Jumla" step="0.01" value="0.00"
-                   class="total-input border border-gray-200 bg-gray-50 text-gray-700 rounded-lg p-2 w-full text-sm font-semibold" />
-        </td>
-        <td class="px-3 py-2 text-center">
-            <button type="button" class="remove-barcode-row text-red-500 hover:text-red-700 p-2 rounded-full transition transform hover:scale-110" title="Futa bidhaa">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    `;
-    
-    tbody.appendChild(newRow);
-    this.addBarcodeRowEvents(newRow);
-    
-    const newBarcodeInput = newRow.querySelector('.barcode-input');
-    if (newBarcodeInput) {
-        setTimeout(() => newBarcodeInput.focus(), 100);
-    }
-    
-    newRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-addBarcodeRowEvents(row) {
-    const barcodeInput = row.querySelector('.barcode-input');
-    const quantityInput = row.querySelector('.quantity-input');
-    const punguzoInput = row.querySelector('.punguzo-input');
-    const removeBtn = row.querySelector('.remove-barcode-row');
-
-    if (barcodeInput) {
-        barcodeInput.addEventListener('input', (e) => {
-            if (this.barcodeScanTimeout) {
-                clearTimeout(this.barcodeScanTimeout);
-            }
             
-            this.barcodeScanTimeout = setTimeout(() => {
-                const value = e.target.value.trim();
-                if (value.length >= 8) {
-                    this.fetchBidhaaByBarcode(e.target);
+            quantityInput.addEventListener('blur', () => {
+                const val = parseFloat(quantityInput.value);
+                if (isNaN(val) || val < 0.01) {
+                    quantityInput.value = '1.00';
+                    this.updateBarcodeRowTotal(row);
                 }
-            }, 300);
-        });
-        
-        barcodeInput.addEventListener('paste', (e) => {
-            setTimeout(() => {
-                const value = barcodeInput.value.trim();
-                if (value.length >= 8) {
-                    this.fetchBidhaaByBarcode(barcodeInput);
-                }
-            }, 50);
-        });
-        
-        barcodeInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const value = barcodeInput.value.trim();
-                if (value.length >= 8) {
-                    this.fetchBidhaaByBarcode(barcodeInput);
-                }
-            }
-        });
-    }
+            });
+        }
 
-    if (quantityInput) {
-        quantityInput.addEventListener('input', () => {
-            this.updateBarcodeRowTotal(row);
-        });
-        
-        quantityInput.addEventListener('blur', () => {
-            const val = parseFloat(quantityInput.value);
-            if (isNaN(val) || val < 0.01) {
-                quantityInput.value = '1.00';
+        if (punguzoInput) {
+            punguzoInput.addEventListener('input', () => {
                 this.updateBarcodeRowTotal(row);
-            }
-        });
+            });
+            
+            punguzoInput.addEventListener('blur', () => {
+                const val = parseFloat(punguzoInput.value);
+                if (isNaN(val) || val < 0) {
+                    punguzoInput.value = '0.00';
+                    this.updateBarcodeRowTotal(row);
+                }
+            });
+        }
+
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                const rows = document.querySelectorAll('.barcode-row');
+                if (rows.length > 1) {
+                    this.showConfirmation(
+                        'Unahakika unataka kuondoa bidhaa hii?',
+                        () => {
+                            row.remove();
+                            this.updateBarcodeTotal();
+                            this.showNotification('Bidhaa imeondolewa!', 'success');
+                        }
+                    );
+                } else {
+                    this.clearBarcodeRow(row);
+                    this.showNotification('Huwezi kufuta safu ya mwisho!', 'warning');
+                }
+            });
+        }
     }
 
-    if (punguzoInput) {
-        punguzoInput.addEventListener('input', () => {
-            this.updateBarcodeRowTotal(row);
+    clearBarcodeRow(row) {
+        const barcodeInput = row.querySelector('.barcode-input');
+        const productName = row.querySelector('.product-name');
+        const productPrice = row.querySelector('.product-price');
+        const stockInput = row.querySelector('.stock-input');
+        const quantityInput = row.querySelector('.quantity-input');
+        const punguzoInput = row.querySelector('.punguzo-input');
+        const totalInput = row.querySelector('.total-input');
+        
+        if (barcodeInput) barcodeInput.value = '';
+        if (productName) productName.value = '';
+        if (productPrice) productPrice.value = '0.00';
+        if (stockInput) stockInput.value = '0.00';
+        if (quantityInput) quantityInput.value = '1.00';
+        if (punguzoInput) punguzoInput.value = '0.00';
+        if (totalInput) totalInput.value = '0.00';
+        
+        this.updateBarcodeTotal();
+        
+        if (barcodeInput) {
+            setTimeout(() => barcodeInput.focus(), 100);
+        }
+    }
+
+    clearBarcodeRows() {
+        const tbody = document.getElementById('barcode-tbody');
+        if (!tbody) return;
+        
+        const rows = tbody.querySelectorAll('.barcode-row');
+        
+        for (let i = rows.length - 1; i > 0; i--) {
+            rows[i].remove();
+        }
+        
+        const firstRow = tbody.querySelector('.barcode-row');
+        if (firstRow) {
+            this.clearBarcodeRow(firstRow);
+        }
+        
+        this.updateBarcodeTotal();
+        
+        const firstBarcodeInput = document.querySelector('.barcode-input');
+        if (firstBarcodeInput) {
+            setTimeout(() => firstBarcodeInput.focus(), 100);
+        }
+    }
+
+    updateBarcodeRowTotal(row) {
+        const productPrice = row.querySelector('.product-price');
+        const quantityInput = row.querySelector('.quantity-input');
+        const punguzoInput = row.querySelector('.punguzo-input');
+        const stockInput = row.querySelector('.stock-input');
+        const totalInput = row.querySelector('.total-input');
+        const punguzoType = document.getElementById('punguzo-type');
+
+        if (!productPrice || !quantityInput || !totalInput) return;
+
+        const price = parseFloat(productPrice.value) || 0;
+        let quantity = parseFloat(quantityInput.value) || 0;
+        const punguzo = parseFloat(punguzoInput?.value) || 0;
+        const stock = stockInput ? parseFloat(stockInput.value) || 0 : 0;
+        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+        
+        if (quantity < 0.01) {
+            quantity = 0.01;
+            quantityInput.value = quantity.toFixed(2);
+        }
+        
+        if (stock > 0 && quantity > stock) {
+            this.showNotification(`Idadi (${quantity.toFixed(2)}) inazidi stock iliyopo (${stock.toFixed(2)})!`, 'warning');
+            quantity = stock;
+            quantityInput.value = stock.toFixed(2);
+        }
+        
+        const baseTotal = price * quantity;
+        let actualDiscount = punguzo;
+        
+        if (discountType === 'bidhaa') {
+            actualDiscount = punguzo * quantity;
+        }
+        
+        if (actualDiscount > baseTotal) {
+            actualDiscount = baseTotal;
+            if (discountType === 'jumla') {
+                punguzoInput.value = baseTotal.toFixed(2);
+            } else {
+                punguzoInput.value = (baseTotal / quantity).toFixed(2);
+            }
+        }
+        
+        const total = baseTotal - actualDiscount;
+        
+        if (totalInput) {
+            totalInput.value = Math.max(0, total).toFixed(2);
+        }
+        
+        this.updateBarcodeTotal();
+    }
+
+    updateBarcodeTotal() {
+        const barcodeTotalElement = document.getElementById('barcode-total');
+        if (!barcodeTotalElement) return;
+
+        let grandTotal = 0;
+        
+        document.querySelectorAll('.barcode-row').forEach(row => {
+            const totalInput = row.querySelector('.total-input');
+            if (totalInput) {
+                const rowTotal = parseFloat(totalInput.value) || 0;
+                grandTotal += rowTotal;
+            }
         });
         
-        punguzoInput.addEventListener('blur', () => {
-            const val = parseFloat(punguzoInput.value);
-            if (isNaN(val) || val < 0) {
-                punguzoInput.value = '0.00';
-                this.updateBarcodeRowTotal(row);
-            }
-        });
+        barcodeTotalElement.textContent = grandTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }) + '/=';
     }
 
-    if (removeBtn) {
-        removeBtn.addEventListener('click', () => {
-            const rows = document.querySelectorAll('.barcode-row');
-            if (rows.length > 1) {
-                this.showConfirmation(
-                    'Unahakika unataka kuondoa bidhaa hii?',
-                    () => {
-                        row.remove();
-                        this.updateBarcodeTotal();
-                        this.showNotification('Bidhaa imeondolewa!', 'success');
-                    }
-                );
+    fetchBidhaaByBarcode(input) {
+        const barcode = input.value.trim();
+        if (!barcode) return;
+
+        const row = input.closest('.barcode-row');
+        const productName = row.querySelector('.product-name');
+        const productPrice = row.querySelector('.product-price');
+        const stockInput = row.querySelector('.stock-input');
+        const quantityInput = row.querySelector('.quantity-input');
+        const punguzoInput = row.querySelector('.punguzo-input');
+        
+        const priceTypeSelect = document.getElementById('price-type-select');
+        const useWholesale = priceTypeSelect && priceTypeSelect.value === 'jumla';
+
+        row.classList.add('opacity-50', 'pointer-events-none');
+        
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        fetch(`/mauzo/product-by-barcode/${encodeURIComponent(barcode)}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            row.classList.remove('opacity-50', 'pointer-events-none');
+            
+            if (data.success && data.product) {
+                const product = data.product;
+                
+                if (productName) productName.value = product.jina || '';
+                
+                let priceToUse = parseFloat(product.bei_kuuza) || 0;
+                if (useWholesale && product.bei_uzo_jumla && parseFloat(product.bei_uzo_jumla) > 0) {
+                    priceToUse = parseFloat(product.bei_uzo_jumla);
+                }
+                
+                if (productPrice) {
+                    productPrice.value = priceToUse.toFixed(2);
+                }
+                
+                if (stockInput) {
+                    stockInput.value = (parseFloat(product.idadi) || 0).toFixed(2);
+                }
+                
+                if (quantityInput) {
+                    const maxQty = parseFloat(product.idadi) || 1;
+                    const defaultQty = Math.min(1, maxQty);
+                    quantityInput.value = defaultQty.toFixed(2);
+                }
+                
+                if (punguzoInput) {
+                    punguzoInput.value = '0.00';
+                }
+                
+                this.updateBarcodeRowTotal(row);
+                
+                row.classList.add('bg-green-50');
+                setTimeout(() => {
+                    row.classList.remove('bg-green-50');
+                }, 500);
+                
+                this.showNotification(`Bidhaa: ${product.jina} imeongezwa!`, 'success');
+                
+                setTimeout(() => {
+                    this.addBarcodeRow();
+                }, 200);
+                
             } else {
                 this.clearBarcodeRow(row);
-                this.showNotification('Huwezi kufuta safu ya mwisho!', 'warning');
+                this.showNotification(data.message || 'Bidhaa haipatikani kwa barcode hii!', 'error');
+                
+                row.classList.add('bg-red-50');
+                setTimeout(() => {
+                    row.classList.remove('bg-red-50');
+                }, 1000);
             }
-        });
-    }
-}
-
-clearBarcodeRow(row) {
-    const barcodeInput = row.querySelector('.barcode-input');
-    const productName = row.querySelector('.product-name');
-    const productPrice = row.querySelector('.product-price');
-    const stockInput = row.querySelector('.stock-input');
-    const quantityInput = row.querySelector('.quantity-input');
-    const punguzoInput = row.querySelector('.punguzo-input');
-    const totalInput = row.querySelector('.total-input');
-    
-    if (barcodeInput) barcodeInput.value = '';
-    if (productName) productName.value = '';
-    if (productPrice) productPrice.value = '0.00';
-    if (stockInput) stockInput.value = '0.00';
-    if (quantityInput) quantityInput.value = '1.00';
-    if (punguzoInput) punguzoInput.value = '0.00';
-    if (totalInput) totalInput.value = '0.00';
-    
-    this.updateBarcodeTotal();
-    
-    if (barcodeInput) {
-        setTimeout(() => barcodeInput.focus(), 100);
-    }
-}
-
-// Update fetchBidhaaByBarcode method
-fetchBidhaaByBarcode(input) {
-    const barcode = input.value.trim();
-    if (!barcode) return;
-
-    const row = input.closest('.barcode-row');
-    const productName = row.querySelector('.product-name');
-    const productPrice = row.querySelector('.product-price');
-    const stockInput = row.querySelector('.stock-input');
-    const quantityInput = row.querySelector('.quantity-input');
-    const punguzoInput = row.querySelector('.punguzo-input');
-    const totalInput = row.querySelector('.total-input');
-    
-    // Optional: Add price type selector for barcode rows if needed
-    const priceTypeSelect = document.getElementById('price-type-select');
-    const useWholesale = priceTypeSelect && priceTypeSelect.value === 'jumla';
-
-    row.classList.add('opacity-50', 'pointer-events-none');
-    
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    fetch(`/mauzo/product-by-barcode/${encodeURIComponent(barcode)}`, {
-        method: 'GET',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        row.classList.remove('opacity-50', 'pointer-events-none');
-        
-        if (data.success && data.product) {
-            const product = data.product;
-            
-            if (productName) productName.value = product.jina || '';
-            
-            // Determine which price to use
-            let priceToUse = parseFloat(product.bei_kuuza) || 0;
-            if (useWholesale && product.bei_uzo_jumla && parseFloat(product.bei_uzo_jumla) > 0) {
-                priceToUse = parseFloat(product.bei_uzo_jumla);
-            }
-            
-            if (productPrice) {
-                productPrice.value = priceToUse.toFixed(2);
-            }
-            
-            if (stockInput) {
-                stockInput.value = (parseFloat(product.idadi) || 0).toFixed(2);
-            }
-            
-            if (quantityInput) {
-                const maxQty = parseFloat(product.idadi) || 1;
-                const defaultQty = Math.min(1, maxQty);
-                quantityInput.value = defaultQty.toFixed(2);
-            }
-            
-            if (punguzoInput) {
-                punguzoInput.value = '0.00';
-            }
-            
-            this.updateBarcodeRowTotal(row);
-            
-            row.classList.add('bg-green-50');
-            setTimeout(() => {
-                row.classList.remove('bg-green-50');
-            }, 500);
-            
-            this.showNotification(`Bidhaa: ${product.jina} imeongezwa!`, 'success');
-            
-            setTimeout(() => {
-                this.addBarcodeRow();
-            }, 200);
-            
-        } else {
-            this.clearBarcodeRow(row);
-            this.showNotification(data.message || 'Bidhaa haipatikani kwa barcode hii!', 'error');
-            
-            row.classList.add('bg-red-50');
-            setTimeout(() => {
-                row.classList.remove('bg-red-50');
-            }, 1000);
-        }
-    })
-    .catch(error => {
-        row.classList.remove('opacity-50', 'pointer-events-none');
-        console.error('Error fetching product:', error);
-        this.showNotification('Kuna tatizo kwenye kutafuta bidhaa!', 'error');
-        this.clearBarcodeRow(row);
-    });
-}
-
-clearBarcodeRows() {
-    const tbody = document.getElementById('barcode-tbody');
-    if (!tbody) return;
-    
-    const rows = tbody.querySelectorAll('.barcode-row');
-    
-    for (let i = rows.length - 1; i > 0; i--) {
-        rows[i].remove();
-    }
-    
-    const firstRow = tbody.querySelector('.barcode-row');
-    if (firstRow) {
-        this.clearBarcodeRow(firstRow);
-    }
-    
-    this.updateBarcodeTotal();
-    
-    const firstBarcodeInput = document.querySelector('.barcode-input');
-    if (firstBarcodeInput) {
-        setTimeout(() => firstBarcodeInput.focus(), 100);
-    }
-}
-
-updateBarcodeRowTotal(row) {
-    const productPrice = row.querySelector('.product-price');
-    const quantityInput = row.querySelector('.quantity-input');
-    const punguzoInput = row.querySelector('.punguzo-input');
-    const stockInput = row.querySelector('.stock-input');
-    const totalInput = row.querySelector('.total-input');
-    const punguzoType = document.getElementById('punguzo-type');
-
-    if (!productPrice || !quantityInput || !totalInput) return;
-
-    const price = parseFloat(productPrice.value) || 0;
-    let quantity = parseFloat(quantityInput.value) || 0;
-    const punguzo = parseFloat(punguzoInput?.value) || 0;
-    const stock = stockInput ? parseFloat(stockInput.value) || 0 : 0;
-    const discountType = punguzoType ? punguzoType.value : 'bidhaa';
-    
-    if (quantity < 0.01) {
-        quantity = 0.01;
-        quantityInput.value = quantity.toFixed(2);
-    }
-    
-    if (stock > 0 && quantity > stock) {
-        this.showNotification(`Idadi (${quantity.toFixed(2)}) inazidi stock iliyopo (${stock.toFixed(2)})!`, 'warning');
-        quantity = stock;
-        quantityInput.value = stock.toFixed(2);
-    }
-    
-    const baseTotal = price * quantity;
-    let actualDiscount = punguzo;
-    
-    if (discountType === 'bidhaa') {
-        actualDiscount = punguzo * quantity;
-    }
-    
-    if (actualDiscount > baseTotal) {
-        actualDiscount = baseTotal;
-        if (discountType === 'jumla') {
-            punguzoInput.value = baseTotal.toFixed(2);
-        } else {
-            punguzoInput.value = (baseTotal / quantity).toFixed(2);
-        }
-    }
-    
-    const total = baseTotal - actualDiscount;
-    
-    if (totalInput) {
-        totalInput.value = Math.max(0, total).toFixed(2);
-    }
-    
-    this.updateBarcodeTotal();
-}
-
-updateBarcodeTotal() {
-    const barcodeTotalElement = document.getElementById('barcode-total');
-    if (!barcodeTotalElement) return;
-
-    let grandTotal = 0;
-    
-    document.querySelectorAll('.barcode-row').forEach(row => {
-        const totalInput = row.querySelector('.total-input');
-        if (totalInput) {
-            const rowTotal = parseFloat(totalInput.value) || 0;
-            grandTotal += rowTotal;
-        }
-    });
-    
-    barcodeTotalElement.textContent = grandTotal.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }) + '/=';
-}
-
-bindSearchEvents() {
-    const searchSales = document.getElementById('search-sales');
-    const filterStartDate = document.getElementById('filter-start-date');
-    const filterEndDate = document.getElementById('filter-end-date');
-    const resetFilters = document.getElementById('reset-filters');
-    
-    if (searchSales) {
-        searchSales.addEventListener('input', (e) => {
-            if (this.searchTimer) clearTimeout(this.searchTimer);
-            this.searchTimer = setTimeout(() => {
-                this.filterSalesTable();
-            }, 500);
-        });
-    }
-    
-    if (filterStartDate) {
-        filterStartDate.addEventListener('change', () => {
-            this.filterSalesTable();
-        });
-    }
-    
-    if (filterEndDate) {
-        filterEndDate.addEventListener('change', () => {
-            this.filterSalesTable();
-        });
-    }
-    
-    if (resetFilters) {
-        resetFilters.addEventListener('click', () => {
-            searchSales.value = '';
-            filterStartDate.value = '';
-            filterEndDate.value = '';
-            this.filterSalesTable();
-        });
-    }
-
-    const searchProduct = document.getElementById('search-product');
-    if (searchProduct) {
-        searchProduct.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            document.querySelectorAll('.grouped-sales-row').forEach(row => {
-                const product = row.dataset.product;
-                if (product.includes(searchTerm)) {
-                    row.classList.remove('hidden');
-                } else {
-                    row.classList.add('hidden');
-                }
-            });
-        });
-    }
-}
-
-filterSalesTable() {
-    const searchTerm = document.getElementById('search-sales').value.toLowerCase();
-    const startDate = document.getElementById('filter-start-date').value;
-    const endDate = document.getElementById('filter-end-date').value;
-    
-    const tbody = document.getElementById('sales-tbody');
-    tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Inapakia...</td></tr>';
-    
-    fetch('/mauzo/filtered-sales', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            search: searchTerm,
-            start_date: startDate,
-            end_date: endDate
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById('sales-tbody').innerHTML = data.html;
-            this.bindReceiptEvents();
-            this.bindDeleteSaleEvents();
-        } else {
-            this.showNotification('Kuna tatizo kwenye kupata taarifa!', 'error');
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Kuna tatizo kwenye kupata taarifa.</td></tr>';
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        this.showNotification('Kuna tatizo kwenye kupata taarifa!', 'error');
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Kuna tatizo kwenye kupata taarifa.</td></tr>';
-    });
-}
-
-bindReceiptEvents() {
-    document.querySelectorAll('.copy-receipt').forEach(element => {
-        element.addEventListener('click', (e) => {
-            const receiptNo = e.target.dataset.receipt;
-            navigator.clipboard.writeText(receiptNo).then(() => {
-                this.showNotification('Namba ya risiti imenakiliwa!', 'success');
-            });
-        });
-    });
-    
-    document.querySelectorAll('.print-single-receipt').forEach(button => {
-        button.addEventListener('click', (e) => {
-            const receiptNo = e.target.closest('.print-single-receipt').dataset.receiptNo;
-            if (receiptNo) {
-                this.printSingleReceipt(receiptNo);
-            }
-        });
-    });
-}
-
-bindModalEvents() {
-    const closeModal = (modalId) => {
-        const modal = document.getElementById(modalId);
-        if (modal) modal.classList.add('hidden');
-    };
-
-    const closeKopeshaBtn = document.getElementById('close-kopesha-modal');
-    const cancelKopeshaBtn = document.getElementById('cancel-kopesha');
-    const kopeshaForm = document.getElementById('kopesha-form');
-    
-    if (closeKopeshaBtn) {
-        closeKopeshaBtn.addEventListener('click', () => closeModal('kopesha-modal'));
-    }
-    if (cancelKopeshaBtn) {
-        cancelKopeshaBtn.addEventListener('click', () => closeModal('kopesha-modal'));
-    }
-    
-    if (kopeshaForm) {
-        kopeshaForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.submitKopeshaForm(kopeshaForm, 'regular');
-        });
-    }
-    
-    const closeKopeshaBarcodeBtn = document.getElementById('close-kopesha-barcode-modal');
-    const cancelKopeshaBarcodeBtn = document.getElementById('cancel-kopesha-barcode');
-    const kopeshaBarcodeForm = document.getElementById('kopesha-barcode-form');
-    
-    if (closeKopeshaBarcodeBtn) {
-        closeKopeshaBarcodeBtn.addEventListener('click', () => closeModal('kopesha-barcode-modal'));
-    }
-    if (cancelKopeshaBarcodeBtn) {
-        cancelKopeshaBarcodeBtn.addEventListener('click', () => closeModal('kopesha-barcode-modal'));
-    }
-    
-    if (kopeshaBarcodeForm) {
-        kopeshaBarcodeForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.submitKopeshaForm(kopeshaBarcodeForm, 'barcode');
-        });
-    }
-    
-    const closeKikapuKopeshaBtn = document.getElementById('close-kikapu-kopesha-modal');
-    const cancelKikapuKopeshaBtn = document.getElementById('cancel-kikapu-kopesha');
-    const kikapuKopeshaForm = document.getElementById('kikapu-kopesha-form');
-    
-    if (closeKikapuKopeshaBtn) {
-        closeKikapuKopeshaBtn.addEventListener('click', () => closeModal('kikapu-kopesha-modal'));
-    }
-    if (cancelKikapuKopeshaBtn) {
-        cancelKikapuKopeshaBtn.addEventListener('click', () => closeModal('kikapu-kopesha-modal'));
-    }
-    
-    if (kikapuKopeshaForm) {
-        kikapuKopeshaForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.submitKopeshaForm(kikapuKopeshaForm, 'kikapu');
+        .catch(error => {
+            row.classList.remove('opacity-50', 'pointer-events-none');
+            console.error('Error fetching product:', error);
+            this.showNotification('Kuna tatizo kwenye kutafuta bidhaa!', 'error');
+            this.clearBarcodeRow(row);
         });
     }
 
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal || e.target.classList.contains('modal-overlay')) {
-                modal.classList.add('hidden');
-                
-                if (modal.id === 'double-sale-modal') {
-                    this.pendingSaleData = null;
-                }
-            }
-        });
-    });
+    async submitBarcodeSales() {
+        const items = [];
+        let hasValidItems = false;
+        const punguzoType = document.getElementById('punguzo-type');
+        const paymentMethodSelect = document.querySelector('#barcode-form select[name="lipa_kwa"]');
+        const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.classList.add('hidden');
-                
-                if (modal.id === 'double-sale-modal') {
-                    this.pendingSaleData = null;
-                }
-            });
-        }
-    });
-}
+        if (!punguzoType) return;
 
-bindCartEvents() {
-    const clearCartBtn = document.getElementById('clear-cart');
-    const checkoutCartBtn = document.getElementById('checkout-cart');
-    const kikapuKopeshaBtn = document.getElementById('kikapu-kopesha-btn');
+        const discountType = punguzoType.value;
 
-    if (clearCartBtn) {
-        clearCartBtn.addEventListener('click', () => {
-            this.showConfirmation(
-                'Unahakika unataka kufuta bidhaa zote kwenye kikapu?',
-                () => {
-                    this.clearCart();
-                }
-            );
-        });
-    }
-
-    if (checkoutCartBtn) {
-        checkoutCartBtn.addEventListener('click', async () => {
-            await this.checkoutCart();
-        });
-    }
-
-    if (kikapuKopeshaBtn) {
-        kikapuKopeshaBtn.addEventListener('click', () => {
-            this.openKopeshaModal('kikapu');
-        });
-    }
-}
-
-bindDeleteEvents() {
-    // Handled by bindDeleteSaleEvents
-}
-
-submitKopeshaForm(form, type) {
-    const formData = new FormData(form);
-    
-    if (type === 'barcode') {
-        const itemsData = document.getElementById('barcode-items-data').value;
-        if (itemsData) {
-            formData.append('items', itemsData);
-        }
-    } else if (type === 'kikapu') {
-        const itemsData = document.getElementById('kikapu-items-data').value;
-        if (itemsData) {
-            formData.append('items', itemsData);
-        }
-    }
-    
-    fetch(form.action, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            this.showNotification('Deni limerekodiwa kikamilifu!', 'success');
-            this.closeModal(type === 'regular' ? 'kopesha-modal' : 
-                          type === 'barcode' ? 'kopesha-barcode-modal' : 
-                          'kikapu-kopesha-modal');
+        document.querySelectorAll('.barcode-row').forEach(row => {
+            const barcodeInput = row.querySelector('.barcode-input');
+            const quantityInput = row.querySelector('.quantity-input');
+            const productName = row.querySelector('.product-name');
+            const productPrice = row.querySelector('.product-price');
+            const punguzoInput = row.querySelector('.punguzo-input');
+            const totalInput = row.querySelector('.total-input');
             
-            if (type === 'regular') {
-                this.resetForm();
-            } else if (type === 'barcode') {
+            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
+                const barcode = barcodeInput.value.trim();
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const product = productName.value.trim();
+                const price = parseFloat(productPrice.value) || 0;
+                const punguzo = parseFloat(punguzoInput.value) || 0;
+                const jumla = parseFloat(totalInput.value) || 0;
+                
+                if (barcode && quantity > 0 && product && price > 0) {
+                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
+                    
+                    items.push({
+                        barcode: barcode,
+                        bidhaa_id: bidhaa ? bidhaa.id : null,
+                        idadi: quantity,
+                        bei: price,
+                        punguzo: punguzo,
+                        punguzo_aina: discountType,
+                        jumla: jumla,
+                        total_before_discount: (price * quantity)
+                    });
+                    hasValidItems = true;
+                }
+            }
+        });
+
+        if (!hasValidItems) {
+            this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch("{{ route('mauzo.store.barcode') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ 
+                    items: items, 
+                    punguzo_aina: discountType,
+                    lipa_kwa: paymentMethod
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
                 this.clearBarcodeRows();
-            } else if (type === 'kikapu') {
-                this.clearCart();
+                this.updateFinancialData();
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
             }
+        } catch (error) {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
+        }
+    }
+
+    bindBarcodeEvents() {
+        const addBarcodeRowBtn = document.getElementById('add-barcode-row');
+        const barcodeForm = document.getElementById('barcode-form');
+        const clearBarcodeFormBtn = document.getElementById('clear-barcode-form');
+        const kopeshaBarcodeBtn = document.getElementById('kopesha-barcode-btn');
+
+        if (addBarcodeRowBtn) {
+            addBarcodeRowBtn.addEventListener('click', () => {
+                this.addBarcodeRow();
+            });
+        }
+
+        if (barcodeForm) {
+            barcodeForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await this.submitBarcodeSales();
+            });
+        }
+
+        if (clearBarcodeFormBtn) {
+            clearBarcodeFormBtn.addEventListener('click', () => {
+                this.showConfirmation(
+                    'Unahakika unataka kufuta bidhaa zote zilizoscan?',
+                    () => {
+                        this.clearBarcodeRows();
+                        this.showNotification('Bidhaa zote zimefutwa!', 'success');
+                    }
+                );
+            });
+        }
+
+        if (kopeshaBarcodeBtn) {
+            kopeshaBarcodeBtn.addEventListener('click', () => {
+                this.openKopeshaModal('barcode');
+            });
+        }
+        
+        const punguzoType = document.getElementById('punguzo-type');
+        if (punguzoType) {
+            punguzoType.addEventListener('change', () => {
+                document.querySelectorAll('.barcode-row').forEach(row => {
+                    this.updateBarcodeRowTotal(row);
+                });
+            });
+        }
+    }
+initKikapuCustomerSearch() {
+    const searchInput = document.getElementById('kikapu_customer_search');
+    const selectDropdown = document.getElementById('kikapu_customer_select');
+    const hiddenId = document.getElementById('kikapu_selected_customer_id');
+    const sendReceiptHidden = document.getElementById('kikapu_send_receipt_hidden');
+    const sendToPhoneHidden = document.getElementById('kikapu_send_to_phone_hidden');
+    const sendReceiptCheckbox = document.getElementById('kikapu-send-receipt-checkbox');
+    
+    if (!searchInput) return;
+    
+    // Filter options based on search
+    const filterOptions = (searchText) => {
+        const filter = searchText.toLowerCase();
+        const options = selectDropdown.getElementsByTagName('option');
+        
+        for (let i = 1; i < options.length; i++) {
+            const jina = options[i].dataset.jina?.toLowerCase() || '';
+            const simu = options[i].dataset.simu?.toLowerCase() || '';
+            const searchableText = `${jina} ${simu}`;
             
+            if (filter === '' || searchableText.includes(filter)) {
+                options[i].style.display = '';
+            } else {
+                options[i].style.display = 'none';
+            }
+        }
+    };
+    
+    // Update phone number for SMS
+    const updatePhoneNumber = () => {
+        const isChecked = sendReceiptCheckbox?.checked || false;
+        
+        if (!isChecked) {
+            if (sendToPhoneHidden) sendToPhoneHidden.value = '';
+            return;
+        }
+        
+        // Check if we have a selected customer
+        const selectedOption = selectDropdown.options[selectDropdown.selectedIndex];
+        if (hiddenId.value && selectedOption && selectedOption.value) {
+            const customerPhone = selectedOption.dataset.simu || '';
+            let formattedPhone = customerPhone.replace(/\D/g, '');
+            if (formattedPhone.startsWith('0')) {
+                formattedPhone = '255' + formattedPhone.substring(1);
+            } else if (formattedPhone.startsWith('255')) {
+                formattedPhone = formattedPhone;
+            } else if (formattedPhone.length === 9 && formattedPhone.startsWith('7')) {
+                formattedPhone = '255' + formattedPhone;
+            }
+            if (sendToPhoneHidden) sendToPhoneHidden.value = formattedPhone;
+        } 
+        // Manual entry mode - use search input value
+        else if (searchInput.value.trim()) {
+            let phone = searchInput.value.trim().replace(/\D/g, '');
+            if (phone.startsWith('0')) {
+                phone = '255' + phone.substring(1);
+            } else if (phone.startsWith('255')) {
+                phone = phone;
+            } else if (phone.length === 9 && phone.startsWith('7')) {
+                phone = '255' + phone;
+            }
+            if (sendToPhoneHidden) sendToPhoneHidden.value = phone;
+        } else {
+            if (sendToPhoneHidden) sendToPhoneHidden.value = '';
+        }
+    };
+    
+    // Handle focus - show dropdown
+    searchInput.addEventListener('focus', () => {
+        selectDropdown.classList.remove('hidden');
+        filterOptions(searchInput.value);
+    });
+    
+    // Handle input - filter options
+    searchInput.addEventListener('input', (e) => {
+        filterOptions(e.target.value);
+        selectDropdown.classList.remove('hidden');
+        
+        // If typing, clear hidden ID (new customer mode)
+        if (hiddenId) hiddenId.value = '';
+        updatePhoneNumber();
+    });
+    
+    // Handle selection from dropdown
+    selectDropdown.addEventListener('change', () => {
+        if (!selectDropdown.value) return;
+        
+        const selectedOption = selectDropdown.options[selectDropdown.selectedIndex];
+        const customerName = selectedOption.dataset.jina || '';
+        const customerPhone = selectedOption.dataset.simu || '';
+        
+        // Update search input with customer info
+        searchInput.value = `${customerName} - ${customerPhone}`;
+        if (hiddenId) hiddenId.value = selectDropdown.value;
+        
+        // Hide dropdown
+        selectDropdown.classList.add('hidden');
+        
+        updatePhoneNumber();
+    });
+    
+    // Handle click outside to hide dropdown
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#kikapu_customer_search') && !e.target.closest('#kikapu_customer_select')) {
+            selectDropdown.classList.add('hidden');
+        }
+    });
+    
+    // Handle Enter key
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            selectDropdown.classList.add('hidden');
+            updatePhoneNumber();
+        }
+    });
+    
+    // Handle checkbox change
+    if (sendReceiptCheckbox) {
+        sendReceiptCheckbox.addEventListener('change', (e) => {
+            if (sendReceiptHidden) sendReceiptHidden.value = e.target.checked ? '1' : '0';
+            updatePhoneNumber();
+        });
+    }
+}
+
+async checkoutCart() {
+    const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+    
+    if (companyCart.length === 0) {
+        this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
+        return;
+    }
+
+    const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
+    const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
+    
+    // Get customer info from the search fields
+    const customerId = document.getElementById('kikapu_selected_customer_id')?.value || null;
+    const sendReceipt = document.getElementById('kikapu_send_receipt_hidden')?.value === '1';
+    const sendToPhone = document.getElementById('kikapu_send_to_phone_hidden')?.value || null;
+
+    try {
+        const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Company-ID': this.companyId
+            },
+            body: JSON.stringify({ 
+                items: companyCart,
+                company_id: this.companyId,
+                lipa_kwa: paymentMethod,
+                mteja_id: customerId,
+                send_receipt: sendReceipt,
+                send_to_phone: sendToPhone
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            this.showNotification('Mauzo ya kikapu yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+            if (sendReceipt && sendToPhone) {
+                this.showNotification(`Risiti imetumwa kwa ${sendToPhone}`, 'success');
+            }
+            this.clearCart();
             this.updateFinancialData();
             
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } else {
-            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
+            this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
         }
-    })
-    .catch(error => {
+    } catch (error) {
         console.error('Error:', error);
-        this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
-    });
-}
-
-removeFromCart(index) {
-    this.cart.splice(index, 1);
-    this.saveCart();
-    this.updateCartCount();
-    this.updateCartDisplay();
-    this.showNotification('Bidhaa imeondolewa kwenye kikapu!', 'success');
-}
-
-clearCart() {
-    this.cart = [];
-    this.saveCart();
-    this.updateCartCount();
-    this.updateCartDisplay();
-    this.showNotification('Kikapu kimefutwa!', 'success');
-}
-
-closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.add('hidden');
-}
-
-saveCart() {
-    localStorage.setItem(this.cartKey, JSON.stringify(this.cart));
-}
-
-updateCartCount() {
-    const cartCount = document.getElementById('cart-count');
-    if (cartCount) {
-        const companyCartCount = this.cart.filter(item => item.company_id === this.companyId).length;
-        if (companyCartCount > 0) {
-            cartCount.textContent = companyCartCount;
-            cartCount.classList.remove('hidden');
-        } else {
-            cartCount.classList.add('hidden');
-        }
+        this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo ya kikapu!', 'error');
     }
 }
-
-setTodayDate() {
-    const today = new Date().toISOString().split('T')[0];
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    dateInputs.forEach(input => {
-        if (!input.value) {
-            input.value = today;
-        }
-    });
-}
-
-showNotification(message, type = 'success', showButtons = false) {
-    const notification = document.getElementById('notification');
-    const notificationIcon = document.getElementById('notification-icon');
-    const notificationMessage = document.getElementById('notification-message');
-    const notificationButtons = document.getElementById('notification-buttons');
-    
-    if (!notification || !notificationIcon || !notificationMessage) return;
-
-    let iconClass, borderColor;
-    switch(type) {
-        case 'success':
-            iconClass = 'fas fa-check-circle text-green-500';
-            borderColor = 'border-green-200';
-            break;
-        case 'error':
-            iconClass = 'fas fa-times-circle text-red-500';
-            borderColor = 'border-red-200';
-            break;
-        case 'warning':
-            iconClass = 'fas fa-exclamation-triangle text-amber-500';
-            borderColor = 'border-amber-200';
-            break;
-        default:
-            iconClass = 'fas fa-info-circle text-blue-500';
-            borderColor = 'border-blue-200';
-    }
-    
-    notificationIcon.className = iconClass;
-    notification.querySelector('.bg-white').className = `bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border-2 ${borderColor} transform transition-all duration-300 scale-95`;
-    notificationMessage.textContent = message;
-    
-    if (showButtons) {
-        notificationButtons.classList.remove('hidden');
-    } else {
-        notificationButtons.classList.add('hidden');
-    }
-    
-    notification.classList.remove('hidden');
-    
-    if (!showButtons) {
-        setTimeout(() => {
-            notification.classList.add('hidden');
-        }, 3000);
-    }
-}
-
-showConfirmation(message, confirmCallback) {
-    if (confirm(message)) {
-        confirmCallback();
-    }
-}
-
-lookupReceipt(receiptNo) {
-    if (!receiptNo) {
-        this.showNotification('Tafadhali ingiza namba ya risiti', 'error');
-        return;
+    initCartDisplay() {
+        this.updateCartDisplay();
     }
 
-    const detailsDiv = document.getElementById('receipt-details');
-    const noResultsDiv = document.getElementById('no-receipt-found');
-    const loadingDiv = document.getElementById('receipt-loading');
-    const searchInput = document.getElementById('search-receipt-input');
-
-    // Show loading state
-    detailsDiv.classList.add('hidden');
-    noResultsDiv.classList.add('hidden');
-    loadingDiv.classList.remove('hidden');
-    
-    if (searchInput) {
-        searchInput.disabled = true;
-        searchInput.classList.remove('border-red-500');
-    }
-
-    // Clean the receipt number
-    receiptNo = receiptNo.toString().trim();
-
-    // Add CSRF token to headers
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': csrfToken
-        }
-    })
-    .then(response => {
-        if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error('Risiti haipatikani');
-            }
-            if (response.status === 401) {
-                throw new Error('Hauruhusiwi');
-            }
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        // Hide loading
-        loadingDiv.classList.add('hidden');
+    initReceiptLookup() {
+        const searchInput = document.getElementById('search-receipt-input');
+        const printButton = document.getElementById('print-thermal-receipt');
+        const shareButton = document.getElementById('share-receipt-btn');
+        const smsButton = document.getElementById('sms-receipt-btn');
         
-        // Re-enable search input
         if (searchInput) {
-            searchInput.disabled = false;
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const receiptNo = searchInput.value.trim();
+                    if (receiptNo) {
+                        this.lookupReceipt(receiptNo);
+                    } else {
+                        this.showNotification('Tafadhali ingiza namba ya risiti', 'error');
+                    }
+                }
+            });
         }
         
-        if (data.success) {
-            this.displayReceiptDetails(data);
-            detailsDiv.classList.remove('hidden');
-            noResultsDiv.classList.add('hidden');
-            
-            if (searchInput) {
-                searchInput.classList.remove('border-red-500');
+        if (printButton) {
+            printButton.addEventListener('click', () => {
+                if (this.currentReceiptNo) {
+                    this.printThermalReceipt();
+                } else {
+                    this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
+                }
+            });
+        }
+        
+        if (shareButton) {
+            shareButton.addEventListener('click', () => {
+                if (this.currentReceiptNo) {
+                    this.shareReceipt(this.currentReceiptNo);
+                } else {
+                    this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
+                }
+            });
+        }
+        
+        if (smsButton) {
+            smsButton.addEventListener('click', () => {
+                if (this.currentReceiptNo) {
+                    this.sendReceiptSms(this.currentReceiptNo);
+                } else {
+                    this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
+                }
+            });
+        }
+        
+        document.querySelectorAll('.copy-receipt').forEach(element => {
+            element.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const receiptNo = element.dataset.receipt;
+                if (receiptNo) {
+                    navigator.clipboard.writeText(receiptNo).then(() => {
+                        this.showNotification('Namba ya risiti imenakiliwa!', 'success');
+                    }).catch(() => {
+                        this.showNotification('Imeshindwa kunakili namba ya risiti', 'error');
+                    });
+                }
+            });
+        });
+        
+        document.querySelectorAll('.print-single-receipt').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const receiptNo = button.dataset.receiptNo;
+                if (receiptNo) {
+                    this.printSingleReceipt(receiptNo);
+                } else {
+                    this.showNotification('Namba ya risiti haipatikani', 'error');
+                }
+            });
+        });
+    }
+
+    lookupReceipt(receiptNo) {
+        if (!receiptNo) {
+            this.showNotification('Tafadhali ingiza namba ya risiti', 'error');
+            return;
+        }
+
+        const detailsDiv = document.getElementById('receipt-details');
+        const noResultsDiv = document.getElementById('no-receipt-found');
+        const loadingDiv = document.getElementById('receipt-loading');
+        const searchInput = document.getElementById('search-receipt-input');
+
+        detailsDiv.classList.add('hidden');
+        noResultsDiv.classList.add('hidden');
+        loadingDiv.classList.remove('hidden');
+        
+        if (searchInput) {
+            searchInput.disabled = true;
+            searchInput.classList.remove('border-red-500');
+        }
+
+        receiptNo = receiptNo.toString().trim();
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
             }
-        } else {
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Risiti haipatikani');
+                }
+                if (response.status === 401) {
+                    throw new Error('Hauruhusiwi');
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            loadingDiv.classList.add('hidden');
+            if (searchInput) searchInput.disabled = false;
+            
+            if (data.success) {
+                this.displayReceiptDetails(data);
+                detailsDiv.classList.remove('hidden');
+                noResultsDiv.classList.add('hidden');
+                if (searchInput) searchInput.classList.remove('border-red-500');
+            } else {
+                noResultsDiv.classList.remove('hidden');
+                detailsDiv.classList.add('hidden');
+                if (searchInput) searchInput.classList.add('border-red-500');
+                this.showNotification(data.message || 'Risiti haipatikani', 'error');
+            }
+        })
+        .catch(error => {
+            loadingDiv.classList.add('hidden');
+            if (searchInput) searchInput.disabled = false;
+            console.error('Error fetching receipt:', error);
             noResultsDiv.classList.remove('hidden');
             detailsDiv.classList.add('hidden');
+            if (searchInput) searchInput.classList.add('border-red-500');
+            this.showNotification(error.message || 'Kuna tatizo kwenye kupata taarifa za risiti', 'error');
+        });
+    }
+
+    displayReceiptDetails(data) {
+        const receiptNoDisplay = document.getElementById('receipt-no-display');
+        const receiptDateDisplay = document.getElementById('receipt-date-display');
+        const receiptItemsCount = document.getElementById('receipt-items-count');
+        const receiptTotalDisplay = document.getElementById('receipt-total-display');
+        
+        if (receiptNoDisplay) {
+            receiptNoDisplay.textContent = data.receipt_no || 'N/A';
+            this.currentReceiptNo = data.receipt_no;
+        }
+        
+        if (receiptDateDisplay) {
+            receiptDateDisplay.textContent = data.date || new Date().toLocaleDateString('sw-TZ');
+        }
+        
+        if (receiptItemsCount) {
+            const itemCount = data.items ? data.items.length : 0;
+            receiptItemsCount.textContent = itemCount + (itemCount === 1 ? ' bidhaa' : ' bidhaa');
+        }
+        
+        if (receiptTotalDisplay) {
+            const total = parseFloat(data.total) || 0;
+            receiptTotalDisplay.textContent = total.toLocaleString('sw-TZ', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }) + '/=';
+        }
+
+        const itemsList = document.getElementById('receipt-items-list');
+        if (itemsList) {
+            itemsList.innerHTML = '';
             
-            if (searchInput) {
-                searchInput.classList.add('border-red-500');
+            if (data.items && data.items.length > 0) {
+                data.items.forEach((item) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'bg-white border border-gray-200 rounded-lg p-3 mb-2 hover:bg-gray-50 transition';
+                    
+                    const quantity = parseFloat(item.idadi) || 0;
+                    const price = parseFloat(item.bei) || 0;
+                    const jumla = parseFloat(item.jumla) || 0;
+                    const punguzo = parseFloat(item.punguzo) || 0;
+                    
+                    let discountHtml = '';
+                    if (punguzo > 0) {
+                        discountHtml = `
+                            <div class="flex justify-between items-center mt-1 text-xs text-red-600">
+                                <span>Punguzo:</span>
+                                <span>-${punguzo.toFixed(2)}/=</span>
+                            </div>
+                        `;
+                    }
+                    
+                    itemDiv.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <span class="font-medium text-gray-800 text-sm">${item.bidhaa || 'Bidhaa'}</span>
+                            </div>
+                            <span class="text-sm font-semibold text-green-700">${jumla.toFixed(2)}/=</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-1 text-xs text-gray-600">
+                            <span>${quantity.toFixed(2)} x ${price.toFixed(2)}/=</span>
+                            <span>Jumla ndogo: ${(price * quantity).toFixed(2)}/=</span>
+                        </div>
+                        ${discountHtml}
+                    `;
+                    itemsList.appendChild(itemDiv);
+                });
+            } else {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'text-center py-4 text-gray-500';
+                emptyDiv.innerHTML = '<i class="fas fa-box-open text-2xl mb-2"></i><p>Hakuna bidhaa kwenye risiti hii</p>';
+                itemsList.appendChild(emptyDiv);
+            }
+        }
+    }
+
+    printThermalReceipt() {
+        if (!this.currentReceiptNo) {
+            this.showNotification('Hakuna risiti iliyochaguliwa', 'error');
+            return;
+        }
+        const printWindow = window.open(`/mauzo/thermal-receipt/${this.currentReceiptNo}`, '_blank', 'width=400,height=600');
+        if (printWindow) printWindow.focus();
+    }
+
+    printSingleReceipt(receiptNo) {
+        if (!receiptNo) {
+            this.showNotification('Hakuna namba ya risiti', 'error');
+            return;
+        }
+        const printWindow = window.open(`/mauzo/thermal-receipt/${encodeURIComponent(receiptNo)}`, '_blank', 'width=400,height=600');
+        if (printWindow) printWindow.focus();
+    }
+
+    async shareReceipt(receiptNo) {
+        try {
+            const response = await fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                this.showNotification('Hitilafu: ' + data.message, 'error');
+                return;
             }
             
-            this.showNotification(data.message || 'Risiti haipatikani', 'error');
-        }
-    })
-    .catch(error => {
-        // Hide loading
-        loadingDiv.classList.add('hidden');
-        
-        // Re-enable search input
-        if (searchInput) {
-            searchInput.disabled = false;
-        }
-        
-        console.error('Error fetching receipt:', error);
-        
-        noResultsDiv.classList.remove('hidden');
-        detailsDiv.classList.add('hidden');
-        
-        if (searchInput) {
-            searchInput.classList.add('border-red-500');
-        }
-        
-        this.showNotification(error.message || 'Kuna tatizo kwenye kupata taarifa za risiti', 'error');
-    });
-}
-
-displayReceiptDetails(data) {
-    // Update receipt header info
-    const receiptNoDisplay = document.getElementById('receipt-no-display');
-    const receiptDateDisplay = document.getElementById('receipt-date-display');
-    const receiptItemsCount = document.getElementById('receipt-items-count');
-    const receiptTotalDisplay = document.getElementById('receipt-total-display');
-    
-    if (receiptNoDisplay) {
-        receiptNoDisplay.textContent = data.receipt_no || 'N/A';
-        this.currentReceiptNo = data.receipt_no;
-    }
-    
-    if (receiptDateDisplay) {
-        receiptDateDisplay.textContent = data.date || new Date().toLocaleDateString('sw-TZ');
-    }
-    
-    if (receiptItemsCount) {
-        const itemCount = data.items ? data.items.length : 0;
-        receiptItemsCount.textContent = itemCount + (itemCount === 1 ? ' bidhaa' : ' bidhaa');
-    }
-    
-    if (receiptTotalDisplay) {
-        const total = parseFloat(data.total) || 0;
-        receiptTotalDisplay.textContent = total.toLocaleString('sw-TZ', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }) + '/=';
-    }
-
-    // Populate items list
-    const itemsList = document.getElementById('receipt-items-list');
-    if (itemsList) {
-        itemsList.innerHTML = '';
-        
-        if (data.items && data.items.length > 0) {
-            data.items.forEach((item) => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'bg-white border border-gray-200 rounded-lg p-3 mb-2 hover:bg-gray-50 transition';
-                
-                const quantity = parseFloat(item.idadi) || 0;
-                const price = parseFloat(item.bei) || 0;
-                const jumla = parseFloat(item.jumla) || 0;
-                const punguzo = parseFloat(item.punguzo) || 0;
-                
-                let discountHtml = '';
-                if (punguzo > 0) {
-                    discountHtml = `
-                        <div class="flex justify-between items-center mt-1 text-xs text-red-600">
-                            <span>Punguzo:</span>
-                            <span>-${punguzo.toFixed(2)}/=</span>
-                        </div>
-                    `;
-                }
-                
-                itemDiv.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <span class="font-medium text-gray-800 text-sm">${item.bidhaa || 'Bidhaa'}</span>
-                        </div>
-                        <span class="text-sm font-semibold text-green-700">${jumla.toFixed(2)}/=</span>
-                    </div>
-                    <div class="flex justify-between items-center mt-1 text-xs text-gray-600">
-                        <span>${quantity.toFixed(2)} x ${price.toFixed(2)}/=</span>
-                        <span>Jumla ndogo: ${(price * quantity).toFixed(2)}/=</span>
-                    </div>
-                    ${discountHtml}
-                `;
-                itemsList.appendChild(itemDiv);
+            let receiptText = `*RISITI YA MALIPO*\n`;
+            receiptText += `---\n`;
+            receiptText += `Namba: ${data.receipt_no}\n`;
+            receiptText += `Tarehe: ${data.date}\n`;
+            receiptText += `---\n`;
+            
+            data.items.forEach(item => {
+                receiptText += `${item.bidhaa}\n`;
+                receiptText += `  ${item.idadi} x ${item.bei} = ${item.jumla}\n`;
             });
-        } else {
-            const emptyDiv = document.createElement('div');
-            emptyDiv.className = 'text-center py-4 text-gray-500';
-            emptyDiv.innerHTML = '<i class="fas fa-box-open text-2xl mb-2"></i><p>Hakuna bidhaa kwenye risiti hii</p>';
-            itemsList.appendChild(emptyDiv);
+            
+            receiptText += `---\n`;
+            receiptText += `Jumla Kuu: ${data.total}\n`;
+            receiptText += `---\n`;
+            receiptText += `Asante kwa kununua!\n`;
+            
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'Risiti ya Mauzo',
+                    text: receiptText,
+                });
+            } else {
+                await navigator.clipboard.writeText(receiptText);
+                this.showNotification('Risiti imenakiliwa kwenye clipboard!', 'success');
+            }
+        } catch (error) {
+            console.error('Error sharing receipt:', error);
+            this.showNotification('Hitilafu wakati wa kushare risiti', 'error');
         }
     }
-}
 
-printThermalReceipt() {
-    if (!this.currentReceiptNo) {
-        this.showNotification('Hakuna risiti iliyochaguliwa', 'error');
-        return;
-    }
-
-    const printWindow = window.open(`/mauzo/thermal-receipt/${this.currentReceiptNo}`, '_blank', 'width=400,height=600');
-    
-    if (printWindow) {
-        printWindow.focus();
-    }
-}
-
-printSingleReceipt(receiptNo) {
-    if (!receiptNo) {
-        this.showNotification('Hakuna namba ya risiti', 'error');
-        return;
-    }
-    
-    const printWindow = window.open(`/mauzo/thermal-receipt/${encodeURIComponent(receiptNo)}`, '_blank', 'width=400,height=600');
-    
-    if (printWindow) {
-        printWindow.focus();
-    }
-}
-// Share receipt via Web Share API (CORRECTED)
-async shareReceipt(receiptNo) {
-    try {
-        // Fetch receipt data
-        const response = await fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`);
-        const data = await response.json();
-        
-        if (!data.success) {
-            this.showNotification('Hitilafu: ' + data.message, 'error');
+    async sendReceiptSms(receiptNo) {
+        if (!receiptNo) {
+            this.showNotification('Hakuna risiti iliyochaguliwa', 'error');
             return;
         }
         
-        // Format receipt text for sharing
-        let receiptText = `*RISITI YA MALIPO*\n`;
-        receiptText += `------------------\n`;
-        receiptText += `Namba: ${data.receipt_no}\n`;
-        receiptText += `Tarehe: ${data.date}\n`;
-        receiptText += `------------------\n`;
+        this.pendingSmsReceiptNo = receiptNo;
+        const previewDiv = document.getElementById('sms-receipt-preview');
         
-        data.items.forEach(item => {
-            receiptText += `${item.bidhaa}\n`;
-            receiptText += `  ${item.idadi} x ${item.bei} = ${item.jumla}\n`;
+        if (previewDiv) {
+            previewDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inataarisha risiti...';
+        }
+        
+        try {
+            const response = await fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`);
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message);
+            }
+            
+            let previewText = `Risiti: ${data.receipt_no}\n`;
+            previewText += `Tarehe: ${data.date}\n`;
+            previewText += `Jumla: ${data.total}/=\n`;
+            previewText += `Bidhaa: ${data.items.length}`;
+            
+            if (previewDiv) {
+                previewDiv.textContent = previewText;
+            }
+            
+            this.pendingSmsData = data;
+        } catch (error) {
+            console.error('Error fetching receipt:', error);
+            if (previewDiv) {
+                previewDiv.innerHTML = '<span class="text-red-500">Imeshindwa kupata taarifa za risiti</span>';
+            }
+        }
+        
+        const modal = document.getElementById('sms-receipt-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            const phoneInput = document.getElementById('sms-receipt-phone');
+            if (phoneInput) {
+                setTimeout(() => phoneInput.focus(), 100);
+                phoneInput.value = '';
+            }
+        }
+    }
+
+    setupSmsModalEvents() {
+        const modal = document.getElementById('sms-receipt-modal');
+        if (!modal) return;
+        
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            const phoneInput = document.getElementById('sms-receipt-phone');
+            if (phoneInput) phoneInput.value = '';
+        };
+        
+        document.getElementById('close-sms-receipt-modal')?.addEventListener('click', closeModal);
+        document.getElementById('cancel-sms-receipt')?.addEventListener('click', closeModal);
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal || e.target.classList.contains('modal-overlay')) {
+                closeModal();
+            }
         });
         
-        receiptText += `------------------\n`;
-        receiptText += `Jumla Kuu: ${data.total}\n`;
-        receiptText += `------------------\n`;
-        receiptText += `Asante kwa kununua!\n`;
+        document.getElementById('confirm-send-sms')?.addEventListener('click', async () => {
+            const phoneInput = document.getElementById('sms-receipt-phone');
+            const phone = phoneInput?.value.trim() || '';
+            
+            if (!phone) {
+                this.showNotification('Tafadhali ingiza namba ya simu', 'warning');
+                phoneInput?.focus();
+                return;
+            }
+            
+            if (!this.pendingSmsReceiptNo) {
+                this.showNotification('Hitilafu: Hakuna risiti iliyochaguliwa', 'error');
+                closeModal();
+                return;
+            }
+            
+            const btn = document.getElementById('confirm-send-sms');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inatuma...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/send-receipt-sms-simple', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        receipt_no: this.pendingSmsReceiptNo
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    this.showNotification('✓ Risiti imetumwa kikamilifu kwa ' + phone, 'success');
+                    closeModal();
+                } else {
+                    this.showNotification('✗ Hitilafu: ' + (data.message || 'Imeshindwa kutuma SMS'), 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.showNotification('Hitilafu ya mtandao. Tafadhali jaribu tena.', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+
+    initCustomerSelection() {
+        const kopeshaSelect = document.getElementById('kopesha-mteja-select');
+        const barcodeSelect = document.getElementById('barcode-mteja-select');
+        const kikapuSelect = document.getElementById('kikapu-mteja-select');
         
-        // Check if Web Share API is supported
-        if (navigator.share) {
-            await navigator.share({
-                title: 'Risiti ya Mauzo',
-                text: receiptText,
+        if (kopeshaSelect) {
+            kopeshaSelect.addEventListener('change', (e) => {
+                this.handleCustomerSelection(e.target, 'kopesha-mteja-select');
             });
+        }
+        
+        if (barcodeSelect) {
+            barcodeSelect.addEventListener('change', (e) => {
+                this.handleCustomerSelection(e.target, 'barcode-mteja-select');
+            });
+        }
+        
+        if (kikapuSelect) {
+            kikapuSelect.addEventListener('change', (e) => {
+                this.handleCustomerSelection(e.target, 'kikapu-mteja-select');
+            });
+        }
+    }
+
+    handleCustomerSelection(selectElement, modalType) {
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        let prefix = '';
+        let hiddenFieldId = '';
+        
+        if (modalType === 'kopesha-mteja-select') {
+            prefix = 'kopesha-';
+            hiddenFieldId = 'kopesha-mteja-id';
+        } else if (modalType === 'barcode-mteja-select') {
+            prefix = 'barcode-kopesha-';
+            hiddenFieldId = 'barcode-kopesha-mteja-id';
+        } else if (modalType === 'kikapu-mteja-select') {
+            prefix = 'kikapu-kopesha-';
+            hiddenFieldId = 'kikapu-kopesha-mteja-id';
+        }
+        
+        const hiddenField = document.getElementById(hiddenFieldId);
+        if (hiddenField) {
+            hiddenField.value = selectedOption.value === "" ? "" : selectedOption.value;
+        }
+        
+        if (selectedOption.value === "") {
+            this.clearCustomerFields(modalType);
         } else {
-            // Fallback: Copy to clipboard
-            await navigator.clipboard.writeText(receiptText);
-            this.showNotification('Risiti imenakiliwa kwenye clipboard!', 'success');
+            const jina = selectedOption.dataset.jina || '';
+            const simu = selectedOption.dataset.simu || '';
+            const baruaPepe = selectedOption.dataset.barua_pepe || '';
+            const anapoishi = selectedOption.dataset.anapoishi || '';
+            this.populateCustomerFields(modalType, jina, simu, baruaPepe, anapoishi);
         }
-    } catch (error) {
-        console.error('Error sharing receipt:', error);
-        this.showNotification('Hitilafu wakati wa kushare risiti', 'error');
     }
-}
 
-async sendReceiptSms(receiptNo) {
-    console.log('🔵 sendReceiptSms called with receiptNo:', receiptNo); // ← ADD THIS
-    
-    if (!receiptNo) {
-        this.showNotification('Hakuna risiti iliyochaguliwa', 'error');
-        return;
+    clearCustomerFields(modalType) {
+        let prefix = '';
+        if (modalType === 'kopesha-mteja-select') prefix = 'kopesha-';  
+        else if (modalType === 'barcode-mteja-select') prefix = 'barcode-kopesha-';
+        else if (modalType === 'kikapu-mteja-select') prefix = 'kikapu-kopesha-';
+        
+        const fields = ['jina', 'simu', 'barua-pepe', 'anapoishi'];
+        fields.forEach(field => {
+            const element = document.getElementById(`${prefix}${field}`);
+            if (element) {
+                element.value = '';
+                if (field === 'jina' || field === 'simu') {
+                    element.required = true;
+                }
+            }
+        });
     }
-    
-    // Store receipt number for later use
-    this.pendingSmsReceiptNo = receiptNo;
-    
-    // Show loading in the modal preview
-    const previewDiv = document.getElementById('sms-receipt-preview');
-    console.log('Preview div:', previewDiv); // ← ADD THIS
-    
-    if (previewDiv) {
-        previewDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inataarisha risiti...';
-    }
-    
-    // First, fetch receipt data to show preview
-    try {
-        console.log('Fetching receipt data for:', receiptNo); // ← ADD THIS
-        const response = await fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`);
-        const data = await response.json();
-        console.log('Receipt data:', data); // ← ADD THIS
-        
-        if (!data.success) {
-            throw new Error(data.message);
-        }
-        
-        // Format preview message
-        let previewText = `Risiti: ${data.receipt_no}\n`;
-        previewText += `Tarehe: ${data.date}\n`;
-        previewText += `Jumla: ${data.total}/=\n`;
-        previewText += `Bidhaa: ${data.items.length}`;
-        
-        if (previewDiv) {
-            previewDiv.textContent = previewText;
-        }
-        
-        // Store full receipt data for sending
-        this.pendingSmsData = data;
-        console.log('Pending SMS data stored'); // ← ADD THIS
-        
-    } catch (error) {
-        console.error('Error fetching receipt:', error);
-        if (previewDiv) {
-            previewDiv.innerHTML = '<span class="text-red-500">Imeshindwa kupata taarifa za risiti</span>';
-        }
-    }
-    
-    // Show the custom modal
-    const modal = document.getElementById('sms-receipt-modal');
-    console.log('SMS Modal element:', modal); // ← ADD THIS
-    
-    if (modal) {
-        modal.classList.remove('hidden');
-        
-        // Focus on phone input
-        const phoneInput = document.getElementById('sms-receipt-phone');
-        if (phoneInput) {
-            setTimeout(() => phoneInput.focus(), 100);
-            phoneInput.value = '';
-        }
-    } else {
-        console.error('SMS modal not found in DOM!'); // ← ADD THIS
-        this.showNotification('Hitilafu: Modal ya SMS haipatikani', 'error');
-    }
-}
 
-// Completely replace the setupSmsModalEvents method with this:
-
-setupSmsModalEvents() {
-    const modal = document.getElementById('sms-receipt-modal');
-    if (!modal) return;
-    
-    const closeModal = () => {
-        modal.classList.add('hidden');
-        const phoneInput = document.getElementById('sms-receipt-phone');
-        if (phoneInput) phoneInput.value = '';
-    };
-    
-    // Close buttons
-    document.getElementById('close-sms-receipt-modal')?.addEventListener('click', closeModal);
-    document.getElementById('cancel-sms-receipt')?.addEventListener('click', closeModal);
-    
-    // Close on overlay click
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal || e.target.classList.contains('modal-overlay')) {
-            closeModal();
+    populateCustomerFields(modalType, jina, simu, baruaPepe, anapoishi) {
+        let prefix = '';
+        if (modalType === 'kopesha-mteja-select') prefix = 'kopesha-'; 
+        else if (modalType === 'barcode-mteja-select') prefix = 'barcode-kopesha-';
+        else if (modalType === 'kikapu-mteja-select') prefix = 'kikapu-kopesha-';
+        
+        const jinaField = document.getElementById(`${prefix}jina`);
+        const simuField = document.getElementById(`${prefix}simu`);
+        const baruaPepeField = document.getElementById(`${prefix}barua-pepe`);
+        const anapoishiField = document.getElementById(`${prefix}anapoishi`);
+        
+        if (jinaField) {
+            jinaField.value = jina;
+            jinaField.required = false;
         }
-    });
-    
-// Send SMS
-document.getElementById('confirm-send-sms')?.addEventListener('click', async () => {
-    const phoneInput = document.getElementById('sms-receipt-phone');
-    const phone = phoneInput?.value.trim() || '';
-    
-    if (!phone) {
-        this.showNotification('Tafadhali ingiza namba ya simu', 'warning');
-        phoneInput?.focus();
-        return;
+        if (simuField) {
+            simuField.value = simu;
+            simuField.required = false;
+        }
+        if (baruaPepeField) baruaPepeField.value = baruaPepe;
+        if (anapoishiField) anapoishiField.value = anapoishi;
     }
-    
-    if (!this.pendingSmsReceiptNo) {
-        this.showNotification('Hitilafu: Hakuna risiti iliyochaguliwa', 'error');
-        closeModal();
-        return;
+
+    openKopeshaModal(type) {
+        this.currentKopeshaType = type;
+        
+        let isValid = false;
+        let modalId = '';
+        
+        if (type === 'regular') {
+            modalId = 'kopesha-modal';
+            const bidhaaId = document.getElementById('bidhaaSelect')?.value;
+            const quantity = document.getElementById('quantity-input')?.value;
+            const totalInput = document.getElementById('total-input');
+            const priceInput = document.getElementById('price-input');
+            const punguzoInput = document.getElementById('punguzo-input');
+            const punguzoType = document.getElementById('punguzo-type');
+            
+            if (bidhaaId && quantity && parseFloat(quantity) > 0) {
+                isValid = true;
+                
+                const kopeshaBidhaaId = document.getElementById('kopesha-bidhaa-id');
+                const kopeshaIdadi = document.getElementById('kopesha-idadi');
+                const kopeshaJumla = document.getElementById('kopesha-jumla');
+                const kopeshaBaki = document.getElementById('kopesha-baki');
+                const kopeshaBei = document.getElementById('kopesha-bei');
+                const kopeshaPunguzo = document.getElementById('kopesha-punguzo');
+                const kopeshaPunguzoAina = document.getElementById('kopesha-punguzo-aina');
+                
+                if (kopeshaBidhaaId) kopeshaBidhaaId.value = bidhaaId;
+                if (kopeshaIdadi) kopeshaIdadi.value = parseFloat(quantity).toFixed(2);
+                if (kopeshaJumla && totalInput) kopeshaJumla.value = totalInput.value;
+                if (kopeshaBaki && totalInput) kopeshaBaki.value = totalInput.value;
+                if (kopeshaBei && priceInput) kopeshaBei.value = priceInput.value;
+                if (kopeshaPunguzo && punguzoInput) kopeshaPunguzo.value = punguzoInput.value || '0.00';
+                if (kopeshaPunguzoAina && punguzoType) kopeshaPunguzoAina.value = punguzoType.value;
+            } else {
+                this.showNotification('Tafadhali chagua bidhaa na idadi sahihi!', 'error');
+                return;
+            }
+        } else if (type === 'barcode') {
+            modalId = 'kopesha-barcode-modal';
+            const rows = document.querySelectorAll('.barcode-row');
+            let validRows = false;
+            let validCount = 0;
+            
+            rows.forEach(row => {
+                const barcode = row.querySelector('.barcode-input')?.value.trim();
+                const productName = row.querySelector('.product-name')?.value.trim();
+                const quantity = row.querySelector('.quantity-input')?.value;
+                
+                if (barcode && productName && quantity && parseFloat(quantity) > 0) {
+                    validRows = true;
+                    validCount++;
+                }
+            });
+            
+            if (validRows) {
+                isValid = true;
+                this.prepareBarcodeKopeshaData();
+                this.showNotification(`Bidhaa ${validCount} zitatumika kwa mkopo`, 'success');
+            } else {
+                this.showNotification('Tafadhali ingiza angalau bidhaa moja kwa usahihi!', 'error');
+                return;
+            }
+        } else if (type === 'kikapu') {
+            modalId = 'kikapu-kopesha-modal';
+            const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+            
+            if (companyCart.length > 0) {
+                isValid = true;
+                this.prepareKikapuKopeshaData();
+                this.showNotification(`Bidhaa ${companyCart.length} kwenye kikapu zitatumika kwa mkopo`, 'success');
+            } else {
+                this.showNotification('Kikapu hakina bidhaa za kampuni yako!', 'error');
+                return;
+            }
+        }
+
+        if (isValid && modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                if (type === 'regular') this.clearCustomerFields('mteja-select');
+                else if (type === 'barcode') this.clearCustomerFields('barcode-mteja-select');
+                else if (type === 'kikapu') this.clearCustomerFields('kikapu-mteja-select');
+                
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const dateInput = modal.querySelector('input[name="tarehe_malipo"]');
+                if (dateInput) {
+                    dateInput.value = tomorrow.toISOString().split('T')[0];
+                }
+                
+                modal.classList.remove('hidden');
+            }
+        }
     }
-    
-    // Show loading
-    const btn = document.getElementById('confirm-send-sms');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inatuma...';
-    btn.disabled = true;
-    
-    try {
-        const response = await fetch('/send-receipt-sms-simple', {
+
+    prepareBarcodeKopeshaData() {
+        const items = [];
+        const punguzoType = document.getElementById('punguzo-type');
+        const discountType = punguzoType ? punguzoType.value : 'bidhaa';
+        
+        document.querySelectorAll('.barcode-row').forEach(row => {
+            const barcodeInput = row.querySelector('.barcode-input');
+            const quantityInput = row.querySelector('.quantity-input');
+            const productName = row.querySelector('.product-name');
+            const productPrice = row.querySelector('.product-price');
+            const punguzoInput = row.querySelector('.punguzo-input');
+            const totalInput = row.querySelector('.total-input');
+            
+            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
+                const barcode = barcodeInput.value.trim();
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const product = productName.value.trim();
+                const price = parseFloat(productPrice.value) || 0;
+                const punguzo = parseFloat(punguzoInput.value) || 0;
+                const jumla = parseFloat(totalInput.value) || 0;
+                
+                if (barcode && quantity > 0 && product && price > 0) {
+                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
+                    
+                    items.push({
+                        barcode: barcode,
+                        bidhaa_id: bidhaa ? bidhaa.id : null,
+                        idadi: quantity,
+                        jina: product,
+                        bei: price,
+                        punguzo: punguzo,
+                        punguzo_aina: discountType,
+                        jumla: jumla,
+                        total_before_discount: (price * quantity),
+                        company_id: this.companyId
+                    });
+                }
+            }
+        });
+        
+        if (items.length > 0) {
+            document.getElementById('barcode-items-data').value = JSON.stringify(items);
+        }
+    }
+
+    prepareKikapuKopeshaData() {
+        const companyCart = this.cart.filter(item => item.company_id === this.companyId);
+        
+        if (companyCart.length > 0) {
+            const items = companyCart.map(item => ({
+                bidhaa_id: item.bidhaa_id,
+                barcode: item.barcode,
+                idadi: item.idadi,
+                jina: item.jina,
+                bei: item.bei,
+                punguzo: item.punguzo,
+                punguzo_aina: item.punguzo_aina,
+                jumla: item.jumla,
+                profit: item.profit || 0,
+                company_id: this.companyId
+            }));
+            
+            document.getElementById('kikapu-items-data').value = JSON.stringify(items);
+        }
+    }
+
+    submitKopeshaForm(form, type) {
+        const formData = new FormData(form);
+        
+        if (type === 'barcode') {
+            const itemsData = document.getElementById('barcode-items-data').value;
+            if (itemsData) {
+                formData.append('items', itemsData);
+            }
+        } else if (type === 'kikapu') {
+            const itemsData = document.getElementById('kikapu-items-data').value;
+            if (itemsData) {
+                formData.append('items', itemsData);
+            }
+        }
+        
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.showNotification('Deni limerekodiwa kikamilifu!', 'success');
+                this.closeModal(type === 'regular' ? 'kopesha-modal' : 
+                              type === 'barcode' ? 'kopesha-barcode-modal' : 
+                              'kikapu-kopesha-modal');
+                
+                if (type === 'regular') {
+                    this.resetForm();
+                } else if (type === 'barcode') {
+                    this.clearBarcodeRows();
+                } else if (type === 'kikapu') {
+                    this.clearCart();
+                }
+                
+                this.updateFinancialData();
+                
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kuhifadhi!', 'error');
+        });
+    }
+
+    bindModalEvents() {
+        const closeModal = (modalId) => {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.add('hidden');
+        };
+
+        const closeKopeshaBtn = document.getElementById('close-kopesha-modal');
+        const cancelKopeshaBtn = document.getElementById('cancel-kopesha');
+        const kopeshaForm = document.getElementById('kopesha-form');
+        
+        if (closeKopeshaBtn) closeKopeshaBtn.addEventListener('click', () => closeModal('kopesha-modal'));
+        if (cancelKopeshaBtn) cancelKopeshaBtn.addEventListener('click', () => closeModal('kopesha-modal'));
+        if (kopeshaForm) kopeshaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitKopeshaForm(kopeshaForm, 'regular');
+        });
+        
+        const closeKopeshaBarcodeBtn = document.getElementById('close-kopesha-barcode-modal');
+        const cancelKopeshaBarcodeBtn = document.getElementById('cancel-kopesha-barcode');
+        const kopeshaBarcodeForm = document.getElementById('kopesha-barcode-form');
+        
+        if (closeKopeshaBarcodeBtn) closeKopeshaBarcodeBtn.addEventListener('click', () => closeModal('kopesha-barcode-modal'));
+        if (cancelKopeshaBarcodeBtn) cancelKopeshaBarcodeBtn.addEventListener('click', () => closeModal('kopesha-barcode-modal'));
+        if (kopeshaBarcodeForm) kopeshaBarcodeForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitKopeshaForm(kopeshaBarcodeForm, 'barcode');
+        });
+        
+        const closeKikapuKopeshaBtn = document.getElementById('close-kikapu-kopesha-modal');
+        const cancelKikapuKopeshaBtn = document.getElementById('cancel-kikapu-kopesha');
+        const kikapuKopeshaForm = document.getElementById('kikapu-kopesha-form');
+        
+        if (closeKikapuKopeshaBtn) closeKikapuKopeshaBtn.addEventListener('click', () => closeModal('kikapu-kopesha-modal'));
+        if (cancelKikapuKopeshaBtn) cancelKikapuKopeshaBtn.addEventListener('click', () => closeModal('kikapu-kopesha-modal'));
+        if (kikapuKopeshaForm) kikapuKopeshaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitKopeshaForm(kikapuKopeshaForm, 'kikapu');
+        });
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal || e.target.classList.contains('modal-overlay')) {
+                    modal.classList.add('hidden');
+                    if (modal.id === 'double-sale-modal') this.pendingSaleData = null;
+                }
+            });
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.classList.add('hidden');
+                    if (modal.id === 'double-sale-modal') this.pendingSaleData = null;
+                });
+            }
+        });
+    }
+
+    bindCartEvents() {
+        const clearCartBtn = document.getElementById('clear-cart');
+        const checkoutCartBtn = document.getElementById('checkout-cart');
+        const kikapuKopeshaBtn = document.getElementById('kikapu-kopesha-btn');
+
+        if (clearCartBtn) {
+            clearCartBtn.addEventListener('click', () => {
+                this.showConfirmation('Unahakika unataka kufuta bidhaa zote kwenye kikapu?', () => this.clearCart());
+            });
+        }
+        if (checkoutCartBtn) checkoutCartBtn.addEventListener('click', async () => await this.checkoutCart());
+        if (kikapuKopeshaBtn) kikapuKopeshaBtn.addEventListener('click', () => this.openKopeshaModal('kikapu'));
+    }
+
+    bindSearchEvents() {
+        const searchSales = document.getElementById('search-sales');
+        const filterStartDate = document.getElementById('filter-start-date');
+        const filterEndDate = document.getElementById('filter-end-date');
+        const resetFilters = document.getElementById('reset-filters');
+        
+        if (searchSales) {
+            searchSales.addEventListener('input', (e) => {
+                if (this.searchTimer) clearTimeout(this.searchTimer);
+                this.searchTimer = setTimeout(() => this.filterSalesTable(), 500);
+            });
+        }
+        if (filterStartDate) filterStartDate.addEventListener('change', () => this.filterSalesTable());
+        if (filterEndDate) filterEndDate.addEventListener('change', () => this.filterSalesTable());
+        
+        if (resetFilters) {
+            resetFilters.addEventListener('click', () => {
+                if (searchSales) searchSales.value = '';
+                if (filterStartDate) filterStartDate.value = '';
+                if (filterEndDate) filterEndDate.value = '';
+                this.filterSalesTable();
+            });
+        }
+
+        const searchProduct = document.getElementById('search-product');
+        if (searchProduct) {
+            searchProduct.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('.grouped-sales-row').forEach(row => {
+                    const product = row.dataset.product;
+                    row.classList.toggle('hidden', !product.includes(searchTerm));
+                });
+            });
+        }
+    }
+
+    filterSalesTable() {
+        const searchTerm = document.getElementById('search-sales')?.value.toLowerCase() || '';
+        const startDate = document.getElementById('filter-start-date')?.value || '';
+        const endDate = document.getElementById('filter-end-date')?.value || '';
+        
+        const tbody = document.getElementById('sales-tbody');
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Inapakia...</td></tr>';
+        
+        fetch('/mauzo/filtered-sales', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({
-                phone: phone,
-                receipt_no: this.pendingSmsReceiptNo
-            })
+            body: JSON.stringify({ search: searchTerm, start_date: startDate, end_date: endDate })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('sales-tbody').innerHTML = data.html;
+                this.bindReceiptEvents();
+                this.bindDeleteSaleEvents();
+            } else {
+                this.showNotification('Kuna tatizo kwenye kupata taarifa!', 'error');
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Kuna tatizo kwenye kupata taarifa.</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            this.showNotification('Kuna tatizo kwenye kupata taarifa!', 'error');
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-gray-500">Kuna tatizo kwenye kupata taarifa.</td></tr>';
+        });
+    }
+
+    bindReceiptEvents() {
+        document.querySelectorAll('.copy-receipt').forEach(element => {
+            element.addEventListener('click', (e) => {
+                const receiptNo = e.target.dataset.receipt;
+                navigator.clipboard.writeText(receiptNo).then(() => {
+                    this.showNotification('Namba ya risiti imenakiliwa!', 'success');
+                });
+            });
         });
         
-        const data = await response.json();
-        
-        if (data.success) {
-            this.showNotification('✓ Risiti imetumwa kikamilifu kwa ' + phone, 'success');
-            closeModal();
-        } else {
-            this.showNotification('✗ Hitilafu: ' + (data.message || 'Imeshindwa kutuma SMS'), 'error');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        this.showNotification('Hitilafu ya mtandao. Tafadhali jaribu tena.', 'error');
-    } finally {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
+        document.querySelectorAll('.print-single-receipt').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const receiptNo = e.target.closest('.print-single-receipt').dataset.receiptNo;
+                if (receiptNo) this.printSingleReceipt(receiptNo);
+            });
+        });
     }
-});
+
+
+bindSmsReceiptEvents() {
+    const sendReceiptCheckbox = document.getElementById('send_receipt_checkbox');
+    const sendReceiptHidden = document.getElementById('send_receipt_hidden');
+    const sendToPhoneHidden = document.getElementById('send_to_phone_hidden');
+    const customerSearch = document.getElementById('customer_search');
+    const customerSelect = document.getElementById('customer_select');
+    const selectedCustomerId = document.getElementById('selected_customer_id');
+    
+    if (!sendReceiptCheckbox || !customerSearch) return;
+    
+    // Track if we're in "new customer" mode
+    let isNewCustomerMode = false;
+    
+    // Function to update phone number based on selection
+    const updatePhoneNumber = () => {
+        const isChecked = sendReceiptCheckbox.checked;
+        
+        if (!isChecked) {
+            sendToPhoneHidden.value = '';
+            return;
+        }
+        
+        if (isNewCustomerMode) {
+            // Manual entry mode - use the search input value as phone
+            const phoneValue = customerSearch.value.trim();
+            if (phoneValue) {
+                // Format phone number
+                let formattedPhone = phoneValue.replace(/\D/g, '');
+                if (formattedPhone.startsWith('0')) {
+                    formattedPhone = '255' + formattedPhone.substring(1);
+                } else if (formattedPhone.startsWith('255')) {
+                    formattedPhone = formattedPhone;
+                } else if (formattedPhone.length === 9 && formattedPhone.startsWith('7')) {
+                    formattedPhone = '255' + formattedPhone;
+                }
+                sendToPhoneHidden.value = formattedPhone;
+            } else {
+                sendToPhoneHidden.value = '';
+            }
+        } else {
+            // Selected customer mode
+            const selectedOption = customerSelect.options[customerSelect.selectedIndex];
+            if (selectedOption && selectedOption.value) {
+                const customerPhone = selectedOption.dataset.simu || '';
+                let formattedPhone = customerPhone.replace(/\D/g, '');
+                if (formattedPhone.startsWith('0')) {
+                    formattedPhone = '255' + formattedPhone.substring(1);
+                } else if (formattedPhone.startsWith('255')) {
+                    formattedPhone = formattedPhone;
+                }
+                sendToPhoneHidden.value = formattedPhone;
+            } else {
+                sendToPhoneHidden.value = '';
+            }
+        }
+    };
+    
+    // Initialize customer search functionality
+    this.initCustomerSearch(customerSearch, customerSelect, selectedCustomerId, () => {
+        isNewCustomerMode = false;
+        updatePhoneNumber();
+    }, () => {
+        isNewCustomerMode = true;
+        updatePhoneNumber();
+    });
+    
+    // Handle checkbox change
+    sendReceiptCheckbox.addEventListener('change', (e) => {
+        sendReceiptHidden.value = e.target.checked ? '1' : '0';
+        updatePhoneNumber();
+    });
+    
+    // Handle manual input for new customer
+    customerSearch.addEventListener('input', (e) => {
+        if (!customerSelect.classList.contains('hidden')) return;
+        
+        // If we're typing and no customer is selected, we're in new customer mode
+        const hasValue = e.target.value.trim().length > 0;
+        if (hasValue && !selectedCustomerId.value) {
+            isNewCustomerMode = true;
+            updatePhoneNumber();
+        } else if (!hasValue) {
+            isNewCustomerMode = false;
+            selectedCustomerId.value = '';
+            updatePhoneNumber();
+        }
+    });
+    
+    customerSearch.addEventListener('blur', () => {
+        setTimeout(() => {
+            if (!customerSelect.classList.contains('hidden')) return;
+            if (customerSearch.value.trim() && !selectedCustomerId.value) {
+                isNewCustomerMode = true;
+                updatePhoneNumber();
+            }
+        }, 200);
+    });
+    
+    // Initial update
+    updatePhoneNumber();
 }
+
+initCustomerSearch(searchInput, selectDropdown, hiddenId, onSelectCallback, onNewCallback) {
+    if (!searchInput || !selectDropdown) return;
+    
+    // Handle focus - show dropdown
+    searchInput.addEventListener('focus', () => {
+        selectDropdown.classList.remove('hidden');
+        this.filterCustomerOptions(searchInput.value);
+    });
+    
+    // Handle input - filter options
+    searchInput.addEventListener('input', (e) => {
+        this.filterCustomerOptions(e.target.value);
+        selectDropdown.classList.remove('hidden');
+    });
+    
+    // Handle selection from dropdown
+    selectDropdown.addEventListener('change', () => {
+        if (!selectDropdown.value) return;
+        
+        const selectedOption = selectDropdown.options[selectDropdown.selectedIndex];
+        const customerName = selectedOption.dataset.jina || '';
+        const customerPhone = selectedOption.dataset.simu || '';
+        
+        // Update search input with customer info
+        searchInput.value = `${customerName} - ${customerPhone}`;
+        hiddenId.value = selectDropdown.value;
+        
+        // Hide dropdown
+        selectDropdown.classList.add('hidden');
+        
+        // Callback for selection
+        if (onSelectCallback) onSelectCallback();
+    });
+    
+    // Handle click outside to hide dropdown
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#customer_search') && !e.target.closest('#customer_select')) {
+            selectDropdown.classList.add('hidden');
+            
+            // If input has value but no customer selected, treat as new customer
+            if (searchInput.value.trim() && !hiddenId.value) {
+                if (onNewCallback) onNewCallback();
+            }
+        }
+    });
+    
+    // Handle Enter key
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            selectDropdown.classList.add('hidden');
+            
+            // If Enter pressed with value but no selection, treat as new customer
+            if (searchInput.value.trim() && !hiddenId.value) {
+                if (onNewCallback) onNewCallback();
+            }
+        }
+    });
+}
+
+filterCustomerOptions(searchText) {
+    const selectDropdown = document.getElementById('customer_select');
+    if (!selectDropdown) return;
+    
+    const filter = searchText.toLowerCase();
+    const options = selectDropdown.getElementsByTagName('option');
+    
+    // Skip the first empty option
+    for (let i = 1; i < options.length; i++) {
+        const jina = options[i].dataset.jina?.toLowerCase() || '';
+        const simu = options[i].dataset.simu?.toLowerCase() || '';
+        const searchableText = `${jina} ${simu}`;
+        
+        if (filter === '' || searchableText.includes(filter)) {
+            options[i].style.display = '';
+        } else {
+            options[i].style.display = 'none';
+        }
+    }
+}
+    removeFromCart(index) {
+        this.cart.splice(index, 1);
+        this.saveCart();
+        this.updateCartCount();
+        this.updateCartDisplay();
+        this.showNotification('Bidhaa imeondolewa kwenye kikapu!', 'success');
+    }
+
+    clearCart() {
+        this.cart = [];
+        this.saveCart();
+        this.updateCartCount();
+        this.updateCartDisplay();
+        this.showNotification('Kikapu kimefutwa!', 'success');
+    }
+
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.add('hidden');
+    }
+
+    saveCart() {
+        localStorage.setItem(this.cartKey, JSON.stringify(this.cart));
+    }
+
+    updateCartCount() {
+        const cartCount = document.getElementById('cart-count');
+        if (cartCount) {
+            const companyCartCount = this.cart.filter(item => item.company_id === this.companyId).length;
+            if (companyCartCount > 0) {
+                cartCount.textContent = companyCartCount;
+                cartCount.classList.remove('hidden');
+            } else {
+                cartCount.classList.add('hidden');
+            }
+        }
+    }
+
+    setTodayDate() {
+        const today = new Date().toISOString().split('T')[0];
+        const dateInputs = document.querySelectorAll('input[type="date"]');
+        dateInputs.forEach(input => {
+            if (!input.value) input.value = today;
+        });
+    }
+
+    showNotification(message, type = 'success', showButtons = false) {
+        const notification = document.getElementById('notification');
+        const notificationIcon = document.getElementById('notification-icon');
+        const notificationMessage = document.getElementById('notification-message');
+        const notificationButtons = document.getElementById('notification-buttons');
+        
+        if (!notification || !notificationIcon || !notificationMessage) return;
+
+        let iconClass, borderColor;
+        switch(type) {
+            case 'success':
+                iconClass = 'fas fa-check-circle text-green-500';
+                borderColor = 'border-green-200';
+                break;
+            case 'error':
+                iconClass = 'fas fa-times-circle text-red-500';
+                borderColor = 'border-red-200';
+                break;
+            case 'warning':
+                iconClass = 'fas fa-exclamation-triangle text-amber-500';
+                borderColor = 'border-amber-200';
+                break;
+            default:
+                iconClass = 'fas fa-info-circle text-blue-500';
+                borderColor = 'border-blue-200';
+        }
+        
+        notificationIcon.className = iconClass;
+        const notificationContent = notification.querySelector('.bg-white');
+        if (notificationContent) {
+            notificationContent.className = `bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4 border-2 ${borderColor} transform transition-all duration-300 scale-95`;
+        }
+        notificationMessage.textContent = message;
+        
+        if (showButtons) {
+            notificationButtons?.classList.remove('hidden');
+        } else {
+            notificationButtons?.classList.add('hidden');
+        }
+        
+        notification.classList.remove('hidden');
+        
+        if (!showButtons) {
+            setTimeout(() => notification.classList.add('hidden'), 3000);
+        }
+    }
+
+    showConfirmation(message, confirmCallback) {
+        if (confirm(message)) confirmCallback();
+    }
 }
 
 // Initialize when DOM is loaded

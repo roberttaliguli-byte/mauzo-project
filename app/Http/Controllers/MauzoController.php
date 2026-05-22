@@ -250,7 +250,10 @@ private function storeRegularSale(Request $request, $companyId)
             'jumla'        => 'required|numeric',
             'lipa_kwa'     => 'nullable|in:cash,lipa_namba,bank',
             'mteja_id'     => 'nullable|exists:mtejas,id',
-            'bei_type'     => 'nullable|in:rejareja,jumla', // ADD THIS
+            'bei_type'     => 'nullable|in:rejareja,jumla',
+            // ADD THESE NEW RULES
+            'send_receipt' => 'nullable|boolean',
+            'send_to_phone' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -268,21 +271,17 @@ private function storeRegularSale(Request $request, $companyId)
         
         // Determine which price to use based on bei_type selection
         $priceType = $request->bei_type ?? 'rejareja';
-        $priceToUse = $request->bei; // The price from the input (already selected from dropdown)
+        $priceToUse = $request->bei;
         
         // Validate that the price matches the selected type
         if ($priceType === 'rejareja') {
-            // Should match retail price
             $expectedPrice = $bidhaa->bei_kuuza;
             if (abs($priceToUse - $expectedPrice) > 0.01 && $expectedPrice > 0) {
-                // Auto-correct to retail price if mismatch
                 $priceToUse = $expectedPrice;
             }
         } elseif ($priceType === 'jumla' && $bidhaa->bei_uzo_jumla && $bidhaa->bei_uzo_jumla > 0) {
-            // Should match wholesale price
             $expectedPrice = $bidhaa->bei_uzo_jumla;
             if (abs($priceToUse - $expectedPrice) > 0.01 && $expectedPrice > 0) {
-                // Auto-correct to wholesale price if mismatch
                 $priceToUse = $expectedPrice;
             }
         }
@@ -326,13 +325,36 @@ private function storeRegularSale(Request $request, $companyId)
             'bidhaa_id'     => $request->bidhaa_id,
             'idadi'         => $request->idadi,
             'bei'           => $priceToUse,
-            'bei_type_used' => $priceType, // RECORD WHICH PRICE TYPE WAS USED
+            'bei_type_used' => $priceType,
             'punguzo'       => $discount,
             'punguzo_aina'  => $discountType,
             'jumla'         => $finalTotal,
             'lipa_kwa'      => $request->lipa_kwa ?? 'cash',
             'mteja_id'      => $request->mteja_id,
         ]);
+
+        // === NEW CODE: Send SMS receipt if requested ===
+        $sendReceipt = $request->input('send_receipt', false);
+        if ($sendReceipt == '1' || $sendReceipt === true || $sendReceipt === 'true') {
+            $phoneNumber = null;
+            
+            // Determine phone number to send to
+            if ($request->mteja_id) {
+                // Get phone from registered customer
+                $mteja = Mteja::find($request->mteja_id);
+                if ($mteja && $mteja->simu) {
+                    $phoneNumber = $mteja->simu;
+                }
+            } else {
+                // Use the manually entered phone number
+                $phoneNumber = $request->input('send_to_phone');
+            }
+            
+            // Send SMS if we have a valid phone number
+            if ($phoneNumber && !empty(trim($phoneNumber))) {
+                $this->sendReceiptAfterSale($mauzo, $phoneNumber);
+            }
+        }
 
         return response()->json([
             'success' => true, 
@@ -342,6 +364,88 @@ private function storeRegularSale(Request $request, $companyId)
             'data' => $mauzo
         ]);
     });
+}
+
+/**
+ * Send receipt SMS after successful sale
+ */
+private function sendReceiptAfterSale($sale, $phoneNumber)
+{
+    try {
+        $company = \App\Models\Company::find($sale->company_id);
+        $user = $this->getAuthUser();
+        
+        // Get all items in same receipt
+        $sales = Mauzo::with('bidhaa')
+            ->where('company_id', $sale->company_id)
+            ->where('receipt_no', $sale->receipt_no)
+            ->get();
+        
+        // Format phone number
+        $phone = preg_replace('/[^0-9]/', '', $phoneNumber);
+        if (substr($phone, 0, 1) == '0') $phone = '255' . substr($phone, 1);
+        if (substr($phone, 0, 1) == '7') $phone = '255' . $phone;
+        if (strlen($phone) != 12) {
+            \Log::warning("Invalid phone number format: {$phone}");
+            return false;
+        }
+        
+        // Define website URL
+        $websiteUrl = 'www.mauzosheetai.co.tz';
+        
+        // Build SMS message
+        $message = "";
+        if ($company && $company->company_name) {
+            $message .= strtoupper($company->company_name) . "\n";
+        }
+        $message .= "RISITI: " . $sale->receipt_no . "\n";
+        $message .= "Tarehe: " . now()->format('d/m/Y H:i') . "\n";
+        $message .= str_repeat("-", 25) . "\n";
+        
+        foreach ($sales as $item) {
+            $message .= $item->bidhaa->jina . "\n";
+            $message .= "  " . number_format($item->idadi, 2) . " x " . number_format($item->bei, 0) . " = " . number_format($item->jumla, 0) . "\n";
+            if ($item->punguzo > 0) {
+                $discountAmount = $item->punguzo_aina === 'bidhaa' ? $item->punguzo * $item->idadi : $item->punguzo;
+                $message .= "  Punguzo: -" . number_format($discountAmount, 0) . "\n";
+            }
+        }
+        
+        $message .= str_repeat("-", 25) . "\n";
+        $totalPunguzo = $sales->sum(function($item) {
+            return $item->punguzo_aina === 'bidhaa' ? $item->punguzo * $item->idadi : $item->punguzo;
+        });
+        $subtotal = $sales->sum('jumla') + $totalPunguzo;
+        
+        if ($totalPunguzo > 0) {
+            $message .= "Jumla Ndogo: " . number_format($subtotal, 0) . "\n";
+            $message .= "Punguzo: -" . number_format($totalPunguzo, 0) . "\n";
+            $message .= str_repeat("-", 25) . "\n";
+        }
+        
+        $message .= "JUMLA: " . number_format($sales->sum('jumla'), 0) . "/=\n";
+        $paymentText = match($sale->lipa_kwa) {
+            'cash' => 'CASH',
+            'lipa_namba' => 'LIPA NAMBA',
+            'bank' => 'BENKI',
+            default => strtoupper($sale->lipa_kwa)
+        };
+        $message .= "Malipo: " . $paymentText . "\n";
+        $message .= str_repeat("-", 25) . "\n";
+        $message .= "ASANTE KWA KUNUNUA!\n";
+        $message .= $websiteUrl . "\n";  // Fixed: Use variable, not Blade syntax
+        
+        // Send SMS
+        $result = $this->smsService->sendSms($phone, $message, 'RECEIPT_' . $sale->receipt_no);
+        
+        \Log::info("SMS sent for receipt {$sale->receipt_no} to {$phone}: " . ($result['success'] ? 'Success' : 'Failed'));
+        
+        return $result['success'] ?? false;
+        
+    } catch (\Exception $e) {
+        \Log::error('Error sending receipt SMS after sale: ' . $e->getMessage());
+        return false;
+    }
 }
 
 // In storeLoan method, add bei_type handling
@@ -557,99 +661,202 @@ public function storeBarcode(Request $request)
         return response()->json(['success' => true, 'message' => 'Mauzo yamerekodiwa kikamilifu!', 'notification' => 'Mauzo yamefanikiwa!', 'receipt_no' => $receiptNo]);
     });
 }
-    // ------------------- KIKAPU SALE (multiple products) -------------------
-    public function storeKikapu(Request $request)
-    {
-        $user = $this->getAuthUser();
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized access', 'notification' => 'Unauthorized!'], 401);
-        }
-        $companyId = $user->company_id;
 
-        $validator = Validator::make($request->all(), [
-            'items' => 'required|array|min:1',
-            'items.*.jina' => 'required|string',
-            'items.*.bei' => 'required|numeric',
-            'items.*.idadi' => 'required|numeric|min:0.01',
-            'items.*.punguzo' => 'nullable|numeric|min:0',
-            'items.*.punguzo_aina' => 'nullable|in:bidhaa,jumla',
-            'items.*.bidhaa_id' => 'required|exists:bidhaas,id',
-            'lipa_kwa' => 'nullable|in:cash,lipa_namba,bank',
-            'mteja_id' => 'nullable|exists:mtejas,id',
-        ]);
+// ------------------- KIKAPU SALE (multiple products) -------------------
+public function storeKikapu(Request $request)
+{
+    $user = $this->getAuthUser();
+    if (!$user) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized access', 'notification' => 'Unauthorized!'], 401);
+    }
+    $companyId = $user->company_id;
 
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()->first(), 'notification' => 'Kosa katika taarifa!'], 422);
-        }
+    $validator = Validator::make($request->all(), [
+        'items' => 'required|array|min:1',
+        'items.*.jina' => 'required|string',
+        'items.*.bei' => 'required|numeric',
+        'items.*.idadi' => 'required|numeric|min:0.01',
+        'items.*.punguzo' => 'nullable|numeric|min:0',
+        'items.*.punguzo_aina' => 'nullable|in:bidhaa,jumla',
+        'items.*.bidhaa_id' => 'required|exists:bidhaas,id',
+        'lipa_kwa' => 'nullable|in:cash,lipa_namba,bank',
+        'mteja_id' => 'nullable|exists:mtejas,id',
+        'send_receipt' => 'nullable|boolean',
+        'send_to_phone' => 'nullable|string|max:20',
+    ]);
 
-        $receiptNo = $this->generateReceiptNo($companyId);
-        $paymentMethod = $request->input('lipa_kwa', 'cash');
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'message' => $validator->errors()->first(), 'notification' => 'Kosa katika taarifa!'], 422);
+    }
 
-        try {
-            DB::beginTransaction();
+    $receiptNo = $this->generateReceiptNo($companyId);
+    $paymentMethod = $request->input('lipa_kwa', 'cash');
+    $sendReceipt = $request->input('send_receipt', false);
+    $sendToPhone = $request->input('send_to_phone');
 
-            foreach ($request->items as $item) {
-                $bidhaa = Bidhaa::where('id', $item['bidhaa_id'])->where('company_id', $companyId)->first();
-                if (!$bidhaa) {
-                    DB::rollBack();
-                    return response()->json(['success' => false, 'message' => "Bidhaa {$item['jina']} haipatikani", 'notification' => 'Bidhaa haipo!'], 404);
-                }
+    try {
+        DB::beginTransaction();
 
-                if ($item['idadi'] > $bidhaa->idadi) {
-                    DB::rollBack();
-                    return response()->json(['success' => false, 'message' => "Stock haitoshi kwa {$bidhaa->jina}, baki ni {$bidhaa->idadi}", 'notification' => 'Stock haitoshi!'], 422);
-                }
-
-                $baseTotal = $item['bei'] * $item['idadi'];
-                $discount = $item['punguzo'] ?? 0;
-                $discountType = $item['punguzo_aina'] ?? 'bidhaa';
-                $actualDiscount = ($discountType === 'bidhaa') ? $discount * $item['idadi'] : $discount;
-                $profit = ($item['bei'] - $bidhaa->bei_nunua) * $item['idadi'];
-
-                // Validate discount
-                if ($discountType === 'jumla') {
-                    if ($discount > $baseTotal) {
-                        DB::rollBack();
-                        return response()->json(['success' => false, 'message' => "Punguzo haliruhusiwi kuzidi jumla ya " . number_format($baseTotal, 2) . " Tsh kwa {$bidhaa->jina}", 'notification' => 'Punguzo limepita kiasi!'], 422);
-                    }
-                    if ($discount > $profit) {
-                        DB::rollBack();
-                        return response()->json(['success' => false, 'message' => "Punguzo la jumla haliruhusiwi kuzidi faida ya " . number_format($profit, 2) . " Tsh kwa {$bidhaa->jina}", 'notification' => 'Punguzo limezidi faida!'], 422);
-                    }
-                } else {
-                    $maxDiscountPerItem = $item['bei'] - $bidhaa->bei_nunua;
-                    if ($discount > $maxDiscountPerItem) {
-                        DB::rollBack();
-                        return response()->json(['success' => false, 'message' => "Punguzo haliruhusiwi kuzidi faida ya " . number_format($maxDiscountPerItem, 2) . " Tsh kwa kila {$bidhaa->jina}", 'notification' => 'Punguzo limepita kiasi!'], 422);
-                    }
-                }
-
-                $jumla = $baseTotal - $actualDiscount;
-
-                Mauzo::create([
-                    'company_id'   => $companyId,
-                    'receipt_no'   => $receiptNo,
-                    'bidhaa_id'    => $bidhaa->id,
-                    'idadi'        => $item['idadi'],
-                    'bei'          => $item['bei'],
-                    'punguzo'      => $discount,
-                    'punguzo_aina' => $discountType,
-                    'jumla'        => $jumla,
-                    'lipa_kwa'     => $paymentMethod,
-                    'mteja_id'     => $request->mteja_id,
-                ]);
-
-                $bidhaa->decrement('idadi', $item['idadi']);
+        foreach ($request->items as $item) {
+            $bidhaa = Bidhaa::where('id', $item['bidhaa_id'])->where('company_id', $companyId)->first();
+            if (!$bidhaa) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => "Bidhaa {$item['jina']} haipatikani", 'notification' => 'Bidhaa haipo!'], 404);
             }
 
-            DB::commit();
-            return response()->json(['success' => true, 'message' => 'Mauzo ya kikapu yamehifadhiwa kikamilifu!', 'notification' => 'Kikapu kimefanikiwa!', 'receipt_no' => $receiptNo]);
+            if ($item['idadi'] > $bidhaa->idadi) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => "Stock haitoshi kwa {$bidhaa->jina}, baki ni {$bidhaa->idadi}", 'notification' => 'Stock haitoshi!'], 422);
+            }
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Kuna tatizo kwenye kuhifadhi mauzo: ' . $e->getMessage(), 'notification' => 'Kuna tatizo!'], 500);
+            $baseTotal = $item['bei'] * $item['idadi'];
+            $discount = $item['punguzo'] ?? 0;
+            $discountType = $item['punguzo_aina'] ?? 'bidhaa';
+            $actualDiscount = ($discountType === 'bidhaa') ? $discount * $item['idadi'] : $discount;
+            $profit = ($item['bei'] - $bidhaa->bei_nunua) * $item['idadi'];
+
+            // Validate discount
+            if ($discountType === 'jumla') {
+                if ($discount > $baseTotal) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => "Punguzo haliruhusiwi kuzidi jumla ya " . number_format($baseTotal, 2) . " Tsh kwa {$bidhaa->jina}", 'notification' => 'Punguzo limepita kiasi!'], 422);
+                }
+                if ($discount > $profit) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => "Punguzo la jumla haliruhusiwi kuzidi faida ya " . number_format($profit, 2) . " Tsh kwa {$bidhaa->jina}", 'notification' => 'Punguzo limezidi faida!'], 422);
+                }
+            } else {
+                $maxDiscountPerItem = $item['bei'] - $bidhaa->bei_nunua;
+                if ($discount > $maxDiscountPerItem) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => "Punguzo haliruhusiwi kuzidi faida ya " . number_format($maxDiscountPerItem, 2) . " Tsh kwa kila {$bidhaa->jina}", 'notification' => 'Punguzo limepita kiasi!'], 422);
+                }
+            }
+
+            $jumla = $baseTotal - $actualDiscount;
+
+            Mauzo::create([
+                'company_id'   => $companyId,
+                'receipt_no'   => $receiptNo,
+                'bidhaa_id'    => $bidhaa->id,
+                'idadi'        => $item['idadi'],
+                'bei'          => $item['bei'],
+                'punguzo'      => $discount,
+                'punguzo_aina' => $discountType,
+                'jumla'        => $jumla,
+                'lipa_kwa'     => $paymentMethod,
+                'mteja_id'     => $request->mteja_id,
+            ]);
+
+            $bidhaa->decrement('idadi', $item['idadi']);
         }
+
+        DB::commit();
+        
+        // Send SMS receipt if requested
+        if ($sendReceipt && $sendToPhone) {
+            // Get all sales with this receipt number to send full receipt
+            $sales = Mauzo::with('bidhaa')
+                ->where('company_id', $companyId)
+                ->where('receipt_no', $receiptNo)
+                ->get();
+            
+            if ($sales->isNotEmpty()) {
+                $this->sendKikapuReceiptSms($sales, $sendToPhone, $companyId);
+            }
+        }
+        
+        return response()->json(['success' => true, 'message' => 'Mauzo ya kikapu yamehifadhiwa kikamilifu!', 'notification' => 'Kikapu kimefanikiwa!', 'receipt_no' => $receiptNo]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['success' => false, 'message' => 'Kuna tatizo kwenye kuhifadhi mauzo: ' . $e->getMessage(), 'notification' => 'Kuna tatizo!'], 500);
     }
+}
+
+/**
+ * Send SMS receipt for kikapu sales
+ */
+private function sendKikapuReceiptSms($sales, $phoneNumber, $companyId)
+{
+    try {
+        $company = \App\Models\Company::find($companyId);
+        
+        // Format phone number
+        $phone = preg_replace('/[^0-9]/', '', $phoneNumber);
+        if (substr($phone, 0, 1) == '0') $phone = '255' . substr($phone, 1);
+        if (substr($phone, 0, 1) == '7') $phone = '255' . $phone;
+        if (strlen($phone) != 12) {
+            \Log::warning("Invalid phone number format for kikapu receipt: {$phone}");
+            return false;
+        }
+        
+        $receiptNo = $sales->first()->receipt_no;
+        $websiteUrl = 'www.mauzosheetai.co.tz';
+        
+        // Build SMS message
+        $message = "";
+        if ($company && $company->company_name) {
+            $message .= strtoupper($company->company_name) . "\n";
+        }
+        $message .= "RISITI: " . $receiptNo . "\n";
+        $message .= "Tarehe: " . now()->format('d/m/Y H:i') . "\n";
+        $message .= str_repeat("-", 25) . "\n";
+        
+        $subtotal = 0;
+        $totalPunguzo = 0;
+        
+        foreach ($sales as $item) {
+            $message .= $item->bidhaa->jina . "\n";
+            $message .= "  " . number_format($item->idadi, 2) . " x " . number_format($item->bei, 0) . " = " . number_format($item->jumla, 0) . "\n";
+            
+            $discountAmount = ($item->punguzo_aina === 'bidhaa') 
+                ? $item->punguzo * $item->idadi 
+                : $item->punguzo;
+            
+            if ($discountAmount > 0) {
+                $message .= "  Punguzo: -" . number_format($discountAmount, 0) . "\n";
+                $totalPunguzo += $discountAmount;
+            }
+            
+            $subtotal += $item->bei * $item->idadi;
+        }
+        
+        $message .= str_repeat("-", 25) . "\n";
+        
+        if ($totalPunguzo > 0) {
+            $message .= "Jumla Ndogo: " . number_format($subtotal, 0) . "\n";
+            $message .= "Punguzo: -" . number_format($totalPunguzo, 0) . "\n";
+            $message .= str_repeat("-", 25) . "\n";
+        }
+        
+        $total = $sales->sum('jumla');
+        $message .= "JUMLA: " . number_format($total, 0) . "/=\n";
+        
+        $paymentMethod = $sales->first()->lipa_kwa ?? 'cash';
+        $paymentText = match($paymentMethod) {
+            'cash' => 'CASH',
+            'lipa_namba' => 'LIPA NAMBA',
+            'bank' => 'BENKI',
+            default => strtoupper($paymentMethod)
+        };
+        $message .= "Malipo: " . $paymentText . "\n";
+        $message .= str_repeat("-", 25) . "\n";
+        $message .= "ASANTE KWA KUNUNUA!\n";
+        $message .= $websiteUrl . "\n";
+        
+        // Send SMS using your SMSService
+        $result = $this->smsService->sendSms($phone, $message, 'RECEIPT_' . $receiptNo);
+        
+        \Log::info("Kikapu SMS sent for receipt {$receiptNo} to {$phone}: " . ($result['success'] ? 'Success' : 'Failed'));
+        
+        return $result['success'] ?? false;
+        
+    } catch (\Exception $e) {
+        \Log::error('Error sending kikapu receipt SMS: ' . $e->getMessage());
+        return false;
+    }
+}
 
     // ------------------- KIKAPU LOAN (multiple products) -------------------
     public function storeKikapuLoan(Request $request)

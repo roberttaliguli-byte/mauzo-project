@@ -48,22 +48,44 @@ class BidhaaController extends Controller
         return Auth::guard('web')->check();
     }
 
-    private function canViewPurchasePrice()
-    {
-        if (Auth::guard('web')->check()) {
-            return true;
-        }
-
-        $employee = Auth::guard('mfanyakazi')->user();
-
-        if (!$employee) {
-            return false;
-        }
-
-        $uwezo = strtolower(trim($employee->uwezo ?? ''));
-
-        return in_array($uwezo, ['mkubwa']);
+private function canViewPurchasePrice()
+{
+    if (Auth::guard('web')->check()) {
+        return true;
     }
+
+    $employee = Auth::guard('mfanyakazi')->user();
+
+    if (!$employee) {
+        return false;
+    }
+
+    $uwezo = strtolower(trim($employee->uwezo ?? ''));
+    
+    // mkubwa can view prices AND edit/delete
+    // mdogo can only view, not edit/delete
+    return in_array($uwezo, ['mkubwa']);
+}
+
+// Add a new method for edit/delete permission
+private function canEditDelete()
+{
+    if (Auth::guard('web')->check()) {
+        return true;
+    }
+
+    $employee = Auth::guard('mfanyakazi')->user();
+
+    if (!$employee) {
+        return false;
+    }
+
+    $uwezo = strtolower(trim($employee->uwezo ?? ''));
+    
+    // Only Boss (web) and mkubwa can edit/delete
+    // mdogo cannot edit/delete
+    return in_array($uwezo, ['mkubwa']);
+}
 
     public function index(Request $request)
     {
@@ -201,7 +223,8 @@ class BidhaaController extends Controller
             'isBoss'
         ) + [
             'canViewPurchasePrice' => $this->canViewPurchasePrice(),
-            'canEditProduct' => $this->canViewPurchasePrice()
+            'canEditProduct' => $this->canViewPurchasePrice(),
+            'canEditDelete' => $this->canEditDelete()
         ]);
     }
 
@@ -412,89 +435,105 @@ class BidhaaController extends Controller
     return redirect()->route('bidhaa.index')
         ->with('success', 'Bidhaa imeongezwa kikamilifu!');
 }
-    public function update(Request $request, $id)
-    {
-        if (!$this->canViewPurchasePrice()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Huna ruhusa ya kurekebisha bidhaa.'
-                ], 403);
-            }
-            return redirect()->route('bidhaa.index')
-                ->with('error', 'Huna ruhusa ya kurekebisha bidhaa.');
-        }
 
-        $companyId = $this->getCompanyId();
-        $bidhaa = Bidhaa::where('id', $id)
-                        ->where('company_id', $companyId)
-                        ->firstOrFail();
 
-        $validator = Validator::make($request->all(), [
-            'jina' => 'required|string|max:255',
-            'aina' => 'required|string|max:255',
-            'kipimo' => 'nullable|string|max:100',
-            'idadi' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
-            'bei_nunua' => 'required|numeric|min:0',
-            'bei_kuuza' => 'required|numeric|min:0',
-            'bei_uzo_jumla' => 'nullable|numeric|min:0',
-            'bei_kiasi_cha_chaguo' => 'sometimes|in:rejareja,jumla',
-            'expiry' => 'nullable|date',
-            'barcode' => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('bidhaas', 'barcode')
-                    ->where(function ($query) use ($companyId) {
-                        return $query->where('company_id', $companyId);
-                    })
-                    ->ignore($bidhaa->id)
-            ],
-        ]);
-
-        $validator->after(function ($validator) use ($request) {
-            if ($request->bei_kuuza < $request->bei_nunua) {
-                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza (rejareja) haiwezi kuwa chini ya bei ya kununua');
-            }
-            
-            if ($request->filled('bei_uzo_jumla') && $request->bei_uzo_jumla < $request->bei_nunua) {
-                $validator->errors()->add('bei_uzo_jumla', 'Bei ya jumla haiwezi kuwa chini ya bei ya kununua');
-            }
-        });
-
-        if ($validator->fails()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hitilafu katika uthibitishaji',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            return back()->withErrors($validator)->withInput();
-        }
-
-        $validated = $validator->validated();
-        
-        if (empty($validated['bei_uzo_jumla'])) {
-            $validated['bei_uzo_jumla'] = null;
-        }
-        
-        if (!isset($validated['bei_kiasi_cha_chaguo'])) {
-            $validated['bei_kiasi_cha_chaguo'] = $bidhaa->bei_kiasi_cha_chaguo ?? 'rejareja';
-        }
-        
-        $bidhaa->update($validated);
-
+public function update(Request $request, $id)
+{
+    if (!$this->canViewPurchasePrice()) {
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Bidhaa imerekebishwa kikamilifu!'
-            ]);
+                'success' => false,
+                'message' => 'Huna ruhusa ya kurekebisha bidhaa.'
+            ], 403);
         }
-
         return redirect()->route('bidhaa.index')
-            ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
+            ->with('error', 'Huna ruhusa ya kurekebisha bidhaa.');
     }
+
+    $companyId = $this->getCompanyId();
+    $bidhaa = Bidhaa::where('id', $id)
+                    ->where('company_id', $companyId)
+                    ->firstOrFail();
+
+    $validator = Validator::make($request->all(), [
+        'jina' => 'required|string|max:255',
+        'aina' => 'required|string|max:255',
+        'kipimo' => 'nullable|string|max:100',
+        'idadi' => 'sometimes|required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/', // Changed from required to sometimes
+        'bei_nunua' => 'required|numeric|min:0',
+        'bei_kuuza' => 'required|numeric|min:0',
+        'bei_uzo_jumla' => 'nullable|numeric|min:0',
+        'bei_kiasi_cha_chaguo' => 'sometimes|in:rejareja,jumla',
+        'expiry' => 'nullable|date',
+        'barcode' => [
+            'nullable',
+            'string',
+            'max:255',
+            Rule::unique('bidhaas', 'barcode')
+                ->where(function ($query) use ($companyId) {
+                    return $query->where('company_id', $companyId);
+                })
+                ->ignore($bidhaa->id)
+        ],
+    ]);
+
+    $validator->after(function ($validator) use ($request) {
+        if ($request->bei_kuuza < $request->bei_nunua) {
+            $validator->errors()->add('bei_kuuza', 'Bei ya kuuza (rejareja) haiwezi kuwa chini ya bei ya kununua');
+        }
+        
+        if ($request->filled('bei_uzo_jumla') && $request->bei_uzo_jumla < $request->bei_nunua) {
+            $validator->errors()->add('bei_uzo_jumla', 'Bei ya jumla haiwezi kuwa chini ya bei ya kununua');
+        }
+    });
+
+    if ($validator->fails()) {
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hitilafu katika uthibitishaji',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        return back()->withErrors($validator)->withInput();
+    }
+
+    $validated = $validator->validated();
+    
+    // IMPORTANT: Only update fields that are present in the request
+    $updateData = [];
+    
+    // Only include fields that are present in the request
+    if ($request->has('jina')) $updateData['jina'] = $validated['jina'];
+    if ($request->has('aina')) $updateData['aina'] = $validated['aina'];
+    if ($request->has('kipimo')) $updateData['kipimo'] = $validated['kipimo'];
+    if ($request->has('idadi')) $updateData['idadi'] = $validated['idadi']; // Only update if provided
+    if ($request->has('bei_nunua')) $updateData['bei_nunua'] = $validated['bei_nunua'];
+    if ($request->has('bei_kuuza')) $updateData['bei_kuuza'] = $validated['bei_kuuza'];
+    
+    if ($request->has('bei_uzo_jumla')) {
+        $updateData['bei_uzo_jumla'] = !empty($validated['bei_uzo_jumla']) && $validated['bei_uzo_jumla'] > 0 ? $validated['bei_uzo_jumla'] : null;
+    }
+    
+    if ($request->has('bei_kiasi_cha_chaguo')) {
+        $updateData['bei_kiasi_cha_chaguo'] = $validated['bei_kiasi_cha_chaguo'];
+    }
+    
+    if ($request->has('expiry')) $updateData['expiry'] = $validated['expiry'];
+    if ($request->has('barcode')) $updateData['barcode'] = $validated['barcode'];
+    
+    $bidhaa->update($updateData);
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Bidhaa imerekebishwa kikamilifu!'
+        ]);
+    }
+
+    return redirect()->route('bidhaa.index')
+        ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
+}
 
     public function destroy($id, Request $request)
     {

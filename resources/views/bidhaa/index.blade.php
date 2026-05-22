@@ -6,8 +6,7 @@
 @section('page-subtitle', now()->format('d/m/Y'))
 
 @section('content')
-<div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}" data-is-boss="{{ $isBoss ? 'true' : 'false' }}" data-can-view-price="{{ $canViewPurchasePrice ? 'true' : 'false' }}">
-    <!-- Notifications -->
+<div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}" data-is-boss="{{ $isBoss ? 'true' : 'false' }}" data-can-view-price="{{ $canViewPurchasePrice ? 'true' : 'false' }}" data-can-edit-delete="{{ $canEditDelete ? 'true' : 'false' }}"> <!-- Notifications -->
     <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none">
         @if(session('success'))
         <div class="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 mb-2 shadow-sm">
@@ -1001,6 +1000,7 @@
 @endpush
 
 @push('scripts')
+
 <script>
 let searchTimeout = null;
 let allSearchResults = [];
@@ -1008,9 +1008,16 @@ let isSearchActive = false;
 let currentSearchTerm = '';
 let isBoss = document.getElementById('app-container')?.dataset.isBoss === 'true';
 let canViewPrice = document.getElementById('app-container')?.dataset.canViewPrice === 'true';
+let canEditDelete = document.getElementById('app-container')?.dataset.canEditDelete === 'true';
 let originalRows = [];
 let selectedProductId = null;
 let taarifaSearchTimeout = null;
+
+// Define formatNumber at the very top so it's available everywhere
+function formatNumber(num, decimals = 2) {
+    if (num === null || num === undefined) return '0';
+    return parseFloat(num).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     // Search input
@@ -1219,6 +1226,65 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     attachProductEvents();
+    
+    // Handle Delete All modal
+    const cancelDeleteAll = document.getElementById('cancel-delete-all');
+    const confirmDeleteAllBtn = document.getElementById('confirm-delete-all');
+    const deleteAllModal = document.getElementById('delete-all-modal');
+    
+    if (cancelDeleteAll) {
+        cancelDeleteAll.addEventListener('click', function() {
+            deleteAllModal.classList.add('hidden');
+        });
+    }
+    
+    if (confirmDeleteAllBtn) {
+        confirmDeleteAllBtn.addEventListener('click', async function() {
+            const button = this;
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Inafuta...';
+            
+            try {
+                const response = await fetch('{{ route("bidhaa.deleteAll") }}', {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showNotification(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showNotification(data.message || 'Hitilafu imetokea', 'error');
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            } catch (error) {
+                showNotification('Hitilafu ya mtandao', 'error');
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+            
+            deleteAllModal.classList.add('hidden');
+        });
+    }
+    
+    // Close modal when clicking outside
+    if (deleteAllModal) {
+        deleteAllModal.addEventListener('click', function(e) {
+            if (e.target === deleteAllModal || e.target.classList.contains('modal-overlay')) {
+                deleteAllModal.classList.add('hidden');
+            }
+        });
+    }
 });
 
 function storeOriginalRows() {
@@ -1334,10 +1400,11 @@ function createProductRow(product) {
     }
     
     let actionButtons = '';
-    if (isBoss) {
+    // Use canEditDelete instead of just isBoss
+    if (isBoss || canEditDelete) {
         actionButtons = `<div class="flex justify-center space-x-2"><button class="edit-product-btn text-emerald-600 hover:text-emerald-800" data-id="${product.id}" title="Badili"><i class="fas fa-edit"></i></button><button class="delete-product-btn text-red-600 hover:text-red-800" data-id="${product.id}" data-name="${(product.jina || '').replace(/'/g, "\\'")}" title="Futa"><i class="fas fa-trash"></i></button></div>`;
     } else {
-        actionButtons = `<span class="text-gray-400 cursor-not-allowed" title="Huwezi kurekebisha au kufuta"><i class="fas fa-edit mr-2"></i><i class="fas fa-trash"></i></span>`;
+        actionButtons = `<span class="text-gray-400 cursor-not-allowed" title="Huwezi kurekebisha au kufuta"><i class="fas fa-lock mr-1"></i> Hakuna ruhusa</span>`;
     }
     
     const wholesaleHtml = product.bei_uzo_jumla ? `<div><span class="text-xs text-gray-500">Jumla:</span><span class="text-sm font-bold text-blue-700">${parseFloat(product.bei_uzo_jumla).toLocaleString()} TZS</span></div>` : '';
@@ -1383,7 +1450,8 @@ function attachProductEvents() {
 function handleEditClick(e) {
     e.preventDefault();
     const productId = this.dataset.id;
-    if (!isBoss && !canViewPrice) {
+    // Check if user has edit permission
+    if (!isBoss && !canEditDelete) {
         showNotification('Huna ruhusa ya kurekebisha bidhaa', 'error');
         return;
     }
@@ -1404,7 +1472,8 @@ function handleDeleteClick(e) {
     e.preventDefault();
     const productId = this.dataset.id;
     const productName = this.dataset.name;
-    if (!isBoss && !canViewPrice) {
+    // Check if user has delete permission
+    if (!isBoss && !canEditDelete) {
         showNotification('Huna ruhusa ya kufuta bidhaa', 'error');
         return;
     }
@@ -1412,7 +1481,7 @@ function handleDeleteClick(e) {
 }
 
 function editProduct(product) {
-    if (!isBoss && !canViewPrice) return;
+    if (!isBoss && !canEditDelete) return;
     document.getElementById('edit-jina').value = product.jina || '';
     document.getElementById('edit-aina').value = product.aina || '';
     document.getElementById('edit-kipimo').value = product.kipimo || '';
@@ -1428,7 +1497,7 @@ function editProduct(product) {
 }
 
 function loadAndEditProduct(productId) {
-    if (!isBoss && !canViewPrice) {
+    if (!isBoss && !canEditDelete) {
         showNotification('Hurumia, wewe huna ruhusa ya kurekebisha bidhaa', 'error');
         return;
     }
@@ -1449,7 +1518,7 @@ function loadAndEditProduct(productId) {
 }
 
 function deleteProduct(productId, productName) {
-    if (!isBoss && !canViewPrice) return;
+    if (!isBoss && !canEditDelete) return;
     document.getElementById('delete-product-name').textContent = productName;
     document.getElementById('delete-form').action = `/bidhaa/${productId}`;
     document.getElementById('delete-modal').classList.remove('hidden');
@@ -1781,6 +1850,7 @@ function displayProductDetails(data) {
         document.getElementById('history-tbody').innerHTML = `<tr><td colspan="6" class="px-3 py-4 text-center text-gray-500">Hakuna historia</td></tr>`;
     }
 }
+
 // Delete All Products
 function confirmDeleteAll() {
     const totalProducts = {{ $totalProducts }} || 0;
@@ -1794,67 +1864,6 @@ function confirmDeleteAll() {
     document.getElementById('delete-all-modal').classList.remove('hidden');
 }
 
-// Handle Delete All
-document.addEventListener('DOMContentLoaded', function() {
-    const cancelDeleteAll = document.getElementById('cancel-delete-all');
-    const confirmDeleteAll = document.getElementById('confirm-delete-all');
-    const deleteAllModal = document.getElementById('delete-all-modal');
-    
-    if (cancelDeleteAll) {
-        cancelDeleteAll.addEventListener('click', function() {
-            deleteAllModal.classList.add('hidden');
-        });
-    }
-    
-    if (confirmDeleteAll) {
-        confirmDeleteAll.addEventListener('click', async function() {
-            const button = this;
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Inafuta...';
-            
-            try {
-                const response = await fetch('{{ route("bidhaa.deleteAll") }}', {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.success) {
-                    showNotification(data.message, 'success');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    showNotification(data.message || 'Hitilafu imetokea', 'error');
-                    button.disabled = false;
-                    button.innerHTML = originalText;
-                }
-            } catch (error) {
-                showNotification('Hitilafu ya mtandao', 'error');
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }
-            
-            deleteAllModal.classList.add('hidden');
-        });
-    }
-    
-    // Close modal when clicking outside
-    if (deleteAllModal) {
-        deleteAllModal.addEventListener('click', function(e) {
-            if (e.target === deleteAllModal || e.target.classList.contains('modal-overlay')) {
-                deleteAllModal.classList.add('hidden');
-            }
-        });
-    }
-});
-
 function printProductDetails() {
     const container = document.getElementById('product-details-container');
     if (!container || container.classList.contains('hidden')) {
@@ -1866,11 +1875,6 @@ function printProductDetails() {
     printWindow.document.write(`<html><head><title>Taarifa za ${jina}</title><style>body{font-family:Arial;margin:20px;}h1{color:#047857;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background:#f3f4f6;}.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0;}.stat-card{border:1px solid #ddd;padding:10px;border-radius:5px;}</style></head><body><div class="header"><h1>Taarifa za Bidhaa</h1><p>Tarehe: ${new Date().toLocaleDateString()}</p></div><h2>${document.getElementById('detail-jina').textContent}</h2><p>Aina: ${document.getElementById('detail-aina').textContent}</p><div class="stats-grid"><div class="stat-card"><div>Idadi Iliyopo Sasa</div><div><b>${document.getElementById('stat-idadi-sasa').textContent}</b></div></div><div class="stat-card"><div>Jumla Iliyoingizwa</div><div><b>${document.getElementById('stat-jumla-ingizo').textContent}</b></div></div><div class="stat-card"><div>Jumla Iliyouzwa</div><div><b>${document.getElementById('stat-jumla-mauzo').textContent}</b></div></div><div class="stat-card"><div>Zilizobaki</div><div><b>${document.getElementById('stat-zilizobaki').textContent}</b></div></div></div><h3>Historia</h3><table><thead><tr><th>Tarehe</th><th>Aina</th><th>Iliyoingizwa</th><th>Iliyouzwa</th><th>Iliyobaki</th><th>Maelezo</th></tr></thead><tbody>${Array.from(document.querySelectorAll('#history-tbody tr')).map(row => row.outerHTML).join('')}</tbody></table></body></html>`);
     printWindow.document.close();
     printWindow.print();
-}
-
-function formatNumber(num, decimals = 2) {
-    if (num === null || num === undefined) return '0';
-    return parseFloat(num).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 </script>
 @endpush
