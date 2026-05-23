@@ -15,6 +15,7 @@ class Marejesho extends Model
         'kiasi',
         'tarehe',
         'lipa_kwa', // Add payment method
+        'lipa_kwa_type'
     ];
 
     /**

@@ -22,6 +22,7 @@ class Mauzo extends Model
         'is_debt_repayment',
         'reprint_count',
         'lipa_kwa',
+        'lipa_kwa_type',      // ADD THIS FIELD
         'mteja_id',
     ];
 
@@ -40,6 +41,23 @@ class Mauzo extends Model
 
     const DEFAULT_PAYMENT_METHOD = 'cash';
 
+    // Lipa Namba types
+    const LIPA_NAMBA_TYPES = [
+        'mpesa' => 'M-Pesa',
+        'mixx_by_yas' => 'Mixx by Yas',
+        'airtel_money' => 'Airtel Money',
+        'halopesa' => 'HaloPesa',
+        'other' => 'Nyingine'
+    ];
+
+    // Bank types
+    const BANK_TYPES = [
+        'crdb' => 'CRDB',
+        'nmb' => 'NMB',
+        'nbc' => 'NBC',
+        'other' => 'Nyingine'
+    ];
+
     public function bidhaa()
     {
         return $this->belongsTo(Bidhaa::class);
@@ -57,12 +75,29 @@ class Mauzo extends Model
 
     public function getLipaKwaNameAttribute()
     {
-        return self::PAYMENT_METHODS[$this->lipa_kwa] ?? 'Unknown';
+        $paymentName = self::PAYMENT_METHODS[$this->lipa_kwa] ?? 'Unknown';
+        
+        if ($this->lipa_kwa_type && $this->lipa_kwa !== 'cash') {
+            if ($this->lipa_kwa === 'lipa_namba') {
+                $typeName = self::LIPA_NAMBA_TYPES[$this->lipa_kwa_type] ?? $this->lipa_kwa_type;
+                return "{$paymentName} ({$typeName})";
+            } elseif ($this->lipa_kwa === 'bank') {
+                $typeName = self::BANK_TYPES[$this->lipa_kwa_type] ?? $this->lipa_kwa_type;
+                return "{$paymentName} ({$typeName})";
+            }
+        }
+        
+        return $paymentName;
     }
 
     public function scopeByPaymentMethod($query, $method)
     {
         return $query->where('lipa_kwa', $method);
+    }
+
+    public function scopeByPaymentType($query, $type)
+    {
+        return $query->where('lipa_kwa_type', $type);
     }
 
     public function scopeDateRange($query, $startDate, $endDate)

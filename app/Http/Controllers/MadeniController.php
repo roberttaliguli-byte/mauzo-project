@@ -407,38 +407,61 @@ class MadeniController extends Controller
         });
     }
     
-    /**
-     * Record a repayment
-     */
-    public function rejesha(Request $request, Madeni $madeni)
-    {
-        $companyId = $this->getCompanyId();
-        
-        abort_unless($madeni->company_id === $companyId, 403);
-        
-        $request->validate([
-            'kiasi' => 'required|numeric|min:0.01|max:' . $madeni->baki,
-            'tarehe' => 'required|date',
-            'lipa_kwa' => 'required|in:cash,lipa_namba,bank',
+/**
+ * Record a repayment
+ */
+public function rejesha(Request $request, Madeni $madeni)
+{
+    $companyId = $this->getCompanyId();
+    
+    abort_unless($madeni->company_id === $companyId, 403);
+    
+    $request->validate([
+        'kiasi' => 'required|numeric|min:0.01|max:' . $madeni->baki,
+        'tarehe' => 'required|date',
+        'lipa_kwa' => 'required|in:cash,lipa_namba,bank',
+        'lipa_kwa_type' => 'nullable|required_if:lipa_kwa,lipa_namba,bank', // ADD THIS
+    ]);
+    
+    // Validate payment type
+    if ($request->lipa_kwa === 'lipa_namba') {
+        $validTypes = ['mpesa', 'mixx_by_yas', 'airtel_money', 'halopesa', 'other'];
+        if (!in_array($request->lipa_kwa_type, $validTypes)) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Tafadhali chagua aina sahihi ya Lipa Namba'
+            ], 422);
+        }
+    }
+    
+    if ($request->lipa_kwa === 'bank') {
+        $validTypes = ['crdb', 'nmb', 'nbc', 'other'];
+        if (!in_array($request->lipa_kwa_type, $validTypes)) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Tafadhali chagua aina sahihi ya Benki'
+            ], 422);
+        }
+    }
+    
+    return DB::transaction(function () use ($request, $madeni, $companyId) {
+        Marejesho::create([
+            'madeni_id' => $madeni->id,
+            'kiasi' => $request->kiasi,
+            'tarehe' => $request->tarehe,
+            'lipa_kwa' => $request->lipa_kwa,
+            'lipa_kwa_type' => ($request->lipa_kwa === 'cash') ? null : $request->lipa_kwa_type, // ADD THIS
+            'company_id' => $companyId,
         ]);
         
-        return DB::transaction(function () use ($request, $madeni, $companyId) {
-            Marejesho::create([
-                'madeni_id' => $madeni->id,
-                'kiasi' => $request->kiasi,
-                'tarehe' => $request->tarehe,
-                'lipa_kwa' => $request->lipa_kwa,
-                'company_id' => $companyId,
-            ]);
-            
-            $madeni->decrement('baki', $request->kiasi);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Rejesho limehifadhiwa!'
-            ]);
-        });
-    }
+        $madeni->decrement('baki', $request->kiasi);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Rejesho limehifadhiwa!'
+        ]);
+    });
+}
     
     /**
      * Update a debt
@@ -457,6 +480,7 @@ class MadeniController extends Controller
             'bei' => 'required|numeric|min:0',
             'punguzo' => 'nullable|numeric|min:0',
             'punguzo_aina' => 'nullable|in:bidhaa,jumla',
+            'tarehe_malipo' => 'required|date',
         ]);
         
         return DB::transaction(function () use ($request, $madeni, $companyId) {
@@ -519,6 +543,7 @@ class MadeniController extends Controller
                 'baki' => $newBaki,
                 'jina_mkopaji' => $request->jina_mkopaji,
                 'simu' => $request->simu ?? $madeni->simu,
+                'tarehe_malipo' => $request->tarehe_malipo,
             ]);
             
             return response()->json([

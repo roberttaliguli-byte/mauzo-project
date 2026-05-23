@@ -249,6 +249,7 @@ private function storeRegularSale(Request $request, $companyId)
             'punguzo_aina' => 'nullable|in:bidhaa,jumla',
             'jumla'        => 'required|numeric',
             'lipa_kwa'     => 'nullable|in:cash,lipa_namba,bank',
+                'lipa_kwa_type' => 'nullable|required_if:lipa_kwa,lipa_namba,bank',
             'mteja_id'     => 'nullable|exists:mtejas,id',
             'bei_type'     => 'nullable|in:rejareja,jumla',
             // ADD THESE NEW RULES
@@ -258,6 +259,21 @@ private function storeRegularSale(Request $request, $companyId)
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => $validator->errors()->first(), 'notification' => 'Kosa katika taarifa!'], 422);
+        }
+
+        // Validate lipa_kwa_type based on lipa_kwa
+        if ($request->lipa_kwa === 'lipa_namba') {
+            $validLipaLipaTypes = ['mpesa', 'mixx_by_yas', 'airtel_money', 'halopesa', 'other'];
+            if (!in_array($request->lipa_kwa_type, $validLipaLipaTypes)) {
+                return response()->json(['success' => false, 'message' => 'Tafadhali chagua aina sahihi ya Lipa Namba', 'notification' => 'Aina ya Lipa Namba si sahihi!'], 422);
+            }
+        }
+        
+        if ($request->lipa_kwa === 'bank') {
+            $validBankTypes = ['crdb', 'nmb', 'nbc', 'other'];
+            if (!in_array($request->lipa_kwa_type, $validBankTypes)) {
+              return response()->json(['success' => false, 'message' => 'Tafadhali chagua aina sahihi ya Benki', 'notification' => 'Aina ya Benki si sahihi!'], 422);
+                }
         }
 
         $bidhaa = Bidhaa::where('id', $request->bidhaa_id)->where('company_id', $companyId)->first();
@@ -330,6 +346,7 @@ private function storeRegularSale(Request $request, $companyId)
             'punguzo_aina'  => $discountType,
             'jumla'         => $finalTotal,
             'lipa_kwa'      => $request->lipa_kwa ?? 'cash',
+             'lipa_kwa_type' => ($request->lipa_kwa === 'cash') ? null : $request->lipa_kwa_type, // ADD THIS
             'mteja_id'      => $request->mteja_id,
         ]);
 
@@ -590,11 +607,27 @@ public function storeBarcode(Request $request)
     $companyId = $user->company_id;
     $items = $request->input('items', []);
     $paymentMethod = $request->input('lipa_kwa', 'cash');
+    $paymentType = $request->input('lipa_kwa_type', null);
     $priceType = $request->input('bei_type', 'rejareja'); // ADD THIS
 
-    return DB::transaction(function () use ($items, $companyId, $paymentMethod, $priceType) {
-        $receiptNo = $this->generateReceiptNo($companyId);
 
+    // Validate payment type
+    if ($paymentMethod === 'lipa_namba') {
+        $validTypes = ['mpesa', 'mixx_by_yas', 'airtel_money', 'halopesa', 'other'];
+        if (!in_array($paymentType, $validTypes)) {
+            return response()->json(['success' => false, 'message' => 'Tafadhali chagua aina sahihi ya Lipa Namba', 'notification' => 'Aina ya Lipa Namba si sahihi!'], 422);
+        }
+    }
+    
+    if ($paymentMethod === 'bank') {
+        $validTypes = ['crdb', 'nmb', 'nbc', 'other'];
+        if (!in_array($paymentType, $validTypes)) {
+            return response()->json(['success' => false, 'message' => 'Tafadhali chagua aina sahihi ya Benki', 'notification' => 'Aina ya Benki si sahihi!'], 422);
+        }
+    }
+
+    return DB::transaction(function () use ($items, $companyId, $paymentMethod, $paymentType, $priceType) {
+        $receiptNo = $this->generateReceiptNo($companyId);
         foreach ($items as $item) {
             $validated = Validator::make($item, [
                 'bidhaa_id' => 'required|exists:bidhaas,id',
@@ -655,6 +688,7 @@ public function storeBarcode(Request $request)
                 'punguzo_aina'  => $discountType,
                 'jumla'         => $jumla,
                 'lipa_kwa'      => $paymentMethod,
+                        'lipa_kwa_type' => ($paymentMethod === 'cash') ? null : $paymentType, // ADD THIS
             ]);
         }
 
@@ -680,6 +714,7 @@ public function storeKikapu(Request $request)
         'items.*.punguzo_aina' => 'nullable|in:bidhaa,jumla',
         'items.*.bidhaa_id' => 'required|exists:bidhaas,id',
         'lipa_kwa' => 'nullable|in:cash,lipa_namba,bank',
+           'lipa_kwa_type' => 'nullable|required_if:lipa_kwa,lipa_namba,bank', // ADD THIS
         'mteja_id' => 'nullable|exists:mtejas,id',
         'send_receipt' => 'nullable|boolean',
         'send_to_phone' => 'nullable|string|max:20',
@@ -688,9 +723,24 @@ public function storeKikapu(Request $request)
     if ($validator->fails()) {
         return response()->json(['success' => false, 'message' => $validator->errors()->first(), 'notification' => 'Kosa katika taarifa!'], 422);
     }
+    // Validate payment type
+    if ($request->lipa_kwa === 'lipa_namba') {
+        $validTypes = ['mpesa', 'mixx_by_yas', 'airtel_money', 'halopesa', 'other'];
+        if (!in_array($request->lipa_kwa_type, $validTypes)) {
+            return response()->json(['success' => false, 'message' => 'Tafadhali chagua aina sahihi ya Lipa Namba', 'notification' => 'Aina ya Lipa Namba si sahihi!'], 422);
+        }
+    }
+    
+    if ($request->lipa_kwa === 'bank') {
+        $validTypes = ['crdb', 'nmb', 'nbc', 'other'];
+        if (!in_array($request->lipa_kwa_type, $validTypes)) {
+            return response()->json(['success' => false, 'message' => 'Tafadhali chagua aina sahihi ya Benki', 'notification' => 'Aina ya Benki si sahihi!'], 422);
+        }
+    }
 
     $receiptNo = $this->generateReceiptNo($companyId);
     $paymentMethod = $request->input('lipa_kwa', 'cash');
+    $paymentType = $request->input('lipa_kwa_type', null);
     $sendReceipt = $request->input('send_receipt', false);
     $sendToPhone = $request->input('send_to_phone');
 
@@ -745,6 +795,7 @@ public function storeKikapu(Request $request)
                 'punguzo_aina' => $discountType,
                 'jumla'        => $jumla,
                 'lipa_kwa'     => $paymentMethod,
+                'lipa_kwa_type' => ($paymentMethod === 'cash') ? null : $paymentType, // ADD THIS
                 'mteja_id'     => $request->mteja_id,
             ]);
 

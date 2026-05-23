@@ -219,84 +219,173 @@
         </div>
     </div>
 
-    @if($reportType === 'sales')
-        <!-- SALES REPORT - summary table -->
-        <table class="summary-table page-break-avoid">
-            <tr>
-                <th>Jumla ya Mauzo</th>
-                <th>Marejesho ya Madeni</th>
-                <th>Jumla ya Mapato</th>
-                <th>Idadi ya Mauzo</th>
-            </tr>
-            <tr>
-                <td>{{ number_format($totalSales ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($totalDebtRepayments ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($grandTotal ?? 0, 2) }} TZS</td>
-                <td>{{ $sales ? count($sales) : 0 }}</td>
-            </tr>
-        </table>
+@elseif($reportType === 'sales')
+    <!-- SALES REPORT - summary table -->
+    <table class="summary-table page-break-avoid">
+        <tr>
+            <th>Jumla ya Mauzo</th>
+            <th>Marejesho ya Madeni</th>
+            <th>Jumla ya Mapato</th>
+            <th>Idadi ya Mauzo</th>
+        </tr>
+        <tr>
+            <td>{{ number_format($totalSales ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($totalDebtRepayments ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($grandTotal ?? 0, 2) }} TZS</td>
+            <td>{{ $sales ? count($sales) : 0 }}</td>
+        </tr>
+    </table>
 
-        <!-- Payment methods summary table (black & white) -->
-        <table class="summary-table page-break-avoid" style="margin-top:8px;">
+    <!-- Payment methods summary table with types -->
+    <table class="summary-table page-break-avoid" style="margin-top:8px;">
+        <thead>
             <tr>
-                <th>Cash</th>
-                <th>Lipa Namba</th>
-                <th>Benki</th>
+                <th colspan="2">Cash</th>
+                <th colspan="3">Lipa Namba</th>
+                <th colspan="3">Benki</th>
             </tr>
             <tr>
-                <td>{{ number_format($totalCashIncome ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($totalMobileIncome ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($totalBankIncome ?? 0, 2) }} TZS</td>
+                <th>Aina</th>
+                <th>Kiasi (TZS)</th>
+                <th>Aina</th>
+                <th>Idadi</th>
+                <th>Kiasi (TZS)</th>
+                <th>Aina</th>
+                <th>Idadi</th>
+                <th>Kiasi (TZS)</th>
             </tr>
-        </table>
-
-        <!-- Sales details table with Aina and Kipimo -->
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Tarehe</th>
-                    <th>Bidhaa</th>
-                    <th>Aina</th>
-                    <th>Kipimo</th>
-                    <th class="text-center">Idadi</th>
-                    <th class="text-center">Njia ya Malipo</th>
-                    <th class="text-right">Jumla (TZS)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($sales ?? [] as $index => $sale)
-                    @if(!$sale->bidhaa) @continue @endif
+        </thead>
+        <tbody>
+            <!-- Cash Row -->
+            <tr>
+                <td>Cash</td>
+                <td class="text-right">{{ number_format($totalCashIncome ?? 0, 2) }}</td>
+                @php
+                    $mobileTypes = [
+                        'mpesa' => 'M-Pesa',
+                        'mixx_by_yas' => 'Mixx by Yas', 
+                        'airtel_money' => 'Airtel Money',
+                        'halopesa' => 'HaloPesa',
+                        'other_lipa_namba' => 'Nyingine'
+                    ];
+                    $mobileCount = 0;
+                @endphp
+                @foreach($mobileTypes as $key => $label)
                     @php
-                        $paymentMethod = $sale->lipa_kwa ?? 'cash';
-                        $methodName = $paymentMethod === 'cash' ? 'Cash' : 
-                                     ($paymentMethod === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
-                        $idadi = $sale->idadi;
-                        $formattedIdadi = is_numeric($idadi) ? 
-                            ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
-                            $idadi;
+                        $salesData = $salesByPaymentType[$key] ?? ['total' => 0, 'count' => 0];
+                        $debtsData = $debtsByPaymentType[$key] ?? ['total' => 0, 'count' => 0];
+                        $total = $salesData['total'] + $debtsData['total'];
+                        $count = $salesData['count'] + $debtsData['count'];
                     @endphp
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $sale->created_at ? date('d/m/Y', strtotime($sale->created_at)) : '' }}</td>
-                        <td>{{ $sale->bidhaa->jina ?? 'N/A' }}</td>
-                        <td>{{ $sale->bidhaa->aina ?? 'N/A' }}</td>
-                        <td>{{ $sale->bidhaa->kipimo ?? 'N/A' }}</td>
-                        <td class="text-center">{{ $formattedIdadi }}</td>
-                        <td class="text-center">{{ $methodName }}</td>
-                        <td class="text-right">{{ number_format($sale->jumla, 2) }}</td>
+                    @if($total > 0 || $count > 0)
+                        @if($mobileCount == 0)
+                            <tr>
+                                <td>{{ $label }}</td>
+                                <td class="text-center">{{ $count }}</td>
+                                <td class="text-right">{{ number_format($total, 2) }}</td>
+                        @elseif($mobileCount == 1)
+                                <td>{{ $label }}</td>
+                                <td class="text-center">{{ $count }}</td>
+                                <td class="text-right">{{ number_format($total, 2) }}</td>
+                            </tr>
+                        @elseif($mobileCount == 2)
+                            <tr>
+                                <td>{{ $label }}</td>
+                                <td class="text-center">{{ $count }}</td>
+                                <td class="text-right">{{ number_format($total, 2) }}</td>
+                            </tr>
+                        @endif
+                        @php $mobileCount++; @endphp
+                    @endif
+                @endforeach
+                @while($mobileCount < 3)
+                    @if($mobileCount == 0)
+                        <td>-</td><td class="text-center">0</td><td class="text-right">0.00</td>
+                    @elseif($mobileCount == 1)
+                        <td>-</td><td class="text-center">0</td><td class="text-right">0.00</td>
+                    </td>
+                    @elseif($mobileCount == 2)
+                        <td>-</td><td class="text-center">0</td><td class="text-right">0.00</td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="text-center no-data">Hakuna mauzo katika kipindi hiki</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                    @endif
+                    @php $mobileCount++; @endphp
+                @endwhile
+                
+                @php
+                    $bankTypes = [
+                        'crdb' => 'CRDB',
+                        'nmb' => 'NMB',
+                        'nbc' => 'NBC',
+                        'other_bank' => 'Nyingine'
+                    ];
+                    $bankCount = 0;
+                @endphp
+                @foreach($bankTypes as $key => $label)
+                    @php
+                        $salesData = $salesByPaymentType[$key] ?? ['total' => 0, 'count' => 0];
+                        $debtsData = $debtsByPaymentType[$key] ?? ['total' => 0, 'count' => 0];
+                        $total = $salesData['total'] + $debtsData['total'];
+                        $count = $salesData['count'] + $debtsData['count'];
+                    @endphp
+                    @if($total > 0 || $count > 0)
+                        @if($bankCount == 0)
+                            <td>{{ $label }}</td><td class="text-center">{{ $count }}</td><td class="text-right">{{ number_format($total, 2) }}</td>
+                        @elseif($bankCount == 1)
+                            <td>{{ $label }}</td><td class="text-center">{{ $count }}</td><td class="text-right">{{ number_format($total, 2) }}</td>
+                        @elseif($bankCount == 2)
+                            <td>{{ $label }}</td><td class="text-center">{{ $count }}</td><td class="text-right">{{ number_format($total, 2) }}</td>
+                        @endif
+                        @php $bankCount++; @endphp
+                    @endif
+                @endforeach
+                @while($bankCount < 3)
+                    <td>-</td><td class="text-center">0</td><td class="text-right">0.00</td>
+                    @php $bankCount++; @endphp
+                @endwhile
+            </tr>
+        </tbody>
+    </table>
 
-        <div class="grand-total page-break-avoid">
-            JUMLA YA MAPATO YOTE: {{ number_format($grandTotal ?? 0, 2) }} TZS
-        </div>
+    <!-- Sales details table with payment type -->
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Tarehe</th>
+                <th>Aina</th>
+                <th>Bidhaa</th>
+                <th>Aina ya Bidhaa</th>
+                <th>Kipimo</th>
+                <th class="text-center">Idadi</th>
+                <th>Njia ya Malipo</th>
+                <th class="text-right">Jumla (TZS)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $index = 1; @endphp
+            @forelse($allTransactions ?? [] as $transaction)
+                <tr>
+                    <td class="text-center">{{ $index++ }}</td>
+                    <td>{{ date('d/m/Y', strtotime($transaction['date'])) }}</td>
+                    <td>{{ $transaction['type'] }}</td>
+                    <td>{{ $transaction['product_name'] }}</td>
+                    <td>{{ $transaction['product_aina'] }}</td>
+                    <td>{{ $transaction['product_kipimo'] }}</td>
+                    <td class="text-center">{{ $transaction['idadi'] }}</td>
+                    <td>{{ $transaction['payment_method'] }}</td>
+                    <td class="text-right">{{ number_format($transaction['amount'], 2) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="9" class="text-center no-data">Hakuna mauzo katika kipindi hiki</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <div class="grand-total page-break-avoid">
+        JUMLA YA MAPATO YOTE: {{ number_format($grandTotal ?? 0, 2) }} TZS
+    </div>
 
     @elseif($reportType === 'manunuzi')
         <!-- PURCHASES REPORT - summary table -->
@@ -544,99 +633,189 @@
             FEDHA DUKANI: {{ number_format($fedhaDukani ?? 0, 2) }} TZS
         </div>
 
-    @elseif($reportType === 'mapato_by_method')
-        <!-- INCOME BY PAYMENT METHOD - summary table -->
-        <table class="summary-table page-break-avoid">
+@elseif($reportType === 'mapato_by_method')
+    <!-- INCOME BY PAYMENT METHOD - summary table -->
+    <table class="summary-table page-break-avoid">
+        <tr>
+            <th>Cash</th>
+            <th>Lipa Namba</th>
+            <th>Benki</th>
+            <th>Jumla Kuu</th>
+        </tr>
+        <tr>
+            <td>{{ number_format($totalCash ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($totalMobile ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($totalBank ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($grandTotal ?? 0, 2) }} TZS</td>
+        </tr>
+    </table>
+
+    <!-- Detailed breakdown by payment type -->
+    <table class="data-table" style="margin-top:15px;">
+        <thead>
             <tr>
-                <th>Cash</th>
-                <th>Lipa Namba</th>
-                <th>Benki</th>
-                <th>Jumla Kuu</th>
+                <th>#</th>
+                <th>Aina ya Malipo</th>
+                <th>Chanzo</th>
+                <th class="text-center">Idadi</th>
+                <th class="text-right">Jumla (TZS)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $index = 1; @endphp
+            
+            <!-- Cash -->
+            @php
+                $cashSalesCount = $salesByMethod->where('lipa_kwa', 'cash')->first()->count ?? 0;
+                $cashDebtsCount = $debtsByMethod->where('lipa_kwa', 'cash')->first()->count ?? 0;
+                $cashSalesTotal = $salesByMethod->where('lipa_kwa', 'cash')->first()->total ?? 0;
+                $cashDebtsTotal = $debtsByMethod->where('lipa_kwa', 'cash')->first()->total ?? 0;
+            @endphp
+            <tr style="background:#f0f0f0; font-weight:bold;">
+                <td colspan="5">💰 CASH</td>
             </tr>
             <tr>
-                <td>{{ number_format($totalCash ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($totalMobile ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($totalBank ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($grandTotal ?? 0, 2) }} TZS</td>
+                <td class="text-center">{{ $index++ }}</td>
+                <td>Cash</td>
+                <td>Mauzo</td>
+                <td class="text-center">{{ $cashSalesCount }}</td>
+                <td class="text-right">{{ number_format($cashSalesTotal, 2) }}</td>
             </tr>
-        </table>
-
-        <!-- Income details table with Aina and Kipimo -->
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Tarehe</th>
-                    <th>Aina</th>
-                    <th>Bidhaa</th>
-                    <th>Aina ya Bidhaa</th>
-                    <th>Kipimo</th>
-                    <th>Njia ya Malipo</th>
-                    <th class="text-center">Idadi</th>
-                    <th class="text-right">Jumla (TZS)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php $index = 1; @endphp
-
-                @forelse(($salesWithDetails ?? []) as $item)
-                    @php
-                        $methodName = $item->lipa_kwa === 'cash' ? 'Cash' : 
-                                     ($item->lipa_kwa === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
-                        $idadi = $item->idadi;
-                        $formattedIdadi = is_numeric($idadi) ? 
-                            ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
-                            $idadi;
-                    @endphp
+            @if($cashDebtsCount > 0)
+            <tr>
+                <td class="text-center">{{ $index++ }}</td>
+                <td>Cash</td>
+                <td>Marejesho ya Madeni</td>
+                <td class="text-center">{{ $cashDebtsCount }}</td>
+                <td class="text-right">{{ number_format($cashDebtsTotal, 2) }}</td>
+            </tr>
+            @endif
+            
+            <!-- Lipa Namba Types -->
+            <tr style="background:#f0f0f0; font-weight:bold;">
+                <td colspan="5">📱 LIPA NAMBA</td>
+            </tr>
+            
+            @php
+                $mobileTypes = [
+                    'mpesa' => ['label' => 'M-Pesa', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                    'mixx_by_yas' => ['label' => 'Mixx by Yas', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                    'airtel_money' => ['label' => 'Airtel Money', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                    'halopesa' => ['label' => 'HaloPesa', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                    'other_lipa_namba' => ['label' => 'Nyingine', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                ];
+                
+                foreach($salesByMethod as $item) {
+                    if ($item->lipa_kwa === 'lipa_namba') {
+                        $type = $item->lipa_kwa_type ?? 'other_lipa_namba';
+                        if (!isset($mobileTypes[$type])) $type = 'other_lipa_namba';
+                        $mobileTypes[$type]['sales_total'] = $item->total;
+                        $mobileTypes[$type]['sales_count'] = $item->count;
+                    }
+                }
+                
+                foreach($debtsByMethod as $item) {
+                    if ($item->lipa_kwa === 'lipa_namba') {
+                        $type = $item->lipa_kwa_type ?? 'other_lipa_namba';
+                        if (!isset($mobileTypes[$type])) $type = 'other_lipa_namba';
+                        $mobileTypes[$type]['debts_total'] = $item->total;
+                        $mobileTypes[$type]['debts_count'] = $item->count;
+                    }
+                }
+            @endphp
+            
+            @foreach($mobileTypes as $type)
+                @php
+                    $hasSales = $mobileTypes[$type]['sales_count'] > 0;
+                    $hasDebts = $mobileTypes[$type]['debts_count'] > 0;
+                @endphp
+                @if($hasSales || $hasDebts)
+                    @if($hasSales)
                     <tr>
                         <td class="text-center">{{ $index++ }}</td>
-                        <td>{{ $item->created_at ? date('d/m/Y', strtotime($item->created_at)) : '' }}</td>
+                        <td>{{ $type['label'] }}</td>
                         <td>Mauzo</td>
-                        <td>{{ $item->bidhaa->jina ?? 'N/A' }}</td>
-                        <td>{{ $item->bidhaa->aina ?? 'N/A' }}</td>
-                        <td>{{ $item->bidhaa->kipimo ?? 'N/A' }}</td>
-                        <td>{{ $methodName }}</td>
-                        <td class="text-center">{{ $formattedIdadi }}</td>
-                        <td class="text-right">{{ number_format($item->jumla, 2) }}</td>
+                        <td class="text-center">{{ $mobileTypes[$type]['sales_count'] }}</td>
+                        <td class="text-right">{{ number_format($mobileTypes[$type]['sales_total'], 2) }}</td>
                     </tr>
-                @empty
-                @endforelse
-
-                @forelse(($debtRepaymentsWithDetails ?? []) as $item)
-                    @php
-                        $methodName = $item->lipa_kwa === 'cash' ? 'Cash' : 
-                                     ($item->lipa_kwa === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
-                        $idadi = $item->madeni->idadi ?? 0;
-                        $formattedIdadi = is_numeric($idadi) ? 
-                            ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
-                            $idadi;
-                    @endphp
+                    @endif
+                    @if($hasDebts)
                     <tr>
                         <td class="text-center">{{ $index++ }}</td>
-                        <td>{{ $item->tarehe ? date('d/m/Y', strtotime($item->tarehe)) : '' }}</td>
+                        <td>{{ $type['label'] }}</td>
                         <td>Marejesho ya Madeni</td>
-                        <td>{{ $item->madeni->bidhaa->jina ?? 'N/A' }}</td>
-                        <td>{{ $item->madeni->bidhaa->aina ?? 'N/A' }}</td>
-                        <td>{{ $item->madeni->bidhaa->kipimo ?? 'N/A' }}</td>
-                        <td>{{ $methodName }}</td>
-                        <td class="text-center">{{ $formattedIdadi }}</td>
-                        <td class="text-right">{{ number_format($item->kiasi, 2) }}</td>
+                        <td class="text-center">{{ $mobileTypes[$type]['debts_count'] }}</td>
+                        <d class="text-right">{{ number_format($mobileTypes[$type]['debts_total'], 2) }}</td>
                     </tr>
-                @empty
-                @endforelse
-
-                @if($index === 1)
-                    <tr>
-                        <td colspan="9" class="text-center no-data">Hakuna data katika kipindi hiki</td>
-                    </tr>
+                    @endif
                 @endif
-            </tbody>
-        </table>
+            @endforeach
+            
+            <!-- Bank Types -->
+            <tr style="background:#f0f0f0; font-weight:bold;">
+                <td colspan="5">🏦 BANK</td>
+            </tr>
+            
+            @php
+                $bankTypes = [
+                    'crdb' => ['label' => 'CRDB', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                    'nmb' => ['label' => 'NMB', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                    'nbc' => ['label' => 'NBC', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                    'other_bank' => ['label' => 'Nyingine', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
+                ];
+                
+                foreach($salesByMethod as $item) {
+                    if ($item->lipa_kwa === 'bank') {
+                        $type = $item->lipa_kwa_type ?? 'other_bank';
+                        if (!isset($bankTypes[$type])) $type = 'other_bank';
+                        $bankTypes[$type]['sales_total'] = $item->total;
+                        $bankTypes[$type]['sales_count'] = $item->count;
+                    }
+                }
+                
+                foreach($debtsByMethod as $item) {
+                    if ($item->lipa_kwa === 'bank') {
+                        $type = $item->lipa_kwa_type ?? 'other_bank';
+                        if (!isset($bankTypes[$type])) $type = 'other_bank';
+                        $bankTypes[$type]['debts_total'] = $item->total;
+                        $bankTypes[$type]['debts_count'] = $item->count;
+                    }
+                }
+            @endphp
+            
+            @foreach($bankTypes as $type)
+                @php
+                    $hasSales = $bankTypes[$type]['sales_count'] > 0;
+                    $hasDebts = $bankTypes[$type]['debts_count'] > 0;
+                @endphp
+                @if($hasSales || $hasDebts)
+                    @if($hasSales)
+                    <tr>
+                        <td class="text-center">{{ $index++ }}</td>
+                        <td>{{ $type['label'] }}</td>
+                        <td>Mauzo</td>
+                        <td class="text-center">{{ $bankTypes[$type]['sales_count'] }}</td>
+                        <td class="text-right">{{ number_format($bankTypes[$type]['sales_total'], 2) }}</td>
+                    </tr>
+                    @endif
+                    @if($hasDebts)
+                    <tr>
+                        <td class="text-center">{{ $index++ }}</td>
+                        <td>{{ $type['label'] }}</td>
+                        <td>Marejesho ya Madeni</td>
+                        <td class="text-center">{{ $bankTypes[$type]['debts_count'] }}</td>
+                        <td class="text-right">{{ number_format($bankTypes[$type]['debts_total'], 2) }}</td>
+                    </tr>
+                    @endif
+                @endif
+            @endforeach
+        </tbody>
+    </table>
 
-        <div class="grand-total page-break-avoid">
-            JUMLA YA MAPATO YOTE: {{ number_format($grandTotal ?? 0, 2) }} TZS
-        </div>
-    @endif
+    <div class="grand-total page-break-avoid">
+        JUMLA YA MAPATO YOTE: {{ number_format($grandTotal ?? 0, 2) }} TZS
+    </div>
+@endif
 
     <!-- Footer -->
     <div class="footer">

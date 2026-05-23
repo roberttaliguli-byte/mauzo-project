@@ -195,15 +195,40 @@
 </div>
 <input type="hidden" name="punguzo_aina" id="punguzo-aina-input" value="bidhaa">
 
-    <!-- Payment Method -->
-    <div class="sm:col-span-1 lg:col-span-2">
-        <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
-        <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-            <option value="cash">Cash</option>
-            <option value="lipa_namba">Lipa Namba</option>
-            <option value="bank">Bank</option>
-        </select>
-    </div>
+<!-- Payment Method with Sub-type -->
+<div class="sm:col-span-2 lg:col-span-2">
+    <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
+    <select name="lipa_kwa" id="lipa_kwa_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="cash">💰 Cash</option>
+        <option value="lipa_namba">📱 Lipa Namba</option>
+        <option value="bank">🏦 Bank</option>
+    </select>
+</div>
+
+<!-- Lipa Namba Type Dropdown (hidden by default) -->
+<div id="lipa_namba_type_container" class="sm:col-span-2 lg:col-span-2 hidden">
+    <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Lipa Namba</label>
+    <select name="lipa_kwa_type" id="lipa_namba_type_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="">-- Chagua Aina --</option>
+        <option value="mpesa">📱 M-Pesa</option>
+        <option value="mixx_by_yas">🎮 Mixx by Yas</option>
+        <option value="airtel_money">📱 Airtel Money</option>
+        <option value="halopesa">📱 HaloPesa</option>
+        <option value="other">🔄 Nyingine</option>
+    </select>
+</div>
+
+<!-- Bank Type Dropdown (hidden by default) -->
+<div id="bank_type_container" class="sm:col-span-2 lg:col-span-2 hidden">
+    <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Benki</label>
+    <select name="lipa_kwa_type" id="bank_type_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="">-- Chagua Benki --</option>
+        <option value="crdb">🏦 CRDB</option>
+        <option value="nmb">🏦 NMB</option>
+        <option value="nbc">🏦 NBC</option>
+        <option value="other">🔄 Nyingine</option>
+    </select>
+</div>
 
 
 <!-- Customer Selection with integrated search and manual entry -->
@@ -593,14 +618,40 @@
 
             <form id="barcode-form" class="space-y-4">
                 @csrf
-                <div class="mb-3">
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
-                    <select name="lipa_kwa" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                        <option value="cash">Cash</option>
-                        <option value="lipa_namba">Lipa Namba</option>
-                        <option value="bank">Bank</option>
-                    </select>
-                </div>
+<!-- In Barcode tab, replace the payment method section -->
+<div class="mb-3">
+    <label class="block text-sm font-semibold text-gray-700 mb-1">Njia ya Malipo</label>
+    <select name="lipa_kwa" id="barcode_lipa_kwa_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="cash">💰 Cash</option>
+        <option value="lipa_namba">📱 Lipa Namba</option>
+        <option value="bank">🏦 Bank</option>
+    </select>
+</div>
+
+<!-- Lipa Namba Type for Barcode -->
+<div id="barcode_lipa_namba_container" class="mb-3 hidden">
+    <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Lipa Namba</label>
+    <select name="lipa_kwa_type" id="barcode_lipa_namba_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="">-- Chagua Aina --</option>
+        <option value="mpesa">📱 M-Pesa</option>
+        <option value="mixx_by_yas">🎮 Mixx by Yas</option>
+        <option value="airtel_money">📱 Airtel Money</option>
+        <option value="halopesa">📱 HaloPesa</option>
+        <option value="other">🔄 Nyingine</option>
+    </select>
+</div>
+
+<!-- Bank Type for Barcode -->
+<div id="barcode_bank_container" class="mb-3 hidden">
+    <label class="block text-sm font-semibold text-gray-700 mb-1">Aina ya Benki</label>
+    <select name="lipa_kwa_type" id="barcode_bank_select" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="">-- Chagua Benki --</option>
+        <option value="crdb">🏦 CRDB</option>
+        <option value="nmb">🏦 NMB</option>
+        <option value="nbc">🏦 NBC</option>
+        <option value="other">🔄 Nyingine</option>
+    </select>
+</div>
 
                 <div class="overflow-x-auto rounded-lg border border-gray-200">
                     <table class="w-full border-collapse text-sm">
@@ -690,6 +741,7 @@
         </div>
     </div>
 
+
     <!-- TAB 3: Taarifa Fupi - Modified with Date Range Search -->
     <div id="taarifa-tab-content" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
@@ -755,28 +807,41 @@
     @endphp
     
     @forelse($mauzos as $item)
-        @php 
-            $itemDate = $item->created_at->format('Y-m-d');
-            $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
-            $actualDiscount = actualDiscount($item);
-            $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
-            $total = $item->jumla;
-            
-            $paymentMethod = '';
-            switch($item->lipa_kwa) {
-                case 'cash':
-                    $paymentMethod = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Cash</span>';
-                    break;
-                case 'lipa_namba':
-                    $paymentMethod = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Lipa Namba</span>';
-                    break;
-                case 'bank':
-                    $paymentMethod = '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Bank</span>';
-                    break;
-                default:
-                    $paymentMethod = '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">Cash</span>';
-            }
-        @endphp
+<!-- In the Taarifa tab content, update the payment method switch statement -->
+@php 
+    $itemDate = $item->created_at->format('Y-m-d');
+    $buyingPrice = $item->bidhaa->bei_nunua ?? 0;
+    $actualDiscount = actualDiscount($item);
+    $faida = (($item->bei - $buyingPrice) * $item->idadi) - $actualDiscount;
+    $total = $item->jumla;
+    
+    // Enhanced payment method display with type
+    $paymentMethod = '';
+    if($item->lipa_kwa === 'cash') {
+        $paymentMethod = '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">💰 Cash</span>';
+    } elseif($item->lipa_kwa === 'lipa_namba') {
+        $typeLabel = match($item->lipa_kwa_type) {
+            'mpesa' => 'M-Pesa',
+            'mixx_by_yas' => 'Mixx by Yas',
+            'airtel_money' => 'Airtel Money',
+            'halopesa' => 'HaloPesa',
+            'other' => 'Nyingine',
+            default => $item->lipa_kwa_type ?? ''
+        };
+        $paymentMethod = '<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">📱 Lipa Namba<br><small class="font-bold">' . e($typeLabel) . '</small></span>';
+    } elseif($item->lipa_kwa === 'bank') {
+        $typeLabel = match($item->lipa_kwa_type) {
+            'crdb' => 'CRDB',
+            'nmb' => 'NMB',
+            'nbc' => 'NBC',
+            'other' => 'Nyingine',
+            default => $item->lipa_kwa_type ?? ''
+        };
+        $paymentMethod = '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">🏦 Bank<br><small class="font-bold">' . e($typeLabel) . '</small></span>';
+    } else {
+        $paymentMethod = '<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">' . e($item->lipa_kwa) . '</span>';
+    }
+@endphp
         <tr class="sales-row" data-product="{{ strtolower($item->bidhaa->jina) }}" data-date="{{ $itemDate }}" data-id="{{ $item->id }}">
 <td class="border px-3 py-2">
     @if($itemDate === $today)
@@ -1057,17 +1122,46 @@
             
             <!-- 2x2 Grid for Payment Method and Customer Selection -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <!-- Left Column: Payment Method -->
-                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-money-bill-wave mr-1 text-green-600"></i> Njia ya Malipo
-                    </label>
-                    <select id="kikapu-lipa-kwa" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
-                        <option value="cash">💰 Cash</option>
-                        <option value="lipa_namba">📱 Lipa Namba</option>
-                        <option value="bank">🏦 Bank</option>
-                    </select>
-                </div>
+<!-- In Kikapu tab, replace the payment method section -->
+<div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">
+        <i class="fas fa-money-bill-wave mr-1 text-green-600"></i> Njia ya Malipo
+    </label>
+    <select id="kikapu-lipa-kwa" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="cash">💰 Cash</option>
+        <option value="lipa_namba">📱 Lipa Namba</option>
+        <option value="bank">🏦 Bank</option>
+    </select>
+</div>
+
+<!-- Lipa Namba Type for Kikapu -->
+<div id="kikapu_lipa_namba_container" class="bg-gray-50 rounded-lg p-3 border border-gray-200 hidden">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">
+        <i class="fas fa-mobile-alt mr-1 text-blue-600"></i> Aina ya Lipa Namba
+    </label>
+    <select id="kikapu-lipa-namba-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="">-- Chagua Aina --</option>
+        <option value="mpesa">📱 M-Pesa</option>
+        <option value="mixx_by_yas">🎮 Mixx by Yas</option>
+        <option value="airtel_money">📱 Airtel Money</option>
+        <option value="halopesa">📱 HaloPesa</option>
+        <option value="other">🔄 Nyingine</option>
+    </select>
+</div>
+
+<!-- Bank Type for Kikapu -->
+<div id="kikapu_bank_container" class="bg-gray-50 rounded-lg p-3 border border-gray-200 hidden">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">
+        <i class="fas fa-university mr-1 text-purple-600"></i> Aina ya Benki
+    </label>
+    <select id="kikapu-bank-type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200">
+        <option value="">-- Chagua Benki --</option>
+        <option value="crdb">🏦 CRDB</option>
+        <option value="nmb">🏦 NMB</option>
+        <option value="nbc">🏦 NBC</option>
+        <option value="other">🔄 Nyingine</option>
+    </select>
+</div>
 
                 <!-- Right Column: Customer Selection with SMS Option -->
                 <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
@@ -1676,6 +1770,7 @@ class MauzoManager {
         this.bindSearchEvents();
         this.bindPriceTypeChange();
         this.bindSmsReceiptEvents();
+        this.bindPaymentTypeEvents();
     }
 
     // Helper function to calculate actual discount
@@ -2105,6 +2200,98 @@ class MauzoManager {
         if (kopeshaBei) kopeshaBei.value = price.toFixed(2);
     }
 
+    // Add this to your MauzoManager class
+bindPaymentTypeEvents() {
+    // For main sales form
+    const lipaKwaSelect = document.getElementById('lipa_kwa_select');
+    const lipaNambaContainer = document.getElementById('lipa_namba_type_container');
+    const bankContainer = document.getElementById('bank_type_container');
+    const lipaNambaSelect = document.getElementById('lipa_namba_type_select');
+    const bankSelect = document.getElementById('bank_type_select');
+    
+    if (lipaKwaSelect) {
+        lipaKwaSelect.addEventListener('change', (e) => {
+            const value = e.target.value;
+            
+            // Hide both containers first
+            if (lipaNambaContainer) lipaNambaContainer.classList.add('hidden');
+            if (bankContainer) bankContainer.classList.add('hidden');
+            
+            // Show appropriate container based on selection
+            if (value === 'lipa_namba') {
+                if (lipaNambaContainer) lipaNambaContainer.classList.remove('hidden');
+                if (lipaNambaSelect) lipaNambaSelect.required = true;
+                if (bankSelect) bankSelect.required = false;
+            } else if (value === 'bank') {
+                if (bankContainer) bankContainer.classList.remove('hidden');
+                if (bankSelect) bankSelect.required = true;
+                if (lipaNambaSelect) lipaNambaSelect.required = false;
+            } else {
+                if (lipaNambaSelect) lipaNambaSelect.required = false;
+                if (bankSelect) bankSelect.required = false;
+            }
+        });
+    }
+    
+    // For barcode form
+    const barcodeLipaKwaSelect = document.getElementById('barcode_lipa_kwa_select');
+    const barcodeLipaNambaContainer = document.getElementById('barcode_lipa_namba_container');
+    const barcodeBankContainer = document.getElementById('barcode_bank_container');
+    const barcodeLipaNambaSelect = document.getElementById('barcode_lipa_namba_select');
+    const barcodeBankSelect = document.getElementById('barcode_bank_select');
+    
+    if (barcodeLipaKwaSelect) {
+        barcodeLipaKwaSelect.addEventListener('change', (e) => {
+            const value = e.target.value;
+            
+            if (barcodeLipaNambaContainer) barcodeLipaNambaContainer.classList.add('hidden');
+            if (barcodeBankContainer) barcodeBankContainer.classList.add('hidden');
+            
+            if (value === 'lipa_namba') {
+                if (barcodeLipaNambaContainer) barcodeLipaNambaContainer.classList.remove('hidden');
+                if (barcodeLipaNambaSelect) barcodeLipaNambaSelect.required = true;
+                if (barcodeBankSelect) barcodeBankSelect.required = false;
+            } else if (value === 'bank') {
+                if (barcodeBankContainer) barcodeBankContainer.classList.remove('hidden');
+                if (barcodeBankSelect) barcodeBankSelect.required = true;
+                if (barcodeLipaNambaSelect) barcodeLipaNambaSelect.required = false;
+            } else {
+                if (barcodeLipaNambaSelect) barcodeLipaNambaSelect.required = false;
+                if (barcodeBankSelect) barcodeBankSelect.required = false;
+            }
+        });
+    }
+    
+    // For kikapu form
+    const kikapuLipaKwaSelect = document.getElementById('kikapu-lipa-kwa');
+    const kikapuLipaNambaContainer = document.getElementById('kikapu_lipa_namba_container');
+    const kikapuBankContainer = document.getElementById('kikapu_bank_container');
+    const kikapuLipaNambaSelect = document.getElementById('kikapu-lipa-namba-type');
+    const kikapuBankSelect = document.getElementById('kikapu-bank-type');
+    
+    if (kikapuLipaKwaSelect) {
+        kikapuLipaKwaSelect.addEventListener('change', (e) => {
+            const value = e.target.value;
+            
+            if (kikapuLipaNambaContainer) kikapuLipaNambaContainer.classList.add('hidden');
+            if (kikapuBankContainer) kikapuBankContainer.classList.add('hidden');
+            
+            if (value === 'lipa_namba') {
+                if (kikapuLipaNambaContainer) kikapuLipaNambaContainer.classList.remove('hidden');
+                if (kikapuLipaNambaSelect) kikapuLipaNambaSelect.required = true;
+                if (kikapuBankSelect) kikapuBankSelect.required = false;
+            } else if (value === 'bank') {
+                if (kikapuBankContainer) kikapuBankContainer.classList.remove('hidden');
+                if (kikapuBankSelect) kikapuBankSelect.required = true;
+                if (kikapuLipaNambaSelect) kikapuLipaNambaSelect.required = false;
+            } else {
+                if (kikapuLipaNambaSelect) kikapuLipaNambaSelect.required = false;
+                if (kikapuBankSelect) kikapuBankSelect.required = false;
+            }
+        });
+    }
+}
+
     bindSalesFormEvents() {
         const bidhaaSelect = document.getElementById('bidhaaSelect');
         const quantityInput = document.getElementById('quantity-input');
@@ -2254,6 +2441,21 @@ class MauzoManager {
         if (priceTypeSelect) {
             formData.append('bei_type', priceTypeSelect.value);
         }
+            // Add payment type if needed
+    const lipaKwaSelect = document.getElementById('lipa_kwa_select');
+    const paymentMethod = lipaKwaSelect ? lipaKwaSelect.value : 'cash';
+    
+    if (paymentMethod === 'lipa_namba') {
+        const typeSelect = document.getElementById('lipa_namba_type_select');
+        if (typeSelect && typeSelect.value) {
+            formData.append('lipa_kwa_type', typeSelect.value);
+        }
+    } else if (paymentMethod === 'bank') {
+        const typeSelect = document.getElementById('bank_type_select');
+        if (typeSelect && typeSelect.value) {
+            formData.append('lipa_kwa_type', typeSelect.value);
+        }
+    }
 
         try {
             const response = await fetch(form.action, {
@@ -2818,6 +3020,25 @@ resetForm() {
         const punguzoType = document.getElementById('punguzo-type');
         const paymentMethodSelect = document.querySelector('#barcode-form select[name="lipa_kwa"]');
         const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
+           // Get payment type
+    let paymentType = null;
+    if (paymentMethod === 'lipa_namba') {
+        const typeSelect = document.getElementById('barcode_lipa_namba_select');
+        if (typeSelect && typeSelect.value) {
+            paymentType = typeSelect.value;
+        } else {
+            this.showNotification('Tafadhali chagua aina ya Lipa Namba', 'error');
+            return;
+        }
+    } else if (paymentMethod === 'bank') {
+        const typeSelect = document.getElementById('barcode_bank_select');
+        if (typeSelect && typeSelect.value) {
+            paymentType = typeSelect.value;
+        } else {
+            this.showNotification('Tafadhali chagua aina ya Benki', 'error');
+            return;
+        }
+    }
 
         if (!punguzoType) return;
 
@@ -2872,7 +3093,8 @@ resetForm() {
                 body: JSON.stringify({ 
                     items: items, 
                     punguzo_aina: discountType,
-                    lipa_kwa: paymentMethod
+                    lipa_kwa: paymentMethod,
+                    lipa_kwa_type: paymentType  // ADD THIS
                 })
             });
 
@@ -3077,6 +3299,26 @@ async checkoutCart() {
 
     const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
     const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
+
+      // Get payment type
+    let paymentType = null;
+    if (paymentMethod === 'lipa_namba') {
+        const typeSelect = document.getElementById('kikapu-lipa-namba-type');
+        if (typeSelect && typeSelect.value) {
+            paymentType = typeSelect.value;
+        } else {
+            this.showNotification('Tafadhali chagua aina ya Lipa Namba', 'error');
+            return;
+        }
+    } else if (paymentMethod === 'bank') {
+        const typeSelect = document.getElementById('kikapu-bank-type');
+        if (typeSelect && typeSelect.value) {
+            paymentType = typeSelect.value;
+        } else {
+            this.showNotification('Tafadhali chagua aina ya Benki', 'error');
+            return;
+        }
+    }
     
     // Get customer info from the search fields
     const customerId = document.getElementById('kikapu_selected_customer_id')?.value || null;
@@ -3095,6 +3337,7 @@ async checkoutCart() {
                 items: companyCart,
                 company_id: this.companyId,
                 lipa_kwa: paymentMethod,
+                 lipa_kwa_type: paymentType,
                 mteja_id: customerId,
                 send_receipt: sendReceipt,
                 send_to_phone: sendToPhone

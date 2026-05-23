@@ -147,162 +147,274 @@ class UserReportController extends Controller
         }
     }
     
-    // Get sales data
-    private function getSalesData($companyId, $dateRange)
-    {
-        try {
-            // Get sales with payment method
-            $sales = Mauzo::where('company_id', $companyId)
-                ->when($dateRange['start'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
-                })
-                ->when($dateRange['end'], function($q) use ($dateRange) {
-                    $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
-                })
-                ->with('bidhaa')
-                ->orderBy('created_at', 'desc')
-                ->get();
+// Get sales data with payment type details
+private function getSalesData($companyId, $dateRange)
+{
+    try {
+        // Get sales with payment method AND payment type
+        $sales = Mauzo::where('company_id', $companyId)
+            ->when($dateRange['start'], function($q) use ($dateRange) {
+                $q->whereDate('created_at', '>=', $dateRange['start']->format('Y-m-d'));
+            })
+            ->when($dateRange['end'], function($q) use ($dateRange) {
+                $q->whereDate('created_at', '<=', $dateRange['end']->format('Y-m-d'));
+            })
+            ->with('bidhaa')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-            // Calculate totals by payment method
-            $totalCashSales = 0;
-            $totalMobileSales = 0;
-            $totalBankSales = 0;
-            $totalSales = 0;
-
-            foreach ($sales as $sale) {
-                if (!$sale->bidhaa) continue;
-                
-                $totalSales += $sale->jumla;
-                
-                // Categorize by payment method
-                $paymentMethod = $sale->lipa_kwa ?? 'cash';
-                
-                switch($paymentMethod) {
-                    case 'cash':
-                        $totalCashSales += $sale->jumla;
-                        break;
-                    case 'lipa_namba':
-                        $totalMobileSales += $sale->jumla;
-                        break;
-                    case 'bank':
-                        $totalBankSales += $sale->jumla;
-                        break;
-                }
-            }
-
-            // Get debt repayments by payment method
-            $debtRepayments = Marejesho::where('company_id', $companyId)
-                ->when($dateRange['start'], function($q) use ($dateRange) {
-                    $q->whereDate('tarehe', '>=', $dateRange['start']->format('Y-m-d'));
-                })
-                ->when($dateRange['end'], function($q) use ($dateRange) {
-                    $q->whereDate('tarehe', '<=', $dateRange['end']->format('Y-m-d'));
-                })
-                ->orderBy('tarehe', 'desc')
-                ->get();
-
-            $totalCashDebts = 0;
-            $totalMobileDebts = 0;
-            $totalBankDebts = 0;
-            $totalDebtRepayments = 0;
-
-            foreach ($debtRepayments as $repayment) {
-                $totalDebtRepayments += $repayment->kiasi;
-                
-                $paymentMethod = $repayment->lipa_kwa ?? 'cash';
-                
-                switch($paymentMethod) {
-                    case 'cash':
-                        $totalCashDebts += $repayment->kiasi;
-                        break;
-                    case 'lipa_namba':
-                        $totalMobileDebts += $repayment->kiasi;
-                        break;
-                    case 'bank':
-                        $totalBankDebts += $repayment->kiasi;
-                        break;
-                }
-            }
-
-            $grandTotal = $totalSales + $totalDebtRepayments;
-            $totalCashIncome = $totalCashSales + $totalCashDebts;
-            $totalMobileIncome = $totalMobileSales + $totalMobileDebts;
-            $totalBankIncome = $totalBankSales + $totalBankDebts;
-
-            // Group sales by date for detailed view
-            $salesByDate = [];
-            foreach ($sales as $sale) {
-                $dateKey = $sale->created_at->format('Y-m-d');
-                if (!isset($salesByDate[$dateKey])) {
-                    $salesByDate[$dateKey] = [
-                        'date' => $sale->created_at->format('d/m/Y'),
-                        'sales' => [],
-                        'total' => 0,
-                        'cash' => 0,
-                        'mobile' => 0,
-                        'bank' => 0
-                    ];
-                }
-                
-                $salesByDate[$dateKey]['sales'][] = $sale;
-                $salesByDate[$dateKey]['total'] += $sale->jumla;
-                
-                $paymentMethod = $sale->lipa_kwa ?? 'cash';
-                switch($paymentMethod) {
-                    case 'cash':
-                        $salesByDate[$dateKey]['cash'] += $sale->jumla;
-                        break;
-                    case 'lipa_namba':
-                        $salesByDate[$dateKey]['mobile'] += $sale->jumla;
-                        break;
-                    case 'bank':
-                        $salesByDate[$dateKey]['bank'] += $sale->jumla;
-                        break;
-                }
-            }
-
-            return [
-                'sales' => $sales,
-                'salesByDate' => $salesByDate,
-                'debtRepayments' => $debtRepayments,
-                'totalSales' => $totalSales,
-                'totalDebtRepayments' => $totalDebtRepayments,
-                'grandTotal' => $grandTotal,
-                'totalCashSales' => $totalCashSales,
-                'totalMobileSales' => $totalMobileSales,
-                'totalBankSales' => $totalBankSales,
-                'totalCashDebts' => $totalCashDebts,
-                'totalMobileDebts' => $totalMobileDebts,
-                'totalBankDebts' => $totalBankDebts,
-                'totalCashIncome' => $totalCashIncome,
-                'totalMobileIncome' => $totalMobileIncome,
-                'totalBankIncome' => $totalBankIncome,
-                'reportTitle' => 'Ripoti ya Mauzo',
-                'reportSubtitle' => 'Mapato na mauzo kwa kipindi kilichochaguliwa'
-            ];
-
-        } catch (\Exception $e) {
-            return [
-                'sales' => collect([]),
-                'salesByDate' => [],
-                'debtRepayments' => collect([]),
-                'totalSales' => 0,
-                'totalDebtRepayments' => 0,
-                'grandTotal' => 0,
-                'totalCashSales' => 0,
-                'totalMobileSales' => 0,
-                'totalBankSales' => 0,
-                'totalCashDebts' => 0,
-                'totalMobileDebts' => 0,
-                'totalBankDebts' => 0,
-                'totalCashIncome' => 0,
-                'totalMobileIncome' => 0,
-                'totalBankIncome' => 0,
-                'reportTitle' => 'Ripoti ya Mauzo',
-                'reportSubtitle' => 'Mapato na mauzo kwa kipindi kilichochaguliwa'
-            ];
+        // Add formatted payment method with type
+        foreach ($sales as $sale) {
+            $sale->formatted_payment = $this->formatPaymentMethod($sale->lipa_kwa, $sale->lipa_kwa_type);
+            $sale->formatted_idadi = $this->formatDecimal($sale->idadi);
         }
+
+        // Calculate totals by payment method AND type
+        $totalCashSales = 0;
+        $totalMobileSales = 0;
+        $totalBankSales = 0;
+        $totalSales = 0;
+        
+        // For detailed breakdown by payment type
+        $salesByPaymentType = [
+            'cash' => ['total' => 0, 'count' => 0],
+            'mpesa' => ['total' => 0, 'count' => 0],
+            'mixx_by_yas' => ['total' => 0, 'count' => 0],
+            'airtel_money' => ['total' => 0, 'count' => 0],
+            'halopesa' => ['total' => 0, 'count' => 0],
+            'crdb' => ['total' => 0, 'count' => 0],
+            'nmb' => ['total' => 0, 'count' => 0],
+            'nbc' => ['total' => 0, 'count' => 0],
+            'other_lipa_namba' => ['total' => 0, 'count' => 0],
+            'other_bank' => ['total' => 0, 'count' => 0],
+        ];
+
+        foreach ($sales as $sale) {
+            if (!$sale->bidhaa) continue;
+            
+            $totalSales += $sale->jumla;
+            $paymentMethod = $sale->lipa_kwa ?? 'cash';
+            $paymentType = $sale->lipa_kwa_type ?? null;
+            
+            // Categorize by payment method
+            switch($paymentMethod) {
+                case 'cash':
+                    $totalCashSales += $sale->jumla;
+                    $salesByPaymentType['cash']['total'] += $sale->jumla;
+                    $salesByPaymentType['cash']['count']++;
+                    break;
+                case 'lipa_namba':
+                    $totalMobileSales += $sale->jumla;
+                    // Categorize by specific mobile money type
+                    $mobileKey = $paymentType ?? 'other_lipa_namba';
+                    if (!in_array($mobileKey, ['mpesa', 'mixx_by_yas', 'airtel_money', 'halopesa'])) {
+                        $mobileKey = 'other_lipa_namba';
+                    }
+                    $salesByPaymentType[$mobileKey]['total'] += $sale->jumla;
+                    $salesByPaymentType[$mobileKey]['count']++;
+                    break;
+                case 'bank':
+                    $totalBankSales += $sale->jumla;
+                    // Categorize by specific bank type
+                    $bankKey = $paymentType ?? 'other_bank';
+                    if (!in_array($bankKey, ['crdb', 'nmb', 'nbc'])) {
+                        $bankKey = 'other_bank';
+                    }
+                    $salesByPaymentType[$bankKey]['total'] += $sale->jumla;
+                    $salesByPaymentType[$bankKey]['count']++;
+                    break;
+            }
+        }
+
+        // Get debt repayments with payment type details
+        $debtRepayments = Marejesho::where('company_id', $companyId)
+            ->when($dateRange['start'], function($q) use ($dateRange) {
+                $q->whereDate('tarehe', '>=', $dateRange['start']->format('Y-m-d'));
+            })
+            ->when($dateRange['end'], function($q) use ($dateRange) {
+                $q->whereDate('tarehe', '<=', $dateRange['end']->format('Y-m-d'));
+            })
+            ->with(['madeni.bidhaa'])
+            ->orderBy('tarehe', 'desc')
+            ->get();
+
+        // Add formatted payment method to repayments
+        foreach ($debtRepayments as $repayment) {
+            $repayment->formatted_payment = $this->formatPaymentMethod($repayment->lipa_kwa, $repayment->lipa_kwa_type);
+            $repayment->formatted_idadi = $this->formatDecimal($repayment->madeni->idadi ?? 0);
+        }
+
+        $totalCashDebts = 0;
+        $totalMobileDebts = 0;
+        $totalBankDebts = 0;
+        $totalDebtRepayments = 0;
+        
+        $debtsByPaymentType = [
+            'cash' => ['total' => 0, 'count' => 0],
+            'mpesa' => ['total' => 0, 'count' => 0],
+            'mixx_by_yas' => ['total' => 0, 'count' => 0],
+            'airtel_money' => ['total' => 0, 'count' => 0],
+            'halopesa' => ['total' => 0, 'count' => 0],
+            'crdb' => ['total' => 0, 'count' => 0],
+            'nmb' => ['total' => 0, 'count' => 0],
+            'nbc' => ['total' => 0, 'count' => 0],
+            'other_lipa_namba' => ['total' => 0, 'count' => 0],
+            'other_bank' => ['total' => 0, 'count' => 0],
+        ];
+
+        foreach ($debtRepayments as $repayment) {
+            $totalDebtRepayments += $repayment->kiasi;
+            $paymentMethod = $repayment->lipa_kwa ?? 'cash';
+            $paymentType = $repayment->lipa_kwa_type ?? null;
+            
+            switch($paymentMethod) {
+                case 'cash':
+                    $totalCashDebts += $repayment->kiasi;
+                    $debtsByPaymentType['cash']['total'] += $repayment->kiasi;
+                    $debtsByPaymentType['cash']['count']++;
+                    break;
+                case 'lipa_namba':
+                    $totalMobileDebts += $repayment->kiasi;
+                    $mobileKey = $paymentType ?? 'other_lipa_namba';
+                    if (!in_array($mobileKey, ['mpesa', 'mixx_by_yas', 'airtel_money', 'halopesa'])) {
+                        $mobileKey = 'other_lipa_namba';
+                    }
+                    $debtsByPaymentType[$mobileKey]['total'] += $repayment->kiasi;
+                    $debtsByPaymentType[$mobileKey]['count']++;
+                    break;
+                case 'bank':
+                    $totalBankDebts += $repayment->kiasi;
+                    $bankKey = $paymentType ?? 'other_bank';
+                    if (!in_array($bankKey, ['crdb', 'nmb', 'nbc'])) {
+                        $bankKey = 'other_bank';
+                    }
+                    $debtsByPaymentType[$bankKey]['total'] += $repayment->kiasi;
+                    $debtsByPaymentType[$bankKey]['count']++;
+                    break;
+            }
+        }
+
+        $grandTotal = $totalSales + $totalDebtRepayments;
+        $totalCashIncome = $totalCashSales + $totalCashDebts;
+        $totalMobileIncome = $totalMobileSales + $totalMobileDebts;
+        $totalBankIncome = $totalBankSales + $totalBankDebts;
+
+        // Combine sales and repayments for detailed view
+        $allTransactions = collect();
+        foreach ($sales as $sale) {
+            $allTransactions->push([
+                'type' => 'Mauzo',
+                'date' => $sale->created_at,
+                'product_name' => $sale->bidhaa->jina ?? 'N/A',
+                'product_aina' => $sale->bidhaa->aina ?? 'N/A',
+                'product_kipimo' => $sale->bidhaa->kipimo ?? 'N/A',
+                'idadi' => $sale->formatted_idadi,
+                'payment_method' => $sale->formatted_payment,
+                'amount' => $sale->jumla,
+                'lipa_kwa' => $sale->lipa_kwa,
+                'lipa_kwa_type' => $sale->lipa_kwa_type
+            ]);
+        }
+        
+        foreach ($debtRepayments as $repayment) {
+            $allTransactions->push([
+                'type' => 'Marejesho ya Deni',
+                'date' => $repayment->tarehe,
+                'product_name' => $repayment->madeni->bidhaa->jina ?? 'N/A',
+                'product_aina' => $repayment->madeni->bidhaa->aina ?? 'N/A',
+                'product_kipimo' => $repayment->madeni->bidhaa->kipimo ?? 'N/A',
+                'idadi' => $repayment->formatted_idadi,
+                'payment_method' => $repayment->formatted_payment,
+                'amount' => $repayment->kiasi,
+                'lipa_kwa' => $repayment->lipa_kwa,
+                'lipa_kwa_type' => $repayment->lipa_kwa_type
+            ]);
+        }
+        
+        $allTransactions = $allTransactions->sortByDesc('date')->values();
+
+        return [
+            'sales' => $sales,
+            'debtRepayments' => $debtRepayments,
+            'allTransactions' => $allTransactions,
+            'totalSales' => $totalSales,
+            'totalDebtRepayments' => $totalDebtRepayments,
+            'grandTotal' => $grandTotal,
+            'totalCashSales' => $totalCashSales,
+            'totalMobileSales' => $totalMobileSales,
+            'totalBankSales' => $totalBankSales,
+            'totalCashDebts' => $totalCashDebts,
+            'totalMobileDebts' => $totalMobileDebts,
+            'totalBankDebts' => $totalBankDebts,
+            'totalCashIncome' => $totalCashIncome,
+            'totalMobileIncome' => $totalMobileIncome,
+            'totalBankIncome' => $totalBankIncome,
+            'salesByPaymentType' => $salesByPaymentType,
+            'debtsByPaymentType' => $debtsByPaymentType,
+            'reportTitle' => 'Ripoti ya Mauzo',
+            'reportSubtitle' => 'Mapato na mauzo kwa kipindi kilichochaguliwa'
+        ];
+
+    } catch (\Exception $e) {
+        \Log::error('Error in getSalesData: ' . $e->getMessage());
+        return [
+            'sales' => collect([]),
+            'debtRepayments' => collect([]),
+            'allTransactions' => collect([]),
+            'totalSales' => 0,
+            'totalDebtRepayments' => 0,
+            'grandTotal' => 0,
+            'totalCashSales' => 0,
+            'totalMobileSales' => 0,
+            'totalBankSales' => 0,
+            'totalCashDebts' => 0,
+            'totalMobileDebts' => 0,
+            'totalBankDebts' => 0,
+            'totalCashIncome' => 0,
+            'totalMobileIncome' => 0,
+            'totalBankIncome' => 0,
+            'salesByPaymentType' => [],
+            'debtsByPaymentType' => [],
+            'reportTitle' => 'Ripoti ya Mauzo',
+            'reportSubtitle' => 'Mapato na mauzo kwa kipindi kilichochaguliwa'
+        ];
     }
+}
+
+/**
+ * Format payment method with type for display
+ */
+private function formatPaymentMethod($lipaKwa, $lipaKwaType)
+{
+    if ($lipaKwa === 'cash') {
+        return 'Cash';
+    }
+    
+    if ($lipaKwa === 'lipa_namba') {
+        $typeNames = [
+            'mpesa' => 'M-Pesa',
+            'mixx_by_yas' => 'Mixx by Yas',
+            'airtel_money' => 'Airtel Money',
+            'halopesa' => 'HaloPesa',
+            'other' => 'Nyingine'
+        ];
+        $typeName = $typeNames[$lipaKwaType] ?? ($lipaKwaType ? ucfirst($lipaKwaType) : 'Lipa Namba');
+        return "Lipa Namba ({$typeName})";
+    }
+    
+    if ($lipaKwa === 'bank') {
+        $typeNames = [
+            'crdb' => 'CRDB',
+            'nmb' => 'NMB',
+            'nbc' => 'NBC',
+            'other' => 'Nyingine'
+        ];
+        $typeName = $typeNames[$lipaKwaType] ?? ($lipaKwaType ? ucfirst($lipaKwaType) : 'Benki');
+        return "Benki ({$typeName})";
+    }
+    
+    return ucfirst($lipaKwa);
+}
 
     // Get purchases data with decimal support
     private function getPurchasesData($companyId, $dateRange)

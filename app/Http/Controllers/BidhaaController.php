@@ -1131,20 +1131,24 @@ public function deleteAll(Request $request)
         }
     }
 
-    private function getExcelValue($row, $possibleKeys)
-    {
-        foreach ($possibleKeys as $key) {
-            $key = strtolower(trim($key));
-            foreach ($row as $rowKey => $value) {
-                $rowKeyLower = strtolower(trim($rowKey));
-                if ($rowKeyLower == $key) {
-                    return $value;
-                }
+// Update the getExcelValue method to be more flexible
+private function getExcelValue($row, $possibleKeys)
+{
+    foreach ($possibleKeys as $key) {
+        $key = strtolower(trim($key));
+        foreach ($row as $rowKey => $value) {
+            $rowKeyLower = strtolower(trim($rowKey));
+            // Remove special characters and spaces for matching
+            $rowKeyClean = preg_replace('/[^a-z0-9]/', '', $rowKeyLower);
+            $keyClean = preg_replace('/[^a-z0-9]/', '', $key);
+            
+            if ($rowKeyLower == $key || $rowKeyClean == $keyClean) {
+                return $value;
             }
         }
-        return '';
     }
-    
+    return '';
+}
     private function processExcelFile($file)
     {
         $rows = [];
@@ -1211,33 +1215,55 @@ public function deleteAll(Request $request)
         return $rows;
     }
     
-    private function parseDate($dateString)
-    {
-        if (empty($dateString)) {
-            return null;
-        }
-        
-        $dateString = preg_split('/[\s,]+/', $dateString)[0];
-        
-        $formats = [
-            'Y-m-d', 'd/m/Y', 'm/d/Y', 'd-m-Y', 'm-d-Y',
-            'Y/m/d', 'Y.m.d', 'd.m.Y', 'Ymd'
-        ];
-        
-        foreach ($formats as $format) {
-            $date = \DateTime::createFromFormat($format, $dateString);
-            if ($date && $date->format($format) === $dateString) {
-                return $date->format('Y-m-d');
-            }
-        }
-        
-        $timestamp = strtotime($dateString);
-        if ($timestamp !== false) {
-            return date('Y-m-d', $timestamp);
-        }
-        
+private function parseDate($dateString)
+{
+    if (empty($dateString)) {
         return null;
     }
+    
+    // Remove any extra whitespace
+    $dateString = trim($dateString);
+    
+    // Handle Excel serial date numbers (common issue)
+    if (is_numeric($dateString) && $dateString > 0) {
+        // Excel dates start from 1900-01-01
+        $unix = ($dateString - 25569) * 86400;
+        return date('Y-m-d', $unix);
+    }
+    
+    // Try to extract just the date part if there's time
+    $dateString = preg_split('/[\s,]+/', $dateString)[0];
+    
+    $formats = [
+        'Y-m-d',     // 2028-01-09 (your format)
+        'Y/m/d',     // 2028/01/09
+        'd/m/Y',     // 09/01/2028
+        'd-m-Y',     // 09-01-2028
+        'm/d/Y',     // 01/09/2028
+        'm-d-Y',     // 01-09-2028
+        'Y.m.d',     // 2028.01.09
+        'd.m.Y',     // 09.01.2028
+        'Ymd',       // 20280109
+        'd.m.y',     // 09.01.28
+        'd/m/y',     // 09/01/28
+    ];
+    
+    foreach ($formats as $format) {
+        $date = \DateTime::createFromFormat($format, $dateString);
+        if ($date && $date->format($format) === $dateString) {
+            return $date->format('Y-m-d');
+        }
+    }
+    
+    // Last resort: try strtotime
+    $timestamp = strtotime($dateString);
+    if ($timestamp !== false && $timestamp > 0) {
+        return date('Y-m-d', $timestamp);
+    }
+    
+    \Log::warning("Could not parse date: {$dateString}");
+    return null;
+}
 
     public function taarifa(Request $request)
     {

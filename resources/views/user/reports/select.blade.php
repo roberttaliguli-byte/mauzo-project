@@ -347,109 +347,169 @@ class ReportManager {
         }
     }
 
-    displaySalesReport(data) {
-        // Summary Cards
-        const summaryHtml = `
-            <div class="bg-white p-3 rounded-lg border border-amber-200 shadow-sm">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Jumla ya Mauzo</p>
-                        <p class="text-xl font-bold text-amber-700">${this.formatNumber(data.totalSales || 0)}</p>
-                    </div>
-                    <i class="fas fa-shopping-cart text-amber-500 text-lg"></i>
+displaySalesReport(data) {
+    // Summary Cards
+    const summaryHtml = `
+        <div class="bg-white p-3 rounded-lg border border-amber-200 shadow-sm">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Jumla ya Mauzo</p>
+                    <p class="text-xl font-bold text-amber-700">${this.formatNumber(data.totalSales || 0)}</p>
                 </div>
+                <i class="fas fa-shopping-cart text-amber-500 text-lg"></i>
             </div>
-            <div class="bg-white p-3 rounded-lg border border-blue-200 shadow-sm">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Marejesho ya Madeni</p>
-                        <p class="text-xl font-bold text-blue-700">${this.formatNumber(data.totalDebtRepayments || 0)}</p>
-                    </div>
-                    <i class="fas fa-hand-holding-usd text-blue-500 text-lg"></i>
+        </div>
+        <div class="bg-white p-3 rounded-lg border border-blue-200 shadow-sm">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Marejesho ya Madeni</p>
+                    <p class="text-xl font-bold text-blue-700">${this.formatNumber(data.totalDebtRepayments || 0)}</p>
                 </div>
+                <i class="fas fa-hand-holding-usd text-blue-500 text-lg"></i>
             </div>
-            <div class="bg-white p-3 rounded-lg border border-green-200 shadow-sm">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Jumla ya Mapato</p>
-                        <p class="text-xl font-bold text-green-700">${this.formatNumber(data.grandTotal || 0)}</p>
-                    </div>
-                    <i class="fas fa-coins text-green-500 text-lg"></i>
+        </div>
+        <div class="bg-white p-3 rounded-lg border border-green-200 shadow-sm">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Jumla ya Mapato</p>
+                    <p class="text-xl font-bold text-green-700">${this.formatNumber(data.grandTotal || 0)}</p>
                 </div>
+                <i class="fas fa-coins text-green-500 text-lg"></i>
             </div>
-            <div class="bg-white p-3 rounded-lg border border-purple-200 shadow-sm">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Idadi ya Mauzo</p>
-                        <p class="text-xl font-bold text-purple-700">${data.sales ? data.sales.length : 0}</p>
-                    </div>
-                    <i class="fas fa-list text-purple-500 text-lg"></i>
+        </div>
+        <div class="bg-white p-3 rounded-lg border border-purple-200 shadow-sm">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Idadi ya Mauzo</p>
+                    <p class="text-xl font-bold text-purple-700">${data.sales ? data.sales.length : 0}</p>
                 </div>
+                <i class="fas fa-list text-purple-500 text-lg"></i>
             </div>
-        `;
-        document.getElementById('summary-cards').innerHTML = summaryHtml;
+        </div>
+    `;
+    document.getElementById('summary-cards').innerHTML = summaryHtml;
 
-        // Payment Method Summary (Additional cards)
-        const paymentSummary = `
-            <div class="col-span-4 grid grid-cols-3 gap-3 mt-2">
-                <div class="bg-gray-50 p-2 rounded border border-gray-200">
-                    <p class="text-xs text-gray-600">Cash</p>
-                    <p class="text-sm font-bold text-gray-800">${this.formatNumber(data.totalCashIncome || 0)}</p>
-                </div>
-                <div class="bg-gray-50 p-2 rounded border border-gray-200">
-                    <p class="text-xs text-gray-600">Lipa Namba</p>
-                    <p class="text-sm font-bold text-gray-800">${this.formatNumber(data.totalMobileIncome || 0)}</p>
-                </div>
-                <div class="bg-gray-50 p-2 rounded border border-gray-200">
-                    <p class="text-xs text-gray-600">Benki</p>
-                    <p class="text-sm font-bold text-gray-800">${this.formatNumber(data.totalBankIncome || 0)}</p>
-                </div>
-            </div>
-        `;
-        document.getElementById('summary-cards').innerHTML += paymentSummary;
-
-        // Table Header
-        const tableHeader = `
-            <tr class="bg-amber-50">
-                <th class="px-4 py-2 text-left font-medium text-amber-800">#</th>
-                <th class="px-4 py-2 text-left font-medium text-amber-800">Tarehe</th>
-                <th class="px-4 py-2 text-left font-medium text-amber-800">Bidhaa</th>
-                <th class="px-4 py-2 text-center font-medium text-amber-800">Idadi</th>
-                <th class="px-4 py-2 text-center font-medium text-amber-800">Njia ya Malipo</th>
-                <th class="px-4 py-2 text-right font-medium text-amber-800">Jumla (TZS)</th>
-            </tr>
-        `;
-        document.getElementById('report-table-header').innerHTML = tableHeader;
-
-        // Table Body
-        let tableBody = '';
-        if (data.sales && data.sales.length > 0) {
-            data.sales.forEach((sale, index) => {
-                const paymentMethod = sale.lipa_kwa || 'cash';
-                const methodName = paymentMethod === 'cash' ? 'Cash' : 
-                                  (paymentMethod === 'lipa_namba' ? 'Lipa Namba' : 'Benki');
-                
-                tableBody += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2">${index + 1}</td>
-                        <td class="px-4 py-2">${sale.created_at ? new Date(sale.created_at).toLocaleDateString('sw-TZ') : ''}</td>
-                        <td class="px-4 py-2">${sale.bidhaa?.jina || 'N/A'}</td>
-                        <td class="px-4 py-2 text-center">${this.formatDecimal(sale.idadi)}</td>
-                        <td class="px-4 py-2 text-center">${methodName}</td>
-                        <td class="px-4 py-2 text-right">${this.formatNumber(sale.jumla)}</td>
-                    </tr>
-                `;
-            });
-        } else {
-            tableBody = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500">Hakuna mauzo katika kipindi hiki</td></tr>';
+    // Payment Method Summary with Types
+    let paymentMethodHtml = `
+        <div class="col-span-4 mt-3">
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-3 py-2 text-left font-medium text-gray-700">Aina ya Malipo</th>
+                            <th class="px-3 py-2 text-center font-medium text-gray-700">Idadi</th>
+                            <th class="px-3 py-2 text-right font-medium text-gray-700">Kiasi (TZS)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+    `;
+    
+    // Cash
+    paymentMethodHtml += `
+        <tr class="border-t">
+            <td class="px-3 py-2 font-medium">💰 Cash</td>
+            <td class="px-3 py-2 text-center">-</td>
+            <td class="px-3 py-2 text-right">${this.formatNumber(data.totalCashIncome || 0)}</td>
+        </tr>
+    `;
+    
+    // Lipa Namba Types
+    const mobileTypes = {
+        'mpesa': '📱 M-Pesa',
+        'mixx_by_yas': '🎮 Mixx by Yas',
+        'airtel_money': '📱 Airtel Money',
+        'halopesa': '📱 HaloPesa',
+        'other_lipa_namba': '🔄 Lipa Namba Nyingine'
+    };
+    
+    for (const [key, label] of Object.entries(mobileTypes)) {
+        const total = (data.salesByPaymentType?.[key]?.total || 0) + (data.debtsByPaymentType?.[key]?.total || 0);
+        const count = (data.salesByPaymentType?.[key]?.count || 0) + (data.debtsByPaymentType?.[key]?.count || 0);
+        if (total > 0) {
+            paymentMethodHtml += `
+                <tr class="border-t">
+                    <td class="px-3 py-2 pl-6">${label}</td>
+                    <td class="px-3 py-2 text-center">${count}</td>
+                    <td class="px-3 py-2 text-right">${this.formatNumber(total)}</td>
+                </tr>
+            `;
         }
-        document.getElementById('report-table-body').innerHTML = tableBody;
-
-        // Grand Total
-        document.getElementById('grand-total').classList.remove('hidden');
-        document.getElementById('grand-total-value').textContent = this.formatNumber(data.grandTotal || 0) + ' TZS';
     }
+    
+    // Bank Types
+    const bankTypes = {
+        'crdb': '🏦 CRDB',
+        'nmb': '🏦 NMB',
+        'nbc': '🏦 NBC',
+        'other_bank': '🏦 Benki Nyingine'
+    };
+    
+    for (const [key, label] of Object.entries(bankTypes)) {
+        const total = (data.salesByPaymentType?.[key]?.total || 0) + (data.debtsByPaymentType?.[key]?.total || 0);
+        const count = (data.salesByPaymentType?.[key]?.count || 0) + (data.debtsByPaymentType?.[key]?.count || 0);
+        if (total > 0) {
+            paymentMethodHtml += `
+                <tr class="border-t">
+                    <td class="px-3 py-2 pl-6">${label}</td>
+                    <td class="px-3 py-2 text-center">${count}</td>
+                    <td class="px-3 py-2 text-right">${this.formatNumber(total)}</td>
+                </tr>
+            `;
+        }
+    }
+    
+    paymentMethodHtml += `
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('summary-cards').innerHTML += paymentMethodHtml;
 
+    // Table Header
+    const tableHeader = `
+        <tr class="bg-amber-50">
+            <th class="px-4 py-2 text-left font-medium text-amber-800">#</th>
+            <th class="px-4 py-2 text-left font-medium text-amber-800">Tarehe</th>
+            <th class="px-4 py-2 text-left font-medium text-amber-800">Aina</th>
+            <th class="px-4 py-2 text-left font-medium text-amber-800">Bidhaa</th>
+            <th class="px-4 py-2 text-left font-medium text-amber-800">Aina ya Bidhaa</th>
+            <th class="px-4 py-2 text-left font-medium text-amber-800">Kipimo</th>
+            <th class="px-4 py-2 text-center font-medium text-amber-800">Idadi</th>
+            <th class="px-4 py-2 text-left font-medium text-amber-800">Njia ya Malipo</th>
+            <th class="px-4 py-2 text-right font-medium text-amber-800">Jumla (TZS)</th>
+        </tr>
+    `;
+    document.getElementById('report-table-header').innerHTML = tableHeader;
+
+    // Table Body
+    let tableBody = '';
+    if (data.allTransactions && data.allTransactions.length > 0) {
+        data.allTransactions.forEach((transaction, index) => {
+            tableBody += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2">${index + 1}</td>
+                    <td class="px-4 py-2">${new Date(transaction.date).toLocaleDateString('sw-TZ')}</td>
+                    <td class="px-4 py-2">${transaction.type}</td>
+                    <td class="px-4 py-2">${transaction.product_name}</td>
+                    <td class="px-4 py-2">${transaction.product_aina}</td>
+                    <td class="px-4 py-2">${transaction.product_kipimo}</td>
+                    <td class="px-4 py-2 text-center">${transaction.idadi}</td>
+                    <td class="px-4 py-2">${transaction.payment_method}</td>
+                    <td class="px-4 py-2 text-right">${this.formatNumber(transaction.amount)}</td>
+                </tr>
+            `;
+        });
+    } else {
+        tableBody = '<tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Hakuna mauzo katika kipindi hiki</td></tr>';
+    }
+    document.getElementById('report-table-body').innerHTML = tableBody;
+
+    // Grand Total
+    document.getElementById('grand-total').classList.remove('hidden');
+    document.getElementById('grand-total-value').textContent = this.formatNumber(data.grandTotal || 0) + ' TZS';
+}
     displayPurchasesReport(data) {
         // Summary Cards
         const summaryHtml = `

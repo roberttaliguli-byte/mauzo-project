@@ -113,6 +113,33 @@
     height: 300px;
     margin-bottom: 20px;
 }
+/* Payment method badges */
+.payment-badge-cash {
+    background-color: #d1fae5;
+    color: #065f46;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.payment-badge-lipa_namba {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.payment-badge-bank {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
 
 /* Search results counter */
 .search-results-counter {
@@ -124,7 +151,11 @@
 }
 </style>
 @endpush
-
+<script>
+    // Pass PHP variable to JavaScript
+    window.hasFullAccess = {{ $hasFullAccess ? 'true' : 'false' }};
+    window.isMfanyakazi = {{ $isMfanyakazi ? 'true' : 'false' }};
+</script>
 @section('content')
 <div class="space-y-4">
     <!-- Notifications Container -->
@@ -332,6 +363,8 @@
             </button>
         </div>
     </div>
+
+
 <!-- TAB 2: Historia ya Marejesho -->
 <div id="marejesho-tab-content" class="tab-content hidden">
     <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
@@ -363,17 +396,37 @@
                         @php
                             $madeni = $rejesho->madeni;
                             $paymentMethod = $rejesho->lipa_kwa ?? 'cash';
-                            $badgeClass = [
-                                'cash' => 'payment-badge-cash',
-                                'lipa_namba' => 'payment-badge-lipa_namba',
-                                'bank' => 'payment-badge-bank'
-                            ][$paymentMethod];
+                            $paymentType = $rejesho->lipa_kwa_type ?? null;
                             
-                            $methodText = [
-                                'cash' => 'Cash',
-                                'lipa_namba' => 'Lipa Namba',
-                                'bank' => 'Bank'
-                            ][$paymentMethod];
+                            // Build payment display with type
+                            if ($paymentMethod === 'cash') {
+                                $methodText = 'Cash';
+                                $badgeClass = 'payment-badge-cash';
+                            } elseif ($paymentMethod === 'lipa_namba') {
+                                $typeLabel = match($paymentType) {
+                                    'mpesa' => 'M-Pesa',
+                                    'mixx_by_yas' => 'Mixx by Yas',
+                                    'airtel_money' => 'Airtel Money',
+                                    'halopesa' => 'HaloPesa',
+                                    'other' => 'Nyingine',
+                                    default => ucfirst($paymentType ?? '')
+                                };
+                                $methodText = "Lipa Namba ({$typeLabel})";
+                                $badgeClass = 'payment-badge-lipa_namba';
+                            } elseif ($paymentMethod === 'bank') {
+                                $typeLabel = match($paymentType) {
+                                    'crdb' => 'CRDB',
+                                    'nmb' => 'NMB',
+                                    'nbc' => 'NBC',
+                                    'other' => 'Nyingine',
+                                    default => ucfirst($paymentType ?? '')
+                                };
+                                $methodText = "Bank ({$typeLabel})";
+                                $badgeClass = 'payment-badge-bank';
+                            } else {
+                                $methodText = ucfirst($paymentMethod);
+                                $badgeClass = 'payment-badge-cash';
+                            }
                         @endphp
                         <tr class="hover:bg-gray-50">
                             <td class="px-4 py-2">
@@ -440,7 +493,6 @@
         @endif
     </div>
 </div>
-
     <!-- TAB 3: Ripoti -->
     <div id="ripoti-tab-content" class="tab-content hidden">
         <div class="grid grid-cols-1 gap-4">
@@ -614,6 +666,7 @@
                             <span id="pay-max-amount" class="text-emerald-600 font-medium"></span>
                         </div>
                     </div>
+                    
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">
                             <span class="text-red-500">*</span> Njia ya Malipo
@@ -626,6 +679,38 @@
                             <option value="bank">🏦 Bank (Benki)</option>
                         </select>
                     </div>
+                    
+                    <!-- Lipa Namba Type Dropdown (hidden by default) -->
+                    <div id="pay-lipa-namba-container" class="hidden">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                            <span class="text-red-500">*</span> Aina ya Lipa Namba
+                        </label>
+                        <select name="lipa_kwa_type" id="pay-lipa-namba-type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                            <option value="">-- Chagua Aina --</option>
+                            <option value="mpesa">📱 M-Pesa</option>
+                            <option value="mixx_by_yas">🎮 Mixx by Yas</option>
+                            <option value="airtel_money">📱 Airtel Money</option>
+                            <option value="halopesa">📱 HaloPesa</option>
+                            <option value="other">🔄 Nyingine</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Bank Type Dropdown (hidden by default) -->
+                    <div id="pay-bank-container" class="hidden">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                            <span class="text-red-500">*</span> Aina ya Benki
+                        </label>
+                        <select name="lipa_kwa_type" id="pay-bank-type"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition">
+                            <option value="">-- Chagua Benki --</option>
+                            <option value="crdb">🏦 CRDB</option>
+                            <option value="nmb">🏦 NMB</option>
+                            <option value="nbc">🏦 NBC</option>
+                            <option value="other">🔄 Nyingine</option>
+                        </select>
+                    </div>
+                    
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">
                             <span class="text-red-500">*</span> Tarehe ya Malipo
@@ -677,6 +762,15 @@
                     <input type="text" name="simu" id="edit-simu"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition">
                 </div>
+                <!-- ADD THE MISSING DATE FIELD HERE -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">
+                        <span class="text-red-500">*</span> Tarehe ya Malipo
+                    </label>
+                    <input type="date" name="tarehe_malipo" id="edit-tarehe-malipo"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                           required>
+                </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">
                         <span class="text-red-500">*</span> Bidhaa
@@ -697,7 +791,7 @@
                     <label class="block text-xs font-medium text-gray-700 mb-1">
                         <span class="text-red-500">*</span> Idadi
                     </label>
-                    <input type="number" name="idadi" id="edit-idadi" min="1"
+                    <input type="number" name="idadi" id="edit-idadi" min="1" step="0.01"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition"
                            required>
                 </div>
@@ -817,7 +911,6 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
 class MadeniManager {
     constructor() {
@@ -838,6 +931,7 @@ class MadeniManager {
         this.autoDismissNotifications();
         this.setupAjaxForms();
         this.initBorrowerSummaryToggle();
+        this.bindPaymentTypeEvents(); // ADD THIS
     }
 
     getSavedTab() {
@@ -897,39 +991,70 @@ class MadeniManager {
         });
     }
 
-// Add to MadeniManager class
-initBorrowerSummaryToggle() {
-    const savedState = localStorage.getItem('borrower_summary_visible');
-    const content = document.getElementById('borrower-summary-content');
-    const btn = document.getElementById('toggle-summary-btn');
-    
-    if (!content || !btn) return;
-    
-    if (savedState === 'true') {
-        content.classList.remove('hidden');
-        btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i><span>Ficha</span>';
-    } else {
-        content.classList.add('hidden');
-        btn.innerHTML = '<i class="fas fa-eye mr-1"></i><span>Onyesha</span>';
+    // Payment type event handling
+    bindPaymentTypeEvents() {
+        const payMethodSelect = document.getElementById('pay-method');
+        const lipaNambaContainer = document.getElementById('pay-lipa-namba-container');
+        const bankContainer = document.getElementById('pay-bank-container');
+        const lipaNambaSelect = document.getElementById('pay-lipa-namba-type');
+        const bankSelect = document.getElementById('pay-bank-type');
+        
+        if (payMethodSelect) {
+            payMethodSelect.addEventListener('change', (e) => {
+                const value = e.target.value;
+                
+                // Hide both containers first
+                if (lipaNambaContainer) lipaNambaContainer.classList.add('hidden');
+                if (bankContainer) bankContainer.classList.add('hidden');
+                
+                // Remove required attributes
+                if (lipaNambaSelect) lipaNambaSelect.required = false;
+                if (bankSelect) bankSelect.required = false;
+                
+                // Show appropriate container based on selection
+                if (value === 'lipa_namba') {
+                    if (lipaNambaContainer) lipaNambaContainer.classList.remove('hidden');
+                    if (lipaNambaSelect) lipaNambaSelect.required = true;
+                } else if (value === 'bank') {
+                    if (bankContainer) bankContainer.classList.remove('hidden');
+                    if (bankSelect) bankSelect.required = true;
+                }
+            });
+        }
     }
-}
 
-toggleBorrowerSummary() {
-    const content = document.getElementById('borrower-summary-content');
-    const btn = document.getElementById('toggle-summary-btn');
-    
-    if (!content || !btn) return;
-    
-    if (content.classList.contains('hidden')) {
-        content.classList.remove('hidden');
-        btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i><span>Ficha</span>';
-        localStorage.setItem('borrower_summary_visible', 'true');
-    } else {
-        content.classList.add('hidden');
-        btn.innerHTML = '<i class="fas fa-eye mr-1"></i><span>Onyesha</span>';
-        localStorage.setItem('borrower_summary_visible', 'false');
+    initBorrowerSummaryToggle() {
+        const savedState = localStorage.getItem('borrower_summary_visible');
+        const content = document.getElementById('borrower-summary-content');
+        const btn = document.getElementById('toggle-summary-btn');
+        
+        if (!content || !btn) return;
+        
+        if (savedState === 'true') {
+            content.classList.remove('hidden');
+            btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i><span>Ficha</span>';
+        } else {
+            content.classList.add('hidden');
+            btn.innerHTML = '<i class="fas fa-eye mr-1"></i><span>Onyesha</span>';
+        }
     }
-}
+
+    toggleBorrowerSummary() {
+        const content = document.getElementById('borrower-summary-content');
+        const btn = document.getElementById('toggle-summary-btn');
+        
+        if (!content || !btn) return;
+        
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            btn.innerHTML = '<i class="fas fa-eye-slash mr-1"></i><span>Ficha</span>';
+            localStorage.setItem('borrower_summary_visible', 'true');
+        } else {
+            content.classList.add('hidden');
+            btn.innerHTML = '<i class="fas fa-eye mr-1"></i><span>Onyesha</span>';
+            localStorage.setItem('borrower_summary_visible', 'false');
+        }
+    }
 
     async performSearch(searchTerm, filter = null) {
         try {
@@ -951,133 +1076,155 @@ toggleBorrowerSummary() {
         }
     }
 
-renderSearchResults(debts, searchTerm) {
-    const container = document.getElementById('debts-container');
-    const searchInfo = document.getElementById('search-info');
-    const searchCount = document.getElementById('search-count');
-    const hasFullAccess = window.hasFullAccess || false; // Get permission from window
-    
-    if (debts.length === 0) {
-        container.innerHTML = `
-            <div class="p-8 text-center text-gray-500">
-                <i class="fas fa-search text-3xl mb-2 text-gray-300"></i>
-                <p>Hakuna madeni yanayolingana na utafutaji wako</p>
-                <p class="text-xs text-gray-400 mt-1">Jaribu maneno mengine</p>
-            </div>
-        `;
-        searchInfo.classList.remove('hidden');
-        searchCount.textContent = '0';
-    } else {
-        let tableHtml = `
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-emerald-50">
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Bidhaa</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Aina</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Kipimo</th>
-                            <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
-                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
-                            <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
-                            <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-        `;
+    renderSearchResults(debts, searchTerm) {
+        const container = document.getElementById('debts-container');
+        const searchInfo = document.getElementById('search-info');
+        const searchCount = document.getElementById('search-count');
+        const hasFullAccess = typeof window.hasFullAccess !== 'undefined' ? window.hasFullAccess : false;
         
-        debts.forEach(debt => {
-            const statusClass = debt.baki <= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-            const statusIcon = debt.baki <= 0 ? '<i class="fas fa-check ml-1 text-xs"></i>' : '';
+        if (debts.length === 0) {
+            container.innerHTML = `
+                <div class="p-8 text-center text-gray-500">
+                    <i class="fas fa-search text-3xl mb-2 text-gray-300"></i>
+                    <p>Hakuna madeni yanayolingana na utafutaji wako</p>
+                    <p class="text-xs text-gray-400 mt-1">Jaribu maneno mengine</p>
+                </div>
+            `;
+            searchInfo.classList.remove('hidden');
+            searchCount.textContent = '0';
+        } else {
+            let tableHtml = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-emerald-50">
+                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Tarehe</th>
+                                <th class="px-4 py-2 text-left font-medium text-emerald-800">Mkopaji</th>
+                                <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Bidhaa</th>
+                                <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Aina</th>
+                                <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Kipimo</th>
+                                <th class="px-4 py-2 text-center font-medium text-emerald-800">Idadi</th>
+                                <th class="px-4 py-2 text-right font-medium text-emerald-800">Deni</th>
+                                <th class="px-4 py-2 text-right font-medium text-emerald-800">Baki</th>
+                                <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+            `;
+            
+            debts.forEach(debt => {
+                const statusClass = debt.baki <= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                const statusIcon = debt.baki <= 0 ? '<i class="fas fa-check ml-1 text-xs"></i>' : '';
+                
+                tableHtml += `
+                    <tr class="debt-row hover:bg-gray-50" data-debt='${JSON.stringify(debt).replace(/'/g, "&apos;")}'>
+                        <td class="px-4 py-2">
+                            <div class="text-sm text-gray-900">${new Date(debt.created_at).toLocaleDateString()}</div>
+                            <div class="text-xs text-gray-500">Kutakiwa: ${debt.tarehe_malipo ? new Date(debt.tarehe_malipo).toLocaleDateString() : 'N/A'}</div>
+                        </td>
+                        <td class="px-4 py-2">
+                            <div class="font-medium text-gray-900 text-sm">${this.escapeHtml(debt.jina_mkopaji)}</div>
+                            ${debt.simu ? `<div class="text-xs text-emerald-600">${this.escapeHtml(debt.simu)}</div>` : ''}
+                        </td>
+                        <td class="px-4 py-2 hidden md:table-cell">
+                            <span class="text-sm text-gray-700">${debt.bidhaa?.jina || 'N/A'}</span>
+                            ${debt.punguzo > 0 ? `<div class="text-xs text-gray-500">Punguzo: ${parseFloat(debt.punguzo).toLocaleString()}</div>` : ''}
+                        </td>
+                        <td class="px-4 py-2 hidden md:table-cell">
+                            <span class="text-sm text-gray-600">${debt.bidhaa?.aina || 'N/A'}</span>
+                        </td>
+                        <td class="px-4 py-2 hidden md:table-cell">
+                            <span class="text-sm text-gray-600">${debt.bidhaa?.kipimo || 'N/A'}</span>
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                ${debt.idadi}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2 text-right">
+                            <div class="text-sm font-bold text-gray-900">${parseFloat(debt.jumla).toLocaleString()}</div>
+                        </td>
+                        <td class="px-4 py-2 text-right">
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold ${statusClass}">
+                                ${parseFloat(debt.baki).toLocaleString()}
+                                ${statusIcon}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2 text-center print:hidden">
+                            <div class="flex justify-center space-x-2">
+                                ${debt.baki > 0 ? `
+                                <button class="pay-debt-btn text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
+                                        data-id="${debt.id}" title="Lipa Deni">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                </button>
+                                ` : ''}
+                                
+                                ${hasFullAccess ? `
+                                <button class="edit-debt-btn text-amber-600 hover:text-amber-800 p-1 rounded-full hover:bg-amber-50"
+                                        data-id="${debt.id}" title="Badili Deni">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-debt-btn text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
+                                        data-id="${debt.id}" data-name="${this.escapeHtml(debt.jina_mkopaji)}" title="Futa Deni">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                ` : `
+                                <button class="text-gray-300 p-1 rounded-full cursor-not-allowed" disabled title="Huna ruhusa ya kubadilisha">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="text-gray-300 p-1 rounded-full cursor-not-allowed" disabled title="Huna ruhusa ya kufuta">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
             
             tableHtml += `
-                <tr class="debt-row hover:bg-gray-50" data-debt='${JSON.stringify(debt).replace(/'/g, "&apos;")}'>
-                    <td class="px-4 py-2">
-                        <div class="text-sm text-gray-900">${new Date(debt.created_at).toLocaleDateString()}</div>
-                        <div class="text-xs text-gray-500">Kutakiwa: ${new Date(debt.tarehe_malipo).toLocaleDateString()}</div>
-                    </td>
-                    <td class="px-4 py-2">
-                        <div class="font-medium text-gray-900 text-sm">${debt.jina_mkopaji}</div>
-                        ${debt.simu ? `<div class="text-xs text-emerald-600">${debt.simu}</div>` : ''}
-                    </td>
-                    <td class="px-4 py-2 hidden md:table-cell">
-                        <span class="text-sm text-gray-700">${debt.bidhaa?.jina || 'N/A'}</span>
-                        ${debt.punguzo > 0 ? `<div class="text-xs text-gray-500">Punguzo: ${parseFloat(debt.punguzo).toLocaleString()}</div>` : ''}
-                    </td>
-                    <td class="px-4 py-2 hidden md:table-cell">
-                        <span class="text-sm text-gray-600">${debt.bidhaa?.aina || 'N/A'}</span>
-                    </td>
-                    <td class="px-4 py-2 hidden md:table-cell">
-                        <span class="text-sm text-gray-600">${debt.bidhaa?.kipimo || 'N/A'}</span>
-                    </td>
-                    <td class="px-4 py-2 text-center">
-                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                            ${debt.idadi}
-                        </span>
-                    </td>
-                    <td class="px-4 py-2 text-right">
-                        <div class="text-sm font-bold text-gray-900">${parseFloat(debt.jumla).toLocaleString()}</div>
-                    </td>
-                    <td class="px-4 py-2 text-right">
-                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold ${statusClass}">
-                            ${parseFloat(debt.baki).toLocaleString()}
-                            ${statusIcon}
-                        </span>
-                    </td>
-                    <td class="px-4 py-2 text-center print:hidden">
-                        <div class="flex justify-center space-x-2">
-                            ${debt.baki > 0 ? `
-                            <button class="pay-debt-btn text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-50"
-                                    data-id="${debt.id}" title="Lipa Deni">
-                                <i class="fas fa-money-bill-wave"></i>
-                            </button>
-                            ` : ''}
-                            
-                            ${hasFullAccess ? `
-                            <button class="edit-debt-btn text-amber-600 hover:text-amber-800 p-1 rounded-full hover:bg-amber-50"
-                                    data-id="${debt.id}" title="Badili Deni">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="delete-debt-btn text-red-600 hover:text-red-800 p-1 rounded-full hover:bg-red-50"
-                                    data-id="${debt.id}" data-name="${debt.jina_mkopaji}" title="Futa Deni">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            ` : `
-                            <button class="text-gray-300 p-1 rounded-full cursor-not-allowed" disabled title="Huna ruhusa ya kubadilisha">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-gray-300 p-1 rounded-full cursor-not-allowed" disabled title="Huna ruhusa ya kufuta">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            `}
-                        </div>
-                    </td>
-                </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="search-results-counter">
+                    <i class="fas fa-search mr-1"></i> Imepatikana matokeo ${debts.length} kwa utafutaji "${this.escapeHtml(searchTerm)}"
+                </div>
             `;
-        });
-        
-        tableHtml += `
-                    </tbody>
-                </table>
-            </div>
-            <div class="search-results-counter">
-                <i class="fas fa-search mr-1"></i> Imepatikana matokeo ${debts.length} kwa utafutaji "${searchTerm}"
-            </div>
-        `;
-        
-        container.innerHTML = tableHtml;
-        searchInfo.classList.remove('hidden');
-        searchCount.textContent = debts.length;
-        
-        // Re-bind debt actions for new rows
-        if (hasFullAccess) {
-            this.bindDebtActions();
+            
+            container.innerHTML = tableHtml;
+            searchInfo.classList.remove('hidden');
+            searchCount.textContent = debts.length;
+            
+            if (hasFullAccess) {
+                this.bindDebtActions();
+            } else {
+                document.querySelectorAll('.pay-debt-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const row = e.target.closest('.debt-row');
+                        if (!row) return;
+                        try {
+                            const debt = JSON.parse(row.dataset.debt);
+                            this.openPayModal(debt);
+                        } catch (error) {
+                            console.error('Error parsing debt data:', error);
+                        }
+                    });
+                });
+            }
         }
+        
+        document.getElementById('clear-filter-container').classList.remove('hidden');
     }
-    
-    document.getElementById('clear-filter-container').classList.remove('hidden');
-}
+
+    escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
 
     filterByBorrower(borrowerName) {
         document.getElementById('search-input').value = borrowerName;
@@ -1203,12 +1350,10 @@ renderSearchResults(debts, searchTerm) {
     }
 
     bindDebtActions() {
-        // Pay buttons
         document.querySelectorAll('.pay-debt-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const row = e.target.closest('.debt-row');
                 if (!row) return;
-                
                 try {
                     const debt = JSON.parse(row.dataset.debt);
                     this.openPayModal(debt);
@@ -1218,12 +1363,10 @@ renderSearchResults(debts, searchTerm) {
             });
         });
 
-        // Edit buttons
         document.querySelectorAll('.edit-debt-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const row = e.target.closest('.debt-row');
                 if (!row) return;
-                
                 try {
                     const debt = JSON.parse(row.dataset.debt);
                     this.openEditModal(debt);
@@ -1233,7 +1376,6 @@ renderSearchResults(debts, searchTerm) {
             });
         });
 
-        // Delete buttons
         document.querySelectorAll('.delete-debt-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 const debtId = e.target.closest('.delete-debt-btn').dataset.id;
@@ -1244,7 +1386,6 @@ renderSearchResults(debts, searchTerm) {
     }
 
     bindModalEvents() {
-        // Pay modal
         const payModal = document.getElementById('pay-modal');
         const closePayBtn = document.getElementById('close-pay-modal');
 
@@ -1260,7 +1401,6 @@ renderSearchResults(debts, searchTerm) {
             });
         }
 
-        // Edit modal
         const editModal = document.getElementById('edit-modal');
         const closeEditBtn = document.getElementById('close-edit-modal');
 
@@ -1276,7 +1416,6 @@ renderSearchResults(debts, searchTerm) {
             });
         }
 
-        // Delete modal
         const deleteModal = document.getElementById('delete-modal');
         const cancelDeleteBtn = document.getElementById('cancel-delete');
 
@@ -1292,7 +1431,6 @@ renderSearchResults(debts, searchTerm) {
             });
         }
 
-        // Borrower modal
         const borrowerModal = document.getElementById('borrower-modal');
         if (borrowerModal) {
             borrowerModal.addEventListener('click', (e) => {
@@ -1343,9 +1481,26 @@ renderSearchResults(debts, searchTerm) {
             payDate.value = new Date().toISOString().split('T')[0];
         }
         
+        // Reset payment method and hide type containers
         const payMethod = document.getElementById('pay-method');
         if (payMethod) {
             payMethod.value = 'cash';
+            
+            const lipaNambaContainer = document.getElementById('pay-lipa-namba-container');
+            const bankContainer = document.getElementById('pay-bank-container');
+            const lipaNambaSelect = document.getElementById('pay-lipa-namba-type');
+            const bankSelect = document.getElementById('pay-bank-type');
+            
+            if (lipaNambaContainer) lipaNambaContainer.classList.add('hidden');
+            if (bankContainer) bankContainer.classList.add('hidden');
+            if (lipaNambaSelect) {
+                lipaNambaSelect.value = '';
+                lipaNambaSelect.required = false;
+            }
+            if (bankSelect) {
+                bankSelect.value = '';
+                bankSelect.required = false;
+            }
         }
         
         const payModal = document.getElementById('pay-modal');
@@ -1367,6 +1522,13 @@ renderSearchResults(debts, searchTerm) {
         document.getElementById('edit-bei').value = debt.bei;
         document.getElementById('edit-punguzo').value = debt.punguzo || 0;
         document.getElementById('edit-punguzo-aina').value = debt.punguzo_aina || 'bidhaa';
+        
+        const tareheMalipoInput = document.getElementById('edit-tarehe-malipo');
+        if (tareheMalipoInput && debt.tarehe_malipo) {
+            const date = new Date(debt.tarehe_malipo);
+            const formattedDate = date.toISOString().split('T')[0];
+            tareheMalipoInput.value = formattedDate;
+        }
         
         editForm.action = `/madeni/${debt.id}`;
         
@@ -1391,49 +1553,116 @@ renderSearchResults(debts, searchTerm) {
         deleteModal.classList.remove('hidden');
     }
 
-    setupAjaxForms() {
-        const payForm = document.getElementById('pay-form');
-        if (payForm) {
-            payForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const amountInput = document.getElementById('pay-amount');
-                const maxAmount = parseFloat(amountInput.max);
-                const amount = parseFloat(amountInput.value);
-                
-                if (amount > maxAmount) {
-                    this.showNotification(`Kiasi kimezidi baki lililobaki (Kiwango cha juu: ${maxAmount.toLocaleString()} TZS)`, 'error');
+setupAjaxForms() {
+    const payForm = document.getElementById('pay-form');
+    if (payForm) {
+        payForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const amountInput = document.getElementById('pay-amount');
+            const maxAmount = parseFloat(amountInput.max);
+            const amount = parseFloat(amountInput.value);
+            
+            if (amount > maxAmount) {
+                this.showNotification(`Kiasi kimezidi baki lililobaki (Kiwango cha juu: ${maxAmount.toLocaleString()} TZS)`, 'error');
+                return;
+            }
+            
+            if (amount <= 0) {
+                this.showNotification('Kiasi cha kulipa lazima kiwe zaidi ya sifuri', 'error');
+                return;
+            }
+            
+            // Get payment method and type
+            const payMethod = document.getElementById('pay-method').value;
+            let lipaKwaType = null;
+            
+            if (payMethod === 'lipa_namba') {
+                lipaKwaType = document.getElementById('pay-lipa-namba-type').value;
+                if (!lipaKwaType) {
+                    this.showNotification('Tafadhali chagua aina ya Lipa Namba (M-Pesa, Mixx by Yas, Airtel Money, au HaloPesa)', 'error');
                     return;
                 }
-                
-                if (amount <= 0) {
-                    this.showNotification('Kiasi cha kulipa lazima kiwe zaidi ya sifuri', 'error');
+            } else if (payMethod === 'bank') {
+                lipaKwaType = document.getElementById('pay-bank-type').value;
+                if (!lipaKwaType) {
+                    this.showNotification('Tafadhali chagua aina ya Benki (CRDB, NMB, NBC, au Nyingine)', 'error');
                     return;
                 }
+            }
+            
+            // Create FormData and manually append all values
+            const formData = new FormData();
+            formData.append('kiasi', amountInput.value);
+            formData.append('tarehe', document.getElementById('pay-date').value);
+            formData.append('lipa_kwa', payMethod);
+            
+            // CRITICAL: Only append lipa_kwa_type if it exists
+            if (lipaKwaType) {
+                formData.append('lipa_kwa_type', lipaKwaType);
+            }
+            
+            // Add CSRF token
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+            
+            const submitButton = payForm.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            try {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Inatumwa...';
                 
-                await this.submitForm(payForm, 'Malipo yamehifadhiwa kikamilifu!');
-                this.closeModal(document.getElementById('pay-modal'));
-            });
-        }
+                // Get the action URL from the form
+                const actionUrl = payForm.action;
+                
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                        // Don't set Content-Type - let browser set it with boundary for FormData
+                    }
+                });
 
-        const editForm = document.getElementById('edit-form');
-        if (editForm) {
-            editForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await this.submitForm(editForm, 'Deni limebadilishwa kikamilifu!');
-                this.closeModal(document.getElementById('edit-modal'));
-            });
-        }
+                const data = await response.json();
 
-        const deleteForm = document.getElementById('delete-form');
-        if (deleteForm) {
-            deleteForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                await this.submitForm(deleteForm, 'Deni limefutwa kikamilifu!');
-                this.closeModal(document.getElementById('delete-modal'));
-            });
-        }
+                if (response.ok) {
+                    const message = data.message || 'Malipo yamehifadhiwa kikamilifu!';
+                    this.showNotification(message, 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    const error = data.errors ? Object.values(data.errors)[0][0] : data.message;
+                    this.showNotification(error || 'Hitilafu imetokea katika kuhifadhi', 'error');
+                }
+            } catch (error) {
+                this.showNotification('Hitilafu ya mtandao. Tafadhali angalia muunganisho wako', 'error');
+                console.error('Form submission error:', error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        });
     }
+
+    // Edit and Delete forms remain the same
+    const editForm = document.getElementById('edit-form');
+    if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.submitForm(editForm, 'Deni limebadilishwa kikamilifu!');
+            this.closeModal(document.getElementById('edit-modal'));
+        });
+    }
+
+    const deleteForm = document.getElementById('delete-form');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.submitForm(deleteForm, 'Deni limefutwa kikamilifu!');
+            this.closeModal(document.getElementById('delete-modal'));
+        });
+    }
+}
 
     async submitForm(form, successMessage = 'Operesheni imekamilika!') {
         const formData = new FormData(form);
@@ -1647,7 +1876,6 @@ function generateDebtReport() {
         return;
     }
     
-    // Get all debt rows
     const rows = document.querySelectorAll('.debt-row');
     let filteredData = [];
     
@@ -1674,21 +1902,18 @@ function generateDebtReport() {
         return;
     }
     
-    // Calculate totals
     const totalDebts = filteredData.length;
     const totalAmount = filteredData.reduce((sum, debt) => sum + parseFloat(debt.jumla), 0);
     const totalRepayments = filteredData.reduce((sum, debt) => sum + (parseFloat(debt.jumla) - parseFloat(debt.baki)), 0);
     const remainingBalance = totalAmount - totalRepayments;
     const avgRepayment = totalDebts > 0 ? totalRepayments / totalDebts : 0;
     
-    // Update summary cards
     document.getElementById('report-total-debts').textContent = totalDebts;
     document.getElementById('report-total-amount').textContent = totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TZS';
     document.getElementById('report-total-repayments').textContent = totalRepayments.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TZS';
     document.getElementById('report-remaining-balance').textContent = remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TZS';
     document.getElementById('report-avg-repayment').textContent = avgRepayment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' TZS';
     
-    // Generate table
     let tableHtml = '';
     let counter = 1;
     
@@ -1697,11 +1922,7 @@ function generateDebtReport() {
         filteredData.forEach(debt => {
             const date = new Date(debt.created_at).toLocaleDateString();
             if (!grouped[date]) {
-                grouped[date] = {
-                    count: 0,
-                    amount: 0,
-                    repaid: 0
-                };
+                grouped[date] = { count: 0, amount: 0, repaid: 0 };
             }
             grouped[date].count++;
             grouped[date].amount += parseFloat(debt.jumla);
@@ -1711,33 +1932,26 @@ function generateDebtReport() {
         Object.keys(grouped).sort().forEach(date => {
             const repaid = grouped[date].repaid;
             const remaining = grouped[date].amount - repaid;
-            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : 
-                                            '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
+            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
             
-            tableHtml += `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2">${counter++}</td>
-                    <td class="px-4 py-2">Madeni ${grouped[date].count} - ${date}</td>
-                    <td class="px-4 py-2">-</td>
-                    <td class="px-4 py-2">-</td>
-                    <td class="px-4 py-2 text-center">-</td>
-                    <td class="px-4 py-2 text-right">${grouped[date].amount.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-center">${status}</td>
-                </tr>
-            `;
+            tableHtml += `<tr class="hover:bg-gray-50">
+                <td class="px-4 py-2">${counter++}</td>
+                <td class="px-4 py-2">Madeni ${grouped[date].count} - ${date}</td>
+                <td class="px-4 py-2">-</td>
+                <td class="px-4 py-2">-</td>
+                <td class="px-4 py-2 text-center">-</td>
+                <td class="px-4 py-2 text-right">${grouped[date].amount.toLocaleString()}</td>
+                <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
+                <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
+                <td class="px-4 py-2 text-center">${status}</td>
+            </tr>`;
         });
     } else if (reportType === 'by_borrower') {
         const grouped = {};
         filteredData.forEach(debt => {
             const borrower = debt.jina_mkopaji;
             if (!grouped[borrower]) {
-                grouped[borrower] = {
-                    count: 0,
-                    amount: 0,
-                    repaid: 0
-                };
+                grouped[borrower] = { count: 0, amount: 0, repaid: 0 };
             }
             grouped[borrower].count++;
             grouped[borrower].amount += parseFloat(debt.jumla);
@@ -1747,33 +1961,26 @@ function generateDebtReport() {
         Object.keys(grouped).sort().forEach(borrower => {
             const repaid = grouped[borrower].repaid;
             const remaining = grouped[borrower].amount - repaid;
-            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : 
-                                            '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
+            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
             
-            tableHtml += `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2">${counter++}</td>
-                    <td class="px-4 py-2">${borrower}</td>
-                    <td class="px-4 py-2">Madeni ${grouped[borrower].count}</td>
-                    <td class="px-4 py-2">-</td>
-                    <td class="px-4 py-2 text-center">-</td>
-                    <td class="px-4 py-2 text-right">${grouped[borrower].amount.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-center">${status}</td>
-                </tr>
-            `;
+            tableHtml += `<tr class="hover:bg-gray-50">
+                <td class="px-4 py-2">${counter++}</td>
+                <td class="px-4 py-2">${borrower}</td>
+                <td class="px-4 py-2">Madeni ${grouped[borrower].count}</td>
+                <td class="px-4 py-2">-</td>
+                <td class="px-4 py-2 text-center">-</td>
+                <td class="px-4 py-2 text-right">${grouped[borrower].amount.toLocaleString()}</td>
+                <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
+                <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
+                <td class="px-4 py-2 text-center">${status}</td>
+            </tr>`;
         });
     } else if (reportType === 'by_product') {
         const grouped = {};
         filteredData.forEach(debt => {
             const product = debt.bidhaa?.jina || 'N/A';
             if (!grouped[product]) {
-                grouped[product] = {
-                    count: 0,
-                    amount: 0,
-                    repaid: 0
-                };
+                grouped[product] = { count: 0, amount: 0, repaid: 0 };
             }
             grouped[product].count++;
             grouped[product].amount += parseFloat(debt.jumla);
@@ -1783,50 +1990,42 @@ function generateDebtReport() {
         Object.keys(grouped).sort().forEach(product => {
             const repaid = grouped[product].repaid;
             const remaining = grouped[product].amount - repaid;
-            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : 
-                                            '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
+            const status = remaining <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
             
-            tableHtml += `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2">${counter++}</td>
-                    <td class="px-4 py-2">-</td>
-                    <td class="px-4 py-2">${product}</td>
-                    <td class="px-4 py-2">${debt.bidhaa?.aina || 'N/A'}</td>
-                    <td class="px-4 py-2 text-center">${debt.bidhaa?.kipimo || 'N/A'}</td>
-                    <td class="px-4 py-2 text-right">${grouped[product].amount.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-center">${status}</td>
-                </tr>
-            `;
+            tableHtml += `<tr class="hover:bg-gray-50">
+                <td class="px-4 py-2">${counter++}</td>
+                <td class="px-4 py-2">-</td>
+                <td class="px-4 py-2">${product}</td>
+                <td class="px-4 py-2">${debt.bidhaa?.aina || 'N/A'}</td>
+                <td class="px-4 py-2 text-center">${debt.bidhaa?.kipimo || 'N/A'}</td>
+                <td class="px-4 py-2 text-right">${grouped[product].amount.toLocaleString()}</td>
+                <td class="px-4 py-2 text-right">${repaid.toLocaleString()}</td>
+                <td class="px-4 py-2 text-right">${remaining.toLocaleString()}</td>
+                <td class="px-4 py-2 text-center">${status}</td>
+            </tr>`;
         });
     } else {
         filteredData.forEach(debt => {
             const paid = parseFloat(debt.jumla) - parseFloat(debt.baki);
-            const status = debt.baki <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : 
-                                            '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
+            const status = debt.baki <= 0 ? '<span class="bg-green-100 text-green-800 px-2 py-1 rounded">Imelipwa</span>' : '<span class="bg-red-100 text-red-800 px-2 py-1 rounded">Inayongoza</span>';
             
-            tableHtml += `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2">${counter++}</td>
-                    <td class="px-4 py-2">${debt.jina_mkopaji}</td>
-                    <td class="px-4 py-2">${debt.bidhaa?.jina || 'N/A'}</td>
-                    <td class="px-4 py-2">${debt.bidhaa?.aina || 'N/A'}</td>
-                    <td class="px-4 py-2">${debt.bidhaa?.kipimo || 'N/A'}</td>
-                    <td class="px-4 py-2 text-center">${debt.idadi}</td>
-                    <td class="px-4 py-2 text-right">${parseFloat(debt.jumla).toLocaleString()}</td>
-                    <td class="px-4 py-2 text-right">${paid.toLocaleString()}</td>
-                    <td class="px-4 py-2 text-right">${parseFloat(debt.baki).toLocaleString()}</td>
-                    <td class="px-4 py-2 text-center">${status}</td>
-                </tr>
-            `;
+            tableHtml += `<tr class="hover:bg-gray-50">
+                <td class="px-4 py-2">${counter++}</td>
+                <td class="px-4 py-2">${debt.jina_mkopaji}</td>
+                <td class="px-4 py-2">${debt.bidhaa?.jina || 'N/A'}</td>
+                <td class="px-4 py-2">${debt.bidhaa?.aina || 'N/A'}</td>
+                <td class="px-4 py-2">${debt.bidhaa?.kipimo || 'N/A'}</td>
+                <td class="px-4 py-2 text-center">${debt.idadi}</td>
+                <td class="px-4 py-2 text-right">${parseFloat(debt.jumla).toLocaleString()}</td>
+                <td class="px-4 py-2 text-right">${paid.toLocaleString()}</td>
+                <td class="px-4 py-2 text-right">${parseFloat(debt.baki).toLocaleString()}</td>
+                <td class="px-4 py-2 text-center">${status}</td>
+            </table>`;
         });
     }
     
     document.getElementById('report-tbody').innerHTML = tableHtml;
     document.getElementById('report-results').classList.remove('hidden');
-    
-    // Update charts
     updateDebtCharts(filteredData);
 }
 
@@ -1855,16 +2054,10 @@ function updateDebtCharts(data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
+            plugins: { legend: { position: 'bottom' } }
         }
     });
     
-    // For payment methods, you would need actual data from repayments
-    // This is a placeholder - you might want to fetch real data
     const paymentCtx = document.getElementById('paymentMethodChart').getContext('2d');
     window.madeniManager.charts.paymentMethod = new Chart(paymentCtx, {
         type: 'pie',
@@ -1879,11 +2072,7 @@ function updateDebtCharts(data) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
+            plugins: { legend: { position: 'bottom' } }
         }
     });
 }
@@ -1917,18 +2106,17 @@ function exportDebtReportExcel() {
     const url = `${window.location.pathname}/report/excel?start_date=${startDate}&end_date=${endDate}&report_type=${reportType}&status=${status}`;
     window.location.href = url;
 }
-// Global wrapper for toggleBorrowerSummary
+
 function toggleBorrowerSummary() {
     if (window.madeniManager) {
         window.madeniManager.toggleBorrowerSummary();
     }
 }
-// Initialize
+
 document.addEventListener('DOMContentLoaded', () => {
     window.madeniManager = new MadeniManager();
     window.madeniManager.charts = {};
     
-    // Add click handlers for borrower rows
     document.querySelectorAll('.borrower-row').forEach(row => {
         row.addEventListener('click', (e) => {
             const borrower = row.dataset.borrower;
