@@ -22,6 +22,7 @@ use App\Http\Controllers\UserReportController;
 use App\Http\Controllers\AdminCompanyActivityController;
 use App\Http\Controllers\Admin\CompanyActivityController;
 use App\Http\Controllers\Admin\CompanyStatisticsController;
+use App\Http\Controllers\UserDailyReportController;
 use App\Models\Bidhaa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -246,7 +247,7 @@ Route::get('/sms-test', [MtejaController::class, 'testSmsConnection'])->name('sm
     Route::delete('/matumizi/aina/{id}', [MatumiziController::class, 'destroyAina'])->name('matumizi.destroy-aina');
     Route::get('/matumizi/export-pdf', [MatumiziController::class, 'exportPDF'])->name('matumizi.export.pdf');
     Route::get('/matumizi/export-report-pdf', [MatumiziController::class, 'exportReportPDF'])->name('matumizi.export.report.pdf');
-    
+    Route::get('/matumizi/report-data', [MatumiziController::class, 'getReportData'])->name('matumizi.report-data');
 // ================================
 // Mauzo Routes (accessible by both)
 // ================================
@@ -341,6 +342,11 @@ Route::middleware(['auth.any'])->group(function () {
         Route::post('/generate', [UserReportController::class, 'generate'])->name('user.reports.generate');
         Route::post('/download', [UserReportController::class, 'download'])->name('user.reports.download');
     });
+          // Daily Reports Routes
+    Route::get('/daily-reports', [UserDailyReportController::class, 'index'])->name('daily_reports.index');
+    Route::post('/daily-reports/generate', [UserDailyReportController::class, 'generate'])->name('daily_reports.generate');
+    Route::post('/daily-reports/download', [UserDailyReportController::class, 'download'])->name('daily_reports.download');
+     
 });
 // =========================
 // Admin routes

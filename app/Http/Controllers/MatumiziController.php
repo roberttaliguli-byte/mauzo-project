@@ -62,7 +62,6 @@ class MatumiziController extends Controller
 
     /**
      * Calculate Faida ya Mauzo (Sales Profit)
-     * Formula: Total Revenue - Cost of Goods Sold
      */
     private function getSalesProfit($companyId, $fromDate = null, $toDate = null)
     {
@@ -84,7 +83,6 @@ class MatumiziController extends Controller
 
     /**
      * Calculate Faida ya Marejesho (Returns Profit)
-     * Using FIFO method as in your UchambuziController
      */
     private function getReturnsProfit($companyId, $fromDate = null, $toDate = null)
     {
@@ -143,30 +141,15 @@ class MatumiziController extends Controller
 
     /**
      * Get total MAPATO (Revenue/Income) - Total Sales Revenue
-     * This is the new limit for expenses
      */
     private function getTotalMapato($companyId)
     {
-        // Total revenue from all sales
         $totalRevenue = Mauzo::where('company_id', $companyId)->sum('jumla');
-        
         return $totalRevenue;
     }
 
     /**
-     * Get total available for expenses (based on MAPATO)
-     * Formula: Mapato (Total Revenue) - Current Expenses
-     */
-    private function getRemainingForExpenses($companyId)
-    {
-        $totalMapato = $this->getTotalMapato($companyId);
-        $currentExpenses = Matumizi::where('company_id', $companyId)->sum('gharama');
-        
-        return $totalMapato - $currentExpenses;
-    }
-
-    /**
-     * Display all expenses
+     * Display all expenses with pagination (10 per page)
      */
     public function index()
     {
@@ -176,17 +159,15 @@ class MatumiziController extends Controller
             abort(403, 'Company not found for this user');
         }
 
-        // Get expenses with pagination
+        // Get expenses with pagination (10 per page)
         $matumizi = Matumizi::where('company_id', $company->id)
             ->latest()
-            ->paginate(20)
+            ->paginate(10)
             ->withQueryString();
 
         // Get all registered expense types for this company
         $aina_za_matumizi = AinaZaMatumizi::where('company_id', $company->id)
-            ->withCount(['matumizi' => function($query) use ($company) {
-                $query->where('company_id', $company->id);
-            }])
+            ->withCount('matumizi')
             ->latest()
             ->get();
 
@@ -198,11 +179,11 @@ class MatumiziController extends Controller
         $expensesCount = Matumizi::where('company_id', $company->id)->count();
         $averageExpense = $expensesCount > 0 ? $totalExpenses / $expensesCount : 0;
         
-        // Get MAPATO (Total Revenue) as the limit
+        // Get MAPATO (Total Revenue)
         $totalMapato = $this->getTotalMapato($company->id);
         $remainingBalance = $totalMapato - $totalExpenses;
         
-        // For reference - profits (just for display)
+        // For reference - profits
         $salesProfit = $this->getSalesProfit($company->id);
         $returnsProfit = $this->getReturnsProfit($company->id);
 
@@ -220,61 +201,64 @@ class MatumiziController extends Controller
         ));
     }
 
-/**
- * Store new expense - NO LIMIT
- */
-public function store(Request $request)
-{
-    $request->validate([
-        'gharama' => 'required|numeric|min:0',
-        'maelezo' => 'nullable|string|max:500',
-        'aina' => 'nullable|string|max:255',
-        'aina_mpya' => 'nullable|string|max:255',
-        'tarehe' => 'nullable|date',
-    ]);
+    /**
+     * Store new expense - respects the date entered by user
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'gharama' => 'required|numeric|min:0',
+            'maelezo' => 'nullable|string|max:500',
+            'aina' => 'nullable|string|max:255',
+            'aina_mpya' => 'nullable|string|max:255',
+            'tarehe' => 'nullable|date',
+        ]);
 
-    $company = $this->getCompany();
-    $companyId = $company->id;
+        $company = $this->getCompany();
+        $companyId = $company->id;
 
-    // Determine the expense type (custom or existing)
-    $aina = $request->filled('aina_mpya')
-        ? $request->input('aina_mpya')
-        : $request->input('aina');
+        // Determine the expense type (custom or existing)
+        $aina = $request->filled('aina_mpya')
+            ? $request->input('aina_mpya')
+            : $request->input('aina');
 
-    // If using a custom type, auto-register it
-    if ($request->filled('aina_mpya')) {
-        $existingAina = AinaZaMatumizi::where('company_id', $companyId)
-            ->where('jina', $request->aina_mpya)
-            ->first();
+        // If using a custom type, auto-register it
+        if ($request->filled('aina_mpya')) {
+            $existingAina = AinaZaMatumizi::where('company_id', $companyId)
+                ->where('jina', $request->aina_mpya)
+                ->first();
 
-        if (!$existingAina) {
-            AinaZaMatumizi::create([
-                'jina' => $request->aina_mpya,
-                'maelezo' => 'Auto-generated from expense entry',
-                'rangi' => 'bg-gray-100 text-gray-800 border border-gray-200',
-                'kategoria' => 'mengineyo',
-                'company_id' => $companyId,
+            if (!$existingAina) {
+                AinaZaMatumizi::create([
+                    'jina' => $request->aina_mpya,
+                    'maelezo' => 'Auto-generated from expense entry',
+                    'rangi' => 'bg-gray-100 text-gray-800 border border-gray-200',
+                    'kategoria' => 'mengineyo',
+                    'company_id' => $companyId,
+                ]);
+            }
+        }
+
+        // Use the date provided by user, or current date if not provided
+        $expenseDate = $request->tarehe ? Carbon::parse($request->tarehe) : now();
+
+        $matumizi = $company->matumizi()->create([
+            'aina' => $aina,
+            'maelezo' => $request->maelezo,
+            'gharama' => $request->gharama,
+            'created_at' => $expenseDate,
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Matumizi yamehifadhiwa!',
+                'data' => $matumizi
             ]);
         }
+
+        return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamehifadhiwa!');
     }
-
-    $matumizi = $company->matumizi()->create([
-        'aina' => $aina,
-        'maelezo' => $request->maelezo,
-        'gharama' => $request->gharama,
-        'created_at' => $request->tarehe ?: now(),
-    ]);
-
-    if ($request->ajax()) {
-        return response()->json([
-            'success' => true,
-            'message' => '✅ Matumizi yamehifadhiwa!',
-            'data' => $matumizi
-        ]);
-    }
-
-    return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamehifadhiwa!');
-}
 
     /**
      * Register new expense type
@@ -318,37 +302,37 @@ public function store(Request $request)
         return redirect()->route('matumizi.index')->with('success', '✅ Aina mpya ya matumizi imesajiliwa!');
     }
 
-/**
- * Update expense - NO LIMIT
- */
-public function update(Request $request, $id)
-{
-    $companyId = $this->getCompanyId();
-    
-    $matumizi = Matumizi::findOrFail($id);
+    /**
+     * Update expense
+     */
+    public function update(Request $request, $id)
+    {
+        $companyId = $this->getCompanyId();
+        
+        $matumizi = Matumizi::findOrFail($id);
 
-    if ($matumizi->company_id !== $companyId) {
-        abort(403, 'Huna ruhusa ya kubadilisha matumizi haya.');
-    }
+        if ($matumizi->company_id !== $companyId) {
+            abort(403, 'Huna ruhusa ya kubadilisha matumizi haya.');
+        }
 
-    $request->validate([
-        'aina' => 'required|string|max:255',
-        'maelezo' => 'nullable|string|max:500',
-        'gharama' => 'required|numeric|min:0',
-    ]);
-
-    $matumizi->update($request->only('aina', 'maelezo', 'gharama'));
-
-    if ($request->ajax()) {
-        return response()->json([
-            'success' => true,
-            'message' => '✅ Matumizi yamerekebishwa!',
-            'data' => $matumizi
+        $request->validate([
+            'aina' => 'required|string|max:255',
+            'maelezo' => 'nullable|string|max:500',
+            'gharama' => 'required|numeric|min:0',
         ]);
-    }
 
-    return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamerekebishwa!');
-}
+        $matumizi->update($request->only('aina', 'maelezo', 'gharama'));
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => '✅ Matumizi yamerekebishwa!',
+                'data' => $matumizi
+            ]);
+        }
+
+        return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamerekebishwa!');
+    }
 
     /**
      * Delete expense
@@ -436,7 +420,7 @@ public function update(Request $request, $id)
     }
     
     /**
-     * Export filtered expenses as PDF (for report tab)
+     * Export filtered expenses as PDF with grouping by type
      */
     public function exportReportPDF(Request $request)
     {
@@ -445,7 +429,6 @@ public function update(Request $request, $id)
         
         $startDate = $request->start_date ?? now()->startOfMonth()->format('Y-m-d');
         $endDate = $request->end_date ?? now()->format('Y-m-d');
-        $reportType = $request->report_type ?? 'all';
         
         $query = Matumizi::where('company_id', $companyId)
             ->whereDate('created_at', '>=', $startDate)
@@ -458,24 +441,24 @@ public function update(Request $request, $id)
         $average = $count > 0 ? $total / $count : 0;
         $max = $matumizi->max('gharama') ?? 0;
         
-        // Group by date for chart
-        $dailyData = [];
+        // Group by category/type for report
+        $groupedByType = [];
         foreach ($matumizi as $item) {
-            $date = Carbon::parse($item->created_at)->format('d/m/Y');
-            if (!isset($dailyData[$date])) {
-                $dailyData[$date] = 0;
+            $type = $item->aina;
+            if (!isset($groupedByType[$type])) {
+                $groupedByType[$type] = [
+                    'total' => 0,
+                    'count' => 0,
+                    'items' => []
+                ];
             }
-            $dailyData[$date] += $item->gharama;
+            $groupedByType[$type]['total'] += $item->gharama;
+            $groupedByType[$type]['count']++;
+            $groupedByType[$type]['items'][] = $item;
         }
         
-        // Group by category
-        $categoryData = [];
-        foreach ($matumizi as $item) {
-            if (!isset($categoryData[$item->aina])) {
-                $categoryData[$item->aina] = 0;
-            }
-            $categoryData[$item->aina] += $item->gharama;
-        }
+        // Sort by total descending
+        arsort($groupedByType);
         
         $pdf = Pdf::loadView('matumizi.report-pdf', compact(
             'matumizi', 
@@ -483,15 +466,70 @@ public function update(Request $request, $id)
             'count', 
             'average', 
             'max',
-            'dailyData',
-            'categoryData',
+            'groupedByType',
             'startDate', 
             'endDate', 
-            'reportType', 
             'company'
         ));
         
         $pdf->setPaper('A4', 'landscape');
         return $pdf->download('matumizi-report-' . date('Y-m-d') . '.pdf');
+    }
+    
+    /**
+     * Get report data for AJAX
+     */
+    public function getReportData(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        
+        $startDate = $request->start_date ?? now()->startOfMonth()->format('Y-m-d');
+        $endDate = $request->end_date ?? now()->format('Y-m-d');
+        
+        $expenses = Matumizi::where('company_id', $companyId)
+            ->whereDate('created_at', '>=', $startDate)
+            ->whereDate('created_at', '<=', $endDate)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        $total = $expenses->sum('gharama');
+        $count = $expenses->count();
+        $average = $count > 0 ? $total / $count : 0;
+        $max = $expenses->max('gharama') ?? 0;
+        
+        // Group by date
+        $dailyData = [];
+        foreach ($expenses as $item) {
+            $date = Carbon::parse($item->created_at)->format('Y-m-d');
+            if (!isset($dailyData[$date])) {
+                $dailyData[$date] = 0;
+            }
+            $dailyData[$date] += $item->gharama;
+        }
+        
+        // Group by category/type
+        $categoryData = [];
+        foreach ($expenses as $item) {
+            if (!isset($categoryData[$item->aina])) {
+                $categoryData[$item->aina] = 0;
+            }
+            $categoryData[$item->aina] += $item->gharama;
+        }
+        
+        // Sort categories by total descending
+        arsort($categoryData);
+        
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'expenses' => $expenses,
+                'total' => $total,
+                'count' => $count,
+                'average' => $average,
+                'max' => $max,
+                'dailyData' => $dailyData,
+                'categoryData' => $categoryData
+            ]
+        ]);
     }
 }

@@ -196,14 +196,7 @@
             <div>
                 <p class="text-xs text-gray-500 mb-1">Marejesho ya Leo</p>
                 <p class="text-xl font-bold text-red-700">TZS {{ number_format($todayRepayments, 2) }}</p>
-                <div class="flex justify-between text-xs mt-1">
-                    <span class="text-gray-500">Gharama:</span>
-                    <span class="text-gray-700">TZS {{ number_format($todayRepayments - $faidaMarejesho, 2) }}</span>
-                </div>
-                <div class="flex justify-between text-xs font-semibold">
-                    <span class="text-emerald-600">Faida:</span>
-                    <span class="text-emerald-600">TZS {{ number_format($faidaMarejesho, 2) }}</span>
-                </div>
+                <!-- Gharama and Faida removed from here - moved to horizontal bar -->
             </div>
             <i class="fas fa-hand-holding-usd text-red-500 text-lg"></i>
         </div>
@@ -230,6 +223,108 @@
     </div>
 </div>
 
+<!-- Horizontal Summary Bar - Gharama, Faida, and Payment Sources -->
+<div class="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 shadow-sm p-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        
+        <!-- Left Side: Gharama & Faida -->
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-chart-line text-gray-500 text-xs"></i>
+                <span class="text-xs font-medium text-gray-600">Gharama:</span>
+                <span class="text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                    TZS {{ number_format($todayRepayments - $faidaMarejesho, 2) }}
+                </span>
+            </div>
+            <div class="w-px h-5 bg-gray-300"></div>
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-chart-line text-gray-500 text-xs"></i>
+                <span class="text-xs font-medium text-gray-600">Faida:</span>
+                <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    TZS {{ number_format($faidaMarejesho, 2) }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="w-px h-5 bg-gray-300 hidden md:block"></div>
+        
+        <!-- Right Side: Chanzo cha Malipo -->
+        <div class="flex items-center flex-wrap gap-3">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-chart-pie text-gray-500 text-xs"></i>
+                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">Chanzo cha Malipo:</span>
+            </div>
+            
+            <!-- Cash -->
+            <div class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-emerald-100">
+                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <i class="fas fa-money-bill-wave text-emerald-600 text-xs"></i>
+                <span class="text-xs font-medium text-gray-700">Cash:</span>
+                <span class="text-xs font-bold text-emerald-700">TZS {{ number_format($todayCashRepayments ?? 0, 2) }}</span>
+            </div>
+            
+            <!-- Lipa Namba -->
+            <div class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-blue-100 group relative">
+                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                <i class="fas fa-mobile-alt text-blue-600 text-xs"></i>
+                <span class="text-xs font-medium text-gray-700">Lipa Namba:</span>
+                <span class="text-xs font-bold text-blue-700">TZS {{ number_format($todayLipaNambaRepayments ?? 0, 2) }}</span>
+                
+                <!-- Tooltip for Lipa Namba details -->
+                @if(($todayMpesaRepayments ?? 0) > 0 || ($todayMixxRepayments ?? 0) > 0 || ($todayAirtelRepayments ?? 0) > 0 || ($todayHaloRepayments ?? 0) > 0)
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg p-2 whitespace-nowrap z-10 shadow-lg">
+                    <div class="text-center text-gray-300 text-[10px] mb-1">Lipa Namba Breakdown</div>
+                    @if(($todayMpesaRepayments ?? 0) > 0)
+                    <div class="flex justify-between gap-3"><span>📱 M-Pesa:</span><span class="font-bold">TZS {{ number_format($todayMpesaRepayments, 2) }}</span></div>
+                    @endif
+                    @if(($todayMixxRepayments ?? 0) > 0)
+                    <div class="flex justify-between gap-3"><span>🎮 Mixx by Yas:</span><span class="font-bold">TZS {{ number_format($todayMixxRepayments, 2) }}</span></div>
+                    @endif
+                    @if(($todayAirtelRepayments ?? 0) > 0)
+                    <div class="flex justify-between gap-3"><span>📱 Airtel Money:</span><span class="font-bold">TZS {{ number_format($todayAirtelRepayments, 2) }}</span></div>
+                    @endif
+                    @if(($todayHaloRepayments ?? 0) > 0)
+                    <div class="flex justify-between gap-3"><span>📱 HaloPesa:</span><span class="font-bold">TZS {{ number_format($todayHaloRepayments, 2) }}</span></div>
+                    @endif
+                </div>
+                @endif
+            </div>
+            
+            <!-- Bank -->
+            <div class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-purple-100 group relative">
+                <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                <i class="fas fa-university text-purple-600 text-xs"></i>
+                <span class="text-xs font-medium text-gray-700">Bank:</span>
+                <span class="text-xs font-bold text-purple-700">TZS {{ number_format($todayBankRepayments ?? 0, 2) }}</span>
+                
+                <!-- Tooltip for Bank details -->
+                @if(($todayCrdbRepayments ?? 0) > 0 || ($todayNmbRepayments ?? 0) > 0 || ($todayNbcRepayments ?? 0) > 0)
+                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg p-2 whitespace-nowrap z-10 shadow-lg">
+                    <div class="text-center text-gray-300 text-[10px] mb-1">Bank Breakdown</div>
+                    @if(($todayCrdbRepayments ?? 0) > 0)
+                    <div class="flex justify-between gap-3"><span>🏦 CRDB:</span><span class="font-bold">TZS {{ number_format($todayCrdbRepayments, 2) }}</span></div>
+                    @endif
+                    @if(($todayNmbRepayments ?? 0) > 0)
+                    <div class="flex justify-between gap-3"><span>🏦 NMB:</span><span class="font-bold">TZS {{ number_format($todayNmbRepayments, 2) }}</span></div>
+                    @endif
+                    @if(($todayNbcRepayments ?? 0) > 0)
+                    <div class="flex justify-between gap-3"><span>🏦 NBC:</span><span class="font-bold">TZS {{ number_format($todayNbcRepayments, 2) }}</span></div>
+                    @endif
+                </div>
+                @endif
+            </div>
+            
+            <!-- Total Verified -->
+            <div class="flex items-center space-x-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                <i class="fas fa-check-circle text-emerald-600 text-xs"></i>
+                <span class="text-xs font-medium text-gray-700">Jumla:</span>
+                <span class="text-xs font-bold text-emerald-800">
+                    TZS {{ number_format(($todayCashRepayments ?? 0) + ($todayLipaNambaRepayments ?? 0) + ($todayBankRepayments ?? 0), 2) }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Borrowers Summary (Grouped) - Hidden until user clicks Show -->
 <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">

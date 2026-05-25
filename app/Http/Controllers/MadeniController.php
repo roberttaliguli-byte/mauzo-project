@@ -244,6 +244,68 @@ class MadeniController extends Controller
         }])->where('company_id', $companyId)
             ->orderBy('tarehe', 'desc')
             ->paginate(15, ['*'], 'history_page');
+
+            // Add these after the existing todayDebts query (around line 120)
+
+// Today's repayments by payment method
+$todayCashRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'cash')
+    ->sum('kiasi');
+
+$todayLipaNambaRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'lipa_namba')
+    ->sum('kiasi');
+
+$todayBankRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'bank')
+    ->sum('kiasi');
+
+// Optional: Get detailed breakdown of Lipa Namba types
+$todayMpesaRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'lipa_namba')
+    ->where('lipa_kwa_type', 'mpesa')
+    ->sum('kiasi');
+
+$todayMixxRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'lipa_namba')
+    ->where('lipa_kwa_type', 'mixx_by_yas')
+    ->sum('kiasi');
+
+$todayAirtelRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'lipa_namba')
+    ->where('lipa_kwa_type', 'airtel_money')
+    ->sum('kiasi');
+
+$todayHaloRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'lipa_namba')
+    ->where('lipa_kwa_type', 'halopesa')
+    ->sum('kiasi');
+
+// Bank types breakdown
+$todayCrdbRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'bank')
+    ->where('lipa_kwa_type', 'crdb')
+    ->sum('kiasi');
+
+$todayNmbRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'bank')
+    ->where('lipa_kwa_type', 'nmb')
+    ->sum('kiasi');
+
+$todayNbcRepayments = Marejesho::where('company_id', $companyId)
+    ->whereBetween('tarehe', $today)
+    ->where('lipa_kwa', 'bank')
+    ->where('lipa_kwa_type', 'nbc')
+    ->sum('kiasi');
         
         return view('madeni.index', compact(
             'madeni',
@@ -257,7 +319,18 @@ class MadeniController extends Controller
             'todayNewBorrowers',
             'todayPending',
             'hasFullAccess',
-            'isMfanyakazi'
+            'isMfanyakazi',
+            'todayCashRepayments',      // ADD
+            'todayLipaNambaRepayments', // ADD
+            'todayBankRepayments',      // ADD
+            // Optional breakdowns:
+            'todayMpesaRepayments',
+            'todayMixxRepayments',
+            'todayAirtelRepayments',
+            'todayHaloRepayments',
+            'todayCrdbRepayments',
+            'todayNmbRepayments',
+            'todayNbcRepayments',
         ));
     }
     

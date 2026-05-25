@@ -64,15 +64,19 @@
             </h2>
             <p class="text-xs text-gray-700 mt-1 font-medium">Chagua aina ya taarifa kuona uchambuzi kamili</p>
         </div>
-        <div class="p-4">
-            <div class="flex flex-wrap gap-2">
-                <button @click="setTab('graphs')" :class="tab === 'graphs' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-chart-bar mr-1"></i> Grafu</button>
-                <button @click="setTab('mwenendo')" :class="tab === 'mwenendo' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-chart-line mr-1"></i> Mwenendo</button>
-                <button @click="setTab('kampuni')" :class="tab === 'kampuni' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-building mr-1"></i> Kampuni</button>
-                <a href="{{ route('user.reports.select') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-gray-100 text-gray-800 hover:bg-gray-200 text-sm"><i class="fas fa-file-alt mr-1"></i> Ripoti</a>
-                <button @click="setTab('historia')" :class="tab === 'historia' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-history mr-1"></i> Historia</button>
-            </div>
-        </div>
+   <div class="p-4">
+    <div class="flex flex-wrap gap-2">
+        <button @click="setTab('graphs')" :class="tab === 'graphs' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-chart-bar mr-1"></i> Grafu</button>
+        <button @click="setTab('mwenendo')" :class="tab === 'mwenendo' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-chart-line mr-1"></i> Mwenendo</button>
+        <button @click="setTab('kampuni')" :class="tab === 'kampuni' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-building mr-1"></i> Kampuni</button>
+        <a href="{{ route('user.reports.select') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-gray-100 text-gray-800 hover:bg-gray-200 text-sm"><i class="fas fa-file-alt mr-1"></i> Ripoti</a>
+        
+        <!-- FIXED: Remove 'user.' prefix from route name -->
+        <a href="{{ route('daily_reports.index') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-white-100 text-emerald-800 hover:bg-emerald-200 text-sm"><i class="fas fa-calendar-week mr-1"></i> Ripoti kwa Siku</a>
+        
+        <button @click="setTab('historia')" :class="tab === 'historia' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-history mr-1"></i> Historia</button>
+    </div>
+</div>
     </div>
 
     <!-- MAIN CONTENT -->
