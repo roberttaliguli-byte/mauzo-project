@@ -61,7 +61,12 @@
     <meta name="company-name" content="{{ $companyName }}">
 @endif
 <meta name="csrf-token" content="{{ csrf_token() }}">
-
+<!-- Add this in your blade view, near the other meta tags -->
+<meta name="can-backdate" content="{{ 
+    (Auth::guard('web')->check()) || 
+    (Auth::guard('mfanyakazi')->check() && (Auth::guard('mfanyakazi')->user()->uwezo ?? 'mdogo') === 'mkubwa') 
+    ? 'true' : 'false' 
+}}">
 <!-- Main Container -->
 <div class="space-y-4">
     <!-- Notification System -->
@@ -103,17 +108,42 @@
         </div>
     </div>
 
-    <!-- TAB 1: Sehemu ya Mauzo -->
-    <div id="sehemu-tab-content" class="tab-content active">
-<!-- Sales Form -->
-<div class="bg-white rounded-lg shadow border border-gray-200 p-4 mb-4">
-    <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-        <i class="fas fa-cash-register mr-2 text-green-600"></i>
-        Rekodi Mauzo
-    </h2>
+<!-- TAB 1: Sehemu ya Mauzo -->
+<div id="sehemu-tab-content" class="tab-content active">
+    <!-- Sales Form -->
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-4 mb-4">
+        <h2 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+            <i class="fas fa-cash-register mr-2 text-green-600"></i>
+            Rekodi Mauzo
+        </h2>
 
-    <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-4" id="sales-form">
-        @csrf
+        <form method="POST" action="{{ route('mauzo.store') }}" class="space-y-4" id="sales-form">
+            @csrf
+
+            <!-- NEW: Backdate Sale Checkbox - ONLY SHOW FOR BOSS OR MFANYAKAZI MKUBWA -->
+            @php
+                $canBackdate = (Auth::guard('web')->check()) || 
+                               (Auth::guard('mfanyakazi')->check() && (Auth::guard('mfanyakazi')->user()->uwezo ?? 'mdogo') === 'mkubwa');
+            @endphp
+
+            @if($canBackdate)
+            <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200 mb-3">
+                <div class="flex items-center">
+                    <input type="checkbox" id="backdate_checkbox" name="is_backdate" value="1" class="w-5 h-5 text-yellow-600 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500">
+                    <label for="backdate_checkbox" class="ml-3 text-sm font-semibold text-gray-700 cursor-pointer">
+                        <i class="fas fa-calendar-alt mr-1 text-yellow-600"></i> 
+                        Rekodi kwa Tarehe Iliyopita
+                    </label>
+                </div>
+                <div id="backdate_container" class="hidden">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-600">Chagua tarehe:</span>
+                        <input type="date" name="backdate" id="backdate_date" class="border border-gray-300 rounded-lg p-1.5 text-sm focus:ring-2 focus:ring-yellow-200">
+                
+                    </div>
+                </div>
+            </div>
+            @endif
 
 <!-- Row 1: Product, Quantity, Price Type, Price, Stock -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
@@ -262,7 +292,7 @@
     <!-- Dropdown for customer selection -->
     <select id="customer_select" name="mteja_id" size="5" 
             class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-200 hidden absolute z-10 bg-white shadow-lg max-h-60 overflow-y-auto mt-1">
-        <option value="">-- Tafuta au Chagua Mteja --</option>
+        <option value="">Tafuta au Chagua Mteja </option>
         @foreach($wateja as $mteja)
             <option value="{{ $mteja->id }}" data-simu="{{ $mteja->simu }}" data-jina="{{ $mteja->jina }}">
                 {{ $mteja->jina }} - {{ $mteja->simu }}
@@ -275,10 +305,6 @@
     <input type="hidden" name="send_receipt" id="send_receipt_hidden" value="0">
     <input type="hidden" name="send_to_phone" id="send_to_phone_hidden" value="">
     
-    <p class="text-xs text-gray-500 mt-1">
-        <i class="fas fa-info-circle mr-1"></i> 
-        chagua jina/namba ya simu
-    </p>
 </div>
 </div>
 
@@ -604,17 +630,43 @@
         
     </div>
 
-    <!-- TAB 2: Barcode Sales -->
-    <div id="barcode-tab-content" class="tab-content hidden">
-        <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
-            <div class="flex items-center mb-4">
-                <div class="bg-green-600 text-white p-3 rounded-full shadow">
-                    <i class="fas fa-barcode"></i>
-                </div>
-                <h2 class="ml-3 text-lg font-bold text-gray-800">
-                    Mauzo kwa Barcode
-                </h2>
+<!-- TAB 2: Barcode Sales -->
+<div id="barcode-tab-content" class="tab-content hidden">
+    <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+        <div class="flex items-center mb-4">
+            <div class="bg-green-600 text-white p-3 rounded-full shadow">
+                <i class="fas fa-barcode"></i>
             </div>
+            <h2 class="ml-3 text-lg font-bold text-gray-800">
+                Mauzo kwa Barcode
+            </h2>
+        </div>
+
+        <form id="barcode-form" class="space-y-4">
+            @csrf
+            
+            @if($canBackdate)
+            <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200 mb-3">
+                <div class="flex items-center">
+                    <input type="checkbox" id="barcode_backdate_checkbox" class="w-5 h-5 text-yellow-600 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500">
+                    <label for="barcode_backdate_checkbox" class="ml-3 text-sm font-semibold text-gray-700 cursor-pointer">
+                        <i class="fas fa-calendar-alt mr-1 text-yellow-600"></i> 
+                        Rekodi kwa Tarehe Iliyopita
+                    </label>
+                </div>
+                <div id="barcode_backdate_container" class="hidden">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-600">Chagua tarehe:</span>
+                        <input type="date" id="barcode_backdate_date" name="backdate" class="border border-gray-300 rounded-lg p-1.5 text-sm focus:ring-2 focus:ring-yellow-200">
+                        <span class="text-xs text-gray-500 ml-2">
+                            <i class="fas fa-info-circle"></i> Siku za nyuma tu
+                        </span>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- rest of barcode form -->
 
             <form id="barcode-form" class="space-y-4">
                 @csrf
@@ -750,28 +802,41 @@
                 Taarifa Fupi ya Mauzo
             </h2>
 
-<!-- Search and Filter - UPDATED WITH DATE RANGE AND SMALLER FILTER BUTTON -->
-<div class="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-4">
+<div class="grid grid-cols-1 lg:grid-cols-6 gap-3 mb-4">
     <div class="relative lg:col-span-2">
         <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-        <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa, risiti, malipo..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
+        <input type="text" id="search-sales" placeholder="Tafuta kwa jina la bidhaa, risiti, malipo..."
+               class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
     </div>
-    
+
     <div class="relative">
         <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
-        <input type="date" id="filter-start-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Toka">
+        <input type="date" id="filter-start-date"
+               class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
     </div>
-    
+
     <div class="relative">
         <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
-        <input type="date" id="filter-end-date" class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm" placeholder="Mpaka">
+        <input type="date" id="filter-end-date"
+               class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
     </div>
-    
+
     <div>
-        <button id="reset-filters" class="w-full bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-2 transition">
+        <button id="reset-filters"
+                class="w-full bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-2 transition">
             <i class="fas fa-redo-alt"></i> Safisha
         </button>
     </div>
+
+    @unless($isMfanyakazi)
+    <div>
+        <a href="{{ route('daily_reports.index') }}"
+           class="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm flex items-center justify-center gap-2 transition">
+            <i class="fas fa-calendar-week"></i>
+            Ripoti kwa Siku
+        </a>
+    </div>
+    @endunless
 </div>
 
             <!-- Sales Table -->
@@ -1119,7 +1184,26 @@
                     <span class="text-green-600 font-bold" id="cart-total">0.00</span> /=
                 </div>
             </div>
-            
+            @if($canBackdate)
+            <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200 mb-4">
+                <div class="flex items-center">
+                    <input type="checkbox" id="kikapu_backdate_checkbox" class="w-5 h-5 text-yellow-600 bg-gray-100 border-gray-300 rounded focus:ring-yellow-500">
+                    <label for="kikapu_backdate_checkbox" class="ml-3 text-sm font-semibold text-gray-700 cursor-pointer">
+                        <i class="fas fa-calendar-alt mr-1 text-yellow-600"></i> 
+                        Rekodi kwa Tarehe Iliyopita
+                    </label>
+                </div>
+                <div id="kikapu_backdate_container" class="hidden">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-600">Chagua tarehe:</span>
+                        <input type="date" id="kikapu_backdate_date" class="border border-gray-300 rounded-lg p-1.5 text-sm focus:ring-2 focus:ring-yellow-200">
+                        <span class="text-xs text-gray-500 ml-2">
+                            <i class="fas fa-info-circle"></i> Siku za nyuma tu
+                        </span>
+                    </div>
+                </div>
+            </div>
+            @endif
             <!-- 2x2 Grid for Payment Method and Customer Selection -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 <!-- In Kikapu tab, replace the payment method section -->
@@ -1771,6 +1855,8 @@ class MauzoManager {
         this.bindPriceTypeChange();
         this.bindSmsReceiptEvents();
         this.bindPaymentTypeEvents();
+        this.initBackdateToggle();
+
     }
 
     // Helper function to calculate actual discount
@@ -2431,6 +2517,14 @@ bindPaymentTypeEvents() {
 
     async processSale(form, type) {
         const formData = new FormData(form);
+            // Add backdate data if applicable
+    const backdateCheckbox = document.getElementById('backdate_checkbox');
+    const backdateDate = document.getElementById('backdate_date');
+    
+    if (backdateCheckbox && backdateCheckbox.checked && backdateDate && backdateDate.value) {
+        formData.append('is_backdate', '1');
+        formData.append('backdate', backdateDate.value);
+    }
         
         const punguzoType = document.getElementById('punguzo-type');
         if (punguzoType) {
@@ -2441,6 +2535,7 @@ bindPaymentTypeEvents() {
         if (priceTypeSelect) {
             formData.append('bei_type', priceTypeSelect.value);
         }
+        
             // Add payment type if needed
     const lipaKwaSelect = document.getElementById('lipa_kwa_select');
     const paymentMethod = lipaKwaSelect ? lipaKwaSelect.value : 'cash';
@@ -3014,13 +3109,18 @@ resetForm() {
         });
     }
 
-    async submitBarcodeSales() {
-        const items = [];
-        let hasValidItems = false;
-        const punguzoType = document.getElementById('punguzo-type');
-        const paymentMethodSelect = document.querySelector('#barcode-form select[name="lipa_kwa"]');
-        const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
-           // Get payment type
+async submitBarcodeSales() {
+    const items = [];
+    let hasValidItems = false;
+    const punguzoType = document.getElementById('punguzo-type');
+    const paymentMethodSelect = document.querySelector('#barcode-form select[name="lipa_kwa"]');
+    const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
+
+    if (!punguzoType) return;
+
+    const discountType = punguzoType.value;  // FIX: Moved BEFORE usage
+
+    // Get payment type - FIX: Moved BEFORE usage
     let paymentType = null;
     if (paymentMethod === 'lipa_namba') {
         const typeSelect = document.getElementById('barcode_lipa_namba_select');
@@ -3040,82 +3140,89 @@ resetForm() {
         }
     }
 
-        if (!punguzoType) return;
-
-        const discountType = punguzoType.value;
-
-        document.querySelectorAll('.barcode-row').forEach(row => {
-            const barcodeInput = row.querySelector('.barcode-input');
-            const quantityInput = row.querySelector('.quantity-input');
-            const productName = row.querySelector('.product-name');
-            const productPrice = row.querySelector('.product-price');
-            const punguzoInput = row.querySelector('.punguzo-input');
-            const totalInput = row.querySelector('.total-input');
+    document.querySelectorAll('.barcode-row').forEach(row => {
+        const barcodeInput = row.querySelector('.barcode-input');
+        const quantityInput = row.querySelector('.quantity-input');
+        const productName = row.querySelector('.product-name');
+        const productPrice = row.querySelector('.product-price');
+        const punguzoInput = row.querySelector('.punguzo-input');
+        const totalInput = row.querySelector('.total-input');
+        
+        if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
+            const barcode = barcodeInput.value.trim();
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const product = productName.value.trim();
+            const price = parseFloat(productPrice.value) || 0;
+            const punguzo = parseFloat(punguzoInput.value) || 0;
+            const jumla = parseFloat(totalInput.value) || 0;
             
-            if (barcodeInput && quantityInput && productName && productPrice && totalInput) {
-                const barcode = barcodeInput.value.trim();
-                const quantity = parseFloat(quantityInput.value) || 0;
-                const product = productName.value.trim();
-                const price = parseFloat(productPrice.value) || 0;
-                const punguzo = parseFloat(punguzoInput.value) || 0;
-                const jumla = parseFloat(totalInput.value) || 0;
+            if (barcode && quantity > 0 && product && price > 0) {
+                const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
                 
-                if (barcode && quantity > 0 && product && price > 0) {
-                    const bidhaa = this.bidhaaList.find(b => b.barcode === barcode);
-                    
-                    items.push({
-                        barcode: barcode,
-                        bidhaa_id: bidhaa ? bidhaa.id : null,
-                        idadi: quantity,
-                        bei: price,
-                        punguzo: punguzo,
-                        punguzo_aina: discountType,
-                        jumla: jumla,
-                        total_before_discount: (price * quantity)
-                    });
-                    hasValidItems = true;
-                }
+                items.push({
+                    barcode: barcode,
+                    bidhaa_id: bidhaa ? bidhaa.id : null,
+                    idadi: quantity,
+                    bei: price,
+                    punguzo: punguzo,
+                    punguzo_aina: discountType,
+                    jumla: jumla,
+                    total_before_discount: (price * quantity)
+                });
+                hasValidItems = true;
             }
+        }
+    });
+
+    if (!hasValidItems) {
+        this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
+        return;
+    }
+
+    // FIX: Build request body correctly with backdate data
+    const backdateCheckbox = document.getElementById('barcode_backdate_checkbox');
+    const backdateDate = document.getElementById('barcode_backdate_date');
+    
+    const requestBody = { 
+        items: items, 
+        punguzo_aina: discountType,
+        lipa_kwa: paymentMethod,
+        lipa_kwa_type: paymentType
+    };
+    
+    if (backdateCheckbox && backdateCheckbox.checked && backdateDate && backdateDate.value) {
+        requestBody.is_backdate = '1';
+        requestBody.backdate = backdateDate.value;
+    }
+
+    try {
+        const response = await fetch("{{ route('mauzo.store.barcode') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(requestBody)  // FIX: Use requestBody with backdate data
         });
 
-        if (!hasValidItems) {
-            this.showNotification('Tafadhali angalau bidhaa moja iwe na barcode na idadi sahihi!', 'error');
-            return;
-        }
-
-        try {
-            const response = await fetch("{{ route('mauzo.store.barcode') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ 
-                    items: items, 
-                    punguzo_aina: discountType,
-                    lipa_kwa: paymentMethod,
-                    lipa_kwa_type: paymentType  // ADD THIS
-                })
-            });
-
-            const data = await response.json();
+        const data = await response.json();
+        
+        if (data.success) {
+            this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+            this.clearBarcodeRows();
+            this.updateFinancialData();
             
-            if (data.success) {
-                this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
-                this.clearBarcodeRows();
-                this.updateFinancialData();
-                
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        this.showNotification('Kuna tatizo kwenye kuhifadhi mauzo!', 'error');
     }
+}
 
     bindBarcodeEvents() {
         const addBarcodeRowBtn = document.getElementById('add-barcode-row');
@@ -3289,6 +3396,7 @@ initKikapuCustomerSearch() {
     }
 }
 
+
 async checkoutCart() {
     const companyCart = this.cart.filter(item => item.company_id === this.companyId);
     
@@ -3300,7 +3408,7 @@ async checkoutCart() {
     const paymentMethodSelect = document.getElementById('kikapu-lipa-kwa');
     const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'cash';
 
-      // Get payment type
+    // Get payment type - Moved BEFORE using it
     let paymentType = null;
     if (paymentMethod === 'lipa_namba') {
         const typeSelect = document.getElementById('kikapu-lipa-namba-type');
@@ -3325,6 +3433,25 @@ async checkoutCart() {
     const sendReceipt = document.getElementById('kikapu_send_receipt_hidden')?.value === '1';
     const sendToPhone = document.getElementById('kikapu_send_to_phone_hidden')?.value || null;
 
+    // Add backdate data
+    const backdateCheckbox = document.getElementById('kikapu_backdate_checkbox');
+    const backdateDate = document.getElementById('kikapu_backdate_date');
+    
+    const requestBody = { 
+        items: companyCart,
+        company_id: this.companyId,
+        lipa_kwa: paymentMethod,
+        lipa_kwa_type: paymentType,
+        mteja_id: customerId,
+        send_receipt: sendReceipt,
+        send_to_phone: sendToPhone
+    };
+    
+    if (backdateCheckbox && backdateCheckbox.checked && backdateDate && backdateDate.value) {
+        requestBody.is_backdate = '1';
+        requestBody.backdate = backdateDate.value;
+    }
+
     try {
         const response = await fetch("{{ route('mauzo.store.kikapu') }}", {
             method: 'POST',
@@ -3333,15 +3460,7 @@ async checkoutCart() {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'X-Company-ID': this.companyId
             },
-            body: JSON.stringify({ 
-                items: companyCart,
-                company_id: this.companyId,
-                lipa_kwa: paymentMethod,
-                 lipa_kwa_type: paymentType,
-                mteja_id: customerId,
-                send_receipt: sendReceipt,
-                send_to_phone: sendToPhone
-            })
+            body: JSON.stringify(requestBody)  // Use requestBody with backdate
         });
 
         const data = await response.json();
@@ -3368,6 +3487,74 @@ async checkoutCart() {
     initCartDisplay() {
         this.updateCartDisplay();
     }
+
+
+    // Add to MauzoManager class
+initBackdateToggle() {
+    const backdateCheckbox = document.getElementById('backdate_checkbox');
+    const backdateContainer = document.getElementById('backdate_container');
+    const backdateDate = document.getElementById('backdate_date');
+    
+    if (backdateCheckbox && backdateContainer) {
+        backdateCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                backdateContainer.classList.remove('hidden');
+                if (backdateDate && !backdateDate.value) {
+                    // Default to yesterday
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    backdateDate.value = yesterday.toISOString().split('T')[0];
+                }
+            } else {
+                backdateContainer.classList.add('hidden');
+                if (backdateDate) backdateDate.value = '';
+            }
+        });
+    }
+    
+    // Also for barcode tab
+    const barcodeBackdateCheckbox = document.getElementById('barcode_backdate_checkbox');
+    const barcodeBackdateContainer = document.getElementById('barcode_backdate_container');
+    const barcodeBackdateDate = document.getElementById('barcode_backdate_date');
+    
+    if (barcodeBackdateCheckbox && barcodeBackdateContainer) {
+        barcodeBackdateCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                barcodeBackdateContainer.classList.remove('hidden');
+                if (barcodeBackdateDate && !barcodeBackdateDate.value) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    barcodeBackdateDate.value = yesterday.toISOString().split('T')[0];
+                }
+            } else {
+                barcodeBackdateContainer.classList.add('hidden');
+                if (barcodeBackdateDate) barcodeBackdateDate.value = '';
+            }
+        });
+    }
+    
+    // For kikapu tab
+    const kikapuBackdateCheckbox = document.getElementById('kikapu_backdate_checkbox');
+    const kikapuBackdateContainer = document.getElementById('kikapu_backdate_container');
+    const kikapuBackdateDate = document.getElementById('kikapu_backdate_date');
+    
+    if (kikapuBackdateCheckbox && kikapuBackdateContainer) {
+        kikapuBackdateCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                kikapuBackdateContainer.classList.remove('hidden');
+                if (kikapuBackdateDate && !kikapuBackdateDate.value) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    kikapuBackdateDate.value = yesterday.toISOString().split('T')[0];
+                }
+            } else {
+                kikapuBackdateContainer.classList.add('hidden');
+                if (kikapuBackdateDate) kikapuBackdateDate.value = '';
+            }
+        });
+    }
+}
+
 
     initReceiptLookup() {
         const searchInput = document.getElementById('search-receipt-input');

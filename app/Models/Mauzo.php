@@ -24,6 +24,9 @@ class Mauzo extends Model
         'lipa_kwa',
         'lipa_kwa_type',      // ADD THIS FIELD
         'mteja_id',
+        'user_id',
+        'sale_date'
+
     ];
 
     protected $casts = [
@@ -127,6 +130,12 @@ class Mauzo extends Model
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
+// Add accessor for display
+public function getSaleDateAttribute($value)
+{
+    return $value ?? $this->created_at;
+}
+
     public function getTotalDiscountAttribute()
     {
         if (!$this->punguzo) {
@@ -153,4 +162,17 @@ class Mauzo extends Model
             }
         });
     }
+
+public function setCreatedAt($value)
+{
+    $this->{static::CREATED_AT} = $value;
+    return $this;
+}
+
+public function setUpdatedAt($value)
+{
+    $this->{static::UPDATED_AT} = $value;
+    return $this;
+}
+
 }
