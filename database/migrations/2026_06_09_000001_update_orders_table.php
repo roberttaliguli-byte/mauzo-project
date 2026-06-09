@@ -7,37 +7,37 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    public function up()
-    {
-        // First, update existing status values to match new ENUM
-        // Map old statuses to new ones
-        DB::statement("UPDATE orders SET status = 'saved' WHERE status = 'draft' OR status = 'pending'");
-        DB::statement("UPDATE orders SET status = 'confirmed' WHERE status = 'confirmed'");
-        DB::statement("UPDATE orders SET status = 'paid' WHERE status = 'paid'");
-        DB::statement("UPDATE orders SET status = 'cancelled' WHERE status = 'cancelled'");
-        
-        // Now modify the column - use raw SQL to avoid issues
-        DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('saved', 'confirmed', 'paid', 'cancelled') NOT NULL DEFAULT 'saved'");
-        
-        // Add new columns
-        if (!Schema::hasColumn('orders', 'transferred_to_cart')) {
-            Schema::table('orders', function (Blueprint $table) {
-                $table->boolean('transferred_to_cart')->default(false);
-            });
-        }
-        
-        if (!Schema::hasColumn('orders', 'transferred_at')) {
-            Schema::table('orders', function (Blueprint $table) {
-                $table->timestamp('transferred_at')->nullable();
-            });
-        }
-        
-        if (!Schema::hasColumn('orders', 'payment_reference')) {
-            Schema::table('orders', function (Blueprint $table) {
-                $table->string('payment_reference')->nullable();
-            });
-        }
+public function up()
+{
+    if (!Schema::hasTable('orders')) {
+        return;
     }
+
+    // Update existing status values
+    DB::statement("UPDATE orders SET status = 'saved' WHERE status = 'draft' OR status = 'pending'");
+
+    // Modify status enum
+    DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('saved', 'confirmed', 'paid', 'cancelled') NOT NULL DEFAULT 'saved'");
+
+    // Add new columns
+    if (!Schema::hasColumn('orders', 'transferred_to_cart')) {
+        Schema::table('orders', function (Blueprint $table) {
+            $table->boolean('transferred_to_cart')->default(false);
+        });
+    }
+
+    if (!Schema::hasColumn('orders', 'transferred_at')) {
+        Schema::table('orders', function (Blueprint $table) {
+            $table->timestamp('transferred_at')->nullable();
+        });
+    }
+
+    if (!Schema::hasColumn('orders', 'payment_reference')) {
+        Schema::table('orders', function (Blueprint $table) {
+            $table->string('payment_reference')->nullable();
+        });
+    }
+}
 
     public function down()
     {
