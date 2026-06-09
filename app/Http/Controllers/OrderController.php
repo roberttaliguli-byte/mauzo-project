@@ -36,24 +36,22 @@ class OrderController extends Controller
         return 1;
     }
 
-// Add this method to your OrderController
-public function create()
-{
-    $companyId = $this->getCompanyId();
-    
-    // Get products (bidhaa) for the order form
-    $bidhaa = Bidhaa::where('company_id', $companyId)
-        ->orderBy('jina')
-        ->get(['id', 'jina', 'bei_kuuza', 'aina', 'kipimo', 'idadi']);
-    
-    // Get customers (wateja) for customer search
-    $wateja = Mteja::where('company_id', $companyId)
-        ->orderBy('jina')
-        ->get(['id', 'jina', 'simu', 'barua_pepe', 'anapoishi']);
-    
-    // Return the view with both variables
-    return view('mauzo.index', compact('bidhaa', 'wateja'));
-}
+    public function create()
+    {
+        $companyId = $this->getCompanyId();
+        
+        // Get products (bidhaa) for the order form
+        $bidhaa = Bidhaa::where('company_id', $companyId)
+            ->orderBy('jina')
+            ->get(['id', 'jina', 'bei_kuuza', 'aina', 'kipimo', 'idadi']);
+        
+        // Get customers - Using correct model Mteja (table: mtejas)
+        $wateja = Mteja::where('company_id', $companyId)
+            ->orderBy('jina')
+            ->get(['id', 'jina', 'simu', 'barua_pepe', 'anapoishi']);
+        
+        return view('mauzo.index', compact('bidhaa', 'wateja'));
+    }
 
     public function index(Request $request)
     {
@@ -82,7 +80,8 @@ public function create()
             });
         }
 
-        $orders = $query->orderBy('created_at', 'desc')->paginate(20);
+        // Paginate with 10 items per page
+        $orders = $query->orderBy('created_at', 'desc')->paginate(10);
         
         $stats = [
             'saved' => Order::where('company_id', $companyId)->where('status', 'saved')->count(),
@@ -119,7 +118,14 @@ public function create()
             'items.*.bidhaa_id' => 'required|exists:bidhaas,id',
             'items.*.idadi' => 'required|numeric|min:0.01',
             'items.*.bei' => 'required|numeric|min:0',
+            'items.*.punguzo' => 'nullable|numeric|min:0',
             'customer_name' => 'required|string|max:255',
+            'customer_id' => 'nullable|exists:mtejas,id',
+            'customer_phone' => 'nullable|string|max:20',
+            'customer_email' => 'nullable|string|max:100',
+            'customer_address' => 'nullable|string',
+            'discount' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
             'status' => 'required|in:saved,confirmed'
         ]);
 
@@ -130,8 +136,12 @@ public function create()
             
             foreach ($validated['items'] as $item) {
                 $bidhaa = Bidhaa::find($item['bidhaa_id']);
+                if (!$bidhaa) {
+                    throw new \Exception('Bidhaa not found: ' . $item['bidhaa_id']);
+                }
+                
                 $itemSubtotal = $item['bei'] * $item['idadi'];
-                $itemDiscount = $item['punguzo'] ?? 0;
+                $itemDiscount = isset($item['punguzo']) ? floatval($item['punguzo']) : 0;
                 $itemTotal = $itemSubtotal - $itemDiscount;
                 $subtotal += $itemTotal;
                 
@@ -140,17 +150,19 @@ public function create()
                     'jina' => $bidhaa->jina,
                     'aina' => $bidhaa->aina ?? '',
                     'kipimo' => $bidhaa->kipimo ?? '',
-                    'idadi' => $item['idadi'],
-                    'bei' => $item['bei'],
-                    'punguzo' => $item['punguzo'] ?? 0,
+                    'idadi' => floatval($item['idadi']),
+                    'bei' => floatval($item['bei']),
+                    'punguzo' => $itemDiscount,
                     'subtotal' => $itemSubtotal,
                     'total' => $itemTotal
                 ];
             }
 
-            $discount = $validated['discount'] ?? 0;
-            if ($discount > $subtotal) $discount = $subtotal;
-            $total = $subtotal - $discount;
+            $globalDiscount = isset($validated['discount']) ? floatval($validated['discount']) : 0;
+            if ($globalDiscount > $subtotal) {
+                $globalDiscount = $subtotal;
+            }
+            $total = $subtotal - $globalDiscount;
 
             $orderNumber = 'ORD-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
             while (Order::where('order_number', $orderNumber)->exists()) {
@@ -167,7 +179,7 @@ public function create()
                 'customer_address' => $validated['customer_address'] ?? '',
                 'items' => $itemsWithDetails,
                 'subtotal' => $subtotal,
-                'discount' => $discount,
+                'discount' => $globalDiscount,
                 'discount_type' => 'jumla',
                 'total' => $total,
                 'status' => $validated['status'],
@@ -205,20 +217,34 @@ public function create()
         DB::beginTransaction();
         try {
             $order->status = $validated['status'];
+            
             if ($validated['status'] === 'paid' && !$order->paid_at) {
                 $order->paid_at = now();
             }
+            
             $order->save();
             DB::commit();
 
+            $message = '';
+            if ($validated['status'] === 'confirmed') {
+                $message = 'Oda imethibitishwa! Inaweza kutumwa kwenye Kikapu.';
+            } elseif ($validated['status'] === 'paid') {
+                $message = 'Oda imelipwa kikamilifu!';
+            } elseif ($validated['status'] === 'cancelled') {
+                $message = 'Oda imeghairiwa!';
+            } else {
+                $message = 'Status imebadilishwa!';
+            }
+
             return response()->json([
                 'success' => true,
-                'message' => $validated['status'] === 'confirmed' ? 'Oda imethibitishwa! Inaweza kutumwa kwenye Kikapu.' : 'Status imebadilishwa!',
+                'message' => $message,
                 'order' => $order
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Order status update failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Kuna tatizo katika kubadilisha status'
@@ -231,60 +257,61 @@ public function create()
         $companyId = $this->getCompanyId();
         $order = Order::where('company_id', $companyId)->findOrFail($id);
         
-        if (!in_array($order->status, ['saved', 'cancelled'])) {
+        // NO CONDITIONS - Delete any order regardless of status
+        try {
+            $order->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'Oda imefutwa kikamilifu!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Order deletion failed: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Huwezi kufuta oda iliyothibitishwa au kulipwa!'
-            ], 400);
+                'message' => 'Kuna tatizo katika kufuta oda!'
+            ], 500);
+        }
+    }
+
+    public function sendToKikapu($id)
+    {
+        $companyId = $this->getCompanyId();
+        $order = Order::where('company_id', $companyId)
+            ->where('status', 'confirmed')
+            ->findOrFail($id);
+
+        $cartItems = [];
+        foreach ($order->items as $item) {
+            $bidhaa = Bidhaa::find($item['bidhaa_id']);
+            $cartItems[] = [
+                'bidhaa_id' => $item['bidhaa_id'],
+                'jina' => $item['jina'],
+                'bei' => floatval($item['bei']),
+                'idadi' => floatval($item['idadi']),
+                'punguzo' => floatval($item['punguzo'] ?? 0),
+                'punguzo_aina' => 'bidhaa',
+                'actual_discount' => floatval($item['punguzo'] ?? 0) * floatval($item['idadi']),
+                'jumla' => floatval($item['total']),
+                'barcode' => $bidhaa ? $bidhaa->barcode : '',
+                'bei_type' => 'rejareja',
+                'timestamp' => now()->toISOString(),
+                'company_id' => $companyId,
+                'company_name' => optional(Company::find($companyId))->company_name ?? ''
+            ];
         }
 
-        $order->delete();
         return response()->json([
             'success' => true,
-            'message' => 'Oda imefutwa kikamilifu!'
+            'message' => 'Oda imetumwa kwenye Kikapu!',
+            'items' => $cartItems,
+            'order_number' => $order->order_number,
+            'customer' => [
+                'id' => $order->customer_id,
+                'name' => $order->customer_name,
+                'phone' => $order->customer_phone
+            ]
         ]);
     }
-
-public function sendToKikapu($id)
-{
-    $companyId = $this->getCompanyId();
-    $order = Order::where('company_id', $companyId)
-        ->where('status', 'confirmed')
-        ->findOrFail($id);
-
-    // Format items for cart exactly like Mauzo expects
-    $cartItems = [];
-    foreach ($order->items as $item) {
-        $bidhaa = Bidhaa::find($item['bidhaa_id']);
-        $cartItems[] = [
-            'bidhaa_id' => $item['bidhaa_id'],
-            'jina' => $item['jina'],
-            'bei' => $item['bei'],
-            'idadi' => $item['idadi'],
-            'punguzo' => $item['punguzo'],
-            'punguzo_aina' => 'bidhaa',
-            'actual_discount' => $item['punguzo'] * $item['idadi'],
-            'jumla' => $item['total'],
-            'barcode' => $bidhaa ? $bidhaa->barcode : '',
-            'bei_type' => 'rejareja',
-            'timestamp' => now()->toISOString(),
-            'company_id' => $companyId,
-            'company_name' => optional(Company::find($companyId))->company_name ?? ''
-        ];
-    }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Oda imetumwa kwenye Kikapu!',
-        'items' => $cartItems,
-        'order_number' => $order->order_number,
-        'customer' => [
-            'id' => $order->customer_id,
-            'name' => $order->customer_name,
-            'phone' => $order->customer_phone
-        ]
-    ]);
-}
 
     public function generateInvoice($id)
     {
@@ -358,8 +385,8 @@ public function sendToKikapu($id)
             
             <div class="total-section">
                 <div><strong>Jumla Ndogo:</strong> ' . number_format($order->subtotal, 0) . ' TZS</div>
-                ' . ($order->discount > 0 ? '<div><strong>Punguzo:</strong> -' . number_format($order->discount, 0) . ' TZS</div>' : '') . '
-                <div style="font-size:16px;margin-top:10px;"><strong>JUMLA:</strong> ' . number_format($order->total, 0) . ' TZS</div>
+                ' . ($order->discount > 0 ? '<div><strong>Punguzo la Jumla:</strong> -' . number_format($order->discount, 0) . ' TZS</div>' : '') . '
+                <div style="font-size:16px;margin-top:10px;"><strong>JUMLA KUU:</strong> ' . number_format($order->total, 0) . ' TZS</div>
             </div>
             
             ' . ($order->notes ? '<div style="margin-top:20px;"><strong>Maelezo:</strong> ' . htmlspecialchars($order->notes) . '</div>' : '') . '
@@ -399,10 +426,16 @@ public function sendToKikapu($id)
             $num = $index + 1;
             $message .= "{$num}. {$item['jina']}\n";
             $message .= "   → {$item['idadi']} x " . number_format($item['bei'], 0) . " = " . number_format($item['total'], 0) . "/=\n";
+            if (($item['punguzo'] ?? 0) > 0) {
+                $message .= "   Punguzo: -" . number_format($item['punguzo'], 0) . "/=\n";
+            }
         }
         
         $message .= "━━━━━━━━━━━━━━━\n";
-        $message .= "*Jumla:* " . number_format($order->total, 0) . "/=\n";
+        if ($order->discount > 0) {
+            $message .= "*Punguzo la Jumla:* -" . number_format($order->discount, 0) . "/=\n";
+        }
+        $message .= "*JUMLA:* " . number_format($order->total, 0) . "/=\n";
         $message .= "━━━━━━━━━━━━━━━\n";
         $message .= "Asante kwa kununua!\n";
         

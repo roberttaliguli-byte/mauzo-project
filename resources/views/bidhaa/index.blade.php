@@ -1480,15 +1480,65 @@ function handleDeleteClick(e) {
     deleteProduct(productId, productName);
 }
 
+// Replace the editProduct function with this improved version
 function editProduct(product) {
     if (!isBoss && !canEditDelete) return;
+    
+    // Helper function to format decimal numbers without rounding errors
+    function formatDecimalForInput(value) {
+        if (value === null || value === undefined) return '';
+        // Parse as float and format with up to 2 decimal places
+        const num = parseFloat(value);
+        if (isNaN(num)) return '';
+        // Use toFixed to ensure consistent decimal places
+        // This prevents floating point rounding issues
+        return num.toFixed(2);
+    }
+    
+    // Set the values with proper formatting
     document.getElementById('edit-jina').value = product.jina || '';
     document.getElementById('edit-aina').value = product.aina || '';
     document.getElementById('edit-kipimo').value = product.kipimo || '';
-    document.getElementById('edit-idadi').value = product.idadi || 0;
-    document.getElementById('edit-bei-nunua').value = product.bei_nunua || 0;
-    document.getElementById('edit-bei-kuuza').value = product.bei_kuuza || 0;
-    document.getElementById('edit-bei-uzo-jumla').value = product.bei_uzo_jumla || '';
+    
+    // Apply formatting to quantity to prevent fluctuations
+    const quantityInput = document.getElementById('edit-idadi');
+    if (quantityInput) {
+        // Store the raw value as a string without rounding errors
+        const rawQuantity = product.idadi !== null && product.idadi !== undefined ? parseFloat(product.idadi) : 0;
+        quantityInput.value = rawQuantity.toFixed(2);
+        // Add input event listener to maintain proper formatting
+        quantityInput.addEventListener('input', function(e) {
+            let value = e.target.value;
+            // Allow only valid decimal input
+            if (value !== '') {
+                let num = parseFloat(value);
+                if (!isNaN(num)) {
+                    // Don't auto-format during typing, just validate
+                    // This prevents jumping/fluctuation
+                    if (value.includes('.') && value.split('.')[1].length > 2) {
+                        e.target.value = num.toFixed(2);
+                    }
+                }
+            }
+        });
+        
+        // Also handle blur to ensure proper formatting
+        quantityInput.addEventListener('blur', function(e) {
+            let value = e.target.value;
+            if (value !== '') {
+                let num = parseFloat(value);
+                if (!isNaN(num)) {
+                    e.target.value = num.toFixed(2);
+                }
+            }
+        });
+    }
+    
+    document.getElementById('edit-bei-nunua').value = parseFloat(product.bei_nunua || 0).toFixed(2);
+    document.getElementById('edit-bei-kuuza').value = parseFloat(product.bei_kuuza || 0).toFixed(2);
+    
+    const wholesalePrice = product.bei_uzo_jumla ? parseFloat(product.bei_uzo_jumla).toFixed(2) : '';
+    document.getElementById('edit-bei-uzo-jumla').value = wholesalePrice;
     document.getElementById('edit-bei-kiasi-cha-chaguo').value = product.bei_kiasi_cha_chaguo || 'rejareja';
     document.getElementById('edit-expiry').value = product.expiry || '';
     document.getElementById('edit-barcode').value = product.barcode || '';
@@ -1496,27 +1546,36 @@ function editProduct(product) {
     document.getElementById('edit-modal').classList.remove('hidden');
 }
 
+// Also update the loadAndEditProduct function to handle decimals properly
 function loadAndEditProduct(productId) {
     if (!isBoss && !canEditDelete) {
         showNotification('Hurumia, wewe huna ruhusa ya kurekebisha bidhaa', 'error');
         return;
     }
+    
     fetch(`/bidhaa/${productId}/edit-product`, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        headers: { 
+            'X-Requested-With': 'XMLHttpRequest', 
+            'Accept': 'application/json' 
+        }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Ensure the quantity is properly formatted before passing to editProduct
+            if (data.data.idadi !== undefined) {
+                data.data.idadi = parseFloat(data.data.idadi).toFixed(2);
+            }
             editProduct(data.data);
         } else {
             showNotification('Imeshindwa kupakua taarifa', 'error');
         }
     })
     .catch(error => {
+        console.error('Error loading product:', error);
         showNotification('Hitilafu ya mtandao', 'error');
     });
 }
-
 function deleteProduct(productId, productName) {
     if (!isBoss && !canEditDelete) return;
     document.getElementById('delete-product-name').textContent = productName;
