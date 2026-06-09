@@ -161,7 +161,7 @@ class SMSService
     public function testConnection()
     {
         return $this->sendSms(
-            '0712345678',
+            '0614356830',
             'Test SMS from MauzoSheetAI',
             'TEST_SMS'
         );

@@ -89,6 +89,11 @@
             <button id="sehemu-tab" class="tab-button pb-2 px-3 transition-colors flex items-center border-b-2 border-white text-white font-semibold whitespace-nowrap text-sm" data-tab="sehemu">
                 <i class="fas fa-cash-register mr-2 text-xs"></i>Sehemu ya Mauzo
             </button>
+            <!-- Add this inside your tab-nav div -->
+<button id="weka-order-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="weka-order">
+    <i class="fas fa-clipboard-list mr-2 text-xs"></i>Weka Order
+    <span id="draft-orders-count" class="ml-1 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+</button>
             <button id="barcode-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="barcode">
                 <i class="fas fa-barcode mr-2 text-xs"></i>Barcode
             </button>
@@ -325,6 +330,7 @@
                 <i class="fas fa-cart-plus"></i>
                 Kikapu
             </button>
+ 
         </div>
     </form>
 </div>
@@ -1392,8 +1398,10 @@
             </div>
         </div>
     </div>
-</div>
 
+</div>
+    <!-- Include Orders Partial -->
+@include('mauzo.partial-order')
 <!-- Modals -->
 <!-- Delete Sale Modal -->
 <div id="delete-sale-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">

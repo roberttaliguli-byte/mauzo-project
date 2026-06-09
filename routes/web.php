@@ -23,6 +23,7 @@ use App\Http\Controllers\AdminCompanyActivityController;
 use App\Http\Controllers\Admin\CompanyActivityController;
 use App\Http\Controllers\Admin\CompanyStatisticsController;
 use App\Http\Controllers\UserDailyReportController;
+use App\Http\Controllers\OrderController;
 use App\Models\Bidhaa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -271,7 +272,19 @@ Route::post('/mauzo/update-stock', [MauzoController::class, 'updateStock'])->nam
 Route::post('/send-receipt-sms-simple', [MauzoController::class, 'sendReceiptSmsSimple'])->name('send.receipt.sms.simple');
 // ADD THIS ROUTE - Send receipt via SMS
 Route::post('/send-receipt-sms', [MauzoController::class, 'sendReceiptSms'])->name('send.receipt.sms');
-    // ================================
+    
+// Add these inside the auth.any middleware group
+Route::prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/{id}', [OrderController::class, 'show'])->name('orders.show');
+    Route::put('/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::delete('/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
+    Route::post('/{id}/send-to-kikapu', [OrderController::class, 'sendToKikapu'])->name('orders.send-to-kikapu');
+    Route::get('/{id}/generate-invoice', [OrderController::class, 'generateInvoice'])->name('orders.invoice');
+    Route::get('/{id}/share-whatsapp', [OrderController::class, 'shareWhatsApp'])->name('orders.share-whatsapp');
+});
+// ================================
     // Bidhaa Routes (accessible by both)
     // ================================
     Route::get('/bidhaa', [BidhaaController::class, 'index'])->name('bidhaa.index');
