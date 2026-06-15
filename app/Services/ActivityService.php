@@ -22,14 +22,31 @@ class ActivityService
             // Total companies
             $totalCompanies = Company::count();
             
-            // Active companies (with at least one active user in last 10 minutes)
-            $activeCompanies = Company::whereHas('users', function($query) {
-                $query->where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow));
-            })->count();
+            // Get active company IDs from both users and employees
+            $activeUserCompanyIds = User::where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))
+                ->whereNotNull('company_id')
+                ->distinct('company_id')
+                ->pluck('company_id')
+                ->toArray();
+                
+            $activeEmployeeCompanyIds = [];
+            try {
+                if (class_exists('App\Models\Wafanyakazi')) {
+                    $activeEmployeeCompanyIds = Wafanyakazi::where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))
+                        ->whereNotNull('company_id')
+                        ->distinct('company_id')
+                        ->pluck('company_id')
+                        ->toArray();
+                }
+            } catch (\Exception $e) {
+                Log::warning('Error counting active employee companies: ' . $e->getMessage());
+            }
             
+            $activeCompanyIds = array_unique(array_merge($activeUserCompanyIds, $activeEmployeeCompanyIds));
+            $activeCompanies = count($activeCompanyIds);
             $inactiveCompanies = $totalCompanies - $activeCompanies;
             
-            // Active users from users table
+            // Active users from users table (bosses)
             $totalActiveUsers = User::where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))->count();
             
             // Active employees from wafanyakazi table
@@ -94,11 +111,28 @@ class ActivityService
     public function getActiveCompanies()
     {
         try {
-            return Company::whereHas('users', function($query) {
-                $query->where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow));
-            })->withCount(['users as active_users_count' => function($query) {
-                $query->where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow));
-            }])->get();
+            $activeUserCompanyIds = User::where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))
+                ->whereNotNull('company_id')
+                ->distinct('company_id')
+                ->pluck('company_id')
+                ->toArray();
+                
+            $activeEmployeeCompanyIds = [];
+            try {
+                if (class_exists('App\Models\Wafanyakazi')) {
+                    $activeEmployeeCompanyIds = Wafanyakazi::where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))
+                        ->whereNotNull('company_id')
+                        ->distinct('company_id')
+                        ->pluck('company_id')
+                        ->toArray();
+                }
+            } catch (\Exception $e) {
+                Log::warning('Error getting active employee companies: ' . $e->getMessage());
+            }
+            
+            $activeCompanyIds = array_unique(array_merge($activeUserCompanyIds, $activeEmployeeCompanyIds));
+            
+            return Company::whereIn('id', $activeCompanyIds)->get();
         } catch (\Exception $e) {
             Log::error('Error in getActiveCompanies: ' . $e->getMessage());
             return collect();
@@ -130,16 +164,29 @@ class ActivityService
     public function isCompanyActive($companyId)
     {
         try {
-            return User::where('company_id', $companyId)
+            $hasActiveUser = User::where('company_id', $companyId)
                 ->where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))
                 ->exists();
+                
+            $hasActiveEmployee = false;
+            try {
+                if (class_exists('App\Models\Wafanyakazi')) {
+                    $hasActiveEmployee = Wafanyakazi::where('company_id', $companyId)
+                        ->where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))
+                        ->exists();
+                }
+            } catch (\Exception $e) {
+                Log::warning('Error checking active employee: ' . $e->getMessage());
+            }
+            
+            return $hasActiveUser || $hasActiveEmployee;
         } catch (\Exception $e) {
             return false;
         }
     }
 
     /**
-     * Get active users count for a company
+     * Get active users count for a company (bosses only)
      */
     public function getActiveUsersCount($companyId)
     {
@@ -148,6 +195,24 @@ class ActivityService
                 ->where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))
                 ->count();
         } catch (\Exception $e) {
+            return 0;
+        }
+    }
+    
+    /**
+     * Get active employees count for a company
+     */
+    public function getActiveEmployeesCount($companyId)
+    {
+        try {
+            if (class_exists('App\Models\Wafanyakazi')) {
+                return Wafanyakazi::where('company_id', $companyId)
+                    ->where('last_activity_at', '>=', Carbon::now()->subMinutes($this->activeTimeWindow))
+                    ->count();
+            }
+            return 0;
+        } catch (\Exception $e) {
+            Log::warning('Error getting active employees count: ' . $e->getMessage());
             return 0;
         }
     }

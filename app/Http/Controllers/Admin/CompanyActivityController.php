@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\Wafanyakazi;
-use App\Services\ActivityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,13 +13,6 @@ use Carbon\Carbon;
 
 class CompanyActivityController extends Controller
 {
-    protected $activityService;
-
-    public function __construct(ActivityService $activityService)
-    {
-        $this->activityService = $activityService;
-    }
-
     /**
      * Display company activity report
      */
@@ -218,43 +210,52 @@ class CompanyActivityController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading company details'
+                'message' => 'Error loading company details: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    // Helper Methods
+    /**
+     * Get dashboard statistics
+     */
     private function getDashboardStats()
     {
-        $activeCompanyIds = $this->getActiveCompanyIds();
-        $totalCompanies = Company::count();
-        $activeCompanies = count($activeCompanyIds);
-        $inactiveCompanies = $totalCompanies - $activeCompanies;
-        
-        // Count active users
-        $activeUsersNow = User::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))->count();
-        $activeEmployeesNow = Wafanyakazi::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))->count();
-        
-        // Today's logins
-        $today = Carbon::now('Africa/Nairobi')->startOfDay();
-        $todayLogins = DB::table('login_histories')
-            ->whereDate('login_at', $today)
-            ->count();
-        
-        $todayUniqueUsers = DB::table('login_histories')
-            ->whereDate('login_at', $today)
-            ->distinct('user_id')
-            ->count('user_id');
-        
-        return [
-            'total_companies' => $totalCompanies,
-            'active_companies' => $activeCompanies,
-            'inactive_companies' => $inactiveCompanies,
-            'active_users_now' => $activeUsersNow + $activeEmployeesNow,
-            'today_logins' => $todayLogins,
-            'today_unique_users' => $todayUniqueUsers,
-            'active_percentage' => $totalCompanies > 0 ? round(($activeCompanies / $totalCompanies) * 100) : 0
-        ];
+        try {
+            $activeCompanyIds = $this->getActiveCompanyIds();
+            $totalCompanies = Company::count();
+            $activeCompanies = count($activeCompanyIds);
+            $inactiveCompanies = $totalCompanies - $activeCompanies;
+            
+            // Count active users (Bosses)
+            $activeUsersNow = User::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))->count();
+            
+            // Count active employees (Wafanyakazi)
+            $activeEmployeesNow = Wafanyakazi::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))->count();
+            
+            // Today's logins from login_histories
+            $today = Carbon::now('Africa/Nairobi')->startOfDay();
+            $todayLogins = DB::table('login_histories')
+                ->whereDate('login_at', $today)
+                ->count();
+            
+            $todayUniqueUsers = DB::table('login_histories')
+                ->whereDate('login_at', $today)
+                ->distinct('user_id')
+                ->count('user_id');
+            
+            return [
+                'total_companies' => $totalCompanies,
+                'active_companies' => $activeCompanies,
+                'inactive_companies' => $inactiveCompanies,
+                'active_users_now' => $activeUsersNow + $activeEmployeesNow,
+                'today_logins' => $todayLogins,
+                'today_unique_users' => $todayUniqueUsers,
+                'active_percentage' => $totalCompanies > 0 ? round(($activeCompanies / $totalCompanies) * 100) : 0
+            ];
+        } catch (\Exception $e) {
+            Log::error('Error getting dashboard stats: ' . $e->getMessage());
+            return $this->getEmptyStats();
+        }
     }
 
     private function getEmptyStats()
@@ -270,126 +271,192 @@ class CompanyActivityController extends Controller
         ];
     }
 
+    /**
+     * Get IDs of companies that have active users or employees
+     */
     private function getActiveCompanyIds()
     {
-        $activeUserCompanyIds = User::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
-            ->whereNotNull('company_id')
-            ->distinct('company_id')
-            ->pluck('company_id')
-            ->toArray();
+        try {
+            $activeUserCompanyIds = User::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+                ->whereNotNull('company_id')
+                ->distinct('company_id')
+                ->pluck('company_id')
+                ->toArray();
+                
+            $activeEmployeeCompanyIds = Wafanyakazi::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+                ->whereNotNull('company_id')
+                ->distinct('company_id')
+                ->pluck('company_id')
+                ->toArray();
             
-        $activeEmployeeCompanyIds = Wafanyakazi::where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
-            ->whereNotNull('company_id')
-            ->distinct('company_id')
-            ->pluck('company_id')
-            ->toArray();
-        
-        return array_unique(array_merge($activeUserCompanyIds, $activeEmployeeCompanyIds));
+            return array_unique(array_merge($activeUserCompanyIds, $activeEmployeeCompanyIds));
+        } catch (\Exception $e) {
+            Log::error('Error getting active company IDs: ' . $e->getMessage());
+            return [];
+        }
     }
 
+    /**
+     * Check if a company has any active users or employees
+     */
     private function isCompanyActive($companyId)
     {
-        $hasActiveUser = User::where('company_id', $companyId)
-            ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
-            ->exists();
+        try {
+            $hasActiveUser = User::where('company_id', $companyId)
+                ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+                ->exists();
+                
+            $hasActiveEmployee = Wafanyakazi::where('company_id', $companyId)
+                ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+                ->exists();
             
-        $hasActiveEmployee = Wafanyakazi::where('company_id', $companyId)
-            ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
-            ->exists();
-        
-        return $hasActiveUser || $hasActiveEmployee;
+            return $hasActiveUser || $hasActiveEmployee;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
+    /**
+     * Get count of active users (bosses) for a company
+     */
     private function getActiveUsersCount($companyId)
     {
-        return User::where('company_id', $companyId)
-            ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
-            ->count();
+        try {
+            return User::where('company_id', $companyId)
+                ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
+                ->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
-    private function getActiveEmployeesCount($companyId)
-    {
+   private function getActiveEmployeesCount($companyId)
+{
+    try {
         return Wafanyakazi::where('company_id', $companyId)
             ->where('last_activity_at', '>=', Carbon::now()->subMinutes(10))
             ->count();
+    } catch (\Exception $e) {
+        return 0;
     }
+}
 
+    /**
+     * Get today's login count for a company
+     */
     private function getTodayLoginsCount($companyId)
     {
-        $today = Carbon::now('Africa/Nairobi')->startOfDay();
-        
-        return DB::table('login_histories')
-            ->where('company_id', $companyId)
-            ->whereDate('login_at', $today)
-            ->count();
-    }
-
-    private function getTotalLoginsCount($companyId)
-    {
-        return DB::table('login_histories')
-            ->where('company_id', $companyId)
-            ->count();
-    }
-
-    private function getLastLoginDate($companyId)
-    {
-        $lastLogin = DB::table('login_histories')
-            ->where('company_id', $companyId)
-            ->orderBy('login_at', 'desc')
-            ->first();
-        
-        return $lastLogin ? Carbon::parse($lastLogin->login_at)->setTimezone('Africa/Nairobi') : null;
-    }
-
-    private function getTodayActiveCompanies()
-    {
-        $today = Carbon::now('Africa/Nairobi')->startOfDay();
-        
-        $companyIds = DB::table('login_histories')
-            ->whereDate('login_at', $today)
-            ->distinct('company_id')
-            ->pluck('company_id');
-        
-        $companies = Company::whereIn('id', $companyIds)->get();
-        
-        foreach ($companies as $company) {
-            $company->today_login_count = DB::table('login_histories')
-                ->where('company_id', $company->id)
+        try {
+            $today = Carbon::now('Africa/Nairobi')->startOfDay();
+            
+            return DB::table('login_histories')
+                ->where('company_id', $companyId)
                 ->whereDate('login_at', $today)
                 ->count();
-            $company->is_active = $this->isCompanyActive($company->id);
-            $company->last_login_date = $this->getLastLoginDate($company->id);
+        } catch (\Exception $e) {
+            return 0;
         }
-        
-        return $companies->sortByDesc('today_login_count');
     }
 
+    /**
+     * Get total login count for a company
+     */
+    private function getTotalLoginsCount($companyId)
+    {
+        try {
+            return DB::table('login_histories')
+                ->where('company_id', $companyId)
+                ->count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Get last login date for a company
+     */
+    private function getLastLoginDate($companyId)
+    {
+        try {
+            $lastLogin = DB::table('login_histories')
+                ->where('company_id', $companyId)
+                ->orderBy('login_at', 'desc')
+                ->first();
+            
+            return $lastLogin ? Carbon::parse($lastLogin->login_at)->setTimezone('Africa/Nairobi') : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Get companies that had activity today
+     */
+    private function getTodayActiveCompanies()
+    {
+        try {
+            $today = Carbon::now('Africa/Nairobi')->startOfDay();
+            
+            $companyIds = DB::table('login_histories')
+                ->whereDate('login_at', $today)
+                ->distinct('company_id')
+                ->pluck('company_id');
+            
+            $companies = Company::whereIn('id', $companyIds)->get();
+            
+            foreach ($companies as $company) {
+                $company->today_login_count = DB::table('login_histories')
+                    ->where('company_id', $company->id)
+                    ->whereDate('login_at', $today)
+                    ->count();
+                $company->is_active = $this->isCompanyActive($company->id);
+                $company->last_login_date = $this->getLastLoginDate($company->id);
+                $company->owner_name = $company->owner_name ?? '-';
+            }
+            
+            return $companies->sortByDesc('today_login_count');
+        } catch (\Exception $e) {
+            Log::error('Error getting today active companies: ' . $e->getMessage());
+            return collect([]);
+        }
+    }
+
+    /**
+     * Get weekly activity for a company
+     */
     private function getWeeklyActivity($companyId)
     {
-        $weeklyData = [];
-        $now = Carbon::now('Africa/Nairobi');
-        
-        for ($i = 6; $i >= 0; $i--) {
-            $date = $now->copy()->subDays($i);
-            $dayName = $date->format('D');
+        try {
+            $weeklyData = [];
+            $now = Carbon::now('Africa/Nairobi');
             
-            $loginCount = DB::table('login_histories')
-                ->where('company_id', $companyId)
-                ->whereDate('login_at', $date)
-                ->distinct('user_id')
-                ->count('user_id');
+            for ($i = 6; $i >= 0; $i--) {
+                $date = $now->copy()->subDays($i);
+                $dayName = $date->format('D');
+                
+                // Get unique users who logged in on this day
+                $loginCount = DB::table('login_histories')
+                    ->where('company_id', $companyId)
+                    ->whereDate('login_at', $date)
+                    ->distinct('user_id')
+                    ->count('user_id');
+                
+                // Get employees who were active on this day
+                $employeeCount = Wafanyakazi::where('company_id', $companyId)
+                    ->whereDate('last_activity_at', $date)
+                    ->count();
+                
+                $weeklyData[] = [
+                    'day' => $dayName,
+                    'active_users' => $loginCount + $employeeCount,
+                    'date' => $date->format('Y-m-d')
+                ];
+            }
             
-            $employeeCount = Wafanyakazi::where('company_id', $companyId)
-                ->whereDate('last_activity_at', $date)
-                ->count();
-            
-            $weeklyData[] = [
-                'day' => $dayName,
-                'active_users' => $loginCount + $employeeCount,
-                'date' => $date->format('Y-m-d')
-            ];
+            return $weeklyData;
+        } catch (\Exception $e) {
+            Log::error('Error getting weekly activity: ' . $e->getMessage());
+            return [];
         }
-        
-        return $weeklyData;
     }
 }
