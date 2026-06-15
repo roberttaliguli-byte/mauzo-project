@@ -284,26 +284,26 @@ class AuthController extends Controller
             if ($user->role !== 'boss') {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Huna ruhusa ya kuingia hapa.'])
-                    ->withInput(['username' => $enteredUsername]); // Persist username
+                    ->withInput(['username' => $enteredUsername]);
             }
 
             // Validate boss has company and is approved
             if (!$user->company_id || !$user->company) {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Akaunti yako haijaunganishwa na kampuni yoyote. Wasiliana na msimamizi.'])
-                    ->withInput(['username' => $enteredUsername]); // Persist username
+                    ->withInput(['username' => $enteredUsername]);
             }
 
             if (!$user->company->is_user_approved) {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Kampuni yako haijaidhinishwa bado.'])
-                    ->withInput(['username' => $enteredUsername]); // Persist username
+                    ->withInput(['username' => $enteredUsername]);
             }
 
             if (!$user->is_approved) {
                 Auth::guard('web')->logout();
                 return back()->withErrors(['login' => 'Akaunti yako haijaidhinishwa bado.'])
-                    ->withInput(['username' => $enteredUsername]); // Persist username
+                    ->withInput(['username' => $enteredUsername]);
             }
 
             // Clear company-specific cache for this new login
@@ -316,13 +316,15 @@ class AuthController extends Controller
                 'login_count' => $user->login_count + 1
             ]);
 
-            // Create login history for boss
+            // ✅ Create login history for boss
             LoginHistory::create([
                 'user_id' => $user->id,
+                'mfanyakazi_id' => null,
                 'company_id' => $user->company_id,
                 'login_at' => now(),
                 'ip_address' => $request->ip()
             ]);
+            
 
             $request->session()->regenerate();
             return redirect()->route('dashboard')
@@ -340,14 +342,14 @@ class AuthController extends Controller
             if ($mfanyakazi->getini !== 'ingia') {
                 Auth::guard('mfanyakazi')->logout();
                 return back()->withErrors(['login' => 'Hauruhusiwi kuingia kwa sasa.'])
-                    ->withInput(['username' => $enteredUsername]); // Persist username
+                    ->withInput(['username' => $enteredUsername]);
             }
 
             // Check if employee has company_id
             if (!$mfanyakazi->company_id) {
                 Auth::guard('mfanyakazi')->logout();
                 return back()->withErrors(['login' => 'Mfanyakazi hana kampuni iliyounganishwa.'])
-                    ->withInput(['username' => $enteredUsername]); // Persist username
+                    ->withInput(['username' => $enteredUsername]);
             }
 
             // ✅ CHECK COMPANY PACKAGE EXPIRY
@@ -359,7 +361,7 @@ class AuthController extends Controller
                 
                 return back()->withErrors([
                     'login' => 'Samahani, kifurushi cha kampuni kimeisha muda. Wasiliana na mwajiri wako.'
-                ])->withInput(['username' => $enteredUsername]); // Persist username
+                ])->withInput(['username' => $enteredUsername]);
             }
 
             // Clear company-specific cache for this new login
@@ -370,6 +372,15 @@ class AuthController extends Controller
                 'last_login_at' => now(),
                 'last_activity_at' => now(),
                 'login_count' => ($mfanyakazi->login_count ?? 0) + 1
+            ]);
+
+            // ✅ Create login history for employee
+            LoginHistory::create([
+                'user_id' => null,
+                'mfanyakazi_id' => $mfanyakazi->id,
+                'company_id' => $mfanyakazi->company_id,
+                'login_at' => now(),
+                'ip_address' => $request->ip()
             ]);
 
             // Optional: Show warning if package expires soon
@@ -385,7 +396,7 @@ class AuthController extends Controller
 
         // 4️⃣ Login failed - Return with username persisted
         return back()->withErrors(['login' => 'Jina la mtumiaji au nenosiri sio sahihi.'])
-            ->withInput(['username' => $enteredUsername]); // Persist the entered username
+            ->withInput(['username' => $enteredUsername]);
     }
 
     /**
@@ -476,10 +487,10 @@ class AuthController extends Controller
             if ($user->role === 'boss') {
                 $user->update(['last_activity_at' => now()]);
                 
-                // Update logout time in login history
+                // ✅ Update logout time in login history
                 LoginHistory::where('user_id', $user->id)
                     ->whereNull('logout_at')
-                    ->latest()
+                    ->latest('login_at')
                     ->first()
                     ?->update(['logout_at' => now()]);
             } else {
@@ -498,6 +509,13 @@ class AuthController extends Controller
             
             // Update employee last activity
             $mfanyakazi->update(['last_activity_at' => now()]);
+            
+            // ✅ Update logout time in login history for employee
+            LoginHistory::where('mfanyakazi_id', $mfanyakazi->id)
+                ->whereNull('logout_at')
+                ->latest('login_at')
+                ->first()
+                ?->update(['logout_at' => now()]);
             
             Auth::guard('mfanyakazi')->logout();
         }

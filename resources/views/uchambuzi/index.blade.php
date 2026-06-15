@@ -55,29 +55,35 @@
     <!-- Notifications container -->
     <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none"></div>
 
-    <!-- Header -->
-    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm card-hover">
-        <div class="p-4 border-b border-gray-200 bg-amber-soft">
-            <h2 class="text-base font-bold flex items-center text-gray-800">
-                <i class="fas fa-chart-bar text-amber-600 mr-2 text-lg"></i>
-                <span class="amber-label text-base">TAARIFA KATIKA MAUZO</span>
-            </h2>
-            <p class="text-xs text-gray-700 mt-1 font-medium">Chagua aina ya taarifa kuona uchambuzi kamili</p>
+<!-- Header -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm card-hover">
+    <div class="p-4 border-b border-gray-200 bg-amber-soft">
+        <h2 class="text-base font-bold flex items-center text-gray-800">
+            <i class="fas fa-chart-bar text-amber-600 mr-2 text-lg"></i>
+            <span class="amber-label text-base">TAARIFA KATIKA MAUZO</span>
+        </h2>
+        <p class="text-xs text-gray-700 mt-1 font-medium">Chagua aina ya taarifa kuona uchambuzi kamili</p>
+    </div>
+    <div class="p-4">
+        <div class="flex flex-wrap gap-2">
+            <button @click="setTab('graphs')" :class="tab === 'graphs' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-chart-bar mr-1"></i> Grafu</button>
+            
+            <button @click="setTab('mwenendo')" :class="tab === 'mwenendo' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-chart-line mr-1"></i> Mwenendo</button>
+            
+            <button @click="setTab('kampuni')" :class="tab === 'kampuni' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-building mr-1"></i> Kampuni</button>
+            
+            <button @click="setTab('historia')" :class="tab === 'historia' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-history mr-1"></i> Historia</button>
+            
+            <button @click="setTab('wauzaji')" :class="tab === 'wauzaji' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm">
+    <i class="fas fa-users mr-1"></i> Wauzaji
+</button>
+
+            <a href="{{ route('user.reports.select') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-gray-100 text-gray-800 hover:bg-gray-200 text-sm"><i class="fas fa-file-alt mr-1"></i> Ripoti</a>
+            
+            <a href="{{ route('daily_reports.index') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-white-100 text-emerald-800 hover:bg-emerald-200 text-sm"><i class="fas fa-calendar-week mr-1"></i> Ripoti kwa Siku</a>
         </div>
-   <div class="p-4">
-    <div class="flex flex-wrap gap-2">
-        <button @click="setTab('graphs')" :class="tab === 'graphs' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-chart-bar mr-1"></i> Grafu</button>
-        <button @click="setTab('mwenendo')" :class="tab === 'mwenendo' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-chart-line mr-1"></i> Mwenendo</button>
-        <button @click="setTab('kampuni')" :class="tab === 'kampuni' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-building mr-1"></i> Kampuni</button>
-        <a href="{{ route('user.reports.select') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-gray-100 text-gray-800 hover:bg-gray-200 text-sm"><i class="fas fa-file-alt mr-1"></i> Ripoti</a>
-        
-        <!-- FIXED: Remove 'user.' prefix from route name -->
-        <a href="{{ route('daily_reports.index') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-white-100 text-emerald-800 hover:bg-emerald-200 text-sm"><i class="fas fa-calendar-week mr-1"></i> Ripoti kwa Siku</a>
-        
-        <button @click="setTab('historia')" :class="tab === 'historia' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm"><i class="fas fa-history mr-1"></i> Historia</button>
     </div>
 </div>
-    </div>
 
     <!-- MAIN CONTENT -->
     <div class="space-y-5">
@@ -191,215 +197,15 @@
             </div>
         </div>
 
-<!-- HISTORIA TAB -->
-<div x-show="tab === 'historia'" class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm" x-cloak x-transition:enter.duration.300ms">
-    <div class="p-4 border-b border-gray-200 bg-amber-soft">
-        <h2 class="text-sm font-bold flex items-center text-gray-800">
-            <i class="fas fa-history text-amber-600 mr-2"></i>
-            <span class="amber-label">Historia ya Mfumo</span>
-        </h2>
-        <p class="text-xs text-gray-700 mt-1 font-medium">Taarifa za kuingia mfumo na shughuli za hivi karibuni</p>
-    </div>
-
-    <div class="p-4 space-y-6">
-        <!-- LOGIN HISTORY (last 5) -->
-        <div>
-            <div class="flex items-center gap-2 mb-3">
-                <i class="fas fa-sign-in-alt text-amber-600 text-sm"></i>
-                <h3 class="text-sm font-bold text-gray-800">Historia ya Kuingia Mfumo</h3>
-                <span class="text-xs text-gray-500">(5 za hivi karibuni)</span>
-            </div>
-            <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 border-b-2 border-gray-200">
-                        <tr>
-                            <th class="px-3 py-2 text-left font-bold text-gray-700">Mtumiaji</th>
-                            <th class="px-3 py-2 text-left font-bold text-gray-700">Muda wa Kuingia</th>
-                            <th class="px-3 py-2 text-left font-bold text-gray-700 hidden md:table-cell">Muda wa Kutoka</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($loginHistories as $login)
-                            <tr class="hover:bg-amber-50">
-                                <td class="px-3 py-2">{{ $login->user_name }}</td>
-                                <td class="px-3 py-2">{{ $login->login_at ? $login->login_at->format('d/m/Y H:i:s') : '-' }}</td>
-                                <td class="px-3 py-2 hidden md:table-cell">{{ $login->logout_at ? $login->logout_at->format('d/m/Y H:i:s') : '-' }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="px-3 py-6 text-center text-gray-500">Hakuna historia ya kuingia bado</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- MAUZO -->
-        <div>
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-shopping-cart text-emerald-600 text-sm"></i>
-                    <h3 class="text-sm font-bold text-gray-800">Mauzo</h3>
-                    <span class="text-xs text-gray-500">(5 za hivi karibuni)</span>
-                </div>
-                <button @click="viewAllActivities('sales', 'Mauzo Yote')" class="text-xs text-amber-600 hover:text-amber-800 font-semibold">
-                    <i class="fas fa-eye mr-1"></i> Tazama Zote
-                </button>
-            </div>
-            <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 border-b">
-                        <tr><th class="px-3 py-2 text-left">Maelezo</th><th class="px-3 py-2 text-left hidden sm:table-cell">Mtumiaji</th><th class="px-3 py-2 text-left">Tarehe</th></tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentSales as $sale)
-                            <tr class="hover:bg-emerald-50">
-                                <td class="px-3 py-2">{{ $sale->description }}</td>
-                                <td class="px-3 py-2 hidden sm:table-cell">{{ $sale->user_name }}</td>
-                                <td class="px-3 py-2 text-xs">{{ $sale->created_at->format('d/m/Y H:i') }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="px-3 py-2 text-gray-500">Hakuna mauzo</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- MANUNUZI -->
-        <div>
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-truck text-blue-600 text-sm"></i>
-                    <h3 class="text-sm font-bold text-gray-800">Manunuzi</h3>
-                    <span class="text-xs text-gray-500">(5 za hivi karibuni)</span>
-                </div>
-                <button @click="viewAllActivities('purchases', 'Manunuzi Yote')" class="text-xs text-amber-600 hover:text-amber-800 font-semibold">
-                    <i class="fas fa-eye mr-1"></i> Tazama Zote
-                </button>
-            </div>
-            <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 border-b">
-                        <tr><th class="px-3 py-2 text-left">Maelezo</th><th class="px-3 py-2 text-left hidden sm:table-cell">Mtumiaji</th><th class="px-3 py-2 text-left">Tarehe</th></tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentPurchases as $purchase)
-                            <tr class="hover:bg-blue-50">
-                                <td class="px-3 py-2">{{ $purchase->description }}</td>
-                                <td class="px-3 py-2 hidden sm:table-cell">{{ $purchase->user_name }}</td>
-                                <td class="px-3 py-2 text-xs">{{ $purchase->created_at->format('d/m/Y H:i') }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="px-3 py-2 text-gray-500">Hakuna manunuzi</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- MATUMIZI -->
-        <div>
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-receipt text-red-600 text-sm"></i>
-                    <h3 class="text-sm font-bold text-gray-800">Matumizi</h3>
-                    <span class="text-xs text-gray-500">(5 ya hivi karibuni)</span>
-                </div>
-                <button @click="viewAllActivities('expenses', 'Matumizi Yote')" class="text-xs text-amber-600 hover:text-amber-800 font-semibold">
-                    <i class="fas fa-eye mr-1"></i> Tazama Zote
-                </button>
-            </div>
-            <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 border-b">
-                        <tr><th class="px-3 py-2 text-left">Maelezo</th><th class="px-3 py-2 text-left hidden sm:table-cell">Mtumiaji</th><th class="px-3 py-2 text-left">Tarehe</th></tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentExpenses as $expense)
-                            <tr class="hover:bg-red-50">
-                                <td class="px-3 py-2">{{ $expense->description }}</td>
-                                <td class="px-3 py-2 hidden sm:table-cell">{{ $expense->user_name }}</td>
-                                <td class="px-3 py-2 text-xs">{{ $expense->created_at->format('d/m/Y H:i') }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="px-3 py-2 text-gray-500">Hakuna matumizi</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- MAREJESHO -->
-        <div>
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-hand-holding-usd text-purple-600 text-sm"></i>
-                    <h3 class="text-sm font-bold text-gray-800">Marejesho ya Deni</h3>
-                    <span class="text-xs text-gray-500">(5 ya hivi karibuni)</span>
-                </div>
-                <button @click="viewAllActivities('repayments', 'Marejesho Yote')" class="text-xs text-amber-600 hover:text-amber-800 font-semibold">
-                    <i class="fas fa-eye mr-1"></i> Tazama Zote
-                </button>
-            </div>
-            <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-100 border-b">
-                        <tr><th class="px-3 py-2 text-left">Maelezo</th><th class="px-3 py-2 text-left hidden sm:table-cell">Mtumiaji</th><th class="px-3 py-2 text-left">Tarehe</th><tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentRepayments as $repayment)
-                            <tr class="hover:bg-purple-50">
-                                <td class="px-3 py-2">{{ $repayment->description }}</td>
-                                <td class="px-3 py-2 hidden sm:table-cell">{{ $repayment->user_name }}</td>
-                                <td class="px-3 py-2 text-xs">{{ $repayment->created_at->format('d/m/Y H:i') }}</td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="3" class="px-3 py-2 text-gray-500">Hakuna marejesho</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<!-- ================= HISTORIA TAB ================= -->
+<div x-show="tab === 'historia'" x-cloak x-transition:enter.duration.300ms>
+    @include('uchambuzi.partials.history')
+</div>
+<!-- WAUZAJI TAB -->
+<div x-show="tab === 'wauzaji'" x-cloak x-transition:enter.duration.300ms>
+    @include('uchambuzi.partials.wauzaji')
 </div>
 
-<!-- MODAL for View All - MUST BE INSIDE the main x-data="dashboardApp()" div -->
-<div x-show="showModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" @click.away="showModal = false">
-    <div class="bg-white rounded-xl max-w-3xl w-full max-h-[80vh] overflow-hidden shadow-xl">
-        <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-amber-soft">
-            <h3 class="text-lg font-bold text-gray-800" id="modalTitle">Shughuli Zote</h3>
-            <button @click="showModal = false" class="text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="overflow-y-auto p-4">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="border-b">
-                        <th class="text-left py-2">Maelezo</th>
-                        <th class="text-left py-2 hidden sm:table-cell">Mtumiaji</th>
-                        <th class="text-left py-2">Tarehe</th>
-                    </tr>
-                </thead>
-                <tbody id="modalTableBody">
-                    <tr><td colspan="3" class="text-center py-4">Inapakia...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="p-4 border-t border-gray-200 text-right">
-            <button @click="showModal = false" class="px-4 py-2 bg-gray-200 rounded-lg">Funga</button>
-        </div>
-    </div>
-</div>
-    </div>
-</div>
-
-<!-- MODAL for View All (inside Alpine scope to share showModal) -->
-<div x-data="{ showModal: false }" x-show="showModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" @click.away="showModal = false">
-    <div class="bg-white rounded-xl max-w-3xl w-full max-h-[80vh] overflow-hidden shadow-xl">
-        <div class="flex justify-between items-center p-4 border-b bg-amber-soft"><h3 class="text-lg font-bold" id="modalTitle">Shughuli Zote</h3><button @click="showModal = false" class="text-gray-500"><i class="fas fa-times text-xl"></i></button></div>
-        <div class="overflow-y-auto p-4"><table class="w-full text-sm"><thead><tr class="border-b"><th class="text-left py-2">Maelezo</th><th class="text-left py-2 hidden sm:table-cell">Mtumiaji</th><th class="text-left py-2">Tarehe</th></tr></thead><tbody id="modalTableBody"><tr><td colspan="3" class="text-center py-4">Inapakia...</td></tr></tbody></table></div>
-        <div class="p-4 border-t text-right"><button @click="showModal = false" class="px-4 py-2 bg-gray-200 rounded-lg">Funga</button></div>
     </div>
 </div>
 
@@ -438,7 +244,6 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('dashboardApp', () => ({
         tab: 'graphs',
         graph: 'faidaBidhaa',
-        showModal: false,
         graphTabs: { faidaBidhaa:'Faida kwa Bidhaa', faidaSiku:'Faida kwa Siku', mauzoSiku:'Mauzo kwa Siku', marejesho:'Faida ya Marejesho', mauzo:'Mauzo Jumla' },
         faidaByBidhaa: @json($faidaBidhaa ?? []),
         faidaBySiku: @json($faidaSiku ?? []),
@@ -480,23 +285,7 @@ document.addEventListener('alpine:init', () => {
             return { responsive:true, maintainAspectRatio:true, plugins:{ legend:{ display:true, position:'top', labels:{ color:'#1f2937', font:{ size:window.innerWidth<768?11:12, weight:'bold' }, usePointStyle:true, pointStyle:'rectRounded' } }, tooltip:{ enabled:true, backgroundColor:'rgba(0,0,0,0.85)', titleColor:'#fbbf24', bodyColor:'#fff', callbacks:{ label:(ctx)=>`${ctx.dataset.label||''}: ${formatCurrency(ctx.parsed.y)}` } } }, scales:{ y:{ beginAtZero:true, grid:{ color:'rgba(0,0,0,0.05)' }, ticks:{ color:'#374151', callback:(v)=>v>=1e6?'Tsh '+(v/1e6).toFixed(1)+'M':(v>=1000?'Tsh '+(v/1000).toFixed(0)+'K':'Tsh '+v) } }, x:{ grid:{ display:false }, ticks:{ maxRotation:45, minRotation:35, autoSkip:true, maxTicksLimit:8 } } }, animation:{ duration:750, easing:'easeInOutQuart' } };
         },
         handleResize() { if(this.tab==='graphs' && chartInstances[this.graph]) setTimeout(()=>chartInstances[this.graph]?.resize(),100); },
-        init() { this.tab='graphs'; setTimeout(()=>{ if(this.tab==='graphs') this.drawChart(this.graph); },150); window.addEventListener('resize',()=>this.handleResize()); },
-        async viewAllActivities(type, title) {
-            this.showModal = true;
-            document.getElementById('modalTitle').innerText = title;
-            let tbody = document.getElementById('modalTableBody');
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4">Inapakia...</td></tr>';
-            try {
-                let resp = await fetch(`/uchambuzi/all-activities?type=${type}`);
-                let data = await resp.json();
-                if(!data.length) { tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4">Hakuna data</td></tr>'; return; }
-                let html = '';
-                data.forEach(item => {
-                    html += `<tr class="border-b hover:bg-amber-50"><td class="py-2">${item.description}</td><td class="py-2 hidden sm:table-cell">${item.user_name}</td><td class="py-2 text-xs">${new Date(item.created_at).toLocaleString('sw-TZ')}</td></tr>`;
-                });
-                tbody.innerHTML = html;
-            } catch(e) { tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-red-500">Hitilafu: ${e.message}</td></tr>`; }
-        }
+        init() { this.tab='graphs'; setTimeout(()=>{ if(this.tab==='graphs') this.drawChart(this.graph); },150); window.addEventListener('resize',()=>this.handleResize()); }
     }));
 
     Alpine.data('mwenendoApp', () => ({

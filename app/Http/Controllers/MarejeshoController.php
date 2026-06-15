@@ -9,6 +9,7 @@ use App\Models\Marejesho;
 use App\Models\Madeni;
 use App\Models\Mauzo;
 use App\Models\Bidhaa;
+use App\Helpers\ActivityHelper;
 
 class MarejeshoController extends Controller
 {
@@ -25,7 +26,22 @@ class MarejeshoController extends Controller
             'lipa_kwa_type' => 'nullable|required_if:lipa_kwa,lipa_namba,bank',
         ]);
 
-        $companyId = Auth::user()->company_id;
+        // Get company ID based on authenticated user type
+        $companyId = null;
+        $userId = null;
+        $mfanyakaziId = null;
+        
+        if (Auth::guard('web')->check()) {
+            $user = Auth::guard('web')->user();
+            $companyId = $user->company_id;
+            $userId = $user->id;
+        } elseif (Auth::guard('mfanyakazi')->check()) {
+            $employee = Auth::guard('mfanyakazi')->user();
+            $companyId = $employee->company_id;
+            $mfanyakaziId = $employee->id;
+        } else {
+            return redirect()->back()->withErrors(['error' => 'Unauthorized access']);
+        }
 
         // Fetch deni and ensure it belongs to the same company
         $deni = Madeni::where('id', $request->deni_id)
@@ -56,19 +72,25 @@ class MarejeshoController extends Controller
         }
 
         // Use transaction to ensure data consistency
-        DB::transaction(function () use ($request, $deni, $companyId) {
-            // Save repayment with payment method and type
-            $deni->marejeshos()->create([
+        DB::transaction(function () use ($request, $deni, $companyId, $userId, $mfanyakaziId) {
+            // Create the repayment and store it in a variable
+            $repayment = $deni->marejeshos()->create([
                 'kiasi'      => $request->kiasi,
                 'tarehe'     => $request->tarehe,
                 'lipa_kwa'   => $request->lipa_kwa,
                 'lipa_kwa_type' => ($request->lipa_kwa === 'cash') ? null : $request->lipa_kwa_type,
                 'company_id' => $companyId,
+                'user_id'    => $userId,
+                'mfanyakazi_id' => $mfanyakaziId,
             ]);
-
-            // Update remaining balance
+            
+            // Then update the remaining balance
             $deni->baki -= $request->kiasi;
             $deni->save();
+            
+            // Log the repayment activity
+            $bidhaaJina = $deni->bidhaa->jina ?? 'Deni';
+            ActivityHelper::logRepayment($repayment, $bidhaaJina, $repayment->kiasi);
         });
 
         return redirect()->back()->with('success', 'Rejesho limehifadhiwa kikamilifu!');

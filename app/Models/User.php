@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Helpers\ActivityHelper;
 
 class User extends Authenticatable
 {
@@ -75,6 +76,42 @@ public function isActive()
 public function updateLastActivity()
 {
     $this->update(['last_activity_at' => now()]);
+}
+
+
+// Add to User model
+public function recordLogin($ipAddress = null)
+{
+    // Record to login_histories (keep your existing)
+    LoginHistory::create([
+        'user_id' => $this->id,
+        'company_id' => $this->company_id,
+        'login_at' => now(),
+        'ip_address' => $ipAddress ?? request()->ip()
+    ]);
+    
+    // Record to activity log
+    ActivityHelper::logLogin($this, 'boss');
+    
+    // Update last login
+    $this->update([
+        'last_login_at' => now(),
+        'login_count' => ($this->login_count ?? 0) + 1
+    ]);
+}
+
+public function recordLogout()
+{
+    $lastLogin = LoginHistory::where('user_id', $this->id)
+        ->whereNull('logout_at')
+        ->latest('login_at')
+        ->first();
+        
+    if ($lastLogin) {
+        $lastLogin->update(['logout_at' => now()]);
+    }
+    
+    ActivityHelper::logLogout($this, 'boss');
 }
 
 }

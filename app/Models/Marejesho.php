@@ -14,8 +14,15 @@ class Marejesho extends Model
         'company_id',
         'kiasi',
         'tarehe',
-        'lipa_kwa', // Add payment method
-        'lipa_kwa_type'
+        'lipa_kwa',
+        'lipa_kwa_type',
+        'user_id',        // ✅ Add this - for boss who recorded
+        'mfanyakazi_id'   // ✅ Add this - for employee who recorded
+    ];
+
+    protected $casts = [
+        'tarehe' => 'date',
+        'created_at' => 'datetime'
     ];
 
     /**
@@ -25,11 +32,23 @@ class Marejesho extends Model
     {
         return $this->belongsTo(Madeni::class, 'madeni_id');
     }
-// Example for Mauzo model
-public function user()
-{
-    return $this->belongsTo(\App\Models\User::class, 'user_id'); // adjust foreign key if needed
-}
+
+    /**
+     * 👤 User (boss) who recorded this repayment
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * 👤 Employee who recorded this repayment
+     */
+    public function mfanyakazi()
+    {
+        return $this->belongsTo(Wafanyakazi::class, 'mfanyakazi_id');
+    }
+
     /**
      * 🏢 Optional: A rejesho belongs to a company
      */
@@ -51,5 +70,19 @@ public function user()
             'madeni_id',  // Local key on marejeshos
             'bidhaa_id'   // Local key on madenis
         );
+    }
+    
+    /**
+     * 🏷️ Get user name who recorded this repayment
+     */
+    public function getRecordedByAttribute()
+    {
+        if ($this->user) {
+            return $this->user->name ?? $this->user->username;
+        }
+        if ($this->mfanyakazi) {
+            return $this->mfanyakazi->jina;
+        }
+        return 'System';
     }
 }

@@ -10,8 +10,11 @@ use App\Models\Matumizi;
 use App\Models\Marejesho;
 use App\Models\Madeni;
 use Carbon\Carbon;
-use App\Models\LoginHistory;
 use App\Models\Manunuzi;
+use App\Models\LoginHistory;
+use App\Models\ActivityLog;
+use App\Models\Wafanyakazi;
+use App\Models\User;
 
 class UchambuziController extends Controller
 {
@@ -42,6 +45,17 @@ class UchambuziController extends Controller
         }
 
         $today = Carbon::today();
+
+        // Get all bosses for the company
+$bossUsers = User::where('company_id', $company->id)
+    ->where('role', 'boss')
+    ->select('id', 'name', 'username')
+    ->get();
+
+// Get all employees for the company
+$employeeUsers = Wafanyakazi::where('company_id', $company->id)
+    ->select('id', 'jina', 'role')
+    ->get();
 
         // ---------- 1. Faida kwa Bidhaa (profit per product) ----------
         $faidaBidhaa = $company->bidhaa()
@@ -187,89 +201,44 @@ class UchambuziController extends Controller
                 return $bidhaa;
             });
 
-        // ---------- HISTORIA DATA ----------
-        // 1. Login History (last 5)
-        $loginHistories = LoginHistory::where('company_id', $company->id)
-            ->with('user')
-            ->orderBy('login_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function ($login) {
-                $userName = $login->user ? ($login->user->name ?? $login->user->username ?? 'Mtumiaji') : 'Mtumiaji aliyeondolewa';
-                return (object) [
-                    'user_name' => $userName,
-                    'login_at'  => $login->login_at,
-                    'logout_at' => $login->logout_at,
-                ];
-            });
-
-        // 2. Recent Sales (5)
-        $recentSales = Mauzo::where('company_id', $company->id)
-            ->with(['bidhaa', 'user'])
+        // ---------- 9. Activities for history ----------
+        $recentActivities = ActivityLog::where('company_id', $company->id)
             ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(fn($sale) => (object) [
-                'type' => '💰 Mauzo',
-                'description' => "Uuzaji wa " . ($sale->bidhaa->jina ?? 'Bidhaa') . " - " . number_format($sale->jumla, 0) . " TZS",
-                'user_name' => $sale->user ? ($sale->user->name ?? $sale->user->username) : 'Mfumo',
-                'created_at' => $sale->created_at,
-            ]);
+            ->limit(20)
+            ->get();
 
-        // 3. Recent Purchases (5)
-        $recentPurchases = Manunuzi::where('company_id', $company->id)
-            ->with(['bidhaa', 'user'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(fn($p) => (object) [
-                'type' => '📦 Manunuzi',
-                'description' => "Ununuzi wa " . ($p->bidhaa->jina ?? 'Bidhaa') . " - " . number_format($p->bei, 0) . " TZS",
-                'user_name' => $p->user ? ($p->user->name ?? $p->user->username) : 'Mfumo',
-                'created_at' => $p->created_at,
-            ]);
-
-        // 4. Recent Expenses (5)
-        $recentExpenses = Matumizi::where('company_id', $company->id)
-            ->with('user')
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(fn($e) => (object) [
-                'type' => '📉 Matumizi',
-                'description' => ($e->maelezo ?? 'Matumizi') . " - " . number_format($e->gharama, 0) . " TZS",
-                'user_name' => $e->user ? ($e->user->name ?? $e->user->username) : 'Mfumo',
-                'created_at' => $e->created_at,
-            ]);
-
-        // 5. Recent Debt Repayments (5)
-        $recentRepayments = Marejesho::where('company_id', $company->id)
-            ->with(['madeni.bidhaa', 'user'])
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(fn($r) => (object) [
-                'type' => '🔄 Marejesho',
-                'description' => ($r->madeni && $r->madeni->bidhaa ? 'Deni la ' . $r->madeni->bidhaa->jina : 'Deni') . " - " . number_format($r->kiasi, 0) . " TZS",
-                'user_name' => $r->user ? ($r->user->name ?? $r->user->username) : 'Mfumo',
-                'created_at' => $r->created_at,
-            ]);
-
-        // Merge all (optional)
-        $recentActivities = collect()
-            ->concat($recentSales)
-            ->concat($recentPurchases)
-            ->concat($recentExpenses)
-            ->concat($recentRepayments)
-            ->sortByDesc('created_at')
-            ->values();
+   // ---------- 10. Login history ----------
+$loginHistories = LoginHistory::where('company_id', $company->id)
+    ->orderBy('login_at', 'desc')
+    ->limit(10)
+    ->get()
+    ->map(function ($login) {
+        $userName = 'Unknown';
+        $userRole = 'Unknown';
+        
+        if ($login->user_id && $login->user) {
+            $userName = $login->user->name ?? $login->user->username;
+            $userRole = 'Boss';
+        } elseif ($login->mfanyakazi_id && $login->mfanyakazi) {
+            $userName = $login->mfanyakazi->jina;
+            $userRole = 'Employee';
+        }
+        
+        return (object)[
+            'user_name' => $userName,
+            'user_role' => $userRole,
+            'login_at' => $login->login_at,
+            'logout_at' => $login->logout_at,
+            'ip_address' => $login->ip_address
+        ];
+    });
+    
 
         return view('uchambuzi.index', compact(
             'faidaBidhaa', 'faidaSiku', 'mauzoSiku', 'marejesho', 'mauzo',
             'mwenendoSummary', 'thamaniKampuniFormatted', 'bidhaaList',
             'thamaniBefore', 'thamaniAfter', 'faida',
-            'loginHistories', 'recentSales', 'recentPurchases',
-            'recentExpenses', 'recentRepayments', 'recentActivities'
+            'recentActivities', 'loginHistories','bossUsers', 'employeeUsers'
         ));
     }
 
@@ -387,49 +356,6 @@ class UchambuziController extends Controller
     }
 
     /**
-     * AJAX endpoint – get all records for a specific activity type
-     */
-    public function getAllActivities(Request $request)
-    {
-        $user = $this->getAuthenticatedUser();
-        $company = $user->company;
-        $type = $request->query('type');
-
-        $query = match($type) {
-            'sales'      => Mauzo::where('company_id', $company->id)->with(['bidhaa', 'user'])->orderBy('created_at', 'desc'),
-            'purchases'  => Manunuzi::where('company_id', $company->id)->with(['bidhaa', 'user'])->orderBy('created_at', 'desc'),
-            'expenses'   => Matumizi::where('company_id', $company->id)->with('user')->orderBy('created_at', 'desc'),
-            'repayments' => Marejesho::where('company_id', $company->id)->with(['madeni.bidhaa', 'user'])->orderBy('created_at', 'desc'),
-            default => abort(400),
-        };
-
-        $items = $query->get()->map(fn($item) => match($type) {
-            'sales' => [
-                'description' => "Uuzaji wa " . ($item->bidhaa->jina ?? 'Bidhaa') . " - " . number_format($item->jumla, 0) . " TZS",
-                'user_name'   => $item->user ? ($item->user->name ?? $item->user->username) : 'Mfumo',
-                'created_at'  => $item->created_at->format('Y-m-d H:i:s'),
-            ],
-            'purchases' => [
-                'description' => "Ununuzi wa " . ($item->bidhaa->jina ?? 'Bidhaa') . " - " . number_format($item->bei, 0) . " TZS",
-                'user_name'   => $item->user ? ($item->user->name ?? $item->user->username) : 'Mfumo',
-                'created_at'  => $item->created_at->format('Y-m-d H:i:s'),
-            ],
-            'expenses' => [
-                'description' => ($item->maelezo ?? 'Matumizi') . " - " . number_format($item->gharama, 0) . " TZS",
-                'user_name'   => $item->user ? ($item->user->name ?? $item->user->username) : 'Mfumo',
-                'created_at'  => $item->created_at->format('Y-m-d H:i:s'),
-            ],
-            'repayments' => [
-                'description' => ($item->madeni && $item->madeni->bidhaa ? 'Deni la ' . $item->madeni->bidhaa->jina : 'Deni') . " - " . number_format($item->kiasi, 0) . " TZS",
-                'user_name'   => $item->user ? ($item->user->name ?? $item->user->username) : 'Mfumo',
-                'created_at'  => $item->created_at->format('Y-m-d H:i:s'),
-            ],
-        });
-
-        return response()->json($items);
-    }
-
-    /**
      * AJAX endpoint for custom date range summary (Mwenendo)
      */
     public function mwenendoRange(Request $request)
@@ -473,4 +399,183 @@ class UchambuziController extends Controller
             'faida_halisi' => (float) $faidaHalisi,
         ]);
     }
+
+    /**
+     * Get all activities as JSON for AJAX (for modal "Tazama Zote")
+     */
+    public function getAllActivities()
+    {
+        $user = $this->getAuthenticatedUser();
+        $company = $user->company;
+        
+        if (!$company) {
+            return response()->json([]);
+        }
+        
+        $activities = ActivityLog::where('company_id', $company->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($activity) {
+                return [
+                    'id' => $activity->id,
+                    'activity_type' => $activity->activity_type,
+                    'description' => $activity->description,
+                    'user_name' => $activity->user_name,
+                    'user_role' => $activity->user_role,
+                    'amount' => $activity->amount,
+                    'created_at' => $activity->created_at ? $activity->created_at->format('d/m/Y H:i:s') : null
+                ];
+            });
+        
+        return response()->json($activities);
+    }
+
+
+  /**
+ * Get user report (sales and activities for a specific user)
+ */
+public function getUserReport(Request $request)
+{
+    $user = $this->getAuthenticatedUser();
+    $company = $user->company;
+    
+    if (!$company) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Company not found'
+        ], 404);
+    }
+    
+    $request->validate([
+        'user_id' => 'required|integer',
+        'user_type' => 'required|in:boss,employee',
+        'from' => 'required|date',
+        'to' => 'required|date'
+    ]);
+    
+    $from = Carbon::parse($request->from)->startOfDay();
+    $to = Carbon::parse($request->to)->endOfDay();
+    
+    $userId = $request->user_id;
+    $userType = $request->user_type;
+    $userName = '';
+    
+    // Get user name
+    if ($userType === 'boss') {
+        $bossUser = User::where('id', $userId)->where('company_id', $company->id)->first();
+        if (!$bossUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mtumiaji huyo hapatikani'
+            ], 404);
+        }
+        $userName = $bossUser->name ?? $bossUser->username;
+    } else {
+        $employee = Wafanyakazi::where('id', $userId)->where('company_id', $company->id)->first();
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mfanyakazi huyo hapatikani'
+            ], 404);
+        }
+        $userName = $employee->jina;
+    }
+    
+    // Query sales based on user type
+    $salesQuery = Mauzo::where('company_id', $company->id)
+        ->whereBetween('created_at', [$from, $to])
+        ->with('bidhaa');
+    
+    if ($userType === 'boss') {
+        $salesQuery->where('user_id', $userId);
+    } else {
+        $salesQuery->where('mfanyakazi_id', $userId);
+    }
+    
+    $sales = $salesQuery->orderBy('created_at', 'desc')->get();
+    
+    // Debug log to see what's happening
+    \Log::info('User Report Query:', [
+        'user_type' => $userType,
+        'user_id' => $userId,
+        'from' => $from,
+        'to' => $to,
+        'sales_count' => $sales->count()
+    ]);
+    
+    // Calculate totals
+    $totalSalesAmount = $sales->sum('jumla');
+    $totalSalesCount = $sales->count();
+    $totalItemsSold = $sales->sum('idadi');
+    
+    // Calculate profit
+    $totalProfit = 0;
+    foreach ($sales as $sale) {
+        if ($sale->bidhaa) {
+            $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
+            $discountAmount = $sale->punguzo_aina === 'bidhaa' 
+                ? $sale->punguzo * $sale->idadi 
+                : $sale->punguzo;
+            $profit = ($sale->bei - $buyingPrice) * $sale->idadi - $discountAmount;
+            $totalProfit += $profit;
+        }
+    }
+    
+    $averageSaleValue = $totalSalesCount > 0 ? $totalSalesAmount / $totalSalesCount : 0;
+    
+    // Add formatted data to each sale for display
+    $salesData = [];
+    foreach ($sales as $sale) {
+        $discountAmount = $sale->punguzo_aina === 'bidhaa' 
+            ? $sale->punguzo * $sale->idadi 
+            : $sale->punguzo;
+        
+        $salesData[] = [
+            'id' => $sale->id,
+            'created_at' => $sale->created_at,
+            'bidhaa' => $sale->bidhaa ? [
+                'jina' => $sale->bidhaa->jina,
+                'aina' => $sale->bidhaa->aina,
+                'kipimo' => $sale->bidhaa->kipimo
+            ] : null,
+            'idadi' => $sale->idadi,
+            'bei' => $sale->bei,
+            'punguzo' => $sale->punguzo,
+            'punguzo_aina' => $sale->punguzo_aina,
+            'discount_amount' => $discountAmount,
+            'jumla' => $sale->jumla,
+            'lipa_kwa' => $sale->lipa_kwa,
+            'lipa_kwa_type' => $sale->lipa_kwa_type
+        ];
+    }
+    
+    // Get activities
+    $activitiesQuery = ActivityLog::where('company_id', $company->id)
+        ->whereBetween('created_at', [$from, $to]);
+    
+    if ($userType === 'boss') {
+        $activitiesQuery->where('user_id', $userId);
+    } else {
+        $activitiesQuery->where('mfanyakazi_id', $userId);
+    }
+    
+    $activities = $activitiesQuery->orderBy('created_at', 'desc')->get();
+    
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'user_name' => $userName,
+            'user_type' => $userType,
+            'sales' => $salesData,
+            'activities' => $activities,
+            'total_sales_amount' => (float) $totalSalesAmount,
+            'total_sales_count' => (int) $totalSalesCount,
+            'total_items_sold' => (float) $totalItemsSold,
+            'total_profit' => (float) $totalProfit,
+            'average_sale_value' => (float) $averageSaleValue,
+            'from_date' => $from->format('d/m/Y'),
+            'to_date' => $to->format('d/m/Y')
+        ]
+    ]);
+}
 }

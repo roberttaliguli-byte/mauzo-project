@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use App\Helpers\ActivityHelper;
+
 
 class MatumiziController extends Controller
 {
@@ -248,6 +250,7 @@ class MatumiziController extends Controller
             'gharama' => $request->gharama,
             'created_at' => $expenseDate,
         ]);
+              ActivityHelper::logExpense($matumizi, $matumizi->maelezo, $matumizi->gharama);
 
         if ($request->ajax()) {
             return response()->json([
@@ -258,6 +261,7 @@ class MatumiziController extends Controller
         }
 
         return redirect()->route('matumizi.index')->with('success', '✅ Matumizi yamehifadhiwa!');
+  
     }
 
     /**

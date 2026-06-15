@@ -359,7 +359,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/daily-reports', [UserDailyReportController::class, 'index'])->name('daily_reports.index');
     Route::post('/daily-reports/generate', [UserDailyReportController::class, 'generate'])->name('daily_reports.generate');
     Route::post('/daily-reports/download', [UserDailyReportController::class, 'download'])->name('daily_reports.download');
-     
+     // Add this inside the auth.any middleware group
+Route::post('/uchambuzi/user-report', [UchambuziController::class, 'getUserReport'])->name('uchambuzi.user.report');
 });
 // =========================
 // Admin routes

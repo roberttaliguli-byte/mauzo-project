@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Helpers\ActivityHelper;
 
 class MadeniController extends Controller
 {
@@ -460,25 +461,31 @@ $todayNbcRepayments = Marejesho::where('company_id', $companyId)
                 ]
             );
             
-            Madeni::create([
-                'company_id' => $companyId,
-                'mteja_id' => $mteja->id,
-                'bidhaa_id' => $bidhaa->id,
-                'idadi' => $request->idadi,
-                'bei' => $request->bei,
-                'punguzo' => $punguzo,
-                'punguzo_aina' => $request->punguzo_aina ?? 'bidhaa',
-                'jumla' => $jumla,
-                'baki' => $jumla,
-                'jina_mkopaji' => $request->jina_mkopaji,
-                'simu' => $request->simu,
-                'tarehe_malipo' => $request->tarehe_malipo,
-            ]);
-            
-            return redirect()->route('madeni.index')
-                ->with('success', 'Deni limehifadhiwa kikamilifu!');
-        });
-    }
+ $debt = Madeni::create([
+            'company_id' => $companyId,
+            'mteja_id' => $mteja->id,
+            'bidhaa_id' => $bidhaa->id,
+            'idadi' => $request->idadi,
+            'bei' => $request->bei,
+            'punguzo' => $punguzo,
+            'punguzo_aina' => $request->punguzo_aina ?? 'bidhaa',
+            'jumla' => $jumla,
+            'baki' => $jumla,
+            'jina_mkopaji' => $request->jina_mkopaji,
+            'simu' => $request->simu,
+            'tarehe_malipo' => $request->tarehe_malipo,
+            // ✅ ADD THESE LINES
+            'user_id' => Auth::guard('web')->check() ? Auth::id() : null,
+            'mfanyakazi_id' => Auth::guard('mfanyakazi')->check() ? Auth::guard('mfanyakazi')->id() : null,
+        ]);
+        
+        // ✅ Add activity logging for new debt
+        ActivityHelper::log('debt_created', "Deni jipya: {$debt->jina_mkopaji} - {$bidhaa->jina} - Tsh " . number_format($debt->jumla, 0), $debt, $debt->jumla);
+        
+        return redirect()->route('madeni.index')
+            ->with('success', 'Deni limehifadhiwa kikamilifu!');
+    });
+}
     
 /**
  * Record a repayment

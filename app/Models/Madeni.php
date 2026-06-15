@@ -11,6 +11,7 @@ class Madeni extends Model
 
     protected $table = 'madenis';
 
+
 protected $fillable = [
     'company_id',
     'bidhaa_id',
@@ -18,13 +19,16 @@ protected $fillable = [
     'idadi',
     'bei',
     'jumla',
-    'punguzo',        // Add this
-    'punguzo_aina',   // Add this
+    'punguzo',
+    'punguzo_aina',
     'baki',
     'jina_mkopaji',
     'simu',
     'tarehe_malipo',
+    'user_id',           // ✅ Add this
+    'mfanyakazi_id'      // ✅ Add this
 ];
+
 protected $casts = [
     'tarehe_malipo' => 'date',
 ];
@@ -57,4 +61,33 @@ protected $casts = [
     {
         return $this->hasMany(Marejesho::class, 'madeni_id');
     }
+    /**
+ * 👤 User (boss) who created this debt
+ */
+public function user()
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
+
+/**
+ * 👤 Employee who created this debt
+ */
+public function mfanyakazi()
+{
+    return $this->belongsTo(Wafanyakazi::class, 'mfanyakazi_id');
+}
+
+/**
+ * 🏷️ Get creator name
+ */
+public function getCreatedByAttribute()
+{
+    if ($this->user) {
+        return $this->user->name ?? $this->user->username;
+    }
+    if ($this->mfanyakazi) {
+        return $this->mfanyakazi->jina;
+    }
+    return 'System';
+}
 }

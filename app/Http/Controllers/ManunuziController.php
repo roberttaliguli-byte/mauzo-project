@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Helpers\ActivityHelper;
 
 class ManunuziController extends Controller
 {
@@ -179,6 +180,8 @@ class ManunuziController extends Controller
                 'simu' => $request->simu,
                 'mengineyo' => $request->mengineyo,
             ]);
+            // After saving purchase
+ActivityHelper::logPurchase($manunuzi, $bidhaa->jina, $manunuzi->bei);
 
             // Update stock and prices
             $bidhaa->increment('idadi', $request->idadi);
@@ -199,6 +202,7 @@ class ManunuziController extends Controller
                 ]
             ]);
         });
+  
     }
 
     /**
