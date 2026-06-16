@@ -30,6 +30,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\MengineyoController;
 use Illuminate\Support\Facades\Mail;
+use App\Http\Controllers\PublicShowcaseController;
+
 // =========================
 // Public routes
 // =========================
@@ -274,15 +276,27 @@ Route::post('/send-receipt-sms-simple', [MauzoController::class, 'sendReceiptSms
 Route::post('/send-receipt-sms', [MauzoController::class, 'sendReceiptSms'])->name('send.receipt.sms');
     
 // Add these inside the auth.any middleware group
+// Order routes - Add these to your routes file
 Route::prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('orders.index');
     Route::post('/', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/placed', [OrderController::class, 'getPlacedOrders'])->name('orders.placed');
+    Route::get('/stats', [OrderController::class, 'getStats'])->name('orders.stats');
+    Route::get('/products', [OrderController::class, 'getProducts'])->name('orders.products');
+    Route::get('/product/barcode/{barcode}', [OrderController::class, 'getProductByBarcode'])->name('orders.product.barcode');
+    Route::get('/customers', [OrderController::class, 'searchCustomers'])->name('orders.customers');
+    
+    // Kikapu routes
+    Route::get('/kikapu', [OrderController::class, 'getKikapuItems'])->name('orders.kikapu');
+    Route::post('/kikapu', [OrderController::class, 'sendToKikapu'])->name('orders.kikapu.send');
+    Route::post('/kikapu/process', [OrderController::class, 'processKikapuSales'])->name('orders.kikapu.process');
+    Route::delete('/kikapu', [OrderController::class, 'clearKikapu'])->name('orders.kikapu.clear');
+    
     Route::get('/{id}', [OrderController::class, 'show'])->name('orders.show');
-    Route::put('/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-    Route::delete('/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
-    Route::post('/{id}/send-to-kikapu', [OrderController::class, 'sendToKikapu'])->name('orders.send-to-kikapu');
-    Route::get('/{id}/generate-invoice', [OrderController::class, 'generateInvoice'])->name('orders.invoice');
+    Route::get('/{id}/invoice', [OrderController::class, 'generateInvoice'])->name('orders.invoice');
     Route::get('/{id}/share-whatsapp', [OrderController::class, 'shareWhatsApp'])->name('orders.share-whatsapp');
+    Route::post('/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+    Route::delete('/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });
 // ================================
     // Bidhaa Routes (accessible by both)
@@ -301,6 +315,7 @@ Route::prefix('orders')->group(function () {
     Route::get('/bidhaa/taarifa', [BidhaaController::class, 'taarifa'])->name('bidhaa.taarifa');
     Route::get('/bidhaa/export-details/{id}', [BidhaaController::class, 'exportProductDetails'])->name('bidhaa.export-details');
     Route::get('/bidhaa/search-products', [BidhaaController::class, 'searchProducts'])->name('bidhaa.search-products');
+    Route::delete('/bidhaa/{id}/delete-image', [BidhaaController::class, 'deleteImage'])->name('bidhaa.deleteImage');
     // Add this route with your other bidhaa routes
    // ================================
     // Madeni Routes (accessible by both)
@@ -570,4 +585,28 @@ Route::prefix('mengineyo')->name('mengineyo.')->group(function () {
     Route::put('/banking/update/{id}', [MengineyoController::class, 'updateBanking'])->name('update.banking');
     Route::delete('/banking/delete/{id}', [MengineyoController::class, 'destroyBanking'])->name('delete.banking');
     Route::get('/banking/export-pdf', [MengineyoController::class, 'exportBankingPDF'])->name('export.banking.pdf');
+});
+
+
+// Public showcase routes - single template for all companies
+Route::prefix('shop')->group(function () {
+    // Main showcase page - accessible via /shop/{companyId} or /shop/{companyName}
+    Route::get('/{identifier}', [PublicShowcaseController::class, 'show'])
+        ->name('public.showcase');
+    
+    // Search products via AJAX
+    Route::get('/{companyId}/search', [PublicShowcaseController::class, 'searchProducts'])
+        ->name('public.search');
+    
+    // Place order
+    Route::post('/{companyId}/order', [PublicShowcaseController::class, 'placeOrder'])
+        ->name('public.order.place');
+    
+    // Check order status
+    Route::get('/{companyId}/order-status', [PublicShowcaseController::class, 'getOrderStatus'])
+        ->name('public.order.status');
+    
+    // Generate QR code for company
+    Route::get('/{companyId}/qr', [PublicShowcaseController::class, 'generateQR'])
+        ->name('public.qr');
 });

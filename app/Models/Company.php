@@ -208,5 +208,61 @@ class Company extends Model
             ];
         }
         return $data;
+ 
+       }
+
+public function getSettingsAttribute($value)
+{
+    return json_decode($value, true) ?? [];
+}
+
+public function setSettingsAttribute($value)
+{
+    $this->attributes['settings'] = json_encode($value);
+}
+
+public function getLogoUrlAttribute()
+{
+    if ($this->logo) {
+        return asset('storage/' . $this->logo);
     }
+    return null;
+}
+
+public function getCoverUrlAttribute()
+{
+    if ($this->cover_image) {
+        return asset('storage/' . $this->cover_image);
+    }
+    return '/images/default-cover.jpg';
+}
+
+public function getWhatsappNumberAttribute()
+{
+    $settings = $this->settings;
+    if (isset($settings['whatsapp'])) {
+        return $settings['whatsapp'];
+    }
+    if ($this->phone) {
+        return preg_replace('/[^0-9]/', '', $this->phone);
+    }
+    return null;
+}
+
+public function getShowcaseUrlAttribute()
+{
+    return route('public.showcase', ['companySlug' => $this->id]);
+}
+
+public function getQrCodeAttribute()
+{
+    // You can use Simple QrCode package
+    // composer require simplesoftwareio/simple-qrcode
+    if (class_exists('SimpleSoftwareIO\QrCode\Facades\QrCode')) {
+        return \SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)
+            ->generate($this->showcase_url);
+    }
+    return null;
+}
+
 }

@@ -1,1303 +1,1593 @@
 <!-- resources/views/mauzo/partial-order.blade.php -->
 <style>
-.order-stat-card {
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-.order-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-.order-status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-/* Modal Styling matching Masaplaya */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-/* Pagination Styles */
-#orderPagination .orderPageBtn {
-    transition: all 0.2s ease;
-    min-width: 36px;
-}
-
-#orderPagination .orderPageBtn:hover {
-    background-color: #f3f4f6;
-    transform: translateY(-1px);
-}
-
-#orderPagination .orderPageBtn:active {
-    transform: translateY(0);
-}
-
-/* Mobile responsive pagination */
-@media (max-width: 640px) {
-    #orderPagination .orderPageBtn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
+    /* Order Section Styling - Professional Compact */
+    .order-section {
+        background: #f8fafc;
+        min-height: 100vh;
     }
     
-    #orderPagination .flex {
-        gap: 0.25rem;
+    /* Compact Product Card */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 8px;
     }
-}
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 50%;
-    max-width: 900px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-.modal-content::-webkit-scrollbar {
-    width: 4px;
-}
-.modal-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-.modal-content::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-@media (max-width: 640px) {
-    .modal-content {
-        width: 95%;
-        margin: 10px;
+    
+    @media (min-width: 640px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
     }
-}
+    
+    @media (min-width: 1024px) {
+        .product-grid {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        }
+    }
+    
+    .product-card {
+        background: white;
+        border-radius: 6px;
+        padding: 8px;
+        text-align: center;
+        border: 1px solid #e5e7eb;
+        transition: all 0.15s ease;
+        cursor: pointer;
+        position: relative;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    
+    .product-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-color: #f59e0b;
+    }
+    
+    .product-card .product-image {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 4px;
+        object-fit: contain;
+        border-radius: 4px;
+        background: #f9fafb;
+    }
+    
+    .product-card .product-name {
+        font-size: 11px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1px;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .product-card .product-details {
+        font-size: 9px;
+        color: #6b7280;
+        margin-bottom: 2px;
+    }
+    
+    .product-card .product-details span {
+        display: inline-block;
+        margin: 0 1px;
+        padding: 0 4px;
+        background: #f3f4f6;
+        border-radius: 3px;
+        font-size: 8px;
+    }
+    
+    .product-card .product-price {
+        font-size: 12px;
+        font-weight: 600;
+        color: #f59e0b;
+    }
+    
+    .product-card .add-btn {
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        margin-top: 2px;
+    }
+    
+    .product-card .add-btn:hover {
+        background: #d97706;
+    }
+    
+    .product-card .add-btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+    
+    .product-card .stock-badge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        font-size: 8px;
+        padding: 1px 5px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    
+    .stock-available { background: #d1fae5; color: #065f46; }
+    .stock-low { background: #fef3c7; color: #92400e; }
+    .stock-out { background: #fee2e2; color: #991b1b; }
+    
+    /* Search Bar */
+    .search-bar {
+        background: white;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        padding: 6px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    
+    .search-bar input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 13px;
+        color: #1f2937;
+        min-width: 0;
+    }
+    
+    .search-bar input::placeholder {
+        color: #9ca3af;
+    }
+    
+    .search-bar i {
+        color: #9ca3af;
+    }
+    
+    /* Order Stats Bar */
+    .order-stats-bar {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 2px 0;
+        margin-bottom: 8px;
+        flex-wrap: nowrap;
+    }
+    
+    .stat-item {
+        background: white;
+        padding: 4px 12px;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        font-size: 11px;
+        font-weight: 500;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    
+    .stat-item i { font-size: 10px; }
+    .stat-total { color: #1f2937; border-color: #d1d5db; }
+    .stat-saved { color: #f59e0b; border-color: #fde68a; background: #fffbeb; }
+    .stat-confirmed { color: #3b82f6; border-color: #93c5fd; background: #eff6ff; }
+    .stat-paid { color: #10b981; border-color: #a7f3d0; background: #ecfdf5; }
+    .stat-cancelled { color: #ef4444; border-color: #fca5a5; background: #fef2f2; }
+    
+    /* Order Panel - Compact */
+    .order-panel-wrapper { position: relative; }
+    
+    .order-panel {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        max-height: 70vh;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    
+    @media (min-width: 1024px) {
+        .order-panel {
+            position: sticky;
+            top: 85px;
+            height: calc(100vh - 110px);
+            max-height: calc(100vh - 110px);
+        }
+    }
+    
+    .order-header {
+        padding: 8px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    
+    .order-header h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .order-header .order-count {
+        font-size: 10px;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 1px 8px;
+        border-radius: 10px;
+    }
+    
+    .order-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 10px;
+        min-height: 60px;
+        max-height: 250px;
+    }
+    
+    @media (min-width: 1024px) {
+        .order-items {
+            max-height: none;
+            min-height: 150px;
+        }
+    }
+    
+    .order-items::-webkit-scrollbar { width: 3px; }
+    .order-items::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+    
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .order-item:last-child { border-bottom: none; }
+    
+    .order-item .item-info { flex: 1; min-width: 0; }
+    .order-item .item-name { font-size: 12px; font-weight: 500; color: #1f2937; }
+    .order-item .item-details { font-size: 10px; color: #6b7280; }
+    .order-item .item-price { font-size: 12px; font-weight: 600; color: #f59e0b; }
+    
+    .order-item .item-qty {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        margin: 0 4px;
+    }
+    
+    .order-item .qty-btn {
+        background: #f3f4f6;
+        border: none;
+        border-radius: 3px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .order-item .qty-btn:hover { background: #e5e7eb; }
+    .order-item .item-total { font-size: 12px; font-weight: 600; color: #1f2937; min-width: 50px; text-align: right; }
+    .order-item .remove-btn { color: #9ca3af; transition: all 0.2s ease; background: none; border: none; padding: 1px; cursor: pointer; }
+    .order-item .remove-btn:hover { color: #ef4444; }
+    
+    /* Order Footer - Compact */
+    .order-footer {
+        padding: 8px 12px;
+        border-top: 1px solid #e5e7eb;
+        background: #fafafa;
+        border-radius: 0 0 8px 8px;
+        flex-shrink: 0;
+    }
+    
+    .order-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+    
+    .order-total .label { font-size: 12px; font-weight: 500; color: #4b5563; }
+    .order-total .amount { font-size: 16px; font-weight: 700; color: #f59e0b; }
+    
+    .order-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+    
+    .order-actions button {
+        flex: 1;
+        min-width: 60px;
+        padding: 4px 8px;
+        border: none;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+    }
+    
+    .btn-primary { background: #f59e0b; color: white; }
+    .btn-primary:hover { background: #d97706; }
+    .btn-secondary { background: #f3f4f6; color: #4b5563; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-success { background: #10b981; color: white; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    
+    /* Placed Orders - Separate Section at Top */
+    .placed-orders-section-top {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    
+    .placed-orders-header-top {
+        padding: 8px 12px;
+        background: #fafafa;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .placed-orders-header-top h4 {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .placed-orders-header-top .badge {
+        font-size: 10px;
+        background: #f59e0b;
+        color: white;
+        padding: 1px 6px;
+        border-radius: 10px;
+    }
+    
+    .placed-orders-list-top {
+        max-height: 120px;
+        overflow-y: auto;
+        padding: 4px;
+    }
+    
+    .placed-orders-list-top::-webkit-scrollbar { width: 3px; }
+    .placed-orders-list-top::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+    
+    .placed-order-item-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 8px;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .placed-order-item-top:hover { background: #f9fafb; }
+    .placed-order-item-top:last-child { border-bottom: none; }
+    
+    .placed-order-item-top .order-info { flex: 1; }
+    .placed-order-item-top .order-id { font-size: 11px; font-weight: 500; color: #1f2937; }
+    .placed-order-item-top .order-date { font-size: 10px; color: #6b7280; }
+    
+    .placed-order-item-top .order-status {
+        font-size: 10px;
+        padding: 1px 6px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .status-saved { background: #fffbeb; color: #f59e0b; border: 1px solid #fde68a; }
+    .status-confirmed { background: #eff6ff; color: #3b82f6; border: 1px solid #93c5fd; }
+    .status-paid { background: #ecfdf5; color: #10b981; border: 1px solid #a7f3d0; }
+    .status-cancelled { background: #fef2f2; color: #ef4444; border: 1px solid #fca5a5; }
+    
+    /* Order Preview Modal - Professional */
+    .order-preview-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
+        backdrop-filter: blur(3px);
+    }
+    
+    .order-preview-modal.active { display: flex; }
+    
+    .order-preview-content {
+        background: white;
+        border-radius: 10px;
+        max-width: 480px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 16px;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+        position: relative;
+    }
+    
+    .order-preview-content .close-btn {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .order-preview-content .close-btn:hover { color: #1f2937; }
+    
+    .order-preview-content .preview-header {
+        text-align: center;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .order-preview-content .preview-header h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1f2937;
+    }
+    
+    .order-preview-content .preview-header p {
+        font-size: 11px;
+        color: #6b7280;
+    }
+    
+    .order-preview-content .preview-order-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        background: #f9fafb;
+        padding: 8px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+    
+    .order-preview-content .preview-order-info .info-item {
+        font-size: 11px;
+        color: #4b5563;
+    }
+    
+    .order-preview-content .preview-order-info .info-item strong {
+        color: #1f2937;
+    }
+    
+    .order-preview-content .preview-items {
+        margin: 8px 0;
+        padding: 6px 0;
+        border-top: 1px solid #e5e7eb;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .order-preview-content .preview-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 0;
+        font-size: 12px;
+    }
+    
+    .order-preview-content .preview-item .item-name {
+        flex: 1;
+    }
+    
+    .order-preview-content .preview-item .item-name small {
+        color: #6b7280;
+        font-size: 10px;
+    }
+    
+    .order-preview-content .preview-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 15px;
+        font-weight: 700;
+        color: #f59e0b;
+        padding-top: 4px;
+    }
+    
+    .order-preview-content .preview-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 8px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 8px;
+    }
+    
+    .order-preview-content .preview-actions button {
+        flex: 1;
+        min-width: 70px;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+    }
+    
+    /* Receipt Styling */
+    .receipt-print {
+        font-family: 'Courier New', monospace;
+        font-size: 11px;
+        line-height: 1.5;
+        color: #1f2937;
+        background: white;
+        padding: 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        margin: 4px 0;
+    }
+    
+    .receipt-print .company-name {
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 2px;
+    }
+    
+    .receipt-print .receipt-line {
+        border-top: 1px dashed #d1d5db;
+        margin: 3px 0;
+    }
+    
+    .receipt-print .receipt-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 1px 0;
+    }
+    
+    .receipt-print .receipt-total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 13px;
+        padding-top: 3px;
+        border-top: 1px dashed #d1d5db;
+    }
+    
+    .receipt-print .receipt-footer {
+        text-align: center;
+        font-size: 10px;
+        color: #6b7280;
+        margin-top: 4px;
+        border-top: 1px dashed #d1d5db;
+        padding-top: 4px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+        .product-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+        .product-card { padding: 6px; }
+        .product-card .product-image { width: 40px; height: 40px; }
+        .product-card .product-name { font-size: 10px; }
+        .order-item .item-name { font-size: 11px; }
+        .order-actions button { font-size: 10px; padding: 3px 6px; min-width: 50px; }
+        .stat-item { font-size: 10px; padding: 2px 8px; }
+        .order-preview-content { padding: 12px; }
+        .order-preview-content .preview-order-info { grid-template-columns: 1fr; }
+        .placed-orders-list-top { max-height: 80px; }
+    }
 </style>
 
 <!-- Orders Tab Content -->
-<div id="weka-order-tab-content" class="tab-content hidden">
-    <div class="space-y-4">
-        <!-- Header -->
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-            <div class="flex justify-between items-center">
-                <h2 class="text-sm font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-clipboard-list mr-2 text-amber-600"></i>
-                    Usimamizi wa Oda
-                </h2>
-                <button id="orderCreateBtn" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded text-sm font-medium transition flex items-center gap-2">
-                    <i class="fas fa-plus"></i> Oda Mpya
-                </button>
-            </div>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm order-stat-card" data-status="all">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-gray-500 mb-1">Jumla ya Oda</p>
-                        <p class="text-xl font-bold text-gray-800" id="orderStatTotal">0</p>
-                    </div>
-                    <i class="fas fa-clipboard-list text-gray-400 text-lg"></i>
-                </div>
-            </div>
-            <div class="bg-white p-3 rounded-lg border border-amber-200 shadow-sm order-stat-card" data-status="saved">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-amber-600 mb-1">Zilizohifadhiwa</p>
-                        <p class="text-xl font-bold text-amber-700" id="orderStatSaved">0</p>
-                    </div>
-                    <i class="fas fa-save text-amber-500 text-lg"></i>
-                </div>
-            </div>
-
-            <div class="bg-white p-3 rounded-lg border border-green-200 shadow-sm order-stat-card" data-status="confirmed">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-green-600 mb-1">Zilizothibitishwa</p>
-                        <p class="text-xl font-bold text-green-700" id="orderStatConfirmed">0</p>
-                    </div>
-                    <i class="fas fa-check-circle text-green-500 text-lg"></i>
-                </div>
-            </div>
+<div id="weka-order-tab-content" class="tab-content hidden order-section">
+    <div class="container mx-auto px-2 sm:px-4 py-3">
         
-
- 
-            <div class="bg-white p-3 rounded-lg border border-orange-200 shadow-sm">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <p class="text-xs text-orange-600 mb-1">Mapato Yanayosubiri</p>
-                        <p class="text-lg font-bold text-orange-700" id="orderStatPending">0 TZS</p>
-                    </div>
-                    <i class="fas fa-clock text-orange-500 text-lg"></i>
-                </div>
+        <!-- Order Stats Bar -->
+        <div class="order-stats-bar" id="orderStatsBar">
+            <div class="stat-item stat-total">
+                <i class="fas fa-clipboard-list"></i>
+                Total: <span id="totalOrders">0</span>
+            </div>
+            <div class="stat-item stat-saved">
+                <i class="fas fa-save"></i>
+                Saved: <span id="savedOrders">0</span>
+            </div>
+            <div class="stat-item stat-confirmed">
+                <i class="fas fa-check-circle"></i>
+                Confirmed: <span id="confirmedOrders">0</span>
+            </div>
+            <div class="stat-item stat-paid">
+                <i class="fas fa-money-bill-wave"></i>
+                Paid: <span id="paidOrders">0</span>
+            </div>
+            <div class="stat-item stat-cancelled">
+                <i class="fas fa-times-circle"></i>
+                Cancelled: <span id="cancelledOrders">0</span>
             </div>
         </div>
-
-        <!-- Filters -->
-        <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-            <div class="flex flex-col sm:flex-row gap-2">
-                <div class="flex-1 relative">
-                    <input type="text" id="orderSearch" placeholder="Tafuta oda, mteja au simu..." 
-                           class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500">
-                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                </div>
-                <div class="w-full sm:w-40">
-                    <select id="orderStatusFilter" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
-                        <option value="all">Hali zote</option>
-                        <option value="saved">Zilizohifadhiwa</option>
-                        <option value="confirmed">Zilizothibitishwa</option>
-                        <option value="paid">Zilizolipwa</option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-36">
-                    <input type="date" id="orderStartDate" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
-                </div>
-                <div class="w-full sm:w-36">
-                    <input type="date" id="orderEndDate" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500">
-                </div>
-                <button id="orderResetFilters" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm font-medium transition flex items-center justify-center gap-1">
-                    <i class="fas fa-redo-alt"></i> Safisha
+        
+        <!-- Placed Orders Section - At Top -->
+        <div class="placed-orders-section-top" id="placedOrdersSectionTop">
+            <div class="placed-orders-header-top">
+                <h4>
+                    <i class="fas fa-clipboard-list mr-1"></i>
+                    Placed Orders
+                    <span class="badge" id="placedOrdersCountTop">0</span>
+                </h4>
+                <button class="text-gray-400 hover:text-gray-600 text-xs" onclick="refreshOrders()">
+                    <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
-        </div>
-
-        <!-- Orders Table -->
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-amber-50">
-                            <th class="px-4 py-2 text-left font-medium text-amber-800">Namba</th>
-                            <th class="px-4 py-2 text-left font-medium text-amber-800">Mteja</th>
-                            <th class="px-4 py-2 text-left font-medium text-amber-800 hidden sm:table-cell">Simu</th>
-                            <th class="px-4 py-2 text-left font-medium text-amber-800 hidden md:table-cell">Tarehe</th>
-                            <th class="px-4 py-2 text-right font-medium text-amber-800">Jumla</th>
-                            <th class="px-4 py-2 text-center font-medium text-amber-800">Hali</th>
-                            <th class="px-4 py-2 text-center font-medium text-amber-800 print:hidden">Vitendo</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderTableBody" class="divide-y divide-gray-100">
-                        <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                                <i class="fas fa-spinner fa-spin text-2xl mb-2 text-gray-300"></i>
-                                <p>Inapakia...</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="placed-orders-list-top" id="placedOrdersListTop">
+                <div class="text-center text-gray-400 py-3">
+                    <p class="text-xs">No placed orders yet</p>
+                </div>
             </div>
-            <!-- Pagination -->
-            <div id="orderPagination" class="px-4 py-3 border-t border-gray-200"></div>
         </div>
-    </div>
-</div>
-
-<!-- Order Modal (Create/Edit) -->
-<div id="orderModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="p-4 border-b border-gray-200">
-            <h3 class="text-sm font-semibold text-gray-800">Oda Mpya</h3>
-        </div>
-        <div class="p-4">
-            <form id="orderForm">
-                @csrf
+        
+        <!-- Main Layout: Product Grid + Order Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            
+            <!-- Left: Product Grid -->
+            <div class="lg:col-span-2">
+                <!-- Search Bar -->
+                <div class="search-bar mb-2">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="productSearch" placeholder="Search products by name, type, or barcode...">
+                    <i class="fas fa-barcode text-gray-400 cursor-pointer hover:text-gray-600" id="scanBarcodeBtn"></i>
+                </div>
                 
-                <!-- Customer Info -->
-  <!-- Customer Info -->
-<div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-4">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-        <!-- Customer Search -->
-        <div class="relative">
-            <label class="block text-xs font-medium text-gray-700 mb-1">
-                Tafuta Mteja
-            </label>
-            <input
-                type="text"
-                id="orderCustomerSearch"
-                placeholder="Tafuta kwa jina au simu..."
-                class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
-            >
-            <i class="fas fa-search absolute left-3 top-8 text-gray-400 text-xs"></i>
-
-            <div
-                id="orderCustomerDropdown"
-                class="hidden absolute z-10 w-full bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto"
-            ></div>
+ <!-- Product Grid -->
+<div class="product-grid" id="productGrid">
+    @foreach($bidhaa as $product)
+    <div class="product-card" 
+         data-id="{{ $product->id }}" 
+         data-name="{{ $product->jina }}" 
+         data-price="{{ $product->bei_kuuza }}" 
+         data-stock="{{ $product->idadi }}"
+         data-image="{{ $product->image_data_url ?? '' }}">
+        
+        @php
+            // Get image data directly from the product
+            $imageData = null;
+            if ($product->image) {
+                try {
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $mimeType = finfo_buffer($finfo, $product->image);
+                    finfo_close($finfo);
+                    $imageData = 'data:' . $mimeType . ';base64,' . base64_encode($product->image);
+                } catch (\Exception $e) {
+                    $imageData = null;
+                }
+            }
+        @endphp
+        
+        @if($imageData)
+            <img src="{{ $imageData }}" 
+                 alt="{{ $product->jina }}" 
+                 class="product-image"
+                 loading="lazy"
+                 onerror="this.src='https://via.placeholder.com/50x50?text={{ urlencode($product->jina) }}'">
+        @else
+            <img src="https://via.placeholder.com/50x50?text={{ urlencode($product->jina) }}" 
+                 alt="{{ $product->jina }}" 
+                 class="product-image"
+                 loading="lazy">
+        @endif
+        
+        <div class="product-name">{{ $product->jina }}</div>
+        <div class="product-details">
+            <span>{{ $product->aina }}</span>
+            @if($product->kipimo)
+                <span>{{ $product->kipimo }}</span>
+            @endif
         </div>
-
-        <input type="hidden" id="orderCustomerId">
-
-        <!-- Customer Name -->
-        <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">
-                Jina Kamili <span class="text-red-500">*</span>
-            </label>
-            <input
-                type="text"
-                id="orderCustomerName"
-                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
-                required
-            >
-        </div>
-
-        <!-- Phone -->
-        <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">
-                Namba ya Simu
-            </label>
-            <input
-                type="text"
-                id="orderCustomerPhone"
-                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
-            >
-        </div>
-
+        <div class="product-price">{{ number_format($product->bei_kuuza, 0) }} TZS</div>
+        
+        @if($product->idadi > 0)
+            <button class="add-btn" onclick="addToOrder({{ $product->id }}, '{{ addslashes($product->jina) }}', '{{ addslashes($product->aina) }}', '{{ addslashes($product->kipimo) }}', {{ $product->bei_kuuza }}, {{ $product->idadi }})">
+                <i class="fas fa-plus"></i> Add
+            </button>
+        @else
+            <button class="add-btn" disabled>
+                <i class="fas fa-times"></i> Out
+            </button>
+        @endif
+        
+        <span class="stock-badge {{ $product->idadi > 10 ? 'stock-available' : ($product->idadi > 0 ? 'stock-low' : 'stock-out') }}">
+            {{ $product->idadi > 0 ? $product->idadi : '0' }}
+        </span>
     </div>
+    @endforeach
 </div>
-
-                <!-- Products Section -->
-                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                            <i class="fas fa-boxes text-amber-600"></i> Bidhaa
-                        </h3>
-                        <button type="button" id="orderAddProduct" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-xs font-medium transition flex items-center gap-1">
-                            <i class="fas fa-plus"></i> Ongeza
+            </div>
+            
+            <!-- Right: Current Order Panel -->
+            <div class="lg:col-span-1 order-panel-wrapper">
+                <div class="order-panel">
+                    <!-- Order Header -->
+                    <div class="order-header">
+                        <div class="flex items-center gap-2">
+                            <h3>Current Order</h3>
+                            <span class="order-count" id="orderItemCount">0</span>
+                        </div>
+                        <button class="text-gray-400 hover:text-red-500 transition text-xs" onclick="clearOrder()" title="Clear Order">
+                            <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
                     
-                    <div id="orderProductsContainer" class="space-y-2">
-                        <div class="orderProductRow bg-white p-2 rounded-lg border border-gray-200">
-                            <div class="grid grid-cols-12 gap-2">
-                                <div class="col-span-12 md:col-span-5">
-                                    <input type="text" class="orderProductSearch w-full px-3 py-1.5 border border-gray-300 rounded text-sm" placeholder="Tafuta bidhaa...">
-                                  <select class="orderProductSelect hidden absolute z-10 w-80 bg-white border border-gray-300 rounded-lg shadow-lg text-base font-medium px-3 py-2">
-                                        <option value="">Chagua Bidhaa</option>
-                                        @foreach($bidhaa as $item)
-                                        <option value="{{ $item->id }}" data-price="{{ $item->bei_kuuza }}">{{ $item->jina }} - {{ number_format($item->bei_kuuza, 0) }} TZS</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-span-3 md:col-span-2">
-                                    <input type="number" class="orderProductQty w-full px-2 py-1.5 border border-gray-300 rounded text-sm" placeholder="Idadi" min="0.01" step="0.01" value="1">
-                                </div>
-                                <div class="col-span-3 md:col-span-2">
-                                    <input type="number" class="orderProductPrice w-full px-2 py-1.5 border border-gray-300 rounded text-sm bg-gray-100" readonly placeholder="Bei">
-                                </div>
-                                <div class="col-span-2 md:col-span-2">
-                                    <input type="number" class="orderProductDiscount w-full px-2 py-1.5 border border-gray-300 rounded text-sm" placeholder="Punguzo" min="0" step="0.01" value="0">
-                                </div>
-                                <div class="col-span-1 text-center flex items-center justify-center">
-                                    <button type="button" class="orderRemoveProduct text-red-500 hover:text-red-700 transition">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
+                    <!-- Order Items -->
+                    <div class="order-items" id="orderItems">
+                        <div class="text-center text-gray-400 py-4">
+                            <i class="fas fa-shopping-cart text-xl mb-1"></i>
+                            <p class="text-xs">No items in order</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Footer -->
+                    <div class="order-footer">
+                        <!-- Subtotal -->
+                        <div class="order-total">
+                            <span class="label">Subtotal</span>
+                            <span class="amount" id="orderSubtotal">0 TZS</span>
+                        </div>
+                        
+                        <!-- Discount -->
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs text-gray-600">Discount</span>
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs text-gray-500">%</span>
+                                <input type="number" id="orderDiscount" value="0" min="0" max="100" 
+                                       class="w-12 px-1 py-0.5 border border-gray-200 rounded text-xs text-right focus:outline-none focus:ring-1 focus:ring-[#f59e0b]"
+                                       onchange="calculateTotal()">
                             </div>
-                            <div class="flex justify-end mt-2 pt-1 border-t">
-                                <span class="text-xs font-medium text-gray-600">Jumla:</span>
-                                <span class="orderProductTotal text-xs font-bold text-green-700 ml-2">0 TZS</span>
-                            </div>
+                        </div>
+                        
+                        <!-- Total -->
+                        <div class="order-total mb-1">
+                            <span class="label font-bold">Total</span>
+                            <span class="amount" id="orderTotal">0 TZS</span>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="order-actions">
+                            <button class="btn-success" onclick="processPayment()">
+                                <i class="fas fa-money-bill-wave"></i> Pay & Generate
+                            </button>
+                            <button class="btn-secondary" onclick="saveOrder()">
+                                <i class="fas fa-save"></i> Save
+                            </button>
                         </div>
                     </div>
                 </div>
-
-         <!-- Totals Section -->
-<div class="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-4">
-    <div class="flex flex-wrap items-center justify-end gap-6 text-sm">
-
-        <div class="flex items-center gap-2">
-            <span class="text-gray-600">Jumla Ndogo:</span>
-            <span id="orderSummarySubtotal" class="font-semibold text-gray-800">0 TZS</span>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <span class="text-gray-600">Punguzo la Jumla:</span>
-            <input
-                type="number"
-                id="orderGlobalDiscount"
-                class="w-24 border border-gray-300 rounded px-2 py-1 text-right text-sm focus:outline-none focus:ring-1 focus:ring-amber-500"
-                value="0"
-                step="0.01"
-            >
-        </div>
-
-        <div class="flex items-center gap-2 border-l pl-4">
-            <span class="font-bold text-gray-800">JUMLA KUU:</span>
-            <span id="orderSummaryTotal" class="font-bold text-green-700 text-lg">0 TZS</span>
-        </div>
-
-    </div>
-</div>
-
-                <!-- Notes -->
-                <div class="mb-2">
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Maelezo</label>
-                    <textarea id="orderNotes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-amber-500" placeholder="Maelezo ya ziada..."></textarea>
-                </div> 
-
-                <!-- Action Buttons -->
-                <div class="flex gap-2 pt-4 border-t border-gray-200">
-                    <button type="button" id="orderCancelBtn" class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
-                        Ghairi
-                    </button>
-                    <button type="button" id="orderSaveDraft" class="flex-1 px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 text-sm font-medium transition flex items-center justify-center gap-1">
-                        <i class="fas fa-save"></i> Hifadhi
-                    </button>
-                    <button type="submit" id="orderConfirmSubmit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium transition flex items-center justify-center gap-1">
-                        <i class="fas fa-check-circle"></i> Thibitisha
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Order Details Modal -->
-<div id="orderDetailsModal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="p-4 border-b border-gray-200">
-            <h3 class="text-sm font-semibold text-gray-800">Maelezo ya Oda</h3>
+<!-- Order Preview Modal -->
+<div class="order-preview-modal" id="orderPreviewModal">
+    <div class="order-preview-content">
+        <button class="close-btn" onclick="closeOrderPreview()">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="preview-header">
+            <h3 id="previewOrderNumber">Order #ORD-20250101-0001</h3>
+            <p id="previewOrderDate">Date: 01/01/2025 14:30</p>
         </div>
-        <div class="p-4" id="orderDetailsContent"></div>
-        <div class="flex gap-2 p-4 border-t border-gray-200">
-            <button id="orderPrint" class="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium transition flex items-center justify-center gap-1">
-                <i class="fas fa-print"></i> Chapisha
+        
+        <div class="preview-order-info">
+            <div class="info-item">
+                <strong>Customer:</strong> <span id="previewCustomerName">Walk-in Customer</span>
+            </div>
+            <div class="info-item">
+                <strong>Phone:</strong> <span id="previewCustomerPhone">-</span>
+            </div>
+            <div class="info-item">
+                <strong>Status:</strong> <span id="previewOrderStatus" class="order-status status-saved">Saved</span>
+            </div>
+            <div class="info-item">
+                <strong>Items:</strong> <span id="previewItemCount">0</span>
+            </div>
+        </div>
+        
+        <!-- Order Receipt -->
+        <div class="receipt-print" id="orderReceiptContent">
+            <div class="company-name" id="receiptCompanyName">{{ $companyName ?? 'Mauzo Sheet' }}</div>
+            <div style="text-align:center;font-size:10px;margin-bottom:2px;">Your Trusted Shop</div>
+            <div style="text-align:center;font-size:10px;margin-bottom:2px;">Order #ORD-20250101-0001</div>
+            <div style="text-align:center;font-size:10px;margin-bottom:4px;">Date: 01/01/2025 14:30</div>
+            <div class="receipt-line"></div>
+            <div style="font-size:10px;margin:2px 0;">
+                <strong>Customer:</strong> Walk-in Customer
+            </div>
+            <div style="font-size:10px;margin:2px 0;">
+                <strong>Phone:</strong> -
+            </div>
+            <div style="font-size:10px;margin:2px 0;">
+                <strong>Status:</strong> Saved
+            </div>
+            <div class="receipt-line"></div>
+            <div id="receiptItemsList"></div>
+            <div class="receipt-line"></div>
+            <div id="receiptTotals"></div>
+            <div class="receipt-footer">
+                Asante kwa kununua!
+            </div>
+        </div>
+        
+        <div class="preview-actions" id="previewActions">
+            <button class="btn-success" onclick="previewPayOrder()">
+                <i class="fas fa-money-bill-wave"></i> Pay
             </button>
-            <button id="orderWhatsApp" class="flex-1 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm font-medium transition flex items-center justify-center gap-1">
+            <button class="btn-success" style="background:#25D366;" onclick="previewWhatsAppOrder()">
                 <i class="fab fa-whatsapp"></i> WhatsApp
             </button>
-            <button id="orderCopy" class="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm font-medium transition flex items-center justify-center gap-1">
-                <i class="fas fa-copy"></i> Nakili
+            <button class="btn-danger" onclick="previewDeleteOrder()">
+                <i class="fas fa-trash"></i> Delete
             </button>
-            <button id="orderCloseDetails" class="flex-1 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 text-sm font-medium transition">
-                Funga
+            <button class="btn-primary" onclick="previewDownloadOrder()">
+                <i class="fas fa-download"></i> Download
+            </button>
+            <button class="btn-secondary" onclick="closeOrderPreview()">
+                <i class="fas fa-times"></i> Close
             </button>
         </div>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="orderDeleteModal" class="modal" style="display: none;">
-    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-sm mx-2">
-        <div class="p-4 border-b border-gray-200">
-            <h3 class="text-sm font-semibold text-gray-800">Thibitisha Kufuta</h3>
-        </div>
-        <div class="p-4 text-center">
-            <i class="fas fa-exclamation-triangle text-amber-500 text-2xl mb-2"></i>
-            <p class="text-gray-700 text-sm mb-2" id="orderDeleteMessage">Una uhakika unataka kufuta oda hii?</p>
-            <p class="text-gray-500 text-xs">Hatua hii haiwezi kutenduliwa</p>
-        </div>
-        <div class="flex gap-2 p-4 border-t border-gray-200">
-            <button id="orderCancelDelete" class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm font-medium">
-                Ghairi
-            </button>
-            <button id="orderConfirmDelete" class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-                Futa
-            </button>
-        </div>
-    </div>
-</div>
 <script>
-// Orders Module
-(function() {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initOrders);
-    } else {
-        initOrders();
+// Order Management System
+let orderItems = [];
+let orderTotal = 0;
+let orderSubtotal = 0;
+let placedOrders = [];
+let currentPreviewOrder = null;
+let companyName = '{{ $companyName ?? 'Mauzo Sheet' }}';
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadPlacedOrders();
+    updateOrderStats();
+});
+
+// Real-time search
+document.getElementById('productSearch').addEventListener('input', function() {
+    const search = this.value.toLowerCase().trim();
+    document.querySelectorAll('.product-card').forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        const aina = card.querySelector('.product-details span:first-child')?.textContent.toLowerCase() || '';
+        const kipimo = card.querySelector('.product-details span:last-child')?.textContent.toLowerCase() || '';
+        card.style.display = (search === '' || name.includes(search) || aina.includes(search) || kipimo.includes(search)) ? '' : 'none';
+    });
+});
+
+// Add product to order
+function addToOrder(id, name, aina, kipimo, price, stock) {
+    if (stock <= 0) {
+        showNotification('Product is out of stock!', 'error');
+        return;
     }
     
-    function initOrders() {
-        let currentOrderId = null;
-        let deleteOrderId = null;
-        let customers = [];
-        
-        try {
-            customers = @json($wateja);
-        } catch(e) { 
-            customers = []; 
+    const existingItem = orderItems.find(item => item.id === id);
+    
+    if (existingItem) {
+        if (existingItem.qty >= stock) {
+            showNotification('Not enough stock available!', 'error');
+            return;
         }
-        
-        // Helper Functions
-        function showToast(msg, type = 'success') {
-            let container = document.getElementById('notification-container');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'notification-container';
-                container.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none';
-                document.body.appendChild(container);
-            }
-            
-            const colors = {
-                success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-                error: 'bg-red-50 border-red-200 text-red-800',
-                warning: 'bg-amber-50 border-amber-200 text-amber-800',
-                info: 'bg-blue-50 border-blue-200 text-blue-800'
-            };
-            
-            const notification = document.createElement('div');
-            notification.className = `rounded-lg border px-4 py-3 text-sm font-medium mb-2 shadow-lg transition-all duration-300`;
-            notification.classList.add(...colors[type].split(' '));
-            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2"></i>${msg}`;
-            
-            container.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateY(-10px)';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-        
-        function formatNumber(n) { 
-            return parseFloat(n || 0).toLocaleString(undefined, {minimumFractionDigits: 0}); 
-        }
-        
-        function escapeHtml(s) { 
-            if (!s) return ''; 
-            return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); 
-        }
-        
-        function calculateItemTotal(row) {
-            const qty = parseFloat(row.querySelector('.orderProductQty')?.value) || 0;
-            const price = parseFloat(row.querySelector('.orderProductPrice')?.value) || 0;
-            const discount = parseFloat(row.querySelector('.orderProductDiscount')?.value) || 0;
-            let total = (qty * price) - discount;
-            if (total < 0) total = 0;
-            
-            const totalSpan = row.querySelector('.orderProductTotal');
-            if (totalSpan) totalSpan.textContent = formatNumber(total) + ' TZS';
-            return total;
-        }
-        
-        function updateRowTotal(row) {
-            calculateItemTotal(row);
-            calculateOrderTotal();
-        }
-        
-        function calculateOrderTotal() {
-            let subtotal = 0;
-            document.querySelectorAll('.orderProductRow').forEach(row => {
-                const qty = parseFloat(row.querySelector('.orderProductQty')?.value) || 0;
-                const price = parseFloat(row.querySelector('.orderProductPrice')?.value) || 0;
-                const discount = parseFloat(row.querySelector('.orderProductDiscount')?.value) || 0;
-                subtotal += (qty * price) - discount;
-            });
-            
-            const globalDisc = parseFloat(document.getElementById('orderGlobalDiscount')?.value) || 0;
-            let total = subtotal - globalDisc;
-            if (total < 0) total = 0;
-            
-            const subtotalEl = document.getElementById('orderSummarySubtotal');
-            const totalEl = document.getElementById('orderSummaryTotal');
-            if (subtotalEl) subtotalEl.textContent = formatNumber(subtotal) + ' TZS';
-            if (totalEl) totalEl.textContent = formatNumber(total) + ' TZS';
-        }
-        
-        function initProductSearch(row) {
-            const searchInput = row.querySelector('.orderProductSearch');
-            const selectDropdown = row.querySelector('.orderProductSelect');
-            const priceField = row.querySelector('.orderProductPrice');
-            const qtyField = row.querySelector('.orderProductQty');
-            const discountField = row.querySelector('.orderProductDiscount');
-            
-            if (!searchInput || !selectDropdown) return;
-            
-            const filterOptions = (searchText) => {
-                const filter = searchText.toLowerCase();
-                Array.from(selectDropdown.options).forEach((opt, i) => {
-                    if (i > 0) {
-                        opt.style.display = opt.textContent.toLowerCase().includes(filter) ? '' : 'none';
-                    }
-                });
-            };
-            
-            const selectProduct = (option) => {
-                if (!option.value) return;
-                const price = parseFloat(option.dataset.price || 0);
-                if (priceField) priceField.value = price.toFixed(2);
-                if (searchInput) searchInput.value = option.textContent.split(' - ')[0];
-                if (selectDropdown) selectDropdown.classList.add('hidden');
-                if (qtyField && !qtyField.value) qtyField.value = '1';
-                calculateItemTotal(row);
-                calculateOrderTotal();
-            };
-            
-            if (searchInput) {
-                searchInput.addEventListener('focus', () => { 
-                    if (selectDropdown) selectDropdown.classList.remove('hidden'); 
-                    filterOptions(searchInput.value); 
-                });
-                searchInput.addEventListener('input', (e) => { 
-                    filterOptions(e.target.value); 
-                    if (selectDropdown) selectDropdown.classList.remove('hidden'); 
-                });
-            }
-            
-            if (selectDropdown) {
-                selectDropdown.addEventListener('change', () => { 
-                    const opt = selectDropdown.options[selectDropdown.selectedIndex]; 
-                    if (opt?.value) selectProduct(opt); 
-                });
-            }
-            
-            if (qtyField) {
-                qtyField.addEventListener('input', () => updateRowTotal(row));
-                qtyField.addEventListener('blur', () => {
-                    if (!qtyField.value || parseFloat(qtyField.value) <= 0) {
-                        qtyField.value = '1';
-                        updateRowTotal(row);
-                    }
-                });
-            }
-            
-            if (discountField) {
-                discountField.addEventListener('input', () => updateRowTotal(row));
-            }
-            
-            document.addEventListener('click', (e) => { 
-                if (searchInput && selectDropdown && !searchInput.contains(e.target) && !selectDropdown.contains(e.target)) 
-                    selectDropdown.classList.add('hidden'); 
-            });
-        }
-        
-        function addProductRow() {
-            const container = document.getElementById('orderProductsContainer');
-            if (!container) return;
-            const template = container.children[0];
-            const newRow = template.cloneNode(true);
-            
-            const searchInput = newRow.querySelector('.orderProductSearch');
-            const selectDropdown = newRow.querySelector('.orderProductSelect');
-            const qtyField = newRow.querySelector('.orderProductQty');
-            const priceField = newRow.querySelector('.orderProductPrice');
-            const discountField = newRow.querySelector('.orderProductDiscount');
-            const totalSpan = newRow.querySelector('.orderProductTotal');
-            
-            if (searchInput) searchInput.value = '';
-            if (selectDropdown) selectDropdown.value = '';
-            if (qtyField) qtyField.value = '1';
-            if (priceField) priceField.value = '';
-            if (discountField) discountField.value = '0';
-            if (totalSpan) totalSpan.textContent = '0 TZS';
-            
-            container.appendChild(newRow);
-            initProductSearch(newRow);
-            
-            const removeBtn = newRow.querySelector('.orderRemoveProduct');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', () => {
-                    if (container.children.length > 1) {
-                        newRow.remove();
-                        calculateOrderTotal();
-                    } else {
-                        showToast('Angalau bidhaa moja inahitajika!', 'error');
-                    }
-                });
-            }
-        }
-        
-        function initCustomerSearch() {
-            const searchInput = document.getElementById('orderCustomerSearch');
-            const dropdown = document.getElementById('orderCustomerDropdown');
-            if (!searchInput || !dropdown) return;
-            
-            searchInput.addEventListener('input', function() {
-                const search = this.value.toLowerCase();
-                if (search.length < 1) { 
-                    dropdown.classList.add('hidden'); 
-                    return; 
-                }
-                const filtered = customers.filter(c => 
-                    c.jina.toLowerCase().includes(search) || 
-                    (c.simu && c.simu.toLowerCase().includes(search))
-                );
-                if (filtered.length > 0) {
-                    dropdown.innerHTML = filtered.map(c => `
-                        <div class="orderCustomerOption p-2 hover:bg-gray-100 cursor-pointer border-b" 
-                             data-id="${c.id}" 
-                             data-name="${escapeHtml(c.jina)}" 
-                             data-phone="${c.simu || ''}">
-                            <div class="font-semibold text-sm">${escapeHtml(c.jina)}</div>
-                            <div class="text-xs text-gray-500">${c.simu || 'Hakuna simu'}</div>
-                        </div>
-                    `).join('');
-                    dropdown.classList.remove('hidden');
-                    document.querySelectorAll('.orderCustomerOption').forEach(opt => 
-                        opt.addEventListener('click', function() {
-                            const idField = document.getElementById('orderCustomerId');
-                            const nameField = document.getElementById('orderCustomerName');
-                            const phoneField = document.getElementById('orderCustomerPhone');
-                            if (idField) idField.value = this.dataset.id;
-                            if (nameField) nameField.value = this.dataset.name;
-                            if (phoneField) phoneField.value = this.dataset.phone;
-                            searchInput.value = this.dataset.name;
-                            dropdown.classList.add('hidden');
-                        })
-                    );
-                } else {
-                    dropdown.classList.add('hidden');
-                }
-            });
-            document.addEventListener('click', (e) => { 
-                if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) 
-                    dropdown.classList.add('hidden'); 
-            });
-        }
-        
-        function resetOrderForm() {
-            const customerId = document.getElementById('orderCustomerId');
-            const customerSearch = document.getElementById('orderCustomerSearch');
-            const customerName = document.getElementById('orderCustomerName');
-            const customerPhone = document.getElementById('orderCustomerPhone');
-            const notes = document.getElementById('orderNotes');
-            const globalDiscount = document.getElementById('orderGlobalDiscount');
-            
-            if (customerId) customerId.value = '';
-            if (customerSearch) customerSearch.value = '';
-            if (customerName) customerName.value = '';
-            if (customerPhone) customerPhone.value = '';
-            if (notes) notes.value = '';
-            if (globalDiscount) globalDiscount.value = '0';
-            
-            const container = document.getElementById('orderProductsContainer');
-            if (container) {
-                while (container.children.length > 1) container.removeChild(container.lastChild);
-                const firstRow = container.children[0];
-                const searchInput = firstRow?.querySelector('.orderProductSearch');
-                const selectDropdown = firstRow?.querySelector('.orderProductSelect');
-                const qtyField = firstRow?.querySelector('.orderProductQty');
-                const priceField = firstRow?.querySelector('.orderProductPrice');
-                const discountField = firstRow?.querySelector('.orderProductDiscount');
-                const totalSpan = firstRow?.querySelector('.orderProductTotal');
-                
-                if (searchInput) searchInput.value = '';
-                if (selectDropdown) selectDropdown.value = '';
-                if (qtyField) qtyField.value = '1';
-                if (priceField) priceField.value = '';
-                if (discountField) discountField.value = '0';
-                if (totalSpan) totalSpan.textContent = '0 TZS';
-            }
-            calculateOrderTotal();
-        }
-        
-        async function saveOrder(status) {
-            const items = [];
-            let hasError = false;
-            
-            document.querySelectorAll('.orderProductRow').forEach((row, idx) => {
-                const select = row.querySelector('.orderProductSelect');
-                const qty = row.querySelector('.orderProductQty')?.value;
-                const price = row.querySelector('.orderProductPrice')?.value;
-                const discount = row.querySelector('.orderProductDiscount')?.value || 0;
-                
-                if (!select?.value) { 
-                    showToast(`Tafadhali chagua bidhaa kwenye safu ${idx + 1}`, 'error'); 
-                    hasError = true; 
-                    return; 
-                }
-                if (!qty || parseFloat(qty) <= 0) { 
-                    showToast(`Ingiza idadi sahihi kwenye safu ${idx + 1}`, 'error'); 
-                    hasError = true; 
-                    return; 
-                }
-                
-                items.push({ 
-                    bidhaa_id: select.value, 
-                    idadi: parseFloat(qty), 
-                    bei: parseFloat(price), 
-                    punguzo: parseFloat(discount) 
-                });
-            });
-            
-            if (hasError || items.length === 0) return;
-            
-            const customerName = document.getElementById('orderCustomerName')?.value;
-            if (!customerName) { 
-                showToast('Tafadhali ingiza jina la mteja!', 'error'); 
-                return; 
-            }
-            
-            const formData = {
-                items, 
-                status,
-                customer_id: document.getElementById('orderCustomerId')?.value || null,
-                customer_name: customerName,
-                customer_phone: document.getElementById('orderCustomerPhone')?.value,
-                discount: parseFloat(document.getElementById('orderGlobalDiscount')?.value) || 0,
-                notes: document.getElementById('orderNotes')?.value
-            };
-            
-            try {
-                const response = await fetch('/orders', {
-                    method: 'POST', 
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content 
-                    },
-                    body: JSON.stringify(formData)
-                });
-                const data = await response.json();
-                if (data.success) { 
-                    showToast(data.message, 'success'); 
-                    const modal = document.getElementById('orderModal');
-                    if (modal) modal.style.display = 'none'; 
-                    resetOrderForm(); 
-                    loadOrders(); 
-                } else {
-                    showToast(data.message || 'Kuna tatizo!', 'error');
-                }
-            } catch (error) { 
-                console.error('Save order error:', error);
-                showToast('Kuna tatizo katika kuhifadhi oda!', 'error'); 
-            }
-        }
-        
-        async function loadOrders(page = 1) {
-            const status = document.getElementById('orderStatusFilter')?.value || 'all';
-            const search = document.getElementById('orderSearch')?.value || '';
-            const startDate = document.getElementById('orderStartDate')?.value || '';
-            const endDate = document.getElementById('orderEndDate')?.value || '';
-            
-            // Show loading state
-            const tableBody = document.getElementById('orderTableBody');
-            if (tableBody) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-2xl mb-2 text-gray-300"></i><p>Inapakia...</p></td></tr>';
-            }
-            
-            try {
-                const params = new URLSearchParams({ status, search, start_date: startDate, end_date: endDate, page });
-                const response = await fetch(`/orders?${params.toString()}`);
-                const data = await response.json();
-                
-                if (data.success) { 
-                    // Handle Laravel pagination structure
-                    let orders = [];
-                    let paginationData = null;
-                    
-                    if (data.orders && data.orders.data) {
-                        orders = data.orders.data;
-                        paginationData = {
-                            current_page: data.orders.current_page,
-                            last_page: data.orders.last_page,
-                            total: data.orders.total,
-                            from: data.orders.from,
-                            to: data.orders.to,
-                            per_page: data.orders.per_page
-                        };
-                    } else if (Array.isArray(data.orders)) {
-                        orders = data.orders;
-                    }
-                    
-                    renderOrders(orders); 
-                    updateStats(data.stats); 
-                    renderPagination(paginationData); 
-                } else {
-                    showToast(data.message || 'Kuna tatizo!', 'error');
-                }
-            } catch (error) { 
-                console.error('Load orders error:', error);
-                showToast('Kuna tatizo katika kupakia oda!', 'error'); 
-                if (tableBody) {
-                    tableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-red-500"><i class="fas fa-exclamation-triangle text-2xl mb-2"></i><p>Hitilafu katika kupakia data!</p></td></tr>';
-                }
-            }
-        }
-        
-        function renderOrders(orders) {
-            const tableBody = document.getElementById('orderTableBody');
-            if (!tableBody) return;
-            
-            if (!orders || orders.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-clipboard-list text-2xl mb-2 text-gray-300"></i><p>Hakuna oda zilizopatikana</p></td></tr>';
-                return;
-            }
-            
-            tableBody.innerHTML = '';
-            orders.forEach(order => {
-                const statusConfig = getStatusConfig(order.status);
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition';
-                row.innerHTML = `
-                    <td class="px-4 py-2 font-mono text-xs">${escapeHtml(order.order_number)}</td>
-                    <td class="px-4 py-2">${escapeHtml(order.customer_name || '-')}</td>
-                    <td class="px-4 py-2 hidden sm:table-cell">${escapeHtml(order.customer_phone || '-')}</td>
-                    <td class="px-4 py-2 hidden md:table-cell">${new Date(order.created_at).toLocaleDateString()}</td>
-                    <td class="px-4 py-2 text-right font-semibold">${formatNumber(order.total)} TZS</td>
-                    <td class="px-4 py-2 text-center">
-                        <span class="order-status-badge ${statusConfig.bg} ${statusConfig.text}">
-                            <i class="fas ${statusConfig.icon} mr-1"></i>${statusConfig.label}
-                        </span>
-                    </td>
-                    <td class="px-4 py-2 text-center print:hidden">
-                        <div class="flex justify-center space-x-2">
-                            <button class="orderViewBtn text-blue-600 hover:text-blue-800 transition" data-id="${order.id}" title="Angalia">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            ${order.status === 'saved' ? `
-                            <button class="orderConfirmBtn text-green-600 hover:text-green-800 transition" data-id="${order.id}" title="Thibitisha">
-                                <i class="fas fa-check-circle"></i>
-                            </button>` : ''}
-                            ${order.status === 'confirmed' ? `
-                            <button class="orderSendToCart text-amber-600 hover:text-amber-800 transition" data-id="${order.id}" title="Tuma Kikapu">
-                                <i class="fas fa-shopping-cart"></i>
-                            </button>` : ''}
-                            <button class="orderDeleteBtn text-red-600 hover:text-red-800 transition" data-id="${order.id}" data-name="${escapeHtml(order.customer_name)}" title="Futa">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-            
-            // Attach event listeners
-            document.querySelectorAll('.orderViewBtn').forEach(btn => btn.addEventListener('click', () => viewOrderDetails(btn.dataset.id)));
-            document.querySelectorAll('.orderConfirmBtn').forEach(btn => btn.addEventListener('click', () => updateOrderStatus(btn.dataset.id, 'confirmed')));
-            document.querySelectorAll('.orderSendToCart').forEach(btn => btn.addEventListener('click', () => sendToCart(btn.dataset.id)));
-            document.querySelectorAll('.orderDeleteBtn').forEach(btn => btn.addEventListener('click', () => showDeleteConfirm(btn.dataset.id, btn.dataset.name)));
-        }
-        
-        function getStatusConfig(status) {
-            const configs = {
-                saved: { label: 'Imehifadhiwa', bg: 'bg-amber-100', text: 'text-amber-800', icon: 'fa-save' },
-                confirmed: { label: 'Imethibitishwa', bg: 'bg-green-100', text: 'text-green-800', icon: 'fa-check-circle' },
-                paid: { label: 'Imelipwa', bg: 'bg-blue-100', text: 'text-blue-800', icon: 'fa-money-bill-wave' }
-            };
-            return configs[status] || configs.saved;
-        }
-        
-        function updateStats(stats) {
-            if (stats) {
-                const total = (stats.saved || 0) + (stats.confirmed || 0) + (stats.paid || 0);
-                const statTotal = document.getElementById('orderStatTotal');
-                const statSaved = document.getElementById('orderStatSaved');
-                const statConfirmed = document.getElementById('orderStatConfirmed');
-                const statPending = document.getElementById('orderStatPending');
-                
-                if (statTotal) statTotal.textContent = total;
-                if (statSaved) statSaved.textContent = stats.saved || 0;
-                if (statConfirmed) statConfirmed.textContent = stats.confirmed || 0;
-                if (statPending) statPending.textContent = formatNumber(stats.pending_revenue || 0) + ' TZS';
-            }
-        }
-        
-        function renderPagination(pagination) {
-            const container = document.getElementById('orderPagination');
-            if (!container) return;
-            
-            if (!pagination || !pagination.last_page || pagination.last_page <= 1) {
-                container.innerHTML = '';
-                return;
-            }
-            
-            let html = '<div class="flex justify-center space-x-1 flex-wrap gap-1">';
-            
-            // Previous button
-            if (pagination.current_page > 1) {
-                html += `<button class="orderPageBtn px-3 py-1 border rounded-lg hover:bg-gray-50 text-sm transition" data-page="${pagination.current_page - 1}">
-                            <i class="fas fa-chevron-left"></i> Nyuma
-                        </button>`;
-            }
-            
-            // First page
-            if (pagination.current_page > 3) {
-                html += `<button class="orderPageBtn px-3 py-1 border rounded-lg hover:bg-gray-50 text-sm transition" data-page="1">1</button>`;
-                if (pagination.current_page > 4) {
-                    html += `<span class="px-2 py-1 text-gray-500">...</span>`;
-                }
-            }
-            
-            // Page numbers around current page
-            for (let i = Math.max(1, pagination.current_page - 2); i <= Math.min(pagination.last_page, pagination.current_page + 2); i++) {
-                if (i === pagination.current_page) {
-                    html += `<span class="px-3 py-1 rounded-lg bg-amber-600 text-white text-sm font-semibold">${i}</span>`;
-                } else {
-                    html += `<button class="orderPageBtn px-3 py-1 border rounded-lg hover:bg-gray-50 text-sm transition" data-page="${i}">${i}</button>`;
-                }
-            }
-            
-            // Last page
-            if (pagination.current_page < pagination.last_page - 2) {
-                if (pagination.current_page < pagination.last_page - 3) {
-                    html += `<span class="px-2 py-1 text-gray-500">...</span>`;
-                }
-                html += `<button class="orderPageBtn px-3 py-1 border rounded-lg hover:bg-gray-50 text-sm transition" data-page="${pagination.last_page}">${pagination.last_page}</button>`;
-            }
-            
-            // Next button
-            if (pagination.current_page < pagination.last_page) {
-                html += `<button class="orderPageBtn px-3 py-1 border rounded-lg hover:bg-gray-50 text-sm transition" data-page="${pagination.current_page + 1}">
-                            Mbele <i class="fas fa-chevron-right"></i>
-                        </button>`;
-            }
-            
-            // Showing entries info
-            html += `</div>
-            <div class="text-center text-xs text-gray-500 mt-3">
-                Inaonyesha ${pagination.from || 0} - ${pagination.to || 0} kati ya ${pagination.total || 0} oda
-            </div>`;
-            
-            container.innerHTML = html;
-            
-            // Attach event listeners
-            document.querySelectorAll('.orderPageBtn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = this.dataset.page;
-                    if (page) loadOrders(parseInt(page));
-                });
-            });
-        }
-        
-        async function viewOrderDetails(id) {
-            try {
-                const response = await fetch(`/orders/${id}`);
-                const data = await response.json();
-                if (data.success) {
-                    const order = data.order;
-                    const statusConfig = getStatusConfig(order.status);
-                    let itemsHtml = '';
-                    order.items.forEach((item, idx) => {
-                        itemsHtml += `
-                            <tr class="border-b">
-                                <td class="py-1 px-2">${idx + 1}</td>
-                                <td class="py-1 px-2">${escapeHtml(item.jina)}</td>
-                                <td class="py-1 px-2 text-right">${formatNumber(item.idadi)}</td>
-                                <td class="py-1 px-2 text-right">${formatNumber(item.bei)}</td>
-                                <td class="py-1 px-2 text-right">${formatNumber(item.punguzo || 0)}</td>
-                                <td class="py-1 px-2 text-right font-semibold">${formatNumber(item.total)} TZS</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    const detailsContent = document.getElementById('orderDetailsContent');
-                    if (detailsContent) {
-                        detailsContent.innerHTML = `
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <h3 class="text-xs font-semibold text-gray-700 mb-2">Taarifa za Oda</h3>
-                                    <div class="space-y-1 text-sm">
-                                        <p><strong>Namba:</strong> ${escapeHtml(order.order_number)}</p>
-                                        <p><strong>Tarehe:</strong> ${new Date(order.created_at).toLocaleString()}</p>
-                                        <p><strong>Hali:</strong> <span class="order-status-badge ${statusConfig.bg} ${statusConfig.text}"><i class="fas ${statusConfig.icon} mr-1"></i>${statusConfig.label}</span></p>
-                                        ${order.notes ? `<p><strong>Maelezo:</strong> ${escapeHtml(order.notes)}</p>` : ''}
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 p-3 rounded-lg">
-                                    <h3 class="text-xs font-semibold text-gray-700 mb-2">Taarifa za Mteja</h3>
-                                    <div class="space-y-1 text-sm">
-                                        <p><strong>Jina:</strong> ${escapeHtml(order.customer_name || '-')}</p>
-                                        ${order.customer_phone ? `<p><strong>Simu:</strong> ${escapeHtml(order.customer_phone)}</p>` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <h3 class="text-xs font-semibold text-gray-700 mb-2">Bidhaa</h3>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm border">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="py-1 px-2">#</th>
-                                            <th>Bidhaa</th>
-                                            <th class="text-right">Idadi</th>
-                                            <th class="text-right">Bei</th>
-                                            <th class="text-right">Punguzo</th>
-                                            <th class="text-right">Jumla</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${itemsHtml}</tbody>
-                                </table>
-                            </div>
-                            <div class="text-right mt-3 pt-2 border-t">
-                                <strong>Jumla Ndogo:</strong> ${formatNumber(order.subtotal)} TZS<br>
-                                ${order.discount > 0 ? `<strong>Punguzo:</strong> -${formatNumber(order.discount)} TZS<br>` : ''}
-                                <strong class="text-lg">JUMLA: ${formatNumber(order.total)} TZS</strong>
-                            </div>
-                        `;
-                    }
-                    
-                    const detailsModal = document.getElementById('orderDetailsModal');
-                    if (detailsModal) detailsModal.style.display = 'flex';
-                    currentOrderId = order.id;
-                }
-            } catch (error) { 
-                console.error('View order details error:', error);
-                showToast('Kuna tatizo katika kuona maelezo!', 'error'); 
-            }
-        }
-        
-        async function updateOrderStatus(id, newStatus) {
-            try {
-                const response = await fetch(`/orders/${id}/status`, {
-                    method: 'PUT', 
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content 
-                    },
-                    body: JSON.stringify({ status: newStatus })
-                });
-                const data = await response.json();
-                if (data.success) { 
-                    showToast(data.message, 'success'); 
-                    loadOrders(); 
-                } else {
-                    showToast(data.message || 'Kuna tatizo!', 'error');
-                }
-            } catch (error) { 
-                console.error('Update order status error:', error);
-                showToast('Kuna tatizo katika kubadilisha hali!', 'error'); 
-            }
-        }
-        
-        function showDeleteConfirm(id, name) {
-            const deleteMessage = document.getElementById('orderDeleteMessage');
-            if (deleteMessage) deleteMessage.textContent = `Una uhakika unataka kufuta oda ya "${escapeHtml(name)}"?`;
-            const deleteModal = document.getElementById('orderDeleteModal');
-            if (deleteModal) deleteModal.style.display = 'flex';
-            deleteOrderId = id;
-        }
-        
-        async function deleteOrder(id) {
-            try {
-                const response = await fetch(`/orders/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content }
-                });
-                const data = await response.json();
-                if (data.success) { 
-                    showToast(data.message, 'success'); 
-                    loadOrders(); 
-                } else {
-                    showToast(data.message || 'Kuna tatizo!', 'error');
-                }
-            } catch (error) { 
-                console.error('Delete order error:', error);
-                showToast('Kuna tatizo katika kufuta oda!', 'error'); 
-            }
-        }
-        
-        async function sendToCart(id) {
-            try {
-                showToast('Inatuma bidhaa kwenye Kikapu...', 'info');
-                const response = await fetch(`/orders/${id}/send-to-kikapu`, {
-                    method: 'POST', 
-                    headers: { 
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content, 
-                        'Content-Type': 'application/json' 
-                    }
-                });
-                const data = await response.json();
-                if (data.success && window.mauzoManager) {
-                    data.items.forEach(item => {
-                        window.mauzoManager.cart.push({
-                            jina: item.jina, 
-                            bei: item.bei, 
-                            idadi: item.idadi, 
-                            punguzo: item.punguzo,
-                            punguzo_aina: 'bidhaa', 
-                            actual_discount: (item.punguzo || 0) * item.idadi, 
-                            jumla: item.jumla,
-                            bidhaa_id: item.bidhaa_id, 
-                            timestamp: new Date().toISOString(),
-                            company_id: window.mauzoManager.companyId
-                        });
-                    });
-                    window.mauzoManager.saveCart();
-                    window.mauzoManager.updateCartCount();
-                    window.mauzoManager.updateCartDisplay();
-                    showToast(`${data.items.length} bidhaa zimeongezwa kwenye Kikapu!`, 'success');
-                    setTimeout(() => document.getElementById('kikapu-tab')?.click(), 1500);
-                    loadOrders();
-                } else {
-                    showToast(data.message || 'Kuna tatizo katika kutuma kwenye Kikapu!', 'error');
-                }
-            } catch (error) { 
-                console.error('Send to cart error:', error);
-                showToast('Kuna tatizo katika kutuma kwenye Kikapu!', 'error'); 
-            }
-        }
-        
-        async function shareWhatsApp(orderId) {
-            try {
-                const response = await fetch(`/orders/${orderId}/share-whatsapp`);
-                const data = await response.json();
-                if (data.success && data.whatsapp_url) {
-                    window.open(data.whatsapp_url, '_blank');
-                } else {
-                    showToast('Kuna tatizo katika kushiriki!', 'error');
-                }
-            } catch (error) { 
-                console.error('Share WhatsApp error:', error);
-                showToast('Kuna tatizo katika kushiriki!', 'error'); 
-            }
-        }
-        
-        async function copyOrder(orderId) {
-            try {
-                const response = await fetch(`/orders/${orderId}`);
-                const data = await response.json();
-                if (data.success) {
-                    const order = data.order;
-                    let text = `ODA #${order.order_number}\nMteja: ${order.customer_name}\nSimu: ${order.customer_phone || '-'}\nJumla: ${formatNumber(order.total)} TZS\n\nBidhaa:\n`;
-                    order.items.forEach(item => { 
-                        text += `${item.jina}: ${item.idadi} x ${formatNumber(item.bei)} = ${formatNumber(item.total)} TZS\n`; 
-                    });
-                    await navigator.clipboard.writeText(text);
-                    showToast('Maelezo ya oda yamenakiliwa!', 'success');
-                }
-            } catch (error) { 
-                console.error('Copy order error:', error);
-                showToast('Kuna tatizo katika kunakili!', 'error'); 
-            }
-        }
-        
-        // Event Listeners
-        const orderTab = document.getElementById('weka-order-tab');
-        if (orderTab) orderTab.addEventListener('click', () => loadOrders());
-        
-        const createBtn = document.getElementById('orderCreateBtn');
-        if (createBtn) {
-            createBtn.addEventListener('click', () => { 
-                resetOrderForm(); 
-                const modal = document.getElementById('orderModal');
-                if (modal) modal.style.display = 'flex'; 
-            });
-        }
-        
-        const closeModalBtn = document.getElementById('closeOrderModal');
-        if (closeModalBtn) closeModalBtn.addEventListener('click', () => {
-            const modal = document.getElementById('orderModal');
-            if (modal) modal.style.display = 'none';
+        existingItem.qty += 1;
+        existingItem.total = existingItem.qty * existingItem.price;
+    } else {
+        orderItems.push({
+            id: id,
+            name: name,
+            aina: aina,
+            kipimo: kipimo,
+            price: price,
+            qty: 1,
+            total: price
         });
-        
-        const cancelBtn = document.getElementById('orderCancelBtn');
-        if (cancelBtn) cancelBtn.addEventListener('click', () => {
-            const modal = document.getElementById('orderModal');
-            if (modal) modal.style.display = 'none';
-        });
-        
-        const addProductBtn = document.getElementById('orderAddProduct');
-        if (addProductBtn) addProductBtn.addEventListener('click', addProductRow);
-        
-        const saveDraftBtn = document.getElementById('orderSaveDraft');
-        if (saveDraftBtn) saveDraftBtn.addEventListener('click', () => saveOrder('saved'));
-        
-        const confirmSubmitBtn = document.getElementById('orderConfirmSubmit');
-        if (confirmSubmitBtn) {
-            confirmSubmitBtn.addEventListener('click', (e) => { 
-                e.preventDefault(); 
-                saveOrder('confirmed'); 
-            });
-        }
-        
-        const globalDiscount = document.getElementById('orderGlobalDiscount');
-        if (globalDiscount) globalDiscount.addEventListener('input', calculateOrderTotal);
-        
-        const statusFilter = document.getElementById('orderStatusFilter');
-        if (statusFilter) statusFilter.addEventListener('change', () => loadOrders());
-        
-        const searchInput = document.getElementById('orderSearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', () => setTimeout(() => loadOrders(), 500));
-        }
-        
-        const resetFilters = document.getElementById('orderResetFilters');
-        if (resetFilters) {
-            resetFilters.addEventListener('click', () => {
-                const search = document.getElementById('orderSearch');
-                const status = document.getElementById('orderStatusFilter');
-                const startDate = document.getElementById('orderStartDate');
-                const endDate = document.getElementById('orderEndDate');
-                
-                if (search) search.value = '';
-                if (status) status.value = 'all';
-                if (startDate) startDate.value = '';
-                if (endDate) endDate.value = '';
-                loadOrders();
-            });
-        }
-        
-        const closeDetailsModal = document.getElementById('closeOrderDetailsModal');
-        if (closeDetailsModal) closeDetailsModal.addEventListener('click', () => {
-            const modal = document.getElementById('orderDetailsModal');
-            if (modal) modal.style.display = 'none';
-        });
-        
-        const orderCloseDetails = document.getElementById('orderCloseDetails');
-        if (orderCloseDetails) orderCloseDetails.addEventListener('click', () => {
-            const modal = document.getElementById('orderDetailsModal');
-            if (modal) modal.style.display = 'none';
-        });
-        
-        const closeDeleteModal = document.getElementById('closeOrderDeleteModal');
-        if (closeDeleteModal) closeDeleteModal.addEventListener('click', () => {
-            const modal = document.getElementById('orderDeleteModal');
-            if (modal) modal.style.display = 'none';
-        });
-        
-        const cancelDelete = document.getElementById('orderCancelDelete');
-        if (cancelDelete) cancelDelete.addEventListener('click', () => {
-            const modal = document.getElementById('orderDeleteModal');
-            if (modal) modal.style.display = 'none';
-        });
-        
-        const confirmDelete = document.getElementById('orderConfirmDelete');
-        if (confirmDelete) {
-            confirmDelete.addEventListener('click', () => { 
-                const modal = document.getElementById('orderDeleteModal');
-                if (modal) modal.style.display = 'none'; 
-                if (deleteOrderId) deleteOrder(deleteOrderId); 
-            });
-        }
-        
-        const printBtn = document.getElementById('orderPrint');
-        if (printBtn) {
-            printBtn.addEventListener('click', () => { 
-                if (currentOrderId) window.open(`/orders/${currentOrderId}/generate-invoice`, '_blank'); 
-            });
-        }
-        
-        const whatsappBtn = document.getElementById('orderWhatsApp');
-        if (whatsappBtn) {
-            whatsappBtn.addEventListener('click', () => { 
-                if (currentOrderId) shareWhatsApp(currentOrderId); 
-            });
-        }
-        
-        const copyBtn = document.getElementById('orderCopy');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', () => { 
-                if (currentOrderId) copyOrder(currentOrderId); 
-            });
-        }
-        
-        // Statistics cards
-        document.querySelectorAll('.order-stat-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const status = card.dataset.status;
-                const statusFilter = document.getElementById('orderStatusFilter');
-                if (status && status !== 'all' && statusFilter) {
-                    statusFilter.value = status;
-                }
-                loadOrders();
-            });
-        });
-        
-        // Initialize
-        initCustomerSearch();
-        document.querySelectorAll('.orderProductRow').forEach(row => initProductSearch(row));
-        loadOrders();
     }
-})();
+    
+    updateOrderDisplay();
+    showNotification(`Added ${name} to order`, 'success');
+}
+
+// Update order display
+function updateOrderDisplay() {
+    const container = document.getElementById('orderItems');
+    const countDisplay = document.getElementById('orderItemCount');
+    
+    if (orderItems.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-400 py-4">
+                <i class="fas fa-shopping-cart text-xl mb-1"></i>
+                <p class="text-xs">No items in order</p>
+            </div>
+        `;
+        countDisplay.textContent = '0';
+        document.getElementById('orderSubtotal').textContent = '0 TZS';
+        document.getElementById('orderTotal').textContent = '0 TZS';
+        return;
+    }
+    
+    let html = '';
+    orderSubtotal = 0;
+    
+    orderItems.forEach((item, index) => {
+        orderSubtotal += item.total;
+        html += `
+            <div class="order-item">
+                <div class="item-info">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-details">
+                        ${item.aina ? item.aina : ''} ${item.kipimo ? '• ' + item.kipimo : ''}
+                        <span class="ml-1">${item.qty} × ${formatCurrency(item.price)}</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                    <div class="item-qty">
+                        <button class="qty-btn" onclick="updateQty(${index}, -1)">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <span class="text-xs font-medium w-4 text-center">${item.qty}</span>
+                        <button class="qty-btn" onclick="updateQty(${index}, 1)">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="item-total">${formatCurrency(item.total)}</div>
+                    <button class="remove-btn" onclick="removeItem(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    countDisplay.textContent = orderItems.length;
+    document.getElementById('orderSubtotal').textContent = formatCurrency(orderSubtotal);
+    calculateTotal();
+}
+
+// Update quantity
+function updateQty(index, change) {
+    const item = orderItems[index];
+    const newQty = item.qty + change;
+    
+    if (newQty <= 0) {
+        orderItems.splice(index, 1);
+    } else {
+        const card = document.querySelector(`.product-card[data-id="${item.id}"]`);
+        const stock = card ? parseInt(card.dataset.stock) : 999;
+        if (newQty > stock) {
+            showNotification('Not enough stock available!', 'error');
+            return;
+        }
+        item.qty = newQty;
+        item.total = item.qty * item.price;
+    }
+    
+    updateOrderDisplay();
+}
+
+// Remove item
+function removeItem(index) {
+    orderItems.splice(index, 1);
+    updateOrderDisplay();
+}
+
+// Calculate total with discount
+function calculateTotal() {
+    const discountPercent = parseFloat(document.getElementById('orderDiscount').value) || 0;
+    const discountAmount = (orderSubtotal * discountPercent) / 100;
+    orderTotal = orderSubtotal - discountAmount;
+    
+    document.getElementById('orderTotal').textContent = formatCurrency(orderTotal);
+}
+
+// Clear order
+function clearOrder() {
+    if (orderItems.length === 0) return;
+    if (confirm('Clear all items from current order?')) {
+        orderItems = [];
+        updateOrderDisplay();
+        showNotification('Order cleared', 'info');
+    }
+}
+
+// Save order
+function saveOrder() {
+    if (orderItems.length === 0) {
+        showNotification('No items to save', 'error');
+        return;
+    }
+    
+    const orderData = {
+        items: orderItems.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+            total: item.total
+        })),
+        subtotal: orderSubtotal,
+        discount: parseFloat(document.getElementById('orderDiscount').value) || 0,
+        total: orderTotal,
+        status: 'saved',
+        customer_name: 'Walk-in Customer'
+    };
+    
+    fetch('/orders', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            loadPlacedOrders();
+            updateOrderStats();
+            orderItems = [];
+            updateOrderDisplay();
+            document.getElementById('placedOrdersSectionTop').style.display = 'block';
+        } else {
+            showNotification(data.message || 'Failed to save order', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to save order', 'error');
+    });
+}
+
+// Process payment
+function processPayment() {
+    if (orderItems.length === 0) {
+        showNotification('No items to process', 'error');
+        return;
+    }
+    
+    const orderData = {
+        items: orderItems.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            qty: item.qty,
+            total: item.total
+        })),
+        subtotal: orderSubtotal,
+        discount: parseFloat(document.getElementById('orderDiscount').value) || 0,
+        total: orderTotal,
+        status: 'paid',
+        customer_name: 'Walk-in Customer'
+    };
+    
+    fetch('/orders', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Order paid and generated successfully!', 'success');
+            loadPlacedOrders();
+            updateOrderStats();
+            orderItems = [];
+            updateOrderDisplay();
+            document.getElementById('placedOrdersSectionTop').style.display = 'block';
+        } else {
+            showNotification(data.message || 'Failed to process payment', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to process payment', 'error');
+    });
+}
+
+// Load placed orders
+function loadPlacedOrders() {
+    fetch('/orders/placed', {
+        method: 'GET',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            placedOrders = data.data;
+            displayPlacedOrders();
+            updateOrderStats();
+        }
+    })
+    .catch(error => console.error('Error loading orders:', error));
+}
+
+// Display placed orders at top
+function displayPlacedOrders() {
+    const list = document.getElementById('placedOrdersListTop');
+    const countBadge = document.getElementById('placedOrdersCountTop');
+    
+    countBadge.textContent = placedOrders.length;
+    
+    if (placedOrders.length === 0) {
+        list.innerHTML = `<div class="text-center text-gray-400 py-3"><p class="text-xs">No placed orders yet</p></div>`;
+        return;
+    }
+    
+    let html = '';
+    placedOrders.forEach(order => {
+        let statusClass = 'status-saved';
+        let statusLabel = 'Saved';
+        
+        if (order.status === 'paid') {
+            statusClass = 'status-paid';
+            statusLabel = 'Paid';
+        } else if (order.status === 'confirmed') {
+            statusClass = 'status-confirmed';
+            statusLabel = 'Confirmed';
+        } else if (order.status === 'cancelled') {
+            statusClass = 'status-cancelled';
+            statusLabel = 'Cancelled';
+        }
+        
+        html += `
+            <div class="placed-order-item-top">
+                <div class="order-info" onclick="previewOrder('${order.id}')">
+                    <div class="order-id">${order.order_number}</div>
+                    <div class="order-date">${new Date(order.created_at).toLocaleString()} • ${order.items ? order.items.length : 0} items</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="order-status ${statusClass}">${statusLabel}</span>
+                    <span class="font-medium text-[#f59e0b] text-xs">${formatCurrency(order.total)}</span>
+                    <button class="text-green-500 hover:text-green-700 transition text-xs" onclick="quickWhatsAppOrder('${order.id}')" title="Share via WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    list.innerHTML = html;
+}
+
+// Refresh orders
+function refreshOrders() {
+    loadPlacedOrders();
+    showNotification('Orders refreshed', 'info');
+}
+
+// Preview order
+function previewOrder(orderId) {
+    const order = placedOrders.find(o => o.id == orderId || o.order_number === orderId);
+    if (!order) {
+        showNotification('Order not found', 'error');
+        return;
+    }
+    
+    currentPreviewOrder = order;
+    
+    // Populate preview
+    document.getElementById('previewOrderNumber').textContent = `Order #${order.order_number}`;
+    document.getElementById('previewOrderDate').textContent = `Date: ${new Date(order.created_at).toLocaleString()}`;
+    document.getElementById('previewCustomerName').textContent = order.customer_name || 'Walk-in Customer';
+    document.getElementById('previewCustomerPhone').textContent = order.customer_phone || '-';
+    document.getElementById('previewItemCount').textContent = order.items ? order.items.length : 0;
+    
+    const statusEl = document.getElementById('previewOrderStatus');
+    let statusLabel = 'Saved';
+    let statusClass = 'status-saved';
+    
+    if (order.status === 'paid') {
+        statusLabel = 'Paid';
+        statusClass = 'status-paid';
+    } else if (order.status === 'confirmed') {
+        statusLabel = 'Confirmed';
+        statusClass = 'status-confirmed';
+    } else if (order.status === 'cancelled') {
+        statusLabel = 'Cancelled';
+        statusClass = 'status-cancelled';
+    }
+    
+    statusEl.textContent = statusLabel;
+    statusEl.className = `order-status ${statusClass}`;
+    
+    // Populate receipt
+    generateOrderReceipt(order);
+    
+    // Show actions based on status
+    const actionsContainer = document.getElementById('previewActions');
+    if (order.status === 'saved' || order.status === 'confirmed') {
+        actionsContainer.innerHTML = `
+            <button class="btn-success" onclick="previewPayOrder()">
+                <i class="fas fa-money-bill-wave"></i> Pay
+            </button>
+            <button class="btn-success" style="background:#25D366;" onclick="previewWhatsAppOrder()">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+            </button>
+            <button class="btn-danger" onclick="previewDeleteOrder()">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            <button class="btn-primary" onclick="previewDownloadOrder()">
+                <i class="fas fa-download"></i> Download
+            </button>
+            <button class="btn-secondary" onclick="closeOrderPreview()">
+                <i class="fas fa-times"></i> Close
+            </button>
+        `;
+    } else {
+        actionsContainer.innerHTML = `
+            <button class="btn-success" style="background:#25D366;" onclick="previewWhatsAppOrder()">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+            </button>
+            <button class="btn-primary" onclick="previewDownloadOrder()">
+                <i class="fas fa-download"></i> Download
+            </button>
+            <button class="btn-danger" onclick="previewDeleteOrder()">
+                <i class="fas fa-trash"></i> Delete
+            </button>
+            <button class="btn-secondary" onclick="closeOrderPreview()">
+                <i class="fas fa-times"></i> Close
+            </button>
+        `;
+    }
+    
+    document.getElementById('orderPreviewModal').classList.add('active');
+}
+
+// Share order via WhatsApp from preview
+function previewWhatsAppOrder() {
+    if (!currentPreviewOrder) return;
+    
+    const order = currentPreviewOrder;
+    const items = order.items || [];
+    let message = `🏪 *${companyName}*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*ORDER DETAILS*\n`;
+    message += `Order: ${order.order_number}\n`;
+    message += `Date: ${new Date(order.created_at).toLocaleString()}\n`;
+    message += `Customer: ${order.customer_name || 'Walk-in Customer'}\n`;
+    if (order.customer_phone) {
+        message += `Phone: ${order.customer_phone}\n`;
+    }
+    message += `Status: ${order.status === 'paid' ? '✅ Paid' : order.status === 'cancelled' ? '❌ Cancelled' : '⏳ Pending'}\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*ITEMS*\n`;
+    
+    items.forEach(item => {
+        const total = item.total || (item.price * item.qty);
+        message += `• ${item.jina || item.name}`;
+        if (item.aina) message += ` (${item.aina})`;
+        if (item.kipimo) message += ` - ${item.kipimo}`;
+        message += `\n  ${item.qty || item.idadi} × ${formatCurrency(item.price)} = ${formatCurrency(total)}\n`;
+    });
+    
+    const discount = order.discount || 0;
+    const total = order.total || orderItems.reduce((sum, item) => sum + (item.total || (item.price * item.qty)), 0);
+    
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    if (discount > 0) {
+        message += `Subtotal: ${formatCurrency(total + discount)}\n`;
+        message += `Discount: -${formatCurrency(discount)}\n`;
+    }
+    message += `*TOTAL: ${formatCurrency(total)}*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `Asante kwa kununua! 🛍️`;
+    
+    // Encode message for URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Get customer phone from order
+    let phoneNumber = order.customer_phone || '';
+    if (phoneNumber) {
+        // Clean phone number
+        phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+        if (phoneNumber.startsWith('0')) {
+            phoneNumber = '255' + phoneNumber.substring(1);
+        } else if (phoneNumber.startsWith('7')) {
+            phoneNumber = '255' + phoneNumber;
+        } else if (!phoneNumber.startsWith('255')) {
+            phoneNumber = '255' + phoneNumber;
+        }
+    }
+    
+    // Open WhatsApp
+    let whatsappUrl;
+    if (phoneNumber && phoneNumber.length === 12) {
+        whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    } else {
+        whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    }
+    
+    window.open(whatsappUrl, '_blank');
+}
+
+// Quick WhatsApp share from orders list
+function quickWhatsAppOrder(orderId) {
+    const order = placedOrders.find(o => o.id == orderId || o.order_number === orderId);
+    if (!order) {
+        showNotification('Order not found', 'error');
+        return;
+    }
+    
+    const items = order.items || [];
+    let message = `🏪 *${companyName}*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*ORDER DETAILS*\n`;
+    message += `Order: ${order.order_number}\n`;
+    message += `Date: ${new Date(order.created_at).toLocaleString()}\n`;
+    message += `Customer: ${order.customer_name || 'Walk-in Customer'}\n`;
+    if (order.customer_phone) {
+        message += `Phone: ${order.customer_phone}\n`;
+    }
+    message += `Status: ${order.status === 'paid' ? '✅ Paid' : order.status === 'cancelled' ? '❌ Cancelled' : '⏳ Pending'}\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `*ITEMS*\n`;
+    
+    items.forEach(item => {
+        const total = item.total || (item.price * item.qty);
+        message += `• ${item.jina || item.name}`;
+        if (item.aina) message += ` (${item.aina})`;
+        if (item.kipimo) message += ` - ${item.kipimo}`;
+        message += `\n  ${item.qty || item.idadi} × ${formatCurrency(item.price)} = ${formatCurrency(total)}\n`;
+    });
+    
+    const discount = order.discount || 0;
+    const total = order.total || orderItems.reduce((sum, item) => sum + (item.total || (item.price * item.qty)), 0);
+    
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    if (discount > 0) {
+        message += `Subtotal: ${formatCurrency(total + discount)}\n`;
+        message += `Discount: -${formatCurrency(discount)}\n`;
+    }
+    message += `*TOTAL: ${formatCurrency(total)}*\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `Asante kwa kununua! 🛍️`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    
+    let phoneNumber = order.customer_phone || '';
+    if (phoneNumber) {
+        phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+        if (phoneNumber.startsWith('0')) {
+            phoneNumber = '255' + phoneNumber.substring(1);
+        } else if (phoneNumber.startsWith('7')) {
+            phoneNumber = '255' + phoneNumber;
+        } else if (!phoneNumber.startsWith('255')) {
+            phoneNumber = '255' + phoneNumber;
+        }
+    }
+    
+    let whatsappUrl;
+    if (phoneNumber && phoneNumber.length === 12) {
+        whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    } else {
+        whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    }
+    
+    window.open(whatsappUrl, '_blank');
+}
+
+// Generate order receipt
+function generateOrderReceipt(order) {
+    const receiptContent = document.getElementById('orderReceiptContent');
+    const items = order.items || [];
+    let subtotal = 0;
+    
+    // Update header
+    document.getElementById('receiptCompanyName').textContent = companyName;
+    
+    // Items list
+    let itemsHtml = '';
+    items.forEach(item => {
+        const total = item.total || (item.price * item.qty);
+        subtotal += total;
+        itemsHtml += `
+            <div class="receipt-item">
+                <span>${item.jina || item.name}</span>
+                <span>${formatCurrency(total)}</span>
+            </div>
+            <div style="font-size:9px;color:#6b7280;padding-left:4px;">
+                ${item.aina ? item.aina + ' ' : ''}${item.kipimo ? item.kipimo + ' ' : ''}× ${item.qty || item.idadi}
+            </div>
+        `;
+    });
+    document.getElementById('receiptItemsList').innerHTML = itemsHtml;
+    
+    // Totals
+    const discount = order.discount || 0;
+    const total = order.total || subtotal;
+    let totalsHtml = '';
+    if (discount > 0) {
+        totalsHtml += `
+            <div class="receipt-item">
+                <span>Subtotal</span>
+                <span>${formatCurrency(subtotal)}</span>
+            </div>
+            <div class="receipt-item">
+                <span>Discount</span>
+                <span>-${formatCurrency(discount)}</span>
+            </div>
+        `;
+    }
+    totalsHtml += `
+        <div class="receipt-total">
+            <span>TOTAL</span>
+            <span>${formatCurrency(total)}</span>
+        </div>
+    `;
+    document.getElementById('receiptTotals').innerHTML = totalsHtml;
+}
+
+// Pay order from preview
+function previewPayOrder() {
+    if (!currentPreviewOrder) return;
+    
+    fetch(`/orders/${currentPreviewOrder.id}/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ status: 'paid' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Order paid successfully!', 'success');
+            closeOrderPreview();
+            loadPlacedOrders();
+            updateOrderStats();
+        } else {
+            showNotification(data.message || 'Failed to pay order', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to pay order', 'error');
+    });
+}
+
+// Delete order from preview
+function previewDeleteOrder() {
+    if (!currentPreviewOrder) return;
+    if (!confirm('Delete this order?')) return;
+    
+    fetch(`/orders/${currentPreviewOrder.id}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Order deleted successfully!', 'success');
+            closeOrderPreview();
+            loadPlacedOrders();
+            updateOrderStats();
+        } else {
+            showNotification(data.message || 'Failed to delete order', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to delete order', 'error');
+    });
+}
+
+// Download order
+function previewDownloadOrder() {
+    if (!currentPreviewOrder) return;
+    
+    const content = document.getElementById('orderReceiptContent').innerHTML;
+    const fullContent = `
+        <div style="font-family:'Courier New',monospace;padding:16px;max-width:400px;margin:0 auto;background:white;">
+            ${content}
+        </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Order #${currentPreviewOrder.order_number}</title>
+            <style>
+                body { font-family: 'Courier New', monospace; padding: 16px; }
+                .company-name { font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 2px; }
+                .receipt-line { border-top: 1px dashed #d1d5db; margin: 3px 0; }
+                .receipt-item { display: flex; justify-content: space-between; padding: 1px 0; font-size: 11px; }
+                .receipt-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; padding-top: 3px; border-top: 1px dashed #d1d5db; }
+                .receipt-footer { text-align: center; font-size: 10px; color: #6b7280; margin-top: 4px; border-top: 1px dashed #d1d5db; padding-top: 4px; }
+            </style>
+        </head>
+        <body>
+            ${fullContent}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Close order preview
+function closeOrderPreview() {
+    document.getElementById('orderPreviewModal').classList.remove('active');
+    currentPreviewOrder = null;
+}
+
+// Update order statistics
+function updateOrderStats() {
+    const total = placedOrders.length;
+    const saved = placedOrders.filter(o => o.status === 'saved').length;
+    const confirmed = placedOrders.filter(o => o.status === 'confirmed').length;
+    const paid = placedOrders.filter(o => o.status === 'paid').length;
+    const cancelled = placedOrders.filter(o => o.status === 'cancelled').length;
+    
+    document.getElementById('totalOrders').textContent = total;
+    document.getElementById('savedOrders').textContent = saved;
+    document.getElementById('confirmedOrders').textContent = confirmed;
+    document.getElementById('paidOrders').textContent = paid;
+    document.getElementById('cancelledOrders').textContent = cancelled;
+}
+
+// Format currency
+function formatCurrency(amount) {
+    return amount.toLocaleString('en-TZ', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' TZS';
+}
+
+// Show notification
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white ${bgColor} text-sm`;
+    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>${message}`;
+    document.body.appendChild(notification);
+    setTimeout(() => { notification.style.opacity = '0'; setTimeout(() => notification.remove(), 300); }, 3000);
+}
 </script>

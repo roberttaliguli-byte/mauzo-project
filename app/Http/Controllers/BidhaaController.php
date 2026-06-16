@@ -48,44 +48,110 @@ class BidhaaController extends Controller
         return Auth::guard('web')->check();
     }
 
-private function canViewPurchasePrice()
-{
-    if (Auth::guard('web')->check()) {
-        return true;
+    private function canViewPurchasePrice()
+    {
+        if (Auth::guard('web')->check()) {
+            return true;
+        }
+
+        $employee = Auth::guard('mfanyakazi')->user();
+
+        if (!$employee) {
+            return false;
+        }
+
+        $uwezo = strtolower(trim($employee->uwezo ?? ''));
+        
+        return in_array($uwezo, ['mkubwa']);
     }
 
-    $employee = Auth::guard('mfanyakazi')->user();
+    private function canEditDelete()
+    {
+        if (Auth::guard('web')->check()) {
+            return true;
+        }
 
-    if (!$employee) {
-        return false;
+        $employee = Auth::guard('mfanyakazi')->user();
+
+        if (!$employee) {
+            return false;
+        }
+
+        $uwezo = strtolower(trim($employee->uwezo ?? ''));
+        
+        return in_array($uwezo, ['mkubwa']);
     }
 
-    $uwezo = strtolower(trim($employee->uwezo ?? ''));
-    
-    // mkubwa can view prices AND edit/delete
-    // mdogo can only view, not edit/delete
-    return in_array($uwezo, ['mkubwa']);
-}
-
-// Add a new method for edit/delete permission
-private function canEditDelete()
-{
-    if (Auth::guard('web')->check()) {
-        return true;
+    // Compress and convert image to binary for database storage
+    private function compressAndConvertImageToBinary($image)
+    {
+        try {
+            // Validate file size (1KB to 5500KB)
+            $imageSize = $image->getSize();
+            $minSize = 1 * 1024; // 1KB
+            $maxSize = 5500 * 1024; // 5500KB
+            
+            if ($imageSize < $minSize) {
+                throw new \Exception('Picha ni ndogo sana. Ukubwa lazima uwe angalau 1KB');
+            }
+            
+            if ($imageSize > $maxSize) {
+                throw new \Exception('Picha ni kubwa sana. Ukubwa unaruhusiwa 1KB - 5500KB');
+            }
+            
+            // Get image content
+            $imageContent = file_get_contents($image->getPathname());
+            
+            // Compress if size > 1MB
+            if ($imageSize > 1024 * 1024) {
+                $imageResource = null;
+                $compressedContent = null;
+                
+                switch ($image->getMimeType()) {
+                    case 'image/jpeg':
+                    case 'image/jpg':
+                        $imageResource = imagecreatefromjpeg($image->getPathname());
+                        if ($imageResource) {
+                            ob_start();
+                            imagejpeg($imageResource, null, 75);
+                            $compressedContent = ob_get_clean();
+                            imagedestroy($imageResource);
+                        }
+                        break;
+                    case 'image/png':
+                        $imageResource = imagecreatefrompng($image->getPathname());
+                        if ($imageResource) {
+                            imagesavealpha($imageResource, true);
+                            ob_start();
+                            imagepng($imageResource, null, 8);
+                            $compressedContent = ob_get_clean();
+                            imagedestroy($imageResource);
+                        }
+                        break;
+                    case 'image/webp':
+                        $imageResource = imagecreatefromwebp($image->getPathname());
+                        if ($imageResource) {
+                            ob_start();
+                            imagewebp($imageResource, null, 75);
+                            $compressedContent = ob_get_clean();
+                            imagedestroy($imageResource);
+                        }
+                        break;
+                    default:
+                        $compressedContent = $imageContent;
+                        break;
+                }
+                
+                return $compressedContent ?: $imageContent;
+            }
+            
+            return $imageContent;
+            
+        } catch (\Exception $e) {
+            \Log::error('Image compression error: ' . $e->getMessage());
+            return file_get_contents($image->getPathname());
+        }
     }
-
-    $employee = Auth::guard('mfanyakazi')->user();
-
-    if (!$employee) {
-        return false;
-    }
-
-    $uwezo = strtolower(trim($employee->uwezo ?? ''));
-    
-    // Only Boss (web) and mkubwa can edit/delete
-    // mdogo cannot edit/delete
-    return in_array($uwezo, ['mkubwa']);
-}
 
     public function index(Request $request)
     {
@@ -287,6 +353,8 @@ private function canEditDelete()
                     'expiry' => $expiryDate,
                     'barcode' => $item->barcode,
                     'stock_status' => $stockStatus,
+                    'has_image' => $item->hasImage(),
+                    'image_base64' => $item->image ? base64_encode($item->image) : null
                 ];
             });
             
@@ -355,7 +423,9 @@ private function canEditDelete()
                     'bei_uzo_jumla' => $product->bei_uzo_jumla,
                     'bei_kiasi_cha_chaguo' => $product->bei_kiasi_cha_chaguo,
                     'expiry' => $expiryDate,
-                    'barcode' => $product->barcode
+                    'barcode' => $product->barcode,
+                    'has_image' => $product->hasImage(),
+                    'image_base64' => $product->image ? base64_encode($product->image) : null
                 ]
             ]);
 
@@ -367,173 +437,203 @@ private function canEditDelete()
         }
     }
 
- public function store(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'jina' => 'required|string|max:255',
-        'aina' => 'required|string|max:255',
-        'kipimo' => 'nullable|string|max:100',
-        'idadi' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
-        'bei_nunua' => 'required|numeric|min:0',
-        'bei_kuuza' => 'required|numeric|min:0',
-        'bei_uzo_jumla' => 'nullable|numeric|min:0',
-        'bei_kiasi_cha_chaguo' => 'sometimes|in:rejareja,jumla',
-        'expiry' => 'nullable|date',
-        'barcode' => [
-            'nullable',
-            'string',
-            'max:255',
-            Rule::unique('bidhaas', 'barcode')->where(function ($query) {
-                return $query->where('company_id', $this->getCompanyId());
-            })
-        ],
-    ]);
-
-    $validator->after(function ($validator) use ($request) {
-        if ($request->bei_kuuza < $request->bei_nunua) {
-            $validator->errors()->add('bei_kuuza', 'Bei ya kuuza (rejareja) haiwezi kuwa chini ya bei ya kununua');
-        }
-        
-        if ($request->filled('bei_uzo_jumla') && $request->bei_uzo_jumla < $request->bei_nunua) {
-            $validator->errors()->add('bei_uzo_jumla', 'Bei ya jumla haiwezi kuwa chini ya bei ya kununua');
-        }
-    });
-
-    if ($validator->fails()) {
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hitilafu katika uthibitishaji',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        return back()->withErrors($validator)->withInput();
-    }
-
-    $validated = $validator->validated();
-    $validated['company_id'] = $this->getCompanyId();
-    
-    // Set default price type if not specified
-    if (!isset($validated['bei_kiasi_cha_chaguo'])) {
-        $validated['bei_kiasi_cha_chaguo'] = 'rejareja';
-    }
-    
-    // IMPORTANT: Only set to null if empty or zero, otherwise use the value
-    $validated['bei_uzo_jumla'] = !empty($validated['bei_uzo_jumla']) && $validated['bei_uzo_jumla'] > 0 
-        ? $validated['bei_uzo_jumla'] 
-        : null;
-
-    Bidhaa::create($validated);
-
-    if ($request->ajax() || $request->wantsJson()) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Bidhaa imeongezwa kikamilifu!'
-        ]);
-    }
-
-    return redirect()->route('bidhaa.index')
-        ->with('success', 'Bidhaa imeongezwa kikamilifu!');
-}
-
-
-public function update(Request $request, $id)
-{
-    if (!$this->canViewPurchasePrice()) {
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Huna ruhusa ya kurekebisha bidhaa.'
-            ], 403);
-        }
-        return redirect()->route('bidhaa.index')
-            ->with('error', 'Huna ruhusa ya kurekebisha bidhaa.');
-    }
-
-    $companyId = $this->getCompanyId();
-    $bidhaa = Bidhaa::where('id', $id)
-                    ->where('company_id', $companyId)
-                    ->firstOrFail();
-
-    $validator = Validator::make($request->all(), [
-        'jina' => 'required|string|max:255',
-        'aina' => 'required|string|max:255',
-        'kipimo' => 'nullable|string|max:100',
-        'idadi' => 'sometimes|required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/', // Changed from required to sometimes
-        'bei_nunua' => 'required|numeric|min:0',
-        'bei_kuuza' => 'required|numeric|min:0',
-        'bei_uzo_jumla' => 'nullable|numeric|min:0',
-        'bei_kiasi_cha_chaguo' => 'sometimes|in:rejareja,jumla',
-        'expiry' => 'nullable|date',
-        'barcode' => [
-            'nullable',
-            'string',
-            'max:255',
-            Rule::unique('bidhaas', 'barcode')
-                ->where(function ($query) use ($companyId) {
-                    return $query->where('company_id', $companyId);
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'jina' => 'required|string|max:255',
+            'aina' => 'required|string|max:255',
+            'kipimo' => 'nullable|string|max:100',
+            'idadi' => 'required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
+            'bei_nunua' => 'required|numeric|min:0',
+            'bei_kuuza' => 'required|numeric|min:0',
+            'bei_uzo_jumla' => 'nullable|numeric|min:0',
+            'bei_kiasi_cha_chaguo' => 'sometimes|in:rejareja,jumla',
+            'expiry' => 'nullable|date',
+            'barcode' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('bidhaas', 'barcode')->where(function ($query) {
+                    return $query->where('company_id', $this->getCompanyId());
                 })
-                ->ignore($bidhaa->id)
-        ],
-    ]);
+            ],
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5500',
+        ]);
 
-    $validator->after(function ($validator) use ($request) {
-        if ($request->bei_kuuza < $request->bei_nunua) {
-            $validator->errors()->add('bei_kuuza', 'Bei ya kuuza (rejareja) haiwezi kuwa chini ya bei ya kununua');
+        $validator->after(function ($validator) use ($request) {
+            if ($request->bei_kuuza < $request->bei_nunua) {
+                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza (rejareja) haiwezi kuwa chini ya bei ya kununua');
+            }
+            
+            if ($request->filled('bei_uzo_jumla') && $request->bei_uzo_jumla < $request->bei_nunua) {
+                $validator->errors()->add('bei_uzo_jumla', 'Bei ya jumla haiwezi kuwa chini ya bei ya kununua');
+            }
+        });
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hitilafu katika uthibitishaji',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
+        $validated['company_id'] = $this->getCompanyId();
+        
+        if (!isset($validated['bei_kiasi_cha_chaguo'])) {
+            $validated['bei_kiasi_cha_chaguo'] = 'rejareja';
         }
         
-        if ($request->filled('bei_uzo_jumla') && $request->bei_uzo_jumla < $request->bei_nunua) {
-            $validator->errors()->add('bei_uzo_jumla', 'Bei ya jumla haiwezi kuwa chini ya bei ya kununua');
-        }
-    });
+        $validated['bei_uzo_jumla'] = !empty($validated['bei_uzo_jumla']) && $validated['bei_uzo_jumla'] > 0 
+            ? $validated['bei_uzo_jumla'] 
+            : null;
 
-    if ($validator->fails()) {
+        // Handle image upload - store as BLOB in database
+        if ($request->hasFile('image')) {
+            try {
+                $imageBinary = $this->compressAndConvertImageToBinary($request->file('image'));
+                $validated['image'] = $imageBinary;
+            } catch (\Exception $e) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage()
+                    ], 422);
+                }
+                return back()->with('error', $e->getMessage())->withInput();
+            }
+        }
+
+        Bidhaa::create($validated);
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => false,
-                'message' => 'Hitilafu katika uthibitishaji',
-                'errors' => $validator->errors()
-            ], 422);
+                'success' => true,
+                'message' => 'Bidhaa imeongezwa kikamilifu!'
+            ]);
         }
-        return back()->withErrors($validator)->withInput();
+
+        return redirect()->route('bidhaa.index')
+            ->with('success', 'Bidhaa imeongezwa kikamilifu!');
     }
 
-    $validated = $validator->validated();
-    
-    // IMPORTANT: Only update fields that are present in the request
-    $updateData = [];
-    
-    // Only include fields that are present in the request
-    if ($request->has('jina')) $updateData['jina'] = $validated['jina'];
-    if ($request->has('aina')) $updateData['aina'] = $validated['aina'];
-    if ($request->has('kipimo')) $updateData['kipimo'] = $validated['kipimo'];
-    if ($request->has('idadi')) $updateData['idadi'] = $validated['idadi']; // Only update if provided
-    if ($request->has('bei_nunua')) $updateData['bei_nunua'] = $validated['bei_nunua'];
-    if ($request->has('bei_kuuza')) $updateData['bei_kuuza'] = $validated['bei_kuuza'];
-    
-    if ($request->has('bei_uzo_jumla')) {
-        $updateData['bei_uzo_jumla'] = !empty($validated['bei_uzo_jumla']) && $validated['bei_uzo_jumla'] > 0 ? $validated['bei_uzo_jumla'] : null;
-    }
-    
-    if ($request->has('bei_kiasi_cha_chaguo')) {
-        $updateData['bei_kiasi_cha_chaguo'] = $validated['bei_kiasi_cha_chaguo'];
-    }
-    
-    if ($request->has('expiry')) $updateData['expiry'] = $validated['expiry'];
-    if ($request->has('barcode')) $updateData['barcode'] = $validated['barcode'];
-    
-    $bidhaa->update($updateData);
+    public function update(Request $request, $id)
+    {
+        if (!$this->canViewPurchasePrice()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Huna ruhusa ya kurekebisha bidhaa.'
+                ], 403);
+            }
+            return redirect()->route('bidhaa.index')
+                ->with('error', 'Huna ruhusa ya kurekebisha bidhaa.');
+        }
 
-    if ($request->ajax() || $request->wantsJson()) {
-        return response()->json([
-            'success' => true,
-            'message' => 'Bidhaa imerekebishwa kikamilifu!'
+        $companyId = $this->getCompanyId();
+        $bidhaa = Bidhaa::where('id', $id)
+                        ->where('company_id', $companyId)
+                        ->firstOrFail();
+
+        $validator = Validator::make($request->all(), [
+            'jina' => 'required|string|max:255',
+            'aina' => 'required|string|max:255',
+            'kipimo' => 'nullable|string|max:100',
+            'idadi' => 'sometimes|required|numeric|min:0|regex:/^\d+(\.\d{1,2})?$/',
+            'bei_nunua' => 'required|numeric|min:0',
+            'bei_kuuza' => 'required|numeric|min:0',
+            'bei_uzo_jumla' => 'nullable|numeric|min:0',
+            'bei_kiasi_cha_chaguo' => 'sometimes|in:rejareja,jumla',
+            'expiry' => 'nullable|date',
+            'barcode' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('bidhaas', 'barcode')
+                    ->where(function ($query) use ($companyId) {
+                        return $query->where('company_id', $companyId);
+                    })
+                    ->ignore($bidhaa->id)
+            ],
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5500',
         ]);
-    }
 
-    return redirect()->route('bidhaa.index')
-        ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
-}
+        $validator->after(function ($validator) use ($request) {
+            if ($request->bei_kuuza < $request->bei_nunua) {
+                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza (rejareja) haiwezi kuwa chini ya bei ya kununua');
+            }
+            
+            if ($request->filled('bei_uzo_jumla') && $request->bei_uzo_jumla < $request->bei_nunua) {
+                $validator->errors()->add('bei_uzo_jumla', 'Bei ya jumla haiwezi kuwa chini ya bei ya kununua');
+            }
+        });
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hitilafu katika uthibitishaji',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
+        
+        // Handle image upload - store as BLOB in database
+        if ($request->hasFile('image')) {
+            try {
+                $imageBinary = $this->compressAndConvertImageToBinary($request->file('image'));
+                $validated['image'] = $imageBinary;
+            } catch (\Exception $e) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage()
+                    ], 422);
+                }
+                return back()->with('error', $e->getMessage())->withInput();
+            }
+        }
+        
+        $updateData = [];
+        
+        if ($request->has('jina')) $updateData['jina'] = $validated['jina'];
+        if ($request->has('aina')) $updateData['aina'] = $validated['aina'];
+        if ($request->has('kipimo')) $updateData['kipimo'] = $validated['kipimo'];
+        if ($request->has('idadi')) $updateData['idadi'] = $validated['idadi'];
+        if ($request->has('bei_nunua')) $updateData['bei_nunua'] = $validated['bei_nunua'];
+        if ($request->has('bei_kuuza')) $updateData['bei_kuuza'] = $validated['bei_kuuza'];
+        
+        if ($request->has('bei_uzo_jumla')) {
+            $updateData['bei_uzo_jumla'] = !empty($validated['bei_uzo_jumla']) && $validated['bei_uzo_jumla'] > 0 ? $validated['bei_uzo_jumla'] : null;
+        }
+        
+        if ($request->has('bei_kiasi_cha_chaguo')) {
+            $updateData['bei_kiasi_cha_chaguo'] = $validated['bei_kiasi_cha_chaguo'];
+        }
+        
+        if ($request->has('expiry')) $updateData['expiry'] = $validated['expiry'];
+        if ($request->has('barcode')) $updateData['barcode'] = $validated['barcode'];
+        if ($request->hasFile('image')) $updateData['image'] = $validated['image'];
+        
+        $bidhaa->update($updateData);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bidhaa imerekebishwa kikamilifu!'
+            ]);
+        }
+
+        return redirect()->route('bidhaa.index')
+            ->with('success', 'Bidhaa imerekebishwa kikamilifu!');
+    }
 
     public function destroy($id, Request $request)
     {
@@ -568,50 +668,75 @@ public function update(Request $request, $id)
             ->with('success', 'Bidhaa imefutwa kikamilifu!');
     }
 
-/**
- * Delete all products
- */
-public function deleteAll(Request $request)
-{
-    $companyId = $this->getCompanyId();
-    
-    // Check permission: only Boss can delete all
-    if (!$this->isBoss()) {
-        if ($request->ajax() || $request->wantsJson()) {
+    public function deleteAll(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        
+        if (!$this->isBoss()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Huna ruhusa ya kufuta bidhaa zote.'
+                ], 403);
+            }
+            return redirect()->route('bidhaa.index')->with('error', 'Huna ruhusa ya kufuta bidhaa zote.');
+        }
+        
+        try {
+            $count = Bidhaa::where('company_id', $companyId)->count();
+            
+            if ($count === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hakuna bidhaa za kufuta'
+                ]);
+            }
+            
+            Bidhaa::where('company_id', $companyId)->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Bidhaa zote ({$count}) zimefutwa kikamilifu!"
+            ]);
+            
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Huna ruhusa ya kufuta bidhaa zote.'
+                'message' => 'Hitilafu: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteImage($id, Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        $bidhaa = Bidhaa::where('id', $id)
+                        ->where('company_id', $companyId)
+                        ->firstOrFail();
+        
+        if (!$this->canViewPurchasePrice()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Huna ruhusa ya kufuta picha'
             ], 403);
         }
-        return redirect()->route('bidhaa.index')->with('error', 'Huna ruhusa ya kufuta bidhaa zote.');
-    }
-    
-    try {
-        // Get count before deletion - FIXED QUERY
-        $count = Bidhaa::where('company_id', $companyId)->count();
         
-        if ($count === 0) {
+        try {
+            $bidhaa->update(['image' => null]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Picha imefutwa kikamilifu'
+            ]);
+            
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Hakuna bidhaa za kufuta'
-            ]);
+                'message' => 'Hitilafu katika kufuta picha: ' . $e->getMessage()
+            ], 500);
         }
-        
-        // Delete all products - FIXED QUERY
-        $deleted = Bidhaa::where('company_id', $companyId)->delete();
-        
-        return response()->json([
-            'success' => true,
-            'message' => "Bidhaa zote ({$count}) zimefutwa kikamilifu!"
-        ]);
-        
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Hitilafu: ' . $e->getMessage()
-        ], 500);
     }
-}
+
     public function exportExcel(Request $request)
     {
         $companyId = $this->getCompanyId();
@@ -1131,24 +1256,23 @@ public function deleteAll(Request $request)
         }
     }
 
-// Update the getExcelValue method to be more flexible
-private function getExcelValue($row, $possibleKeys)
-{
-    foreach ($possibleKeys as $key) {
-        $key = strtolower(trim($key));
-        foreach ($row as $rowKey => $value) {
-            $rowKeyLower = strtolower(trim($rowKey));
-            // Remove special characters and spaces for matching
-            $rowKeyClean = preg_replace('/[^a-z0-9]/', '', $rowKeyLower);
-            $keyClean = preg_replace('/[^a-z0-9]/', '', $key);
-            
-            if ($rowKeyLower == $key || $rowKeyClean == $keyClean) {
-                return $value;
+    private function getExcelValue($row, $possibleKeys)
+    {
+        foreach ($possibleKeys as $key) {
+            $key = strtolower(trim($key));
+            foreach ($row as $rowKey => $value) {
+                $rowKeyLower = strtolower(trim($rowKey));
+                $rowKeyClean = preg_replace('/[^a-z0-9]/', '', $rowKeyLower);
+                $keyClean = preg_replace('/[^a-z0-9]/', '', $key);
+                
+                if ($rowKeyLower == $key || $rowKeyClean == $keyClean) {
+                    return $value;
+                }
             }
         }
+        return '';
     }
-    return '';
-}
+
     private function processExcelFile($file)
     {
         $rows = [];
@@ -1215,55 +1339,41 @@ private function getExcelValue($row, $possibleKeys)
         return $rows;
     }
     
-private function parseDate($dateString)
-{
-    if (empty($dateString)) {
+    private function parseDate($dateString)
+    {
+        if (empty($dateString)) {
+            return null;
+        }
+        
+        $dateString = trim($dateString);
+        
+        if (is_numeric($dateString) && $dateString > 0) {
+            $unix = ($dateString - 25569) * 86400;
+            return date('Y-m-d', $unix);
+        }
+        
+        $dateString = preg_split('/[\s,]+/', $dateString)[0];
+        
+        $formats = [
+            'Y-m-d', 'Y/m/d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'm-d-Y',
+            'Y.m.d', 'd.m.Y', 'Ymd', 'd.m.y', 'd/m/y',
+        ];
+        
+        foreach ($formats as $format) {
+            $date = \DateTime::createFromFormat($format, $dateString);
+            if ($date && $date->format($format) === $dateString) {
+                return $date->format('Y-m-d');
+            }
+        }
+        
+        $timestamp = strtotime($dateString);
+        if ($timestamp !== false && $timestamp > 0) {
+            return date('Y-m-d', $timestamp);
+        }
+        
+        \Log::warning("Could not parse date: {$dateString}");
         return null;
     }
-    
-    // Remove any extra whitespace
-    $dateString = trim($dateString);
-    
-    // Handle Excel serial date numbers (common issue)
-    if (is_numeric($dateString) && $dateString > 0) {
-        // Excel dates start from 1900-01-01
-        $unix = ($dateString - 25569) * 86400;
-        return date('Y-m-d', $unix);
-    }
-    
-    // Try to extract just the date part if there's time
-    $dateString = preg_split('/[\s,]+/', $dateString)[0];
-    
-    $formats = [
-        'Y-m-d',     // 2028-01-09 (your format)
-        'Y/m/d',     // 2028/01/09
-        'd/m/Y',     // 09/01/2028
-        'd-m-Y',     // 09-01-2028
-        'm/d/Y',     // 01/09/2028
-        'm-d-Y',     // 01-09-2028
-        'Y.m.d',     // 2028.01.09
-        'd.m.Y',     // 09.01.2028
-        'Ymd',       // 20280109
-        'd.m.y',     // 09.01.28
-        'd/m/y',     // 09/01/28
-    ];
-    
-    foreach ($formats as $format) {
-        $date = \DateTime::createFromFormat($format, $dateString);
-        if ($date && $date->format($format) === $dateString) {
-            return $date->format('Y-m-d');
-        }
-    }
-    
-    // Last resort: try strtotime
-    $timestamp = strtotime($dateString);
-    if ($timestamp !== false && $timestamp > 0) {
-        return date('Y-m-d', $timestamp);
-    }
-    
-    \Log::warning("Could not parse date: {$dateString}");
-    return null;
-}
 
     public function taarifa(Request $request)
     {
@@ -1423,6 +1533,7 @@ private function parseDate($dateString)
                 'bei_kiasi_cha_chaguo' => $bidhaa->bei_kiasi_cha_chaguo,
                 'expiry' => $bidhaa->expiry ? $bidhaa->expiry->format('Y-m-d') : null,
                 'imeundwa' => $bidhaa->created_at->format('d/m/Y H:i'),
+                'has_image' => $bidhaa->hasImage(),
             ],
             'statistics' => [
                 'tarehe_ya_kwanza' => $bidhaa->created_at->format('d/m/Y'),
@@ -1465,7 +1576,23 @@ private function parseDate($dateString)
             ]);
         }
         
-        $products = $query->orderBy('jina')->get(['id', 'jina', 'aina', 'barcode', 'idadi', 'bei_kuuza', 'bei_uzo_jumla', 'bei_kiasi_cha_chaguo']);
+        $products = $query->orderBy('jina')->get(['id', 'jina', 'aina', 'barcode', 'idadi', 'bei_kuuza', 'bei_uzo_jumla', 'bei_kiasi_cha_chaguo', 'image']);
+        
+        // Convert images to base64 for response
+        $products = $products->map(function($product) {
+            return [
+                'id' => $product->id,
+                'jina' => $product->jina,
+                'aina' => $product->aina,
+                'barcode' => $product->barcode,
+                'idadi' => $product->idadi,
+                'bei_kuuza' => $product->bei_kuuza,
+                'bei_uzo_jumla' => $product->bei_uzo_jumla,
+                'bei_kiasi_cha_chaguo' => $product->bei_kiasi_cha_chaguo,
+                'has_image' => $product->hasImage(),
+                'image_base64' => $product->image ? base64_encode($product->image) : null
+            ];
+        });
         
         return response()->json([
             'success' => true,

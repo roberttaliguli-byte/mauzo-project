@@ -110,6 +110,11 @@
             <button id="risiti-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="risiti">
                 <i class="fas fa-receipt mr-2 text-xs"></i>Risiti
             </button>
+
+            <button id="pokeaorder-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="pokeaorder">
+    <i class="fas fa-clipboard-check mr-2 text-xs"></i>Pokea Order
+    <span id="pokea-orders-count" class="ml-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+</button>
         </div>
     </div>
 
@@ -1402,6 +1407,9 @@
 </div>
     <!-- Include Orders Partial -->
 @include('mauzo.partial-order')
+
+@include('mauzo.partial-pokeaorder')
+
 <!-- Modals -->
 <!-- Delete Sale Modal -->
 <div id="delete-sale-modal" class="modal fixed inset-0 z-50 flex items-center justify-center hidden p-2">

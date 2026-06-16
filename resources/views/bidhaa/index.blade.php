@@ -59,9 +59,86 @@
             </div>
         </a>
     </div>
-
+<!-- Add this after the stats cards and before the Zilizoisha Button section -->
+<!-- Showcase Link Generator -->
+<div class="bg-gradient-to-r from-emerald-50 to-amber-50 p-4 rounded-lg border border-emerald-200 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <div class="h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-store-alt text-emerald-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-800">Customer Showcase Page</h3>
+                <p class="text-xs text-gray-600">Share this link with customers to browse and order products</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <button onclick="generateShowcaseLink()" 
+                    class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all text-sm font-medium shadow-sm hover:shadow-md">
+                <i class="fas fa-link mr-2"></i> Generate Link
+            </button>
+            <button onclick="generateQRCode()" 
+                    class="inline-flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all text-sm font-medium shadow-sm hover:shadow-md">
+                <i class="fas fa-qrcode mr-2"></i> QR Code
+            </button>
+        </div>
+    </div>
+    
+    <!-- Showcase Link Display (hidden initially) -->
+    <div id="showcaseLinkContainer" class="hidden mt-3 p-3 bg-white rounded-lg border border-emerald-200">
+        <div class="flex flex-wrap items-center gap-2">
+            <div class="flex-1 min-w-0">
+                <label class="text-xs font-medium text-gray-600 block mb-1">Your Showcase Link:</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="showcaseLinkInput" 
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-w-0"
+                           readonly>
+                    <button onclick="copyShowcaseLink()" 
+                            class="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-all text-sm font-medium whitespace-nowrap">
+                        <i class="fas fa-copy mr-1"></i> Copy
+                    </button>
+                    <button onclick="openShowcaseLink()" 
+                            class="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all text-sm font-medium whitespace-nowrap">
+                        <i class="fas fa-external-link-alt mr-1"></i> Open
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="mt-2 flex flex-wrap gap-2">
+            <button onclick="shareOnWhatsApp()" 
+                    class="px-3 py-1.5 bg-[#25D366] text-white rounded-lg hover:bg-[#1DA851] transition-all text-xs font-medium flex items-center gap-1">
+                <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            </button>
+            <button onclick="shareViaEmail()" 
+                    class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-xs font-medium flex items-center gap-1">
+                <i class="fas fa-envelope"></i> Share via Email
+            </button>
+            <button onclick="printShowcaseLink()" 
+                    class="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all text-xs font-medium flex items-center gap-1">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+    </div>
+    
+    <!-- QR Code Display (hidden initially) -->
+    <div id="qrCodeContainer" class="hidden mt-3 p-3 bg-white rounded-lg border border-amber-200 text-center">
+        <div class="flex flex-col items-center">
+            <p class="text-xs font-medium text-gray-600 mb-2">Scan to open showcase page:</p>
+            <div id="qrCodeDisplay" class="p-2 bg-white rounded-lg inline-block"></div>
+            <div class="mt-2 flex gap-2">
+                <button onclick="downloadQRCode()" 
+                        class="px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all text-xs font-medium">
+                    <i class="fas fa-download mr-1"></i> Download QR
+                </button>
+                <button onclick="document.getElementById('qrCodeContainer').classList.add('hidden')" 
+                        class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all text-xs font-medium">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
     <!-- Zilizoisha Button -->
-<!-- Zilizoisha Button -->
 <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
     <div class="flex flex-wrap gap-2 items-center justify-between">
         <div class="flex gap-2">
@@ -158,6 +235,7 @@
             <table class="w-full text-sm table-fixed">
                 <thead>
                     <tr class="bg-emerald-50 border-b border-gray-200">
+                        <th class="w-12 px-3 py-2 text-center font-medium text-emerald-800 text-sm">Picha</th>
                         <th class="w-2/5 px-3 py-2 text-left font-medium text-emerald-800 text-sm">Bidhaa</th>
                         <th class="w-1/5 px-3 py-2 text-left font-medium text-emerald-800 text-sm hidden sm:table-cell">Aina</th>
                         <th class="w-16 px-3 py-2 text-center font-medium text-emerald-800 text-sm">Idadi</th>
@@ -168,99 +246,116 @@
                 </thead>
                 <tbody id="products-tbody" class="divide-y divide-gray-100">
                     @forelse($bidhaa as $item)
-                        <tr class="product-row hover:bg-gray-50" data-product='@json($item)'>
-                            <td class="px-3 py-2 align-middle">
-                                <div class="flex items-center">
-                                    <div class="h-7 w-7 bg-emerald-100 rounded flex items-center justify-center text-emerald-800 font-bold text-xs mr-2 flex-shrink-0">
-                                        {{ substr($item->jina, 0, 1) }}
-                                    </div>
-                                    <div class="min-w-0">
-                                        <div class="font-medium text-gray-900 text-sm truncate" title="{{ $item->jina }}">{{ $item->jina }}</div>
-                                        <div class="text-xs text-gray-500 sm:hidden truncate">{{ $item->aina }}</div>
-                                        @if($item->barcode)
-                                        <div class="text-xs text-emerald-600 font-mono truncate">#{{ $item->barcode }}</div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-3 py-2 align-middle hidden sm:table-cell">
-                                <div class="text-sm text-gray-700 truncate">{{ $item->aina }}</div>
-                                @if($item->kipimo)
-                                <div class="text-xs text-gray-400 truncate">{{ $item->kipimo }}</div>
-                                @endif
-                            </td>
-                            <td class="px-3 py-2 text-center align-middle">
+                    <tr class="product-row hover:bg-gray-50" data-product='@json($item)'>
+                        <td class="px-3 py-2 text-center align-middle">
+                            @if($item->image)
                                 @php
-                                    $formattedIdadi = $item->idadi % 1 == 0 ? (string)(int)$item->idadi : number_format($item->idadi, 2);
+                                    // Detect mime type from binary data
+                                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                                    $mimeType = finfo_buffer($finfo, $item->image);
+                                    finfo_close($finfo);
+                                    $base64Image = base64_encode($item->image);
                                 @endphp
-                                <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap
-                                    @if($item->idadi < 10 && $item->idadi > 0) bg-amber-100 text-amber-800
-                                    @elseif($item->idadi == 0) bg-gray-100 text-gray-800
-                                    @else bg-emerald-100 text-emerald-800 @endif">
-                                    {{ $formattedIdadi }}
-                                </span>
-                            </td>
-                            <td class="px-3 py-2 text-right align-middle">
-                                <div class="text-sm font-bold text-emerald-700 whitespace-nowrap">{{ number_format($item->bei_kuuza, 0) }} TZS</div>
-                                @if($item->bei_uzo_jumla)
-                                <div class="text-xs text-blue-600 whitespace-nowrap">Jumla: {{ number_format($item->bei_uzo_jumla, 0) }} TZS</div>
-                                @endif
-                                @if($canViewPurchasePrice)
-                                <div class="text-xs text-gray-500 whitespace-nowrap">Nunua: {{ number_format($item->bei_nunua, 0) }} TZS</div>
-                                @endif
-                            </td>
-                            <td class="px-3 py-2 align-middle hidden lg:table-cell">
-                                @if($item->expiry)
-                                    @php
-                                        $expiryDate = \Carbon\Carbon::parse($item->expiry);
-                                        $today = \Carbon\Carbon::today();
-                                        $diffDays = $today->diffInDays($expiryDate, false);
-                                    @endphp
-                                    <div class="text-xs whitespace-nowrap
-                                        @if($expiryDate < $today) text-red-600 font-medium
-                                        @elseif($diffDays <= 30) text-amber-600 font-medium
-                                        @else text-gray-600 @endif"
-                                        title="Tarehe ya kuisha: {{ $expiryDate->format('d/m/Y') }}">
-                                        {{ $expiryDate->format('d/m/Y') }}
-                                        @if($expiryDate >= $today && $diffDays <= 30)
-                                            <span class="text-xs">({{ $diffDays }}d)</span>
-                                        @elseif($expiryDate < $today)
-                                            <span class="text-xs">(Imepita)</span>
-                                        @endif
-                                    </div>
-                                @else
-                                    <span class="text-xs text-gray-400">--</span>
-                                @endif
-                             </td>
-                            <td class="px-3 py-2 text-center align-middle print:hidden">
-                                <div class="flex justify-center space-x-1">
-                                    @if($canEditProduct)
-                                        <button class="edit-product-btn text-emerald-600 hover:text-emerald-800 p-1"
-                                                data-id="{{ $item->id }}" title="Badili">
-                                            <i class="fas fa-edit text-sm"></i>
-                                        </button>
-                                        <button class="delete-product-btn text-red-600 hover:text-red-800 p-1"
-                                                data-id="{{ $item->id }}" data-name="{{ $item->jina }}" title="Futa">
-                                            <i class="fas fa-trash text-sm"></i>
-                                        </button>
-                                    @else
-                                        <span class="text-gray-400 cursor-not-allowed" title="Huwezi kurekebisha au kufuta">
-                                            <i class="fas fa-lock text-sm"></i>
-                                        </span>
+                                <img src="data:{{ $mimeType }};base64,{{ $base64Image }}" 
+                                     alt="{{ $item->jina }}" 
+                                     class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" 
+                                     onclick="showImageModalFromBase64('{{ $mimeType }}', '{{ $base64Image }}', '{{ addslashes($item->jina) }}')">
+                            @else
+                                <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto cursor-pointer" 
+                                     onclick="showNotification('Hakuna picha ya bidhaa hii', 'info')">
+                                    <i class="fas fa-image text-gray-400 text-sm"></i>
+                                </div>
+                            @endif
+                        </td>
+                        <td class="px-3 py-2 align-middle">
+                            <div class="flex items-center">
+                                <div class="min-w-0">
+                                    <div class="font-medium text-gray-900 text-sm truncate" title="{{ $item->jina }}">{{ $item->jina }}</div>
+                                    <div class="text-xs text-gray-500 sm:hidden truncate">{{ $item->aina }}</div>
+                                    @if($item->barcode)
+                                    <div class="text-xs text-emerald-600 font-mono truncate">#{{ $item->barcode }}</div>
                                     @endif
                                 </div>
-                             </td>
-                        </tr>
+                            </div>
+                        </td>
+                        <td class="px-3 py-2 align-middle hidden sm:table-cell">
+                            <div class="text-sm text-gray-700 truncate">{{ $item->aina }}</div>
+                            @if($item->kipimo)
+                            <div class="text-xs text-gray-400 truncate">{{ $item->kipimo }}</div>
+                            @endif
+                        </td>
+                        <td class="px-3 py-2 text-center align-middle">
+                            @php
+                                $formattedIdadi = $item->idadi % 1 == 0 ? (string)(int)$item->idadi : number_format($item->idadi, 2);
+                            @endphp
+                            <span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap
+                                @if($item->idadi < 10 && $item->idadi > 0) bg-amber-100 text-amber-800
+                                @elseif($item->idadi == 0) bg-gray-100 text-gray-800
+                                @else bg-emerald-100 text-emerald-800 @endif">
+                                {{ $formattedIdadi }}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2 text-right align-middle">
+                            <div class="text-sm font-bold text-emerald-700 whitespace-nowrap">{{ number_format($item->bei_kuuza, 0) }} TZS</div>
+                            @if($item->bei_uzo_jumla)
+                            <div class="text-xs text-blue-600 whitespace-nowrap">Jumla: {{ number_format($item->bei_uzo_jumla, 0) }} TZS</div>
+                            @endif
+                            @if($canViewPurchasePrice)
+                            <div class="text-xs text-gray-500 whitespace-nowrap">Nunua: {{ number_format($item->bei_nunua, 0) }} TZS</div>
+                            @endif
+                        </td>
+                        <td class="px-3 py-2 align-middle hidden lg:table-cell">
+                            @if($item->expiry)
+                                @php
+                                    $expiryDate = \Carbon\Carbon::parse($item->expiry);
+                                    $today = \Carbon\Carbon::today();
+                                    $diffDays = $today->diffInDays($expiryDate, false);
+                                @endphp
+                                <div class="text-xs whitespace-nowrap
+                                    @if($expiryDate < $today) text-red-600 font-medium
+                                    @elseif($diffDays <= 30) text-amber-600 font-medium
+                                    @else text-gray-600 @endif"
+                                    title="Tarehe ya kuisha: {{ $expiryDate->format('d/m/Y') }}">
+                                    {{ $expiryDate->format('d/m/Y') }}
+                                    @if($expiryDate >= $today && $diffDays <= 30)
+                                        <span class="text-xs">({{ $diffDays }}d)</span>
+                                    @elseif($expiryDate < $today)
+                                        <span class="text-xs">(Imepita)</span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400">--</span>
+                            @endif
+                        </td>
+                        <td class="px-3 py-2 text-center align-middle print:hidden">
+                            <div class="flex justify-center space-x-1">
+                                @if($canEditProduct)
+                                    <button class="edit-product-btn text-emerald-600 hover:text-emerald-800 p-1"
+                                            data-id="{{ $item->id }}" title="Badili">
+                                        <i class="fas fa-edit text-sm"></i>
+                                    </button>
+                                    <button class="delete-product-btn text-red-600 hover:text-red-800 p-1"
+                                            data-id="{{ $item->id }}" data-name="{{ $item->jina }}" title="Futa">
+                                        <i class="fas fa-trash text-sm"></i>
+                                    </button>
+                                @else
+                                    <span class="text-gray-400 cursor-not-allowed" title="Huwezi kurekebisha au kufuta">
+                                        <i class="fas fa-lock text-sm"></i>
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
                     @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">
-                                <i class="fas fa-boxes text-3xl mb-2 text-gray-300"></i>
-                                <p>Hakuna bidhaa bado</p>
-                             </td>
-                        </tr>
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            <i class="fas fa-boxes text-3xl mb-2 text-gray-300"></i>
+                            <p>Hakuna bidhaa bado</p>
+                        </td>
+                    </tr>
                     @endforelse
                 </tbody>
-             </table>
+            </table>
         </div>
         
         <!-- Pagination -->
@@ -281,7 +376,7 @@
     <!-- TAB 2: Ingiza -->
 <div id="ingiza-tab-content" class="tab-content hidden">
     <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-        <form method="POST" action="{{ route('bidhaa.store') }}" id="product-form" class="space-y-4">
+        <form method="POST" action="{{ route('bidhaa.store') }}" id="product-form" class="space-y-4" enctype="multipart/form-data">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -347,6 +442,16 @@
                     <input type="text" name="barcode" 
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                            placeholder="Barcode (hiari)">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Picha ya Bidhaa</label>
+                    <input type="file" name="image" id="product-image" accept="image/*" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                    <p class="text-xs text-gray-500 mt-1">Ukubwa: 1KB - 5,500KB (Maks: 5.5MB). Picha itapunguzwa kiotomatiki ikiwa kubwa</p>
+                    <div id="image-preview" class="hidden mt-2">
+                        <img id="image-preview-img" src="" alt="Preview" class="h-20 w-20 object-cover rounded border border-gray-200">
+                        <button type="button" id="remove-image" class="text-xs text-red-600 mt-1 hover:text-red-800">Ondoa Picha</button>
+                    </div>
                 </div>
             </div>
             <div id="price-error" class="text-red-600 text-xs font-medium hidden"></div>
@@ -699,7 +804,7 @@
         <div class="p-4 border-b border-gray-200">
             <h3 class="text-sm font-semibold text-gray-800">Rekebisha Bidhaa</h3>
         </div>
-        <form id="edit-form" method="POST" class="p-4">
+        <form id="edit-form" method="POST" class="p-4" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="space-y-3">
@@ -762,6 +867,21 @@
                     <input type="text" name="barcode" id="edit-barcode"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Picha ya Bidhaa</label>
+                    <input type="file" name="image" id="edit-product-image" accept="image/*" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                    <p class="text-xs text-gray-500 mt-1">Ukubwa: 1KB - 5,500KB. Picha itapunguzwa kiotomatiki</p>
+                    <div id="edit-image-preview" class="hidden mt-2">
+                        <img id="edit-image-preview-img" src="" alt="Preview" class="h-20 w-20 object-cover rounded border border-gray-200">
+                        <button type="button" id="edit-remove-image" class="text-xs text-red-600 mt-1 hover:text-red-800">Ondoa Picha</button>
+                    </div>
+                    <div id="current-image-container" class="hidden mt-2">
+                        <p class="text-xs text-gray-500 mb-1">Picha ya sasa:</p>
+                        <img id="current-product-image" src="" alt="Current" class="h-20 w-20 object-cover rounded border border-gray-200">
+                        <button type="button" id="delete-image-btn" class="text-xs text-red-600 mt-1 hover:text-red-800">Futa Picha</button>
+                    </div>
+                </div>
             </div>
             <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
                 <button type="button" id="close-edit-modal"
@@ -805,6 +925,22 @@
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div id="image-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-75"></div>
+    <div class="modal-content bg-white rounded-lg shadow-lg max-w-2xl w-full mx-auto z-50">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-sm font-semibold text-gray-800" id="image-modal-title">Picha ya Bidhaa</h3>
+            <button onclick="closeImageModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-4 flex justify-center">
+            <img id="image-modal-img" src="" alt="Product Image" class="max-w-full max-h-96 object-contain">
         </div>
     </div>
 </div>
@@ -1019,6 +1155,122 @@ function formatNumber(num, decimals = 2) {
     return parseFloat(num).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
+// Function to show image modal from base64 data
+function showImageModalFromBase64(mimeType, base64Data, productName) {
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('image-modal-img');
+    const modalTitle = document.getElementById('image-modal-title');
+    
+    if (modal && modalImg) {
+        modalImg.src = 'data:' + mimeType + ';base64,' + base64Data;
+        modalTitle.textContent = 'Picha: ' + productName;
+        modal.classList.remove('hidden');
+    }
+}
+
+// Legacy function for backward compatibility
+function showImageModal(imageUrl, productName) {
+    // Check if it's a data URL (from database) or file URL
+    if (imageUrl && imageUrl.startsWith('data:')) {
+        const modal = document.getElementById('image-modal');
+        const modalImg = document.getElementById('image-modal-img');
+        const modalTitle = document.getElementById('image-modal-title');
+        
+        if (modal && modalImg) {
+            modalImg.src = imageUrl;
+            modalTitle.textContent = 'Picha: ' + productName;
+            modal.classList.remove('hidden');
+        }
+    } else {
+        // Try to use as is (file storage fallback)
+        const modal = document.getElementById('image-modal');
+        const modalImg = document.getElementById('image-modal-img');
+        const modalTitle = document.getElementById('image-modal-title');
+        
+        if (modal && modalImg) {
+            modalImg.src = imageUrl;
+            modalTitle.textContent = 'Picha: ' + productName;
+            modal.classList.remove('hidden');
+        }
+    }
+}
+
+function closeImageModal() {
+    document.getElementById('image-modal')?.classList.add('hidden');
+}
+
+// Image preview for add form
+const productImageInput = document.getElementById('product-image');
+if (productImageInput) {
+    productImageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            validateAndPreviewImage(file, 'image-preview-img', 'image-preview');
+        }
+    });
+    
+    document.getElementById('remove-image')?.addEventListener('click', function() {
+        productImageInput.value = '';
+        document.getElementById('image-preview').classList.add('hidden');
+        document.getElementById('image-preview-img').src = '';
+    });
+}
+
+// Image preview for edit form
+const editImageInput = document.getElementById('edit-product-image');
+if (editImageInput) {
+    editImageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            validateAndPreviewImage(file, 'edit-image-preview-img', 'edit-image-preview');
+            document.getElementById('current-image-container')?.classList.add('hidden');
+        }
+    });
+    
+    document.getElementById('edit-remove-image')?.addEventListener('click', function() {
+        editImageInput.value = '';
+        document.getElementById('edit-image-preview').classList.add('hidden');
+        document.getElementById('edit-image-preview-img').src = '';
+        document.getElementById('current-image-container')?.classList.remove('hidden');
+    });
+}
+
+function validateAndPreviewImage(file, previewImgId, previewContainerId) {
+    // Validate file size (1KB to 5500KB = 5.5MB)
+    const minSize = 1 * 1024; // 1KB in bytes
+    const maxSize = 5500 * 1024; // 5500KB in bytes
+    
+    if (file.size < minSize) {
+        showNotification('Picha ni ndogo sana. Ukubwa lazima uwe angalau 1KB', 'error');
+        return false;
+    }
+    
+    if (file.size > maxSize) {
+        showNotification(`Picha ni kubwa sana. Ukubwa unaruhusiwa 1KB - 5,500KB. Faili yako: ${(file.size / 1024).toFixed(2)}KB`, 'error');
+        return false;
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        showNotification('Aina ya faili haikubaliki. Tumia: JPG, PNG, GIF, au WEBP', 'error');
+        return false;
+    }
+    
+    // Preview image
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewImg = document.getElementById(previewImgId);
+        const previewContainer = document.getElementById(previewContainerId);
+        if (previewImg && previewContainer) {
+            previewImg.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+        }
+    };
+    reader.readAsDataURL(file);
+    return true;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Search input
     const searchInput = document.getElementById('search-input');
@@ -1046,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (searchTerm.length >= 2) {
                 const tbody = document.getElementById('products-tbody');
                 if (tbody) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2 text-emerald-500"></i><p>Inatafuta kwenye bidhaa zote...</p></td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2 text-emerald-500"></i><p>Inatafuta kwenye bidhaa zote...</p></td></tr>`;
                 }
                 
                 const pagination = document.getElementById('pagination-container');
@@ -1141,7 +1393,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('delete-modal').classList.add('hidden');
     });
     
-    const modals = ['edit-modal', 'delete-modal'];
+    const modals = ['edit-modal', 'delete-modal', 'image-modal'];
     modals.forEach(modalId => {
         const modal = document.getElementById(modalId);
         if (modal) {
@@ -1157,6 +1409,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.key === 'Escape') {
             document.getElementById('edit-modal')?.classList.add('hidden');
             document.getElementById('delete-modal')?.classList.add('hidden');
+            document.getElementById('image-modal')?.classList.add('hidden');
         }
     });
     
@@ -1323,7 +1576,7 @@ function searchAllProducts(searchTerm) {
     
     if (!tbody) return;
     
-    tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2 text-emerald-500"></i><p>Inatafuta "${searchTerm}" kwenye bidhaa zote...</p></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin text-3xl mb-2 text-emerald-500"></i><p>Inatafuta "${searchTerm}" kwenye bidhaa zote...</p></td></tr>`;
     
     fetch(`/bidhaa/search?search=${encodeURIComponent(searchTerm)}`, {
         headers: {
@@ -1348,7 +1601,7 @@ function searchAllProducts(searchTerm) {
             if (pagination) pagination.classList.add('hidden');
             attachProductEvents();
         } else {
-            tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-search text-3xl mb-2 text-gray-300"></i><p>Hakuna bidhaa zinazolingana na "${searchTerm}"</p></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-search text-3xl mb-2 text-gray-300"></i><p>Hakuna bidhaa zinazolingana na "${searchTerm}"</p></td></tr>`;
             if (searchStatus && searchResultCount) {
                 searchStatus.classList.remove('hidden');
                 searchResultCount.innerHTML = `<div class="bg-amber-50 p-2 rounded"><span class="text-amber-700">Hakuna bidhaa zinazolingana na "${searchTerm}"</span><button onclick="clearSearch()" class="ml-2 text-xs bg-amber-600 text-white px-2 py-1 rounded hover:bg-amber-700"><i class="fas fa-times mr-1"></i> Ondoa</button></div>`;
@@ -1358,7 +1611,7 @@ function searchAllProducts(searchTerm) {
     })
     .catch(error => {
         console.error('Search error:', error);
-        tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-red-500"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><p>Hitilafu ya utafutaji. Jaribu tena.</p></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-red-500"><i class="fas fa-exclamation-triangle text-3xl mb-2"></i><p>Hitilafu ya utafutaji. Jaribu tena.</p></td></tr>`;
     });
 }
 
@@ -1400,7 +1653,6 @@ function createProductRow(product) {
     }
     
     let actionButtons = '';
-    // Use canEditDelete instead of just isBoss
     if (isBoss || canEditDelete) {
         actionButtons = `<div class="flex justify-center space-x-2"><button class="edit-product-btn text-emerald-600 hover:text-emerald-800" data-id="${product.id}" title="Badili"><i class="fas fa-edit"></i></button><button class="delete-product-btn text-red-600 hover:text-red-800" data-id="${product.id}" data-name="${(product.jina || '').replace(/'/g, "\\'")}" title="Futa"><i class="fas fa-trash"></i></button></div>`;
     } else {
@@ -1409,13 +1661,47 @@ function createProductRow(product) {
     
     const wholesaleHtml = product.bei_uzo_jumla ? `<div><span class="text-xs text-gray-500">Jumla:</span><span class="text-sm font-bold text-blue-700">${parseFloat(product.bei_uzo_jumla).toLocaleString()} TZS</span></div>` : '';
     
+    // Check if image exists and create appropriate HTML
+    let imageHtml = '';
+    if (product.image) {
+        // If product.image is a base64 string directly
+        if (product.image.startsWith('/') || product.image.startsWith('http')) {
+            // File path (legacy)
+            imageHtml = `<img src="${product.image}" alt="${product.jina}" class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); showImageModal('${product.image}', '${product.jina.replace(/'/g, "\\'")}')">`;
+        } else if (product.image.startsWith('data:')) {
+            // Already a data URL
+            imageHtml = `<img src="${product.image}" alt="${product.jina}" class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); showImageModal('${product.image}', '${product.jina.replace(/'/g, "\\'")}')">`;
+        } else {
+            // Try to use as base64 (might be from API response)
+            try {
+                // Check if it's valid base64
+                atob(product.image);
+                imageHtml = `<img src="data:image/jpeg;base64,${product.image}" alt="${product.jina}" class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); showImageModal('data:image/jpeg;base64,${product.image}', '${product.jina.replace(/'/g, "\\'")}')">`;
+            } catch (e) {
+                // Not valid base64, treat as regular string
+                imageHtml = `<div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto"><i class="fas fa-image text-gray-400 text-sm"></i></div>`;
+            }
+        }
+    } else {
+        imageHtml = `<div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto"><i class="fas fa-image text-gray-400 text-sm"></i></div>`;
+    }
+    
     row.innerHTML = `
-        <td class="px-4 py-2"><div class="flex items-center"><div class="h-8 w-8 bg-emerald-100 rounded flex items-center justify-center text-emerald-800 font-bold text-sm mr-2 flex-shrink-0">${(product.jina || '?').charAt(0)}</div><div class="min-w-0"><div class="font-medium text-gray-900 text-sm truncate">${product.jina || ''}</div><div class="text-xs text-gray-500 sm:hidden truncate">${product.aina || ''}</div>${product.barcode ? `<div class="text-xs text-emerald-600 font-mono">#${product.barcode}</div>` : ''}</div></div></td>
-        <td class="px-4 py-2 hidden sm:table-cell"><span class="text-sm text-gray-700">${product.aina || ''}</span>${product.kipimo ? `<span class="text-xs text-gray-500 block">${product.kipimo}</span>` : ''}</td>
-        <td class="px-4 py-2 text-center"><span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${stockClass}">${formattedIdadi}</span></td>
-        <td class="px-4 py-2 text-right"><div class="space-y-1"><div><span class="text-xs text-gray-500">Rejareja:</span><span class="text-sm font-bold text-emerald-700">${parseFloat(product.bei_kuuza || 0).toLocaleString()} TZS</span></div>${wholesaleHtml}</div>${canViewPrice ? `<div class="text-xs text-gray-500 mt-1">Nunua: ${parseFloat(product.bei_nunua || 0).toLocaleString()} TZS</div>` : ''}</td>
-        <td class="px-4 py-2 hidden lg:table-cell">${expiryHtml}</td>
-        <td class="px-4 py-2 text-center print:hidden">${actionButtons}</td>
+        <td class="px-3 py-2 text-center align-middle">${imageHtml}</td>
+        <td class="px-3 py-2 align-middle">
+            <div class="flex items-center">
+                <div class="min-w-0">
+                    <div class="font-medium text-gray-900 text-sm truncate">${product.jina || ''}</div>
+                    <div class="text-xs text-gray-500 sm:hidden truncate">${product.aina || ''}</div>
+                    ${product.barcode ? `<div class="text-xs text-emerald-600 font-mono">#${product.barcode}</div>` : ''}
+                </div>
+            </div>
+        </td>
+        <td class="px-3 py-2 hidden sm:table-cell"><span class="text-sm text-gray-700">${product.aina || ''}</span>${product.kipimo ? `<span class="text-xs text-gray-500 block">${product.kipimo}</span>` : ''}</td>
+        <td class="px-3 py-2 text-center"><span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${stockClass}">${formattedIdadi}</span></td>
+        <td class="px-3 py-2 text-right"><div class="space-y-1"><div><span class="text-xs text-gray-500">Rejareja:</span><span class="text-sm font-bold text-emerald-700">${parseFloat(product.bei_kuuza || 0).toLocaleString()} TZS</span></div>${wholesaleHtml}</div>${canViewPrice ? `<div class="text-xs text-gray-500 mt-1">Nunua: ${parseFloat(product.bei_nunua || 0).toLocaleString()} TZS</div>` : ''}</td>
+        <td class="px-3 py-2 hidden lg:table-cell">${expiryHtml}</td>
+        <td class="px-3 py-2 text-center print:hidden">${actionButtons}</td>
     `;
     return row;
 }
@@ -1450,7 +1736,6 @@ function attachProductEvents() {
 function handleEditClick(e) {
     e.preventDefault();
     const productId = this.dataset.id;
-    // Check if user has edit permission
     if (!isBoss && !canEditDelete) {
         showNotification('Huna ruhusa ya kurekebisha bidhaa', 'error');
         return;
@@ -1472,7 +1757,6 @@ function handleDeleteClick(e) {
     e.preventDefault();
     const productId = this.dataset.id;
     const productName = this.dataset.name;
-    // Check if user has delete permission
     if (!isBoss && !canEditDelete) {
         showNotification('Huna ruhusa ya kufuta bidhaa', 'error');
         return;
@@ -1480,58 +1764,17 @@ function handleDeleteClick(e) {
     deleteProduct(productId, productName);
 }
 
-// Replace the editProduct function with this improved version
 function editProduct(product) {
     if (!isBoss && !canEditDelete) return;
     
-    // Helper function to format decimal numbers without rounding errors
-    function formatDecimalForInput(value) {
-        if (value === null || value === undefined) return '';
-        // Parse as float and format with up to 2 decimal places
-        const num = parseFloat(value);
-        if (isNaN(num)) return '';
-        // Use toFixed to ensure consistent decimal places
-        // This prevents floating point rounding issues
-        return num.toFixed(2);
-    }
-    
-    // Set the values with proper formatting
     document.getElementById('edit-jina').value = product.jina || '';
     document.getElementById('edit-aina').value = product.aina || '';
     document.getElementById('edit-kipimo').value = product.kipimo || '';
     
-    // Apply formatting to quantity to prevent fluctuations
     const quantityInput = document.getElementById('edit-idadi');
     if (quantityInput) {
-        // Store the raw value as a string without rounding errors
         const rawQuantity = product.idadi !== null && product.idadi !== undefined ? parseFloat(product.idadi) : 0;
         quantityInput.value = rawQuantity.toFixed(2);
-        // Add input event listener to maintain proper formatting
-        quantityInput.addEventListener('input', function(e) {
-            let value = e.target.value;
-            // Allow only valid decimal input
-            if (value !== '') {
-                let num = parseFloat(value);
-                if (!isNaN(num)) {
-                    // Don't auto-format during typing, just validate
-                    // This prevents jumping/fluctuation
-                    if (value.includes('.') && value.split('.')[1].length > 2) {
-                        e.target.value = num.toFixed(2);
-                    }
-                }
-            }
-        });
-        
-        // Also handle blur to ensure proper formatting
-        quantityInput.addEventListener('blur', function(e) {
-            let value = e.target.value;
-            if (value !== '') {
-                let num = parseFloat(value);
-                if (!isNaN(num)) {
-                    e.target.value = num.toFixed(2);
-                }
-            }
-        });
     }
     
     document.getElementById('edit-bei-nunua').value = parseFloat(product.bei_nunua || 0).toFixed(2);
@@ -1543,10 +1786,68 @@ function editProduct(product) {
     document.getElementById('edit-expiry').value = product.expiry || '';
     document.getElementById('edit-barcode').value = product.barcode || '';
     document.getElementById('edit-form').action = `/bidhaa/${product.id}`;
+    
+    // Handle image display in edit modal
+    if (product.image && product.image !== 'null' && product.image !== null) {
+        const currentImageContainer = document.getElementById('current-image-container');
+        const currentImage = document.getElementById('current-product-image');
+        if (currentImageContainer && currentImage) {
+            // Check if image is base64 or file path
+            if (product.image.startsWith('data:') || product.image.startsWith('/') || product.image.startsWith('http')) {
+                currentImage.src = product.image;
+            } else {
+                // Try as base64
+                try {
+                    atob(product.image);
+                    currentImage.src = 'data:image/jpeg;base64,' + product.image;
+                } catch (e) {
+                    currentImage.src = '/storage/' + product.image;
+                }
+            }
+            currentImageContainer.classList.remove('hidden');
+        }
+        document.getElementById('edit-image-preview')?.classList.add('hidden');
+    } else {
+        document.getElementById('current-image-container')?.classList.add('hidden');
+    }
+    
+    // Add delete image button handler
+    const deleteImageBtn = document.getElementById('delete-image-btn');
+    if (deleteImageBtn) {
+        deleteImageBtn.onclick = function() {
+            if (confirm('Una uhakika unataka kufuta picha hii?')) {
+                deleteProductImage(product.id);
+            }
+        };
+    }
+    
     document.getElementById('edit-modal').classList.remove('hidden');
 }
 
-// Also update the loadAndEditProduct function to handle decimals properly
+function deleteProductImage(productId) {
+    fetch(`/bidhaa/${productId}/delete-image`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Picha imefutwa kikamilifu', 'success');
+            document.getElementById('current-image-container').classList.add('hidden');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showNotification(data.message || 'Hitilafu imetokea', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Hitilafu ya mtandao', 'error');
+    });
+}
+
 function loadAndEditProduct(productId) {
     if (!isBoss && !canEditDelete) {
         showNotification('Hurumia, wewe huna ruhusa ya kurekebisha bidhaa', 'error');
@@ -1562,7 +1863,6 @@ function loadAndEditProduct(productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Ensure the quantity is properly formatted before passing to editProduct
             if (data.data.idadi !== undefined) {
                 data.data.idadi = parseFloat(data.data.idadi).toFixed(2);
             }
@@ -1576,6 +1876,7 @@ function loadAndEditProduct(productId) {
         showNotification('Hitilafu ya mtandao', 'error');
     });
 }
+
 function deleteProduct(productId, productName) {
     if (!isBoss && !canEditDelete) return;
     document.getElementById('delete-product-name').textContent = productName;
@@ -1720,7 +2021,7 @@ function printCurrentView() {
         return;
     }
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(`<html><head><title>Orodha ya Bidhaa - ${new Date().toLocaleDateString()}</title><style>body{font-family:Arial,sans-serif;margin:20px;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background-color:#f3f4f6;}.header{text-align:center;margin-bottom:30px;}.header h2{margin:0;color:#047857;}</style></head><body><div class="header"><h2>Orodha ya Bidhaa</h2><p>Tarehe: ${new Date().toLocaleDateString()} | Jumla: ${products.length}</p>${isSearchActive ? `<p>Matokeo ya utafutaji: "${currentSearchTerm}"</p>` : ''}</div><table><thead><tr><th>#</th><th>Bidhaa</th><th>Aina</th><th>Idadi</th><th>Bei Rejareja</th><th>Bei Jumla</th><th>Expiry</th></tr></thead><tbody>${products.map((p, i) => `<tr><td>${i+1}</td><td>${p.jina||''}</td><td>${p.aina||''}</td><td class="text-center">${parseFloat(p.idadi||0).toFixed(2)}</td><td>${parseFloat(p.bei_kuuza||0).toLocaleString()} TZS</td><td>${p.bei_uzo_jumla ? parseFloat(p.bei_uzo_jumla).toLocaleString() + ' TZS' : '--'}</td><td>${p.expiry ? new Date(p.expiry).toLocaleDateString() : '--'}</td></tr>`).join('')}</tbody></table></body></html>`);
+    printWindow.document.write(`<html><head><title>Orodha ya Bidhaa - ${new Date().toLocaleDateString()}</title><style>body{font-family:Arial,sans-serif;margin:20px;}table{width:100%;border-collapse:collapse;margin-top:20px;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background-color:#f3f4f6;}.header{text-align:center;margin-bottom:30px;}.header h2{margin:0;color:#047857;}</style></head><body><div class="header"><h2>Orodha ya Bidhaa</h2><p>Tarehe: ${new Date().toLocaleDateString()} | Jumla: ${products.length}</p>${isSearchActive ? `<p>Matokeo ya utafutaji: "${currentSearchTerm}"</p>` : ''}</div><table><thead><tr><th>#</th><th>Bidhaa</th><th>Aina</th><th>Idadi</th><th>Bei Rejareja</th><th>Bei Jumla</th><th>Expiry</th></tr></thead><tbody>${products.map((p, i) => `<tr><td>${i+1}</td><td>${p.jina||''}</td><td>${p.aina||''}</td><td class="text-center">${parseFloat(p.idadi||0).toFixed(2)}</td><td>${parseFloat(p.bei_kuuza||0).toLocaleString()} TZS</td><td>${p.bei_uzo_jumla ? parseFloat(p.bei_uzo_jumla).toLocaleString() + ' TZS' : '--'}</td><td>${p.expiry ? new Date(p.expiry).toLocaleDateString() : '--'}</td></tr>`).join('')}</tbody>}</table></body></html>`);
     printWindow.document.close();
     printWindow.print();
 }
@@ -1934,6 +2235,230 @@ function printProductDetails() {
     printWindow.document.write(`<html><head><title>Taarifa za ${jina}</title><style>body{font-family:Arial;margin:20px;}h1{color:#047857;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ddd;padding:8px;text-align:left;}th{background:#f3f4f6;}.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0;}.stat-card{border:1px solid #ddd;padding:10px;border-radius:5px;}</style></head><body><div class="header"><h1>Taarifa za Bidhaa</h1><p>Tarehe: ${new Date().toLocaleDateString()}</p></div><h2>${document.getElementById('detail-jina').textContent}</h2><p>Aina: ${document.getElementById('detail-aina').textContent}</p><div class="stats-grid"><div class="stat-card"><div>Idadi Iliyopo Sasa</div><div><b>${document.getElementById('stat-idadi-sasa').textContent}</b></div></div><div class="stat-card"><div>Jumla Iliyoingizwa</div><div><b>${document.getElementById('stat-jumla-ingizo').textContent}</b></div></div><div class="stat-card"><div>Jumla Iliyouzwa</div><div><b>${document.getElementById('stat-jumla-mauzo').textContent}</b></div></div><div class="stat-card"><div>Zilizobaki</div><div><b>${document.getElementById('stat-zilizobaki').textContent}</b></div></div></div><h3>Historia</h3><table><thead><tr><th>Tarehe</th><th>Aina</th><th>Iliyoingizwa</th><th>Iliyouzwa</th><th>Iliyobaki</th><th>Maelezo</th></tr></thead><tbody>${Array.from(document.querySelectorAll('#history-tbody tr')).map(row => row.outerHTML).join('')}</tbody></table></body></html>`);
     printWindow.document.close();
     printWindow.print();
+}
+// Add these functions to the existing script section
+
+// ===== SHOWCASE LINK GENERATION =====
+let currentShowcaseLink = '';
+let currentQRCodeData = '';
+
+function generateShowcaseLink() {
+    // Get company ID from the page
+    const companyId = getCompanyId();
+    
+    if (!companyId) {
+        showNotification('Company ID not found. Please refresh the page.', 'error');
+        return;
+    }
+    
+    // Generate the showcase URL
+    const baseUrl = window.location.origin;
+    currentShowcaseLink = `${baseUrl}/shop/${companyId}`;
+    
+    // Display the link
+    document.getElementById('showcaseLinkInput').value = currentShowcaseLink;
+    document.getElementById('showcaseLinkContainer').classList.remove('hidden');
+    
+    // Animate the container
+    const container = document.getElementById('showcaseLinkContainer');
+    container.style.animation = 'fadeIn 0.5s ease';
+    
+    showNotification('Showcase link generated successfully!', 'success');
+}
+
+function getCompanyId() {
+    // Try to get company ID from multiple sources
+    // 1. From the app container dataset
+    const appContainer = document.getElementById('app-container');
+    if (appContainer && appContainer.dataset.companyId) {
+        return appContainer.dataset.companyId;
+    }
+    
+    // 2. From the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('company')) {
+        return urlParams.get('company');
+    }
+    
+    // 3. From meta tag
+    const metaTag = document.querySelector('meta[name="company-id"]');
+    if (metaTag) {
+        return metaTag.content;
+    }
+    
+    // 4. From the user's company (via Laravel)
+    // This will be populated from the backend
+    const companyIdElement = document.getElementById('company-id-data');
+    if (companyIdElement) {
+        return companyIdElement.value;
+    }
+    
+    // 5. Default to 1 if nothing found (for demo)
+    return 1;
+}
+
+function copyShowcaseLink() {
+    const input = document.getElementById('showcaseLinkInput');
+    input.select();
+    input.setSelectionRange(0, 99999);
+    
+    try {
+        navigator.clipboard.writeText(input.value);
+        showNotification('Link copied to clipboard!', 'success');
+    } catch (err) {
+        // Fallback
+        document.execCommand('copy');
+        showNotification('Link copied to clipboard!', 'success');
+    }
+}
+
+function openShowcaseLink() {
+    if (currentShowcaseLink) {
+        window.open(currentShowcaseLink, '_blank');
+    } else {
+        showNotification('Please generate a link first.', 'warning');
+    }
+}
+
+function shareOnWhatsApp() {
+    if (!currentShowcaseLink) {
+        showNotification('Please generate a link first.', 'warning');
+        return;
+    }
+    
+    const companyName = getCompanyName();
+    const message = `🛍️ *${companyName}* - Order Online\n\nBrowse our products and place your order easily:\n${currentShowcaseLink}\n\n📱 Scan or click the link to start shopping!`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+}
+
+function shareViaEmail() {
+    if (!currentShowcaseLink) {
+        showNotification('Please generate a link first.', 'warning');
+        return;
+    }
+    
+    const companyName = getCompanyName();
+    const subject = encodeURIComponent(`Order from ${companyName}`);
+    const body = encodeURIComponent(
+        `Hello,\n\nYou can now browse and order products from ${companyName} using the link below:\n\n${currentShowcaseLink}\n\nThank you!`
+    );
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+function printShowcaseLink() {
+    if (!currentShowcaseLink) {
+        showNotification('Please generate a link first.', 'warning');
+        return;
+    }
+    
+    const companyName = getCompanyName();
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Showcase Link - ${companyName}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 40px; text-align: center; }
+                .container { max-width: 500px; margin: 0 auto; border: 2px solid #10b981; border-radius: 12px; padding: 30px; }
+                .logo { font-size: 48px; color: #10b981; margin-bottom: 10px; }
+                h2 { color: #1f2937; margin-bottom: 5px; }
+                .link { background: #f3f4f6; padding: 12px; border-radius: 8px; margin: 15px 0; word-break: break-all; color: #059669; font-weight: 600; }
+                .qr { margin: 15px 0; padding: 10px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; }
+                .footer { color: #6b7280; font-size: 12px; margin-top: 15px; border-top: 1px solid #e5e7eb; padding-top: 15px; }
+                .btn { display: inline-block; background: #10b981; color: white; padding: 8px 20px; border-radius: 6px; text-decoration: none; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="logo">🛍️</div>
+                <h2>${companyName}</h2>
+                <p style="color:#6b7280;">Customer Showcase Page</p>
+                <div class="link">${currentShowcaseLink}</div>
+                <div class="qr">
+                    <p style="font-size:14px;color:#6b7280;">Scan QR to open</p>
+                    <div style="display:flex;justify-content:center;margin:10px 0;" id="qrPrintPlaceholder">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentShowcaseLink)}" alt="QR Code">
+                    </div>
+                </div>
+                <p style="font-size:14px;color:#6b7280;">Share this link with customers to browse and order products</p>
+                <div class="footer">
+                    Powered by Mauzo Sheet &bull; ${new Date().toLocaleDateString()}
+                </div>
+            </div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function getCompanyName() {
+    // Try to get company name from the page
+    const companyNameElement = document.getElementById('company-name-data');
+    if (companyNameElement) {
+        return companyNameElement.value;
+    }
+    
+    // Try to get from page title
+    const titleElement = document.querySelector('title');
+    if (titleElement) {
+        const title = titleElement.textContent;
+        if (title && !title.includes('Bidhaa')) {
+            return title;
+        }
+    }
+    
+    // Default
+    return 'Our Shop';
+}
+
+function generateQRCode() {
+    if (!currentShowcaseLink) {
+        // Generate link first if not available
+        generateShowcaseLink();
+        // Wait a moment then generate QR
+        setTimeout(() => {
+            generateQRCodeActual();
+        }, 500);
+    } else {
+        generateQRCodeActual();
+    }
+}
+
+function generateQRCodeActual() {
+    const container = document.getElementById('qrCodeContainer');
+    const display = document.getElementById('qrCodeDisplay');
+    
+    // Use QR Server API
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(currentShowcaseLink)}&bgcolor=ffffff&color=059669&margin=10`;
+    
+    display.innerHTML = `<img src="${qrUrl}" alt="QR Code" class="w-48 h-48 object-contain" style="max-width:200px;height:200px;" id="qrImage">`;
+    container.classList.remove('hidden');
+    
+    // Store QR data for download
+    currentQRCodeData = qrUrl;
+    
+    showNotification('QR Code generated successfully!', 'success');
+}
+
+function downloadQRCode() {
+    const qrImage = document.getElementById('qrImage');
+    if (!qrImage) {
+        showNotification('Please generate a QR code first.', 'warning');
+        return;
+    }
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.download = `showcase-qr-${getCompanyName().toLowerCase().replace(/\s/g, '-')}.png`;
+    link.href = qrImage.src;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification('QR Code downloaded!', 'success');
 }
 </script>
 @endpush

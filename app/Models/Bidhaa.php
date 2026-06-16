@@ -24,6 +24,7 @@ class Bidhaa extends Model
         'expiry',
         'barcode',
         'company_id',
+        'image',
     ];
 
     protected $casts = [
@@ -35,6 +36,43 @@ class Bidhaa extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    // Get image as base64 for display
+    public function getImageBase64Attribute()
+    {
+        if ($this->image) {
+            $mimeType = $this->getImageMimeType();
+            return 'data:' . $mimeType . ';base64,' . base64_encode($this->image);
+        }
+        return null;
+    }
+
+    // Get image mime type
+    private function getImageMimeType()
+    {
+        if (empty($this->image)) {
+            return 'image/jpeg';
+        }
+        
+        // Try to detect mime type from the binary data
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_buffer($finfo, $this->image);
+        finfo_close($finfo);
+        
+        return $mimeType ?: 'image/jpeg';
+    }
+
+    // Get image URL (data URI)
+    public function getImageUrlAttribute()
+    {
+        return $this->image_base64;
+    }
+
+    // Check if product has image
+    public function hasImage()
+    {
+        return !empty($this->image);
+    }
 
     public function getCurrentPriceAttribute(): float
     {

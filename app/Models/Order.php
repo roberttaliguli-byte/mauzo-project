@@ -1,5 +1,6 @@
 <?php
 // app/Models/Order.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,42 +11,75 @@ class Order extends Model
     use HasFactory;
 
     protected $fillable = [
-        'company_id', 'order_number', 'customer_id', 'customer_name', 
-        'customer_phone', 'customer_email', 'customer_address', 'items', 
-        'subtotal', 'discount', 'discount_type', 'total', 'status', 
-        'payment_method', 'payment_type', 'notes', 'created_by', 
-        'paid_at', 'sale_id', 'transferred_to_cart', 'transferred_at', 'payment_reference'
+        'company_id',
+        'order_number',
+        'customer_id',
+        'customer_name',
+        'customer_phone',
+        'customer_email',
+        'customer_address',
+        'delivery_address',
+        'items',
+        'subtotal',
+        'discount',
+        'discount_type',
+        'delivery_fee',
+        'tax',
+        'total',
+        'status',
+        'order_type',
+        'table_number',
+        'special_instructions',
+        'notes',
+        'created_by',
+        'paid_at',
+        'confirmed_at',
+        'processing_at',
+        'ready_at',
+        'shipped_at',
+        'delivered_at',
+        'cancelled_at',
+        'transferred_to_cart',
+        'transferred_at'
     ];
 
     protected $casts = [
         'items' => 'array',
-        'subtotal' => 'decimal:2',
-        'discount' => 'decimal:2',
-        'total' => 'decimal:2',
+        'subtotal' => 'float',
+        'discount' => 'float',
+        'delivery_fee' => 'float',
+        'tax' => 'float',
+        'total' => 'float',
         'paid_at' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'processing_at' => 'datetime',
+        'ready_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'cancelled_at' => 'datetime',
         'transferred_at' => 'datetime',
-        'created_at' => 'datetime'
+        'transferred_to_cart' => 'boolean'
     ];
 
-    const STATUS_SAVED = 'saved';
-    const STATUS_CONFIRMED = 'confirmed';
-    const STATUS_PAID = 'paid';
-    const STATUS_CANCELLED = 'cancelled';
-
-    const STATUS_CONFIG = [
-        'saved' => ['label' => 'Saved', 'color' => 'gray', 'bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'icon' => 'fa-save'],
-        'confirmed' => ['label' => 'Confirmed', 'color' => 'blue', 'bg' => 'bg-blue-100', 'text' => 'text-blue-700', 'icon' => 'fa-check-circle'],
-        'paid' => ['label' => 'Paid', 'color' => 'green', 'bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'fa-money-bill-wave'],
-        'cancelled' => ['label' => 'Cancelled', 'color' => 'red', 'bg' => 'bg-red-100', 'text' => 'text-red-700', 'icon' => 'fa-times-circle']
+   protected $dates = [
+        'created_at',
+        'updated_at',
+        'paid_at',
+        'transferred_at'
     ];
 
-    public function company() { return $this->belongsTo(Company::class); }
-    public function customer() { return $this->belongsTo(Mteja::class, 'customer_id'); }
-    public function creator() { return $this->belongsTo(User::class, 'created_by'); }
-    public function sale() { return $this->belongsTo(Mauzo::class, 'sale_id'); }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
-    public function getStatusLabelAttribute() { return self::STATUS_CONFIG[$this->status]['label'] ?? $this->status; }
-    public function getStatusBgAttribute() { return self::STATUS_CONFIG[$this->status]['bg'] ?? 'bg-gray-100'; }
-    public function getStatusTextAttribute() { return self::STATUS_CONFIG[$this->status]['text'] ?? 'text-gray-700'; }
-    public function getStatusIconAttribute() { return self::STATUS_CONFIG[$this->status]['icon'] ?? 'fa-circle'; }
+    public function customer()
+    {
+        return $this->belongsTo(Mteja::class, 'customer_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }
