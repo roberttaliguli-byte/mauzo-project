@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\MengineyoController;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\PublicShowcaseController;
+use App\Http\Controllers\UzalishajiController;
+
 
 // =========================
 // Public routes
@@ -636,3 +638,17 @@ Route::get('/shop/customer/find-code/{companyId}', [PublicShowcaseController::cl
     ->name('customer.find.code');
 
 Route::delete('/company/logo', [CompanyController::class, 'deleteLogo'])->name('company.logo.delete');
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('uzalishaji')->name('uzalishaji.')->group(function () {
+        Route::get('/', [UzalishajiController::class, 'index'])->name('index');
+        Route::post('/', [UzalishajiController::class, 'store'])->name('store');
+        Route::put('/{id}', [UzalishajiController::class, 'update'])->name('update');
+        Route::delete('/{id}', [UzalishajiController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/complete', [UzalishajiController::class, 'complete'])->name('complete');
+        Route::post('/{id}/duplicate', [UzalishajiController::class, 'duplicate'])->name('duplicate');
+        Route::get('/{id}/summary', [UzalishajiController::class, 'getSummary'])->name('summary');
+        Route::get('/reports', [UzalishajiController::class, 'reports'])->name('reports');
+    });
+});

@@ -18,7 +18,9 @@
         ['route' => 'masaplaya.index', 'icon' => '🏆', 'label' => 'Masaplaya', 'short' => 'MP'],
         ['route' => 'wateja.index', 'icon' => '👥', 'label' => 'Wateja', 'short' => 'WT'],
         ['route' => 'uchambuzi.index', 'icon' => '📊', 'label' => 'Uchambuzi', 'short' => 'UC'],
-         ['route' => 'mengineyo.index', 'icon' => '💰', 'label' => 'Mengineyo', 'short' => 'ME'], 
+        ['route' => 'uzalishaji.index', 'icon' => '🏭', 'label' => 'Uzalishaji', 'short' => 'UZ'], // NEW
+          ['route' => 'mengineyo.index', 'icon' => '💰', 'label' => 'Mengineyo', 'short' => 'ME'], 
+         
     ];
 
     $mfanyakaziNavItems = [
