@@ -2,7 +2,7 @@
 
 <!-- Pokea Order Tab Content -->
 <div id="pokeaorder-tab-content" class="tab-content hidden">
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         
         <!-- Header -->
         <div class="px-4 py-3 bg-gradient-to-r from-emerald-50 to-green-50 border-b border-gray-200">
@@ -15,73 +15,70 @@
                     <p class="text-xs text-gray-500">Orders from customers via showcase page</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <button onclick="refreshPokeaOrders()" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium transition">
-                        <i class="fas fa-sync-alt mr-1"></i> Refresh
-                    </button>
-                    <button onclick="filterPokeaOrders('all')" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium transition">
-                        <i class="fas fa-list mr-1"></i> All
+                    <button onclick="refreshPokeaOrders()" class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium transition flex items-center gap-1">
+                        <i class="fas fa-sync-alt"></i> Fresha
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <div class="text-center p-2 bg-white rounded-lg border border-gray-200">
-                <p class="text-xs text-gray-500">Jumla</p>
-                <p class="text-lg font-bold text-gray-700" id="pokea-total">0</p>
-            </div>
-            <div class="text-center p-2 bg-white rounded-lg border border-yellow-200">
-                <p class="text-xs text-gray-500">Inasubiri</p>
-                <p class="text-lg font-bold text-yellow-600" id="pokea-pending">0</p>
-            </div>
-            <div class="text-center p-2 bg-white rounded-lg border border-blue-200">
-                <p class="text-xs text-gray-500">Imethibitishwa</p>
-                <p class="text-lg font-bold text-blue-600" id="pokea-confirmed">0</p>
-            </div>
-            <div class="text-center p-2 bg-white rounded-lg border border-green-200">
-                <p class="text-xs text-gray-500">Imelipwa</p>
-                <p class="text-lg font-bold text-green-600" id="pokea-paid">0</p>
-            </div>
-            <div class="text-center p-2 bg-white rounded-lg border border-red-200">
-                <p class="text-xs text-gray-500">Imefutwa</p>
-                <p class="text-lg font-bold text-red-600" id="pokea-cancelled">0</p>
-            </div>
-        </div>
+<!-- Stats - Simple & Clean Cards -->
+<div class="grid grid-cols-3 md:grid-cols-5 gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+    <div class="text-center p-2 bg-white rounded-lg border border-gray-200">
+        <p class="text-[10px] text-gray-500">Jumla</p>
+        <p class="text-base font-bold text-gray-700" id="pokea-total">0</p>
+    </div>
+    <div class="text-center p-2 bg-white rounded-lg border border-yellow-200">
+        <p class="text-[10px] text-gray-500">Inasubiri</p>
+        <p class="text-base font-bold text-yellow-600" id="pokea-pending">0</p>
+    </div>
+    <div class="text-center p-2 bg-white rounded-lg border border-blue-200">
+        <p class="text-[10px] text-gray-500">Imethibitishwa</p>
+        <p class="text-base font-bold text-blue-600" id="pokea-confirmed">0</p>
+    </div>
+    <div class="text-center p-2 bg-white rounded-lg border border-green-200">
+        <p class="text-[10px] text-gray-500">Imelipwa</p>
+        <p class="text-base font-bold text-green-600" id="pokea-paid">0</p>
+    </div>
+    <div class="text-center p-2 bg-white rounded-lg border border-red-200">
+        <p class="text-[10px] text-gray-500">Imefutwa</p>
+        <p class="text-base font-bold text-red-600" id="pokea-cancelled">0</p>
+    </div>
+</div>
 
-        <!-- Filter Bar -->
+        <!-- Filter Bar - Modern -->
         <div class="px-4 py-2 bg-gray-50 border-b border-gray-200 flex flex-wrap gap-2 items-center">
-            <span class="text-xs font-medium text-gray-600">Filter:</span>
-            <button onclick="filterPokeaOrders('all')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-600 text-white" data-filter="all">
-                All
+            <span class="text-xs font-medium text-gray-600">Chuja:</span>
+            <button onclick="filterPokeaOrders('all')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-emerald-600 text-white transition" data-filter="all">
+                Zote
             </button>
-            <button onclick="filterPokeaOrders('saved')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-yellow-100" data-filter="saved">
+            <button onclick="filterPokeaOrders('saved')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-yellow-100 transition" data-filter="saved">
                 <i class="fas fa-clock mr-1"></i> Inasubiri
             </button>
-            <button onclick="filterPokeaOrders('confirmed')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-blue-100" data-filter="confirmed">
+            <button onclick="filterPokeaOrders('confirmed')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-blue-100 transition" data-filter="confirmed">
                 <i class="fas fa-check-circle mr-1"></i> Imethibitishwa
             </button>
-            <button onclick="filterPokeaOrders('paid')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-green-100" data-filter="paid">
+            <button onclick="filterPokeaOrders('paid')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-green-100 transition" data-filter="paid">
                 <i class="fas fa-money-bill-wave mr-1"></i> Imelipwa
             </button>
-            <button onclick="filterPokeaOrders('cancelled')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-red-100" data-filter="cancelled">
+            <button onclick="filterPokeaOrders('cancelled')" class="filter-btn px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700 hover:bg-red-100 transition" data-filter="cancelled">
                 <i class="fas fa-times-circle mr-1"></i> Imefutwa
             </button>
         </div>
 
-        <!-- Orders Table -->
+        <!-- Orders Table - Modern -->
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#Order</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mteja</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Simu</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Bidhaa</th>
-                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumla</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Hali</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tarehe</th>
-                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Vitendo</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#Order</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mteja</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Simu</th>
+                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Bidhaa</th>
+                        <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Jumla</th>
+                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Hali</th>
+                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">Tarehe</th>
+                        <th class="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Vitendo</th>
                     </tr>
                 </thead>
                 <tbody id="pokea-orders-tbody" class="divide-y divide-gray-100">
@@ -101,26 +98,26 @@
             <div class="flex justify-between items-center">
                 <span class="text-xs text-gray-500" id="pokea-showing">Showing 0 orders</span>
                 <div class="flex gap-1">
-                    <button onclick="loadPokeaOrders('prev')" class="px-3 py-1 border border-gray-300 rounded text-xs hover:bg-gray-50">←</button>
-                    <span id="pokea-page-info" class="px-3 py-1 text-xs">Page 1</span>
-                    <button onclick="loadPokeaOrders('next')" class="px-3 py-1 border border-gray-300 rounded text-xs hover:bg-gray-50">→</button>
+                    <button onclick="loadPokeaOrders('prev')" class="px-3 py-1 border border-gray-300 rounded text-xs hover:bg-gray-50 transition">←</button>
+                    <span id="pokea-page-info" class="px-3 py-1 text-xs">Ukurasa 1</span>
+                    <button onclick="loadPokeaOrders('next')" class="px-3 py-1 border border-gray-300 rounded text-xs hover:bg-gray-50 transition">→</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Order Detail Modal -->
+<!-- Order Detail Modal - Modern -->
 <div id="pokea-order-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-2xl mx-auto z-50 max-h-[90vh] overflow-y-auto">
-        <div class="p-4 border-b border-gray-200 sticky top-0 bg-white z-10 flex justify-between items-center">
+    <div class="modal-overlay absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="modal-content bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto z-50 max-h-[90vh] overflow-y-auto">
+        <div class="p-4 border-b border-gray-200 sticky top-0 bg-white z-10 rounded-t-xl flex justify-between items-center">
             <h3 class="text-lg font-semibold text-gray-800">
                 <i class="fas fa-clipboard-list text-emerald-600 mr-2"></i>
-                Order Details
+                Maelezo ya Order
             </h3>
-            <button onclick="closePokeaModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times"></i>
+            <button onclick="closePokeaModal()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-1 rounded transition">
+                <i class="fas fa-times text-xl"></i>
             </button>
         </div>
         
@@ -129,6 +126,256 @@
         </div>
     </div>
 </div>
+
+<!-- Toast Notification Container -->
+<div class="toast-container" id="toastContainerPokea"></div>
+
+<style>
+/* Modal Styles */
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Status Badges - Modern */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    gap: 4px;
+}
+
+.status-badge .badge-icon {
+    font-size: 10px;
+}
+
+/* Table row hover */
+#pokea-orders-tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+#pokea-orders-tbody tr:hover {
+    background-color: #f9fafb;
+    cursor: pointer;
+}
+
+/* Filter buttons - Modern */
+.filter-btn {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.filter-btn.active {
+    background: #10b981;
+    color: white;
+}
+
+/* Scroll for items */
+#pokea-modal-body .max-h-60 {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+/* Toast Notification - Centered Top */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    max-width: 90%;
+    width: 400px;
+    pointer-events: none;
+}
+
+.toast {
+    padding: 12px 24px;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: slideDown 0.4s ease forwards;
+    width: 100%;
+    text-align: center;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.toast-success { background: #10b981; }
+.toast-error { background: #ef4444; }
+.toast-info { background: #3b82f6; }
+.toast-warning { background: #f59e0b; }
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.toast-out {
+    animation: slideUp 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-30px) scale(0.95); }
+}
+
+/* Action Buttons - Modern */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    min-width: 36px;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.action-btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.action-btn-view { background: #dbeafe; color: #1e40af; }
+.action-btn-view:hover { background: #bfdbfe; }
+
+.action-btn-confirm { background: #d1fae5; color: #065f46; }
+.action-btn-confirm:hover { background: #a7f3d0; }
+
+.action-btn-pay { background: #d1fae5; color: #065f46; }
+.action-btn-pay:hover { background: #a7f3d0; }
+
+.action-btn-cancel { background: #fee2e2; color: #991b1b; }
+.action-btn-cancel:hover { background: #fecaca; }
+
+.action-btn-whatsapp { background: #d1fae5; color: #065f46; }
+.action-btn-whatsapp:hover { background: #a7f3d0; }
+
+/* Table action buttons container */
+.table-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    #pokea-orders-tbody td {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+    
+    .modal-content {
+        margin: 8px;
+        padding: 12px;
+    }
+    
+    .status-badge {
+        font-size: 9px;
+        padding: 2px 8px;
+    }
+    
+    .action-btn {
+        padding: 4px 6px;
+        font-size: 10px;
+        min-width: 28px;
+    }
+    
+    .action-btn span {
+        display: none;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    #pokea-orders-tbody td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Modal body scroll */
+#pokea-modal-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+#pokea-modal-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#pokea-modal-body::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+</style>
 
 <script>
 // ============================================
@@ -140,10 +387,73 @@ let pokeaCurrentFilter = 'all';
 let pokeaCurrentPage = 1;
 let pokeaPerPage = 20;
 let pokeaSelectedOrder = null;
+let pokeaAutoRefreshInterval = null;
+let pokeaIsLoading = false;
+
+// ===== INITIALIZE =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Load orders when tab is shown
+    const observer = new MutationObserver(function() {
+        const tabContent = document.getElementById('pokeaorder-tab-content');
+        if (tabContent && !tabContent.classList.contains('hidden')) {
+            loadPokeaOrders();
+            startPokeaAutoRefresh();
+        } else {
+            stopPokeaAutoRefresh();
+        }
+    });
+    
+    const target = document.getElementById('pokeaorder-tab-content');
+    if (target) {
+        observer.observe(target, { attributes: true, attributeFilter: ['class'] });
+    }
+    
+    // Initial load if visible
+    const tabContent = document.getElementById('pokeaorder-tab-content');
+    if (tabContent && !tabContent.classList.contains('hidden')) {
+        loadPokeaOrders();
+        startPokeaAutoRefresh();
+    }
+    
+    // Close modal on escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePokeaModal();
+        }
+    });
+});
+
+// ===== AUTO REFRESH =====
+function startPokeaAutoRefresh() {
+    stopPokeaAutoRefresh();
+    pokeaAutoRefreshInterval = setInterval(function() {
+        if (!pokeaIsLoading) {
+            loadPokeaOrders();
+        }
+    }, 15000);
+}
+
+function stopPokeaAutoRefresh() {
+    if (pokeaAutoRefreshInterval) {
+        clearInterval(pokeaAutoRefreshInterval);
+        pokeaAutoRefreshInterval = null;
+    }
+}
 
 // ===== LOAD ORDERS =====
-function loadPokeaOrders() {
+function loadPokeaOrders(direction) {
+    if (pokeaIsLoading) return;
+    
+    if (direction === 'prev' && pokeaCurrentPage > 1) {
+        pokeaCurrentPage--;
+    } else if (direction === 'next') {
+        pokeaCurrentPage++;
+    }
+    
+    pokeaIsLoading = true;
     const tbody = document.getElementById('pokea-orders-tbody');
+    
+    // Show loading state
     tbody.innerHTML = `
         <tr>
             <td colspan="8" class="px-4 py-8 text-center text-gray-500">
@@ -168,22 +478,25 @@ function loadPokeaOrders() {
     })
     .then(response => response.json())
     .then(data => {
+        pokeaIsLoading = false;
         if (data.success) {
             pokeaOrders = data.data;
             displayPokeaOrders(pokeaOrders);
             updatePokeaStats(pokeaOrders);
+            updatePokeaTabBadge();
         } else {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="8" class="px-4 py-8 text-center text-red-500">
                         <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
-                        <p>${data.message || 'Failed to load orders'}</p>
+                        <p>${data.message || 'Imeshindwa kupakia orders'}</p>
                     </td>
                 </tr>
             `;
         }
     })
     .catch(error => {
+        pokeaIsLoading = false;
         console.error('Error:', error);
         tbody.innerHTML = `
             <tr>
@@ -221,51 +534,56 @@ function displayPokeaOrders(orders) {
         
         html += `
             <tr class="hover:bg-gray-50 cursor-pointer" onclick="viewPokeaOrder('${order.id}')">
-                <td class="px-4 py-2 font-medium text-gray-800">${order.order_number}</td>
-                <td class="px-4 py-2">
-                    <div class="font-medium text-gray-800">${order.customer_name || 'Walk-in'}</div>
-                    <div class="text-xs text-gray-500">${order.order_type || 'delivery'}</div>
+                <td class="px-3 py-2 font-medium text-gray-800 text-xs">${order.order_number}</td>
+                <td class="px-3 py-2">
+                    <div class="font-medium text-gray-800 text-sm">${order.customer_name || 'Mteja wa Kutembea'}</div>
+                    <div class="text-xs text-gray-400">${order.order_type || 'delivery'}</div>
                 </td>
-                <td class="px-4 py-2 text-sm">${order.customer_phone || '-'}</td>
-                <td class="px-4 py-2 text-center">
+                <td class="px-3 py-2 text-sm hidden sm:table-cell">${order.customer_phone || '-'}</td>
+                <td class="px-3 py-2 text-center hidden md:table-cell">
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
-                        ${itemCount} items
+                        ${itemCount} bidhaa
                     </span>
                 </td>
-                <td class="px-4 py-2 text-right font-semibold text-emerald-600">
+                <td class="px-3 py-2 text-right font-semibold text-emerald-600 text-sm">
                     ${formatCurrency(order.total)}
                 </td>
-                <td class="px-4 py-2 text-center">
+                <td class="px-3 py-2 text-center hidden lg:table-cell">
                     <span class="status-badge ${statusBadge.class}">
                         ${statusBadge.icon} ${statusBadge.label}
                     </span>
                 </td>
-                <td class="px-4 py-2 text-center text-xs text-gray-500">${createdDate}</td>
-                <td class="px-4 py-2 text-center">
-                    <div class="flex items-center justify-center gap-1">
+                <td class="px-3 py-2 text-center text-xs text-gray-500 hidden xl:table-cell">${createdDate}</td>
+                <td class="px-3 py-2 text-center">
+                    <div class="table-actions">
                         <button onclick="event.stopPropagation(); viewPokeaOrder('${order.id}')" 
-                                class="text-blue-600 hover:text-blue-800 p-1" title="View">
-                            <i class="fas fa-eye text-sm"></i>
+                                class="action-btn action-btn-view action-btn-sm" title="Tazama">
+                            <i class="fas fa-eye"></i>
+                            <span class="hidden sm:inline">Tazama</span>
                         </button>
                         ${order.status === 'saved' ? `
                         <button onclick="event.stopPropagation(); confirmPokeaOrder('${order.id}')" 
-                                class="text-green-600 hover:text-green-800 p-1" title="Confirm">
-                            <i class="fas fa-check-circle text-sm"></i>
+                                class="action-btn action-btn-confirm action-btn-sm" title="Thibitisha">
+                            <i class="fas fa-check-circle"></i>
+                            <span class="hidden md:inline">Thibitisha</span>
                         </button>
                         <button onclick="event.stopPropagation(); cancelPokeaOrder('${order.id}')" 
-                                class="text-red-600 hover:text-red-800 p-1" title="Cancel">
-                            <i class="fas fa-times-circle text-sm"></i>
+                                class="action-btn action-btn-cancel action-btn-sm" title="Ghairi">
+                            <i class="fas fa-times-circle"></i>
+                            <span class="hidden md:inline">Ghairi</span>
                         </button>
                         ` : ''}
                         ${order.status === 'confirmed' ? `
                         <button onclick="event.stopPropagation(); markPokeaOrderPaid('${order.id}')" 
-                                class="text-emerald-600 hover:text-emerald-800 p-1" title="Mark as Paid">
-                            <i class="fas fa-money-bill-wave text-sm"></i>
+                                class="action-btn action-btn-pay action-btn-sm" title="Lipa">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span class="hidden md:inline">Lipa</span>
                         </button>
                         ` : ''}
                         <button onclick="event.stopPropagation(); sharePokeaOrderWhatsApp('${order.id}')" 
-                                class="text-[#25D366] hover:text-[#1DA851] p-1" title="Share via WhatsApp">
-                            <i class="fab fa-whatsapp text-sm"></i>
+                                class="action-btn action-btn-whatsapp action-btn-sm" title="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                            <span class="hidden sm:inline">WhatsApp</span>
                         </button>
                     </div>
                 </td>
@@ -280,10 +598,10 @@ function displayPokeaOrders(orders) {
 // ===== STATUS BADGE =====
 function getStatusBadge(status) {
     const statusMap = {
-        'saved': { label: 'Inasubiri', class: 'bg-yellow-100 text-yellow-800', icon: '<i class="fas fa-clock mr-1"></i>' },
-        'confirmed': { label: 'Imethibitishwa', class: 'bg-blue-100 text-blue-800', icon: '<i class="fas fa-check-circle mr-1"></i>' },
-        'paid': { label: 'Imelipwa', class: 'bg-green-100 text-green-800', icon: '<i class="fas fa-money-bill-wave mr-1"></i>' },
-        'cancelled': { label: 'Imefutwa', class: 'bg-red-100 text-red-800', icon: '<i class="fas fa-times-circle mr-1"></i>' }
+        'saved': { label: 'Inasubiri', class: 'bg-yellow-100 text-yellow-800', icon: '<i class="fas fa-clock badge-icon"></i>' },
+        'confirmed': { label: 'Imethibitishwa', class: 'bg-blue-100 text-blue-800', icon: '<i class="fas fa-check-circle badge-icon"></i>' },
+        'paid': { label: 'Imelipwa', class: 'bg-green-100 text-green-800', icon: '<i class="fas fa-money-bill-wave badge-icon"></i>' },
+        'cancelled': { label: 'Imefutwa', class: 'bg-red-100 text-red-800', icon: '<i class="fas fa-times-circle badge-icon"></i>' }
     };
     return statusMap[status] || statusMap['saved'];
 }
@@ -301,6 +619,21 @@ function updatePokeaStats(orders) {
     document.getElementById('pokea-confirmed').textContent = confirmed;
     document.getElementById('pokea-paid').textContent = paid;
     document.getElementById('pokea-cancelled').textContent = cancelled;
+}
+
+// ===== UPDATE TAB BADGE =====
+function updatePokeaTabBadge() {
+    const pending = pokeaOrders.filter(o => o.status === 'saved').length;
+    const badge = document.getElementById('pokea-orders-count');
+    
+    if (badge) {
+        if (pending > 0) {
+            badge.textContent = pending;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
 }
 
 // ===== FILTER ORDERS =====
@@ -329,8 +662,8 @@ function updatePokeaPagination() {
     
     if (pokeaOrders.length > 0) {
         pagination.classList.remove('hidden');
-        showing.textContent = `Showing ${pokeaOrders.length} orders`;
-        pageInfo.textContent = `Page ${pokeaCurrentPage}`;
+        showing.textContent = `Inaonyesha ${pokeaOrders.length} orders`;
+        pageInfo.textContent = `Ukurasa ${pokeaCurrentPage}`;
     } else {
         pagination.classList.add('hidden');
     }
@@ -340,21 +673,19 @@ function updatePokeaPagination() {
 function viewPokeaOrder(orderId) {
     const order = pokeaOrders.find(o => o.id == orderId);
     if (!order) {
-        showNotification('Order not found', 'error');
+        showNotification('Order haijapatikana', 'error');
         return;
     }
 
     pokeaSelectedOrder = order;
     const modalBody = document.getElementById('pokea-modal-body');
     
-    // Get items from order
     const items = order.items || [];
     let itemsHtml = '';
     let subtotal = 0;
     
     if (items.length > 0) {
-        items.forEach((item, index) => {
-            // Handle different item formats
+        items.forEach((item) => {
             const itemName = item.jina || item.name || 'Bidhaa';
             const itemAina = item.aina || '';
             const itemKipimo = item.kipimo || '';
@@ -364,7 +695,7 @@ function viewPokeaOrder(orderId) {
             subtotal += itemTotal;
             
             itemsHtml += `
-                <div class="flex justify-between py-2 border-b border-gray-100 text-sm hover:bg-gray-50 px-1 rounded">
+                <div class="flex justify-between py-2 border-b border-gray-100 text-sm hover:bg-gray-50 px-2 rounded">
                     <div class="flex-1">
                         <span class="font-medium text-gray-800">${itemName}</span>
                         ${itemAina ? `<span class="text-xs text-gray-500 ml-2">${itemAina}</span>` : ''}
@@ -395,11 +726,11 @@ function viewPokeaOrder(orderId) {
             <!-- Order Info -->
             <div class="grid grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg">
                 <div>
-                    <p class="text-xs text-gray-500">Order Number</p>
+                    <p class="text-xs text-gray-500">Namba ya Order</p>
                     <p class="font-semibold text-gray-800 text-sm">${order.order_number}</p>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-500">Status</p>
+                    <p class="text-xs text-gray-500">Hali</p>
                     <span class="status-badge ${statusBadge.class} text-xs">${statusBadge.icon} ${statusBadge.label}</span>
                 </div>
                 <div>
@@ -415,26 +746,14 @@ function viewPokeaOrder(orderId) {
             <!-- Customer Info -->
             <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
                 <h4 class="text-sm font-semibold text-blue-800 mb-2">
-                    <i class="fas fa-user mr-2"></i> Customer Details
+                    <i class="fas fa-user mr-2"></i> Maelezo ya Mteja
                 </h4>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                        <span class="text-gray-500">Jina:</span>
-                        <span class="font-medium">${order.customer_name || 'Walk-in'}</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-500">Simu:</span>
-                        <span class="font-medium">${order.customer_phone || '-'}</span>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="text-gray-500">Anwani:</span>
-                        <span class="font-medium">${order.customer_address || order.delivery_address || '-'}</span>
-                    </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <div><span class="text-gray-500">Jina:</span> <span class="font-medium">${order.customer_name || 'Mteja wa Kutembea'}</span></div>
+                    <div><span class="text-gray-500">Simu:</span> <span class="font-medium">${order.customer_phone || '-'}</span></div>
+                    <div class="sm:col-span-2"><span class="text-gray-500">Anwani:</span> <span class="font-medium">${order.customer_address || order.delivery_address || '-'}</span></div>
                     ${order.special_instructions ? `
-                    <div class="col-span-2">
-                        <span class="text-gray-500">Maelekezo:</span>
-                        <span class="font-medium">${order.special_instructions}</span>
-                    </div>
+                    <div class="sm:col-span-2"><span class="text-gray-500">Maelekezo:</span> <span class="font-medium">${order.special_instructions}</span></div>
                     ` : ''}
                 </div>
             </div>
@@ -453,7 +772,7 @@ function viewPokeaOrder(orderId) {
             <!-- Totals -->
             <div class="bg-gray-50 p-3 rounded-lg">
                 <div class="flex justify-between text-sm py-1">
-                    <span class="text-gray-500">Subtotal</span>
+                    <span class="text-gray-500">Jumla Ndogo</span>
                     <span>${formatCurrency(subtotal)}</span>
                 </div>
                 ${order.discount > 0 ? `
@@ -464,44 +783,44 @@ function viewPokeaOrder(orderId) {
                 ` : ''}
                 ${order.delivery_fee > 0 ? `
                 <div class="flex justify-between text-sm py-1">
-                    <span class="text-gray-500">Delivery Fee</span>
+                    <span class="text-gray-500">Gharama ya Usafirishaji</span>
                     <span>${formatCurrency(order.delivery_fee)}</span>
                 </div>
                 ` : ''}
                 <div class="flex justify-between text-lg font-bold border-t border-gray-200 pt-2 mt-2">
-                    <span>Jumla</span>
+                    <span>JUMLA</span>
                     <span class="text-emerald-600">${formatCurrency(total)}</span>
                 </div>
             </div>
 
-            <!-- Actions -->
+            <!-- Actions - Modern Single Line -->
             <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
                 ${order.status === 'saved' ? `
-                <button onclick="confirmPokeaOrder('${order.id}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition">
-                    <i class="fas fa-check-circle mr-1"></i> Thibitisha
+                <button onclick="confirmPokeaOrder('${order.id}')" class="action-btn bg-blue-600 text-white hover:bg-blue-700 px-4 py-2">
+                    <i class="fas fa-check-circle"></i> Thibitisha
                 </button>
-                <button onclick="markPokeaOrderPaid('${order.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium transition">
-                    <i class="fas fa-money-bill-wave mr-1"></i> Lipa
+                <button onclick="markPokeaOrderPaid('${order.id}')" class="action-btn bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2">
+                    <i class="fas fa-money-bill-wave"></i> Lipa
                 </button>
                 ` : ''}
                 ${order.status === 'confirmed' ? `
-                <button onclick="markPokeaOrderPaid('${order.id}')" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm font-medium transition">
-                    <i class="fas fa-money-bill-wave mr-1"></i> Lipa
+                <button onclick="markPokeaOrderPaid('${order.id}')" class="action-btn bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2">
+                    <i class="fas fa-money-bill-wave"></i> Lipa
                 </button>
                 ` : ''}
                 ${order.status !== 'cancelled' ? `
-                <button onclick="cancelPokeaOrder('${order.id}')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition">
-                    <i class="fas fa-times-circle mr-1"></i> Ghairi
+                <button onclick="cancelPokeaOrder('${order.id}')" class="action-btn bg-red-600 text-white hover:bg-red-700 px-4 py-2">
+                    <i class="fas fa-times-circle"></i> Ghairi
                 </button>
                 ` : ''}
-                <button onclick="sharePokeaOrderWhatsApp('${order.id}')" class="px-4 py-2 bg-[#25D366] text-white rounded-lg hover:bg-[#1DA851] text-sm font-medium transition">
-                    <i class="fab fa-whatsapp mr-1"></i> WhatsApp
+                <button onclick="sharePokeaOrderWhatsApp('${order.id}')" class="action-btn bg-[#25D366] text-white hover:bg-[#1DA851] px-4 py-2">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
                 </button>
-                <button onclick="printPokeaOrder('${order.id}')" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm font-medium transition">
-                    <i class="fas fa-print mr-1"></i> Chapisha
+                <button onclick="printPokeaOrder('${order.id}')" class="action-btn bg-gray-600 text-white hover:bg-gray-700 px-4 py-2">
+                    <i class="fas fa-print"></i> Chapisha
                 </button>
-                <button onclick="closePokeaModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium transition">
-                    <i class="fas fa-times mr-1"></i> Funga
+                <button onclick="closePokeaModal()" class="action-btn bg-gray-200 text-gray-700 hover:bg-gray-300 px-4 py-2">
+                    <i class="fas fa-times"></i> Funga
                 </button>
             </div>
         </div>
@@ -512,8 +831,6 @@ function viewPokeaOrder(orderId) {
 
 // ===== CONFIRM ORDER =====
 function confirmPokeaOrder(orderId) {
-    if (!confirm('Thibitisha order hii?')) return;
-    
     fetch(`/orders/${orderId}/status`, {
         method: 'POST',
         headers: {
@@ -531,7 +848,7 @@ function confirmPokeaOrder(orderId) {
             closePokeaModal();
             loadPokeaOrders();
         } else {
-            showNotification(data.message || 'Failed to confirm order', 'error');
+            showNotification(data.message || 'Imeshindwa kuthibitisha order', 'error');
         }
     })
     .catch(error => {
@@ -542,8 +859,6 @@ function confirmPokeaOrder(orderId) {
 
 // ===== MARK ORDER AS PAID =====
 function markPokeaOrderPaid(orderId) {
-    if (!confirm('Lipa order hii?')) return;
-    
     fetch(`/orders/${orderId}/status`, {
         method: 'POST',
         headers: {
@@ -557,11 +872,11 @@ function markPokeaOrderPaid(orderId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Order imelipwa kikamilifu!', 'success');
+            showNotification('Mauzo yamerekodiwa!', 'success');
             closePokeaModal();
             loadPokeaOrders();
         } else {
-            showNotification(data.message || 'Failed to process payment', 'error');
+            showNotification(data.message || 'Imeshindwa kulipa order', 'error');
         }
     })
     .catch(error => {
@@ -572,8 +887,6 @@ function markPokeaOrderPaid(orderId) {
 
 // ===== CANCEL ORDER =====
 function cancelPokeaOrder(orderId) {
-    if (!confirm('Ghairi order hii?')) return;
-    
     fetch(`/orders/${orderId}/status`, {
         method: 'POST',
         headers: {
@@ -591,7 +904,7 @@ function cancelPokeaOrder(orderId) {
             closePokeaModal();
             loadPokeaOrders();
         } else {
-            showNotification(data.message || 'Failed to cancel order', 'error');
+            showNotification(data.message || 'Imeshindwa kughairi order', 'error');
         }
     })
     .catch(error => {
@@ -604,25 +917,25 @@ function cancelPokeaOrder(orderId) {
 function sharePokeaOrderWhatsApp(orderId) {
     const order = pokeaOrders.find(o => o.id == orderId);
     if (!order) {
-        showNotification('Order not found', 'error');
+        showNotification('Order haijapatikana', 'error');
         return;
     }
 
-    const companyName = document.querySelector('meta[name="company-name"]')?.content || 'Our Shop';
+    const companyName = document.querySelector('meta[name="company-name"]')?.content || 'Mauzo Sheet';
     const items = order.items || [];
     
     let message = `🏪 *${companyName}*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*ORDER DETAILS*\n`;
-    message += `Order: ${order.order_number}\n`;
-    message += `Date: ${new Date(order.created_at).toLocaleString()}\n`;
-    message += `Customer: ${order.customer_name || 'Walk-in Customer'}\n`;
+    message += `*MAELEZO YA ODA*\n`;
+    message += `Oda: ${order.order_number}\n`;
+    message += `Tarehe: ${new Date(order.created_at).toLocaleString()}\n`;
+    message += `Mteja: ${order.customer_name || 'Mteja wa Kutembea'}\n`;
     if (order.customer_phone) {
-        message += `Phone: ${order.customer_phone}\n`;
+        message += `Simu: ${order.customer_phone}\n`;
     }
-    message += `Status: ${order.status === 'paid' ? '✅ Paid' : order.status === 'cancelled' ? '❌ Cancelled' : '⏳ Pending'}\n`;
+    message += `Hali: ${order.status === 'paid' ? '✅ Imelipwa' : order.status === 'cancelled' ? '❌ Imefutwa' : '⏳ Inasubiri'}\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*ITEMS*\n`;
+    message += `*BIDHAA*\n`;
     
     items.forEach(item => {
         const itemName = item.jina || item.name || 'Bidhaa';
@@ -638,16 +951,15 @@ function sharePokeaOrderWhatsApp(orderId) {
     const total = order.total || 0;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     if (order.discount > 0) {
-        message += `Subtotal: ${formatCurrency(order.subtotal || total + order.discount)}\n`;
-        message += `Discount: -${formatCurrency(order.discount)}\n`;
+        message += `Jumla Ndogo: ${formatCurrency(order.subtotal || total + order.discount)}\n`;
+        message += `Punguzo: -${formatCurrency(order.discount)}\n`;
     }
-    message += `*TOTAL: ${formatCurrency(total)}*\n`;
+    message += `*JUMLA: ${formatCurrency(total)}*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     message += `Asante kwa kununua! 🛍️`;
     
     const encodedMessage = encodeURIComponent(message);
     
-    // Get customer phone
     let phoneNumber = order.customer_phone || '';
     if (phoneNumber) {
         phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
@@ -674,14 +986,13 @@ function sharePokeaOrderWhatsApp(orderId) {
 function printPokeaOrder(orderId) {
     const order = pokeaOrders.find(o => o.id == orderId);
     if (!order) {
-        showNotification('Order not found', 'error');
+        showNotification('Order haijapatikana', 'error');
         return;
     }
 
-    const companyName = document.querySelector('meta[name="company-name"]')?.content || 'Our Shop';
+    const companyName = document.querySelector('meta[name="company-name"]')?.content || 'Mauzo Sheet';
     const items = order.items || [];
     const total = order.total || 0;
-    const subtotal = order.subtotal || total;
     
     let itemsHtml = '';
     items.forEach(item => {
@@ -703,7 +1014,7 @@ function printPokeaOrder(orderId) {
     printWindow.document.write(`
         <html>
         <head>
-            <title>Order #${order.order_number}</title>
+            <title>Oda #${order.order_number}</title>
             <style>
                 body { font-family: 'Courier New', monospace; padding: 20px; max-width: 400px; margin: 0 auto; }
                 .header { text-align: center; margin-bottom: 20px; }
@@ -727,27 +1038,27 @@ function printPokeaOrder(orderId) {
         <body>
             <div class="header">
                 <h1>${companyName}</h1>
-                <p>Order Receipt</p>
+                <p>Stakabadhi ya Oda</p>
                 <p>${order.order_number}</p>
             </div>
             
             <div class="divider"></div>
             
-            <div class="info"><strong>Date:</strong> ${new Date(order.created_at).toLocaleString()}</div>
-            <div class="info"><strong>Customer:</strong> ${order.customer_name || 'Walk-in'}</div>
-            <div class="info"><strong>Phone:</strong> ${order.customer_phone || '-'}</div>
-            <div class="info"><strong>Status:</strong> <span class="status status-${order.status}">${getStatusBadge(order.status).label}</span></div>
-            ${order.delivery_address ? `<div class="info"><strong>Address:</strong> ${order.delivery_address}</div>` : ''}
+            <div class="info"><strong>Tarehe:</strong> ${new Date(order.created_at).toLocaleString()}</div>
+            <div class="info"><strong>Mteja:</strong> ${order.customer_name || 'Mteja wa Kutembea'}</div>
+            <div class="info"><strong>Simu:</strong> ${order.customer_phone || '-'}</div>
+            <div class="info"><strong>Hali:</strong> <span class="status status-${order.status}">${getStatusBadge(order.status).label}</span></div>
+            ${order.delivery_address ? `<div class="info"><strong>Anwani:</strong> ${order.delivery_address}</div>` : ''}
             
             <div class="divider"></div>
             
             <table>
                 <thead>
                     <tr>
-                        <th>Item</th>
+                        <th>Bidhaa</th>
                         <th style="text-align:center;">Qty</th>
-                        <th style="text-align:right;">Price</th>
-                        <th style="text-align:right;">Total</th>
+                        <th style="text-align:right;">Bei</th>
+                        <th style="text-align:right;">Jumla</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -757,7 +1068,7 @@ function printPokeaOrder(orderId) {
             
             <div class="total">
                 <div style="display:flex;justify-content:space-between;font-size:14px;">
-                    <span>Total:</span>
+                    <span>JUMLA:</span>
                     <span>${formatCurrency(total)}</span>
                 </div>
             </div>
@@ -784,7 +1095,7 @@ function closePokeaModal() {
 // ===== REFRESH ORDERS =====
 function refreshPokeaOrders() {
     loadPokeaOrders();
-    showNotification('Orders refreshed!', 'info');
+    showNotification('Orders zimefresheshwa!', 'info');
 }
 
 // ===== FORMAT CURRENCY =====
@@ -794,17 +1105,29 @@ function formatCurrency(amount) {
 
 // ===== SHOW NOTIFICATION =====
 function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-emerald-500' : 
-                    type === 'error' ? 'bg-red-500' : 
-                    type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500';
-    notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white ${bgColor} text-sm max-w-sm`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>${message}`;
-    document.body.appendChild(notification);
-    setTimeout(() => { 
-        notification.style.opacity = '0'; 
-        notification.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => notification.remove(), 300); 
+    const container = document.getElementById('toastContainerPokea');
+    if (!container) {
+        const newContainer = document.createElement('div');
+        newContainer.id = 'toastContainerPokea';
+        newContainer.className = 'toast-container';
+        document.body.appendChild(newContainer);
+        return showNotification(message, type);
+    }
+    
+    const toast = document.createElement('div');
+    const iconMap = {
+        'success': 'fa-check-circle',
+        'error': 'fa-exclamation-circle',
+        'info': 'fa-info-circle',
+        'warning': 'fa-exclamation-triangle'
+    };
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<i class="fas ${iconMap[type] || 'fa-info-circle'}"></i> ${message}`;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 300);
     }, 4000);
 }
 
@@ -818,95 +1141,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Load orders when tab is shown
-    const observer = new MutationObserver(function() {
-        const tabContent = document.getElementById('pokeaorder-tab-content');
-        if (tabContent && !tabContent.classList.contains('hidden')) {
-            loadPokeaOrders();
-        }
-    });
-    
-    // Observe the tab content for class changes
-    const target = document.getElementById('pokeaorder-tab-content');
-    if (target) {
-        observer.observe(target, { attributes: true, attributeFilter: ['class'] });
-    }
 });
 
-// ===== LOAD ORDERS ON FIRST VISIT =====
-document.addEventListener('DOMContentLoaded', function() {
+// ===== TAB VISIBILITY =====
+document.addEventListener('visibilitychange', function() {
     const tabContent = document.getElementById('pokeaorder-tab-content');
     if (tabContent && !tabContent.classList.contains('hidden')) {
-        loadPokeaOrders();
+        if (!document.hidden) {
+            loadPokeaOrders();
+        }
     }
 });
 </script>
-
-<style>
-/* Modal Styles */
-.modal {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-    position: relative;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-/* Status Badges */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 10px;
-    border-radius: 9999px;
-    font-size: 11px;
-    font-weight: 500;
-}
-
-/* Table row hover */
-#pokea-orders-tbody tr:hover {
-    background-color: #f9fafb;
-    cursor: pointer;
-}
-
-/* Filter buttons */
-.filter-btn {
-    transition: all 0.2s ease;
-}
-
-.filter-btn:hover {
-    transform: translateY(-1px);
-}
-
-/* Scroll for items */
-#pokea-modal-body .max-h-60 {
-    max-height: 250px;
-    overflow-y: auto;
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-    #pokea-orders-tbody td {
-        padding: 6px 8px;
-        font-size: 12px;
-    }
-    
-    .modal-content {
-        margin: 8px;
-        padding: 12px;
-    }
-}
-</style>

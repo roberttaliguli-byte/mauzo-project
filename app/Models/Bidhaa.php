@@ -54,7 +54,6 @@ class Bidhaa extends Model
             return 'image/jpeg';
         }
         
-        // Try to detect mime type from the binary data
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_buffer($finfo, $this->image);
         finfo_close($finfo);
@@ -155,6 +154,11 @@ class Bidhaa extends Model
         return $this->hasMany(Mauzo::class, 'bidhaa_id');
     }
 
+    public function madeni()
+    {
+        return $this->hasMany(Madeni::class);
+    }
+
     public function company()
     {
         return $this->belongsTo(\App\Models\Company::class);
@@ -192,6 +196,21 @@ class Bidhaa extends Model
                     );
                 }
             }
+        });
+
+        // ===== IMPORTANT: Delete associated records when product is deleted =====
+        static::deleting(function ($bidhaa) {
+            // Delete all Mauzo records associated with this product
+            $bidhaa->mauzos()->delete();
+            
+            // Delete all Madeni records associated with this product
+            $bidhaa->madeni()->delete();
+            
+            // Delete all Manunuzi records associated with this product
+            $bidhaa->manunuzi()->delete();
+            
+            // Log the deletion
+            \Log::info("Product deleted: {$bidhaa->jina} (ID: {$bidhaa->id}) - All associated records deleted");
         });
     }
 

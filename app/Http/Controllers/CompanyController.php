@@ -6,12 +6,13 @@ use Illuminate\Http\Request;
 use App\Models\Company;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
 {
     /**
-     * Update the company info - with email uniqueness check
+     * Update the company info - with email uniqueness check and logo upload
      */
     public function update(Request $request)
     {
@@ -44,7 +45,7 @@ class CompanyController extends Controller
                     ->with('active_tab', 'edit');
             }
 
-            // Validate incoming data with email uniqueness check
+            // Validate incoming data with email uniqueness check and logo validation
             $validated = $request->validate([
                 'company_name' => 'required|string|max:255',
                 'owner_name'   => 'required|string|max:255',
@@ -58,12 +59,15 @@ class CompanyController extends Controller
                     'required',
                     'email',
                     'max:255',
-                    // Check if email is unique except for this company
                     Rule::unique('companies', 'email')->ignore($company->id)
-                ]
+                ],
+                'logo'         => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
             ], [
                 'email.unique' => 'Barua pepe hii tayari imesajiliwa na kampuni nyingine. Tafadhali tumia barua pepe nyingine.',
-                'business_type.required' => 'Tafadhali chagua aina ya biashara.'
+                'business_type.required' => 'Tafadhali chagua aina ya biashara.',
+                'logo.image' => 'Tafadhali pakia picha halali (JPG, PNG, GIF, au SVG).',
+                'logo.max' => 'Saizi ya picha haipaswi kuzidi 2MB.',
+                'logo.mimes' => 'Aina zinazokubalika: jpeg, png, jpg, gif, svg.'
             ]);
 
             // Check if email is being changed
@@ -92,6 +96,34 @@ class CompanyController extends Controller
                 ]);
             }
 
+            // Handle logo upload - STORE IN DATABASE VIA STORAGE
+            if ($request->hasFile('logo')) {
+                $logo = $request->file('logo');
+                
+                // Generate unique filename
+                $logoName = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $logo->getClientOriginalName());
+                $logoPath = $logo->storeAs('company-logos', $logoName, 'public');
+                
+                // Delete old logo if exists
+                if ($company->logo && Storage::disk('public')->exists($company->logo)) {
+                    Storage::disk('public')->delete($company->logo);
+                    Log::info('Old logo deleted', [
+                        'company_id' => $company->id,
+                        'old_logo' => $company->logo
+                    ]);
+                }
+                
+                // STORE THE PATH IN DATABASE
+                $company->logo = $logoPath;
+                
+                Log::info('Company logo updated', [
+                    'user_id' => $user->id,
+                    'company_id' => $company->id,
+                    'new_logo' => $logoPath,
+                    'ip' => $request->ip()
+                ]);
+            }
+
             // Log business type change if it changed
             if ($company->business_type !== $validated['business_type']) {
                 Log::info('Company business type changed', [
@@ -103,7 +135,7 @@ class CompanyController extends Controller
                 ]);
             }
 
-            // Update ONLY this specific company's data
+            // Update company data
             $company->company_name = $validated['company_name'];
             $company->owner_name = $validated['owner_name'];
             $company->owner_dob = $validated['owner_dob'];
@@ -114,7 +146,7 @@ class CompanyController extends Controller
             $company->email = $validated['email'];
             $company->business_type = $validated['business_type'];
 
-            // Save the changes
+            // Save the changes - THIS SAVES LOGO PATH TO DATABASE
             $company->save();
 
             // Log the update for security audit
@@ -131,24 +163,27 @@ class CompanyController extends Controller
                 ->with('hash', 'edit');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Check if it's an email uniqueness error
+            // Check for specific validation errors
             $errors = $e->validator->errors();
+            
+            $errorMessages = [];
             if ($errors->has('email')) {
-                return redirect()
-                    ->back()
-                    ->withErrors($e->validator)
-                    ->withInput()
-                    ->with('active_tab', 'edit')
-                    ->with('error', '❌ ' . $errors->first('email'));
+                $errorMessages[] = $errors->first('email');
+            }
+            if ($errors->has('business_type')) {
+                $errorMessages[] = $errors->first('business_type');
+            }
+            if ($errors->has('logo')) {
+                $errorMessages[] = $errors->first('logo');
             }
             
-            if ($errors->has('business_type')) {
+            if (!empty($errorMessages)) {
                 return redirect()
                     ->back()
                     ->withErrors($e->validator)
                     ->withInput()
                     ->with('active_tab', 'edit')
-                    ->with('error', '❌ ' . $errors->first('business_type'));
+                    ->with('error', '❌ ' . implode(' ', $errorMessages));
             }
             
             return redirect()
@@ -166,6 +201,60 @@ class CompanyController extends Controller
                 ->withInput()
                 ->with('error', '❌ Kuna tatizo limejitokeza. Tafadhali jaribu tena.')
                 ->with('active_tab', 'edit');
+        }
+    }
+
+    /**
+     * Delete company logo
+     */
+    public function deleteLogo(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user || !$user->company_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 401);
+            }
+            
+            $company = Company::find($user->company_id);
+            
+            if (!$company) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Company not found'
+                ], 404);
+            }
+            
+            // Delete logo from storage
+            if ($company->logo && Storage::disk('public')->exists($company->logo)) {
+                Storage::disk('public')->delete($company->logo);
+            }
+            
+            // Remove logo path from database
+            $company->logo = null;
+            $company->save();
+            
+            Log::info('Company logo deleted', [
+                'user_id' => $user->id,
+                'company_id' => $company->id,
+                'ip' => $request->ip()
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Logo imefutwa kwa mafanikio'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error deleting logo: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Kuna tatizo limejitokeza'
+            ], 500);
         }
     }
 

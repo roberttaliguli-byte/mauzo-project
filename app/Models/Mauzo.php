@@ -1,4 +1,6 @@
 <?php
+// app/Models/Mauzo.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,18 +24,21 @@ class Mauzo extends Model
         'is_debt_repayment',
         'reprint_count',
         'lipa_kwa',
-        'lipa_kwa_type',      // ADD THIS FIELD
+        'lipa_kwa_type',
         'mteja_id',
         'user_id',
-        'sale_date'
-
+        'mfanyakazi_id', // Add this field
+        'sale_date',
+        'order_id',
+        'order_number'
     ];
 
     protected $casts = [
         'bei' => 'decimal:2',
         'punguzo' => 'decimal:2',
         'jumla' => 'decimal:2',
-        'reprint_count' => 'integer'
+        'reprint_count' => 'integer',
+        'idadi' => 'float'
     ];
 
     const PAYMENT_METHODS = [
@@ -44,7 +49,6 @@ class Mauzo extends Model
 
     const DEFAULT_PAYMENT_METHOD = 'cash';
 
-    // Lipa Namba types
     const LIPA_NAMBA_TYPES = [
         'mpesa' => 'M-Pesa',
         'mixx_by_yas' => 'Mixx by Yas',
@@ -53,7 +57,6 @@ class Mauzo extends Model
         'other' => 'Nyingine'
     ];
 
-    // Bank types
     const BANK_TYPES = [
         'crdb' => 'CRDB',
         'nmb' => 'NMB',
@@ -76,6 +79,21 @@ class Mauzo extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+    public function mfanyakazi()
+    {
+        return $this->belongsTo(\App\Models\Wafanyakazi::class, 'mfanyakazi_id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'order_id');
+    }
+
     public function getLipaKwaNameAttribute()
     {
         $paymentName = self::PAYMENT_METHODS[$this->lipa_kwa] ?? 'Unknown';
@@ -91,6 +109,26 @@ class Mauzo extends Model
         }
         
         return $paymentName;
+    }
+
+    public function getProcessorNameAttribute()
+    {
+        if ($this->user_id) {
+            $user = $this->user;
+            return $user ? $user->name : 'Unknown User';
+        }
+        if ($this->mfanyakazi_id) {
+            $employee = $this->mfanyakazi;
+            return $employee ? $employee->jina : 'Unknown Employee';
+        }
+        return 'System';
+    }
+
+    public function getProcessorTypeAttribute()
+    {
+        if ($this->user_id) return 'Boss';
+        if ($this->mfanyakazi_id) return 'Employee';
+        return 'System';
     }
 
     public function scopeByPaymentMethod($query, $method)
@@ -125,16 +163,10 @@ class Mauzo extends Model
         return $subtotal - $totalDiscount;
     }
 
-    public function user()
+    public function getSaleDateAttribute($value)
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $value ?? $this->created_at;
     }
-
-// Add accessor for display
-public function getSaleDateAttribute($value)
-{
-    return $value ?? $this->created_at;
-}
 
     public function getTotalDiscountAttribute()
     {
@@ -163,16 +195,15 @@ public function getSaleDateAttribute($value)
         });
     }
 
-public function setCreatedAt($value)
-{
-    $this->{static::CREATED_AT} = $value;
-    return $this;
-}
+    public function setCreatedAt($value)
+    {
+        $this->{static::CREATED_AT} = $value;
+        return $this;
+    }
 
-public function setUpdatedAt($value)
-{
-    $this->{static::UPDATED_AT} = $value;
-    return $this;
-}
-
+    public function setUpdatedAt($value)
+    {
+        $this->{static::UPDATED_AT} = $value;
+        return $this;
+    }
 }

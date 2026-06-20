@@ -7,13 +7,36 @@
     @php
         $regions = [
             "Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi",
-            "Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mbeya","Morogoro",
+            "Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mwanza","Mbeya","Morogoro",
             "Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","Singida",
             "Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"
         ];
+        
+        $businessLabels = [
+            'retail_shop' => 'Retail Shop / Duka',
+            'mini_market' => 'Mini Market',
+            'supermarket' => 'Supermarket',
+            'pharmacy' => 'Pharmacy / Dawa',
+            'hardware' => 'Hardware',
+            'stationery' => 'Stationery',
+            'restaurant' => 'Restaurant',
+            'hotel' => 'Hotel',
+            'bar' => 'Bar / Vinywaji',
+            'clothes_shop' => 'Duka la Nguo',
+            'shoes_shop' => 'Duka la Viatu',
+            'furniture' => 'Furniture',
+            'cosmetics' => 'Cosmetics',
+            'electronics' => 'Electronics',
+            'salon' => 'Salon / Kinyozi',
+            'spare_parts' => 'Spare Parts',
+            'wholesale' => 'Jumla / Wholesale',
+            'bakery' => 'Bakery',
+            'grocery' => 'Grocery',
+            'other' => 'Nyingine'
+        ];
     @endphp
 
-    <!-- Success/Error Notifications with Amber/Orange theme -->
+    <!-- Success/Error Notifications -->
     @if(session('success'))
         <div id="success-notification" class="mb-4 bg-amber-50 border-l-4 border-amber-600 text-amber-800 p-3 sm:p-4 rounded-lg shadow-md flex justify-between items-start sm:items-center gap-3 animate-fade-in" role="alert">
             <div class="flex items-start sm:items-center">
@@ -46,7 +69,7 @@
         </div>
     @endif
 
-    <!-- Tabs with Amber/Orange theme -->
+    <!-- Tabs -->
     <div class="border-b border-gray-200 overflow-x-auto pb-px">
         <nav class="flex space-x-2 sm:space-x-6 min-w-max sm:min-w-0" aria-label="Tabs">
             <button id="tab-info" class="tab-button py-2 px-3 sm:px-4 border-b-2 font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap flex items-center text-gray-700 border-amber-600">
@@ -65,7 +88,7 @@
         <!-- Info Tab -->
         <div id="content-info" class="tab-content">
             <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden mb-6">
-                <!-- Header with Amber gradient -->
+                <!-- Header -->
                 <div class="bg-gradient-to-r from-amber-700 to-amber-600 text-white px-4 sm:px-6 py-3 sm:py-4">
                     <h2 class="text-base sm:text-lg font-semibold flex items-center">
                         <span class="sm:hidden">📋</span>
@@ -74,7 +97,16 @@
                     <p class="text-xs sm:text-sm text-amber-100 mt-1 hidden sm:block">Maelezo ya kampuni yako yaliyosajiliwa</p>
                 </div>
 
-                <!-- Mobile View: Single Column with Amber labels -->
+                <!-- Logo Display -->
+                @if($company && $company->hasLogo())
+                    <div class="flex justify-center py-4 border-b border-gray-100 bg-gray-50">
+                        <img src="{{ $company->logo_url }}" 
+                             alt="Logo ya Kampuni" 
+                             class="h-24 w-auto object-contain rounded-lg shadow-sm">
+                    </div>
+                @endif
+
+                <!-- Mobile View -->
                 <div class="block sm:hidden divide-y divide-gray-100">
                     <div class="px-4 py-3">
                         <div class="text-xs font-medium text-amber-700 mb-1">Jina la Kampuni</div>
@@ -116,60 +148,24 @@
                     </div>
                     <div class="px-4 py-3">
                         <div class="text-xs font-medium text-amber-700 mb-1">Namba ya Simu</div>
-                        <div class="text-sm text-gray-900 flex items-center">
-                            <svg class="w-4 h-4 mr-1 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                            </svg>
-                            {{ $company->phone ?? 'Hakuna' }}
-                        </div>
+                        <div class="text-sm text-gray-900">{{ $company->phone ?? 'Hakuna' }}</div>
                     </div>
                     <div class="px-4 py-3">
                         <div class="text-xs font-medium text-amber-700 mb-1">Barua Pepe</div>
-                        <div class="text-sm text-gray-900 flex items-center truncate">
-                            <svg class="w-4 h-4 mr-1 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                            </svg>
-                            <span class="truncate">{{ $company->email ?? 'Hakuna' }}</span>
+                        <div class="text-sm text-gray-900 truncate">{{ $company->email ?? 'Hakuna' }}</div>
+                    </div>
+                    <div class="px-4 py-3">
+                        <div class="text-xs font-medium text-amber-700 mb-1">Aina ya Biashara</div>
+                        <div class="text-sm text-gray-900">
+                            <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
+                                {{ $businessLabels[$company->business_type ?? 'other'] ?? $company->business_type ?? 'Haijabainishwa' }}
+                            </span>
                         </div>
                     </div>
-                    <!-- Add this in the Mobile View section -->
-<div class="px-4 py-3">
-    <div class="text-xs font-medium text-amber-700 mb-1">Aina ya Biashara</div>
-    <div class="text-sm text-gray-900">
-        @php
-            $businessLabels = [
-                'retail_shop' => 'Retail Shop / Duka',
-                'mini_market' => 'Mini Market',
-                'supermarket' => 'Supermarket',
-                'pharmacy' => 'Pharmacy / Dawa',
-                'hardware' => 'Hardware',
-                'stationery' => 'Stationery',
-                'restaurant' => 'Restaurant',
-                'hotel' => 'Hotel',
-                'bar' => 'Bar / Vinywaji',
-                'clothes_shop' => 'Duka la Nguo',
-                'shoes_shop' => 'Duka la Viatu',
-                'furniture' => 'Furniture',
-                'cosmetics' => 'Cosmetics',
-                'electronics' => 'Electronics',
-                'salon' => 'Salon / Kinyozi',
-                'spare_parts' => 'Spare Parts',
-                'wholesale' => 'Jumla / Wholesale',
-                'bakery' => 'Bakery',
-                'grocery' => 'Grocery',
-                'other' => 'Nyingine'
-            ];
-        @endphp
-        <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
-            {{ $businessLabels[$company->business_type ?? 'other'] ?? $company->business_type ?? 'Haijabainishwa' }}
-        </span>
-    </div>
-</div>
                 </div>
 
-                <!-- Desktop View: Grid 2 Columns with Amber labels -->
+                <!-- Desktop View -->
                 <div class="hidden sm:grid sm:grid-cols-2 gap-x-6 gap-y-4 px-6 py-6 text-gray-800 text-sm">
-                    <!-- Left column labels - Amber -->
                     <div class="font-medium text-amber-700">Jina la Kampuni</div>
                     <div class="text-gray-900 font-semibold">{{ $company->company_name ?? 'Hakuna' }}</div>
 
@@ -203,56 +199,31 @@
                     </div>
 
                     <div class="font-medium text-amber-700">Namba ya Simu</div>
-                    <div class="text-gray-900 flex items-center">
-                        <svg class="w-4 h-4 mr-1 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                        </svg>
-                        {{ $company->phone ?? 'Hakuna' }}
-                    </div>
+                    <div class="text-gray-900">{{ $company->phone ?? 'Hakuna' }}</div>
 
                     <div class="font-medium text-amber-700">Barua Pepe</div>
-                    <div class="text-gray-900 break-all flex items-center">
-                        <svg class="w-4 h-4 mr-1 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                        </svg>
-                        {{ $company->email ?? 'Hakuna' }}
+                    <div class="text-gray-900 break-all">{{ $company->email ?? 'Hakuna' }}</div>
+                    
+                    <div class="font-medium text-amber-700">Aina ya Biashara</div>
+                    <div class="text-gray-900">
+                        <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
+                            {{ $businessLabels[$company->business_type ?? 'other'] ?? $company->business_type ?? 'Haijabainishwa' }}
+                        </span>
                     </div>
-                    <!-- Add this in the Info Tab - Desktop View -->
-<div class="font-medium text-amber-700">Aina ya Biashara</div>
-<div class="text-gray-900">
-    @php
-        $businessLabels = [
-            'retail_shop' => 'Retail Shop / Duka',
-            'mini_market' => 'Mini Market',
-            'supermarket' => 'Supermarket',
-            'pharmacy' => 'Pharmacy / Dawa',
-            'hardware' => 'Hardware',
-            'stationery' => 'Stationery',
-            'restaurant' => 'Restaurant',
-            'hotel' => 'Hotel',
-            'bar' => 'Bar / Vinywaji',
-            'clothes_shop' => 'Duka la Nguo',
-            'shoes_shop' => 'Duka la Viatu',
-            'furniture' => 'Furniture',
-            'cosmetics' => 'Cosmetics',
-            'electronics' => 'Electronics',
-            'salon' => 'Salon / Kinyozi',
-            'spare_parts' => 'Spare Parts',
-            'wholesale' => 'Jumla / Wholesale',
-            'bakery' => 'Bakery',
-            'grocery' => 'Grocery',
-            'other' => 'Nyingine'
-        ];
-    @endphp
-    <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
-        {{ $businessLabels[$company->business_type ?? 'other'] ?? $company->business_type ?? 'Haijabainishwa' }}
-    </span>
-</div>
+                    
+                    @if($company && $company->hasLogo())
+                        <div class="font-medium text-amber-700">Logo</div>
+                        <div class="text-gray-900">
+                            <img src="{{ $company->logo_url }}" 
+                                 alt="Company Logo" 
+                                 class="h-16 w-auto object-contain border border-gray-200 rounded-lg">
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <!-- Edit Tab - NO LOGO FIELD -->
+        <!-- Edit Tab -->
         <div id="content-edit" class="tab-content hidden">
             <div class="bg-white shadow rounded-lg border border-gray-200">
                 <div class="bg-gradient-to-r from-amber-50 to-orange-50 px-4 sm:px-6 py-3 sm:py-4 border-b">
@@ -262,11 +233,10 @@
                     </h2>
                 </div>
                 
-                <form action="{{ route('company.update') }}" method="POST" class="px-4 sm:px-6 py-4 sm:py-6" id="companyEditForm">
+                <form action="{{ route('company.update') }}" method="POST" class="px-4 sm:px-6 py-4 sm:py-6" id="companyEditForm" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     
-                    <!-- Mobile: Single Column, Desktop: Grid 2 Columns -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 text-sm text-gray-700">
                         <!-- Left column -->
                         <div class="space-y-3 sm:space-y-4">
@@ -278,6 +248,18 @@
                                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 @error('company_name') border-orange-500 @enderror" 
                                        required>
                                 @error('company_name')
+                                    <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div>
+                                <label class="block font-medium mb-1 text-xs sm:text-sm text-amber-700">
+                                    Jina la Mmiliki <span class="text-orange-600">*</span>
+                                </label>
+                                <input type="text" name="owner_name" value="{{ old('owner_name', $company->owner_name ?? '') }}"
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 @error('owner_name') border-orange-500 @enderror" 
+                                       required>
+                                @error('owner_name')
                                     <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
@@ -325,18 +307,6 @@
                         <div class="space-y-3 sm:space-y-4">
                             <div>
                                 <label class="block font-medium mb-1 text-xs sm:text-sm text-amber-700">
-                                    Jina la Mmiliki <span class="text-orange-600">*</span>
-                                </label>
-                                <input type="text" name="owner_name" value="{{ old('owner_name', $company->owner_name ?? '') }}"
-                                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 @error('owner_name') border-orange-500 @enderror" 
-                                       required>
-                                @error('owner_name')
-                                    <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div>
-                                <label class="block font-medium mb-1 text-xs sm:text-sm text-amber-700">
                                     Mahali Ilipo <span class="text-orange-600">*</span>
                                 </label>
                                 <input type="text" name="location" value="{{ old('location', $company->location ?? '') }}"
@@ -371,46 +341,72 @@
                                     <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
-                            <!-- Add this after the email field or before the submit button -->
-<div>
-    <label class="block font-medium mb-1 text-xs sm:text-sm text-amber-700">
-        Aina ya Biashara <span class="text-orange-600">*</span>
-    </label>
-    <select name="business_type" 
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 @error('business_type') border-orange-500 @enderror" 
-            required>
-        <option value="">Chagua Aina ya Biashara</option>
-        <option value="retail_shop" {{ old('business_type', $company->business_type ?? '') == 'retail_shop' ? 'selected' : '' }}>Retail Shop / Duka</option>
-        <option value="mini_market" {{ old('business_type', $company->business_type ?? '') == 'mini_market' ? 'selected' : '' }}>Mini Market</option>
-        <option value="supermarket" {{ old('business_type', $company->business_type ?? '') == 'supermarket' ? 'selected' : '' }}>Supermarket</option>
-        <option value="pharmacy" {{ old('business_type', $company->business_type ?? '') == 'pharmacy' ? 'selected' : '' }}>Pharmacy / Dawa</option>
-        <option value="hardware" {{ old('business_type', $company->business_type ?? '') == 'hardware' ? 'selected' : '' }}>Hardware</option>
-        <option value="stationery" {{ old('business_type', $company->business_type ?? '') == 'stationery' ? 'selected' : '' }}>Stationery</option>
-        <option value="restaurant" {{ old('business_type', $company->business_type ?? '') == 'restaurant' ? 'selected' : '' }}>Restaurant</option>
-        <option value="hotel" {{ old('business_type', $company->business_type ?? '') == 'hotel' ? 'selected' : '' }}>Hotel</option>
-        <option value="bar" {{ old('business_type', $company->business_type ?? '') == 'bar' ? 'selected' : '' }}>Bar / Vinywaji</option>
-        <option value="clothes_shop" {{ old('business_type', $company->business_type ?? '') == 'clothes_shop' ? 'selected' : '' }}>Duka la Nguo</option>
-        <option value="shoes_shop" {{ old('business_type', $company->business_type ?? '') == 'shoes_shop' ? 'selected' : '' }}>Duka la Viatu</option>
-        <option value="furniture" {{ old('business_type', $company->business_type ?? '') == 'furniture' ? 'selected' : '' }}>Furniture</option>
-        <option value="cosmetics" {{ old('business_type', $company->business_type ?? '') == 'cosmetics' ? 'selected' : '' }}>Cosmetics</option>
-        <option value="electronics" {{ old('business_type', $company->business_type ?? '') == 'electronics' ? 'selected' : '' }}>Electronics</option>
-        <option value="salon" {{ old('business_type', $company->business_type ?? '') == 'salon' ? 'selected' : '' }}>Salon / Kinyozi</option>
-        <option value="spare_parts" {{ old('business_type', $company->business_type ?? '') == 'spare_parts' ? 'selected' : '' }}>Spare Parts</option>
-        <option value="wholesale" {{ old('business_type', $company->business_type ?? '') == 'wholesale' ? 'selected' : '' }}>Jumla / Wholesale</option>
-        <option value="bakery" {{ old('business_type', $company->business_type ?? '') == 'bakery' ? 'selected' : '' }}>Bakery</option>
-        <option value="grocery" {{ old('business_type', $company->business_type ?? '') == 'grocery' ? 'selected' : '' }}>Grocery</option>
-        <option value="other" {{ old('business_type', $company->business_type ?? '') == 'other' ? 'selected' : '' }}>Nyingine</option>
-    </select>
-    @error('business_type')
-        <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
-    @enderror
-</div>
-                            
-                            <!-- LOGO FIELD COMPLETELY REMOVED -->
+
+                            <div>
+                                <label class="block font-medium mb-1 text-xs sm:text-sm text-amber-700">
+                                    Aina ya Biashara <span class="text-orange-600">*</span>
+                                </label>
+                                <select name="business_type" 
+                                        class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 @error('business_type') border-orange-500 @enderror" 
+                                        required>
+                                    <option value="">Chagua Aina ya Biashara</option>
+                                    @foreach($businessLabels as $key => $label)
+                                        <option value="{{ $key }}" {{ old('business_type', $company->business_type ?? '') == $key ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('business_type')
+                                    <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- LOGO UPLOAD FIELD -->
+                            <div>
+                                <label class="block font-medium mb-1 text-xs sm:text-sm text-amber-700">
+                                    Logo ya Kampuni
+                                </label>
+                                
+                                <!-- Current Logo Display -->
+                                @if($company && $company->hasLogo())
+                                    <div class="mb-2 flex items-center gap-3">
+                                        <img src="{{ $company->logo_url }}" 
+                                             alt="Current Logo" 
+                                             class="h-16 w-auto object-contain border border-gray-200 rounded-lg p-1 bg-white">
+                                        <button type="button" onclick="deleteLogo()" 
+                                                class="text-xs text-red-600 hover:text-red-800 flex items-center">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Futa Logo
+                                        </button>
+                                    </div>
+                                @endif
+                                
+                                <input type="file" name="logo" accept="image/*"
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 @error('logo') border-orange-500 @enderror"
+                                       id="logoInput">
+                                <p class="text-xs text-gray-500 mt-1">Aina zinazokubalika: JPG, PNG, GIF, SVG. Ukubwa max: 2MB</p>
+                                
+                                <!-- Preview -->
+                                <div id="logoPreviewContainer" class="mt-2 hidden">
+                                    <img id="logoPreview" src="#" alt="Logo Preview" class="h-16 w-auto object-contain border border-gray-200 rounded-lg p-1 bg-white">
+                                    <button type="button" onclick="removeLogoPreview()" class="text-xs text-red-600 hover:text-red-800 mt-1 flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Ondoa picha
+                                    </button>
+                                </div>
+                                
+                                @error('logo')
+                                    <p class="text-orange-600 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Buttons with Amber/Orange theme -->
+                    <!-- Buttons -->
                     <div class="mt-6 sm:mt-8 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
                         <button type="button" onclick="window.location.href='{{ route('company.info') }}'#info"
                                 class="w-full sm:w-auto px-4 sm:px-5 py-2 border border-amber-300 text-amber-700 rounded-full hover:bg-amber-50 transition text-sm font-medium">
@@ -454,24 +450,20 @@
         animation: fadeIn 0.3s ease-out;
     }
     
-    /* Mobile optimizations */
     @media (max-width: 640px) {
         input, select, button {
-            font-size: 16px !important; /* Prevents zoom on iOS */
+            font-size: 16px !important;
         }
-        
         .tab-button {
             padding-top: 0.75rem;
             padding-bottom: 0.75rem;
         }
     }
     
-    /* Smooth transitions */
     .tab-content {
         transition: opacity 0.2s ease-in-out;
     }
     
-    /* Custom scrollbar for tabs on mobile */
     .overflow-x-auto::-webkit-scrollbar {
         height: 3px;
     }
@@ -481,18 +473,16 @@
     }
     
     .overflow-x-auto::-webkit-scrollbar-thumb {
-        background: #c2410c; /* Orange-800 */
+        background: #c2410c;
         border-radius: 3px;
     }
     
-    /* Amber/Orange focus rings */
     input:focus, select:focus {
         outline: none;
         box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
     }
 </style>
 
-<!-- Tabs and Notifications JS -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const tabInfo = document.getElementById('tab-info');
@@ -502,13 +492,11 @@
         
         function setTabStyles(activeTab) {
             if (activeTab === 'info') {
-                // Info tab active
                 tabInfo.classList.add('text-gray-700', 'border-amber-600');
                 tabInfo.classList.remove('text-gray-500', 'border-transparent');
                 tabEdit.classList.add('text-gray-500', 'border-transparent');
                 tabEdit.classList.remove('text-gray-700', 'border-amber-600');
             } else {
-                // Edit tab active
                 tabEdit.classList.add('text-gray-700', 'border-amber-600');
                 tabEdit.classList.remove('text-gray-500', 'border-transparent');
                 tabInfo.classList.add('text-gray-500', 'border-transparent');
@@ -568,53 +556,118 @@
                 submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
             });
         }
+
+        // Logo preview functionality
+        const logoInput = document.getElementById('logoInput');
+        const logoPreview = document.getElementById('logoPreview');
+        const logoPreviewContainer = document.getElementById('logoPreviewContainer');
+
+        if (logoInput) {
+            logoInput.addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        logoPreview.src = e.target.result;
+                        logoPreviewContainer.classList.remove('hidden');
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                } else {
+                    logoPreviewContainer.classList.add('hidden');
+                    logoPreview.src = '#';
+                }
+            });
+        }
+
+        // Real-time email validation
+        const emailInput = document.querySelector('input[name="email"]');
+        const emailError = document.createElement('p');
+        emailError.className = 'text-orange-600 text-xs mt-1 hidden';
+        if (emailInput && emailInput.parentNode) {
+            emailInput.parentNode.appendChild(emailError);
+        }
+        
+        let emailCheckTimeout;
+        
+        if (emailInput) {
+            emailInput.addEventListener('input', function() {
+                clearTimeout(emailCheckTimeout);
+                
+                const email = this.value;
+                
+                if (!email.includes('@') || !email.includes('.')) {
+                    return;
+                }
+                
+                emailCheckTimeout = setTimeout(() => {
+                    emailInput.classList.add('bg-gray-50');
+                    
+                    fetch('{{ route("company.check.email") }}?email=' + encodeURIComponent(email))
+                        .then(response => response.json())
+                        .then(data => {
+                            emailInput.classList.remove('bg-gray-50');
+                            
+                            if (data.exists) {
+                                emailError.textContent = data.message;
+                                emailError.classList.remove('hidden');
+                                emailInput.classList.add('border-orange-500', 'bg-orange-50');
+                                emailInput.classList.remove('border-green-500');
+                            } else {
+                                emailError.classList.add('hidden');
+                                emailInput.classList.remove('border-orange-500', 'bg-orange-50');
+                                emailInput.classList.add('border-green-500');
+                            }
+                        })
+                        .catch(error => {
+                            emailInput.classList.remove('bg-gray-50');
+                        });
+                }, 500);
+            });
+        }
     });
 
-    <!-- Add this before the closing </div> or in your script section -->
+    // Function to remove logo preview
+    function removeLogoPreview() {
+        const logoInput = document.getElementById('logoInput');
+        const logoPreviewContainer = document.getElementById('logoPreviewContainer');
+        const logoPreview = document.getElementById('logoPreview');
+        
+        if (logoInput) {
+            logoInput.value = '';
+        }
+        if (logoPreviewContainer) {
+            logoPreviewContainer.classList.add('hidden');
+        }
+        if (logoPreview) {
+            logoPreview.src = '#';
+        }
+    }
 
-    // Real-time email validation
-    const emailInput = document.querySelector('input[name="email"]');
-    const emailError = document.createElement('p');
-    emailError.className = 'text-orange-600 text-xs mt-1 hidden';
-    emailInput.parentNode.appendChild(emailError);
-    
-    let emailCheckTimeout;
-    
-    emailInput.addEventListener('input', function() {
-        clearTimeout(emailCheckTimeout);
-        
-        const email = this.value;
-        
-        // Basic email format validation
-        if (!email.includes('@') || !email.includes('.')) {
+    // Function to delete logo
+    function deleteLogo() {
+        if (!confirm('Je, una uhakika unataka kufuta logo hii?')) {
             return;
         }
         
-        emailCheckTimeout = setTimeout(() => {
-            // Show checking indicator
-            emailInput.classList.add('bg-gray-50');
-            
-            fetch('{{ route("company.check.email") }}?email=' + encodeURIComponent(email))
-                .then(response => response.json())
-                .then(data => {
-                    emailInput.classList.remove('bg-gray-50');
-                    
-                    if (data.exists) {
-                        emailError.textContent = data.message;
-                        emailError.classList.remove('hidden');
-                        emailInput.classList.add('border-orange-500', 'bg-orange-50');
-                        emailInput.classList.remove('border-green-500');
-                    } else {
-                        emailError.classList.add('hidden');
-                        emailInput.classList.remove('border-orange-500', 'bg-orange-50');
-                        emailInput.classList.add('border-green-500');
-                    }
-                })
-                .catch(error => {
-                    emailInput.classList.remove('bg-gray-50');
-                });
-        }, 500); // Wait 500ms after user stops typing
-    });
-
+        fetch('{{ route("company.logo.delete") }}', {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('❌ ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('❌ Kuna tatizo limejitokeza. Tafadhali jaribu tena.');
+        });
+    }
 </script>
 @endsection

@@ -68,6 +68,27 @@ class OrderController extends Controller
     }
 
     /**
+     * Get product image as base64 data URL
+     * EXACTLY THE SAME as PublicShowcaseController
+     */
+    private function getProductImageUrl($product)
+    {
+        if (empty($product->image)) {
+            return null;
+        }
+
+        try {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_buffer($finfo, $product->image);
+            finfo_close($finfo);
+            return 'data:' . $mimeType . ';base64,' . base64_encode($product->image);
+        } catch (\Exception $e) {
+            Log::error('Image conversion failed for product ' . ($product->id ?? 'unknown') . ': ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Display the orders page
      */
     public function index(Request $request)
@@ -84,25 +105,20 @@ class OrderController extends Controller
             ->orderBy('jina')
             ->get();
 
-        // Process images for each product (convert BLOB to base64)
+        // Process images for each product - EXACTLY LIKE SHOWCASE
+        $imageCount = 0;
         foreach ($bidhaa as $product) {
-            $product->image_data_url = null;
-            $product->has_image = false;
+            // Use the same method as showcase
+            $product->image_data_url = $this->getProductImageUrl($product);
+            $product->has_image = !empty($product->image);
             
-            if ($product->image) {
-                try {
-                    // Detect mime type from binary data
-                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                    $mimeType = finfo_buffer($finfo, $product->image);
-                    finfo_close($finfo);
-                    $product->image_data_url = 'data:' . $mimeType . ';base64,' . base64_encode($product->image);
-                    $product->has_image = true;
-                } catch (\Exception $e) {
-                    $product->image_data_url = null;
-                    $product->has_image = false;
-                }
+            if ($product->has_image) {
+                $imageCount++;
+                Log::info("Order: Product {$product->id} - {$product->jina} has image, size: " . strlen($product->image) . " bytes");
             }
         }
+
+        Log::info("Order page loaded: Total products: {$bidhaa->count()}, Products with images: {$imageCount}");
 
         // Get customers
         $wateja = Mteja::where('company_id', $companyId)->orderBy('jina')->get();

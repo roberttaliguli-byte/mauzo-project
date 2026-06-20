@@ -609,6 +609,80 @@
         .order-preview-content .preview-order-info { grid-template-columns: 1fr; }
         .placed-orders-list-top { max-height: 80px; }
     }
+
+    /* Toast Notification - Centered Top */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        max-width: 90%;
+        width: 400px;
+        pointer-events: none;
+    }
+    
+    .toast {
+        padding: 12px 24px;
+        border-radius: 8px;
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        animation: slideDown 0.4s ease forwards;
+        width: 100%;
+        text-align: center;
+        pointer-events: auto;
+    }
+    
+    .toast-success { background: #10b981; }
+    .toast-error { background: #ef4444; }
+    .toast-info { background: #3b82f6; }
+    .toast-warning { background: #f59e0b; }
+    
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    .toast-out {
+        animation: slideUp 0.3s ease forwards;
+    }
+    
+    @keyframes slideUp {
+        from { opacity: 1; transform: translateY(0) scale(1); }
+        to { opacity: 0; transform: translateY(-30px) scale(0.95); }
+    }
+    
+    /* Tab Badge - Red for saved orders */
+    .tab-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #ef4444;
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 10px;
+        margin-left: 4px;
+        animation: pulse-badge 2s infinite;
+    }
+    
+    @keyframes pulse-badge {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .tab-badge.hidden {
+        display: none;
+    }
 </style>
 
 <!-- Orders Tab Content -->
@@ -619,23 +693,23 @@
         <div class="order-stats-bar" id="orderStatsBar">
             <div class="stat-item stat-total">
                 <i class="fas fa-clipboard-list"></i>
-                Total: <span id="totalOrders">0</span>
+                Jumla: <span id="totalOrders">0</span>
             </div>
             <div class="stat-item stat-saved">
                 <i class="fas fa-save"></i>
-                Saved: <span id="savedOrders">0</span>
+                Imehifadhiwa: <span id="savedOrders">0</span>
             </div>
             <div class="stat-item stat-confirmed">
                 <i class="fas fa-check-circle"></i>
-                Confirmed: <span id="confirmedOrders">0</span>
+                Imethibitishwa: <span id="confirmedOrders">0</span>
             </div>
             <div class="stat-item stat-paid">
                 <i class="fas fa-money-bill-wave"></i>
-                Paid: <span id="paidOrders">0</span>
+                Imelipwa: <span id="paidOrders">0</span>
             </div>
             <div class="stat-item stat-cancelled">
                 <i class="fas fa-times-circle"></i>
-                Cancelled: <span id="cancelledOrders">0</span>
+                Imefutwa: <span id="cancelledOrders">0</span>
             </div>
         </div>
         
@@ -644,16 +718,16 @@
             <div class="placed-orders-header-top">
                 <h4>
                     <i class="fas fa-clipboard-list mr-1"></i>
-                    Placed Orders
+                    Oda Zilizowekwa
                     <span class="badge" id="placedOrdersCountTop">0</span>
                 </h4>
-                <button class="text-gray-400 hover:text-gray-600 text-xs" onclick="refreshOrders()">
+                <button class="text-gray-400 hover:text-gray-600 text-xs" onclick="refreshOrders()" title="Fresha">
                     <i class="fas fa-sync-alt"></i>
                 </button>
             </div>
             <div class="placed-orders-list-top" id="placedOrdersListTop">
                 <div class="text-center text-gray-400 py-3">
-                    <p class="text-xs">No placed orders yet</p>
+                    <p class="text-xs">Hakuna oda zilizowekwa</p>
                 </div>
             </div>
         </div>
@@ -666,73 +740,59 @@
                 <!-- Search Bar -->
                 <div class="search-bar mb-2">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="productSearch" placeholder="Search products by name, type, or barcode...">
+                    <input type="text" id="productSearch" placeholder="Tafuta bidhaa kwa jina, aina, au barcode...">
                     <i class="fas fa-barcode text-gray-400 cursor-pointer hover:text-gray-600" id="scanBarcodeBtn"></i>
                 </div>
                 
- <!-- Product Grid -->
-<div class="product-grid" id="productGrid">
-    @foreach($bidhaa as $product)
-    <div class="product-card" 
-         data-id="{{ $product->id }}" 
-         data-name="{{ $product->jina }}" 
-         data-price="{{ $product->bei_kuuza }}" 
-         data-stock="{{ $product->idadi }}"
-         data-image="{{ $product->image_data_url ?? '' }}">
-        
-        @php
-            // Get image data directly from the product
-            $imageData = null;
-            if ($product->image) {
-                try {
-                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                    $mimeType = finfo_buffer($finfo, $product->image);
-                    finfo_close($finfo);
-                    $imageData = 'data:' . $mimeType . ';base64,' . base64_encode($product->image);
-                } catch (\Exception $e) {
-                    $imageData = null;
-                }
-            }
-        @endphp
-        
-        @if($imageData)
-            <img src="{{ $imageData }}" 
-                 alt="{{ $product->jina }}" 
-                 class="product-image"
-                 loading="lazy"
-                 onerror="this.src='https://via.placeholder.com/50x50?text={{ urlencode($product->jina) }}'">
-        @else
-            <img src="https://via.placeholder.com/50x50?text={{ urlencode($product->jina) }}" 
-                 alt="{{ $product->jina }}" 
-                 class="product-image"
-                 loading="lazy">
-        @endif
-        
-        <div class="product-name">{{ $product->jina }}</div>
-        <div class="product-details">
-            <span>{{ $product->aina }}</span>
-            @if($product->kipimo)
-                <span>{{ $product->kipimo }}</span>
-            @endif
-        </div>
-        <div class="product-price">{{ number_format($product->bei_kuuza, 0) }} TZS</div>
-        
-        @if($product->idadi > 0)
-            <button class="add-btn" onclick="addToOrder({{ $product->id }}, '{{ addslashes($product->jina) }}', '{{ addslashes($product->aina) }}', '{{ addslashes($product->kipimo) }}', {{ $product->bei_kuuza }}, {{ $product->idadi }})">
-                <i class="fas fa-plus"></i> Add
-            </button>
-        @else
-            <button class="add-btn" disabled>
-                <i class="fas fa-times"></i> Out
-            </button>
-        @endif
-        
-        <span class="stock-badge {{ $product->idadi > 10 ? 'stock-available' : ($product->idadi > 0 ? 'stock-low' : 'stock-out') }}">
-            {{ $product->idadi > 0 ? $product->idadi : '0' }}
-        </span>
-    </div>
-    @endforeach
-</div>
+                <!-- Product Grid -->
+                <div class="product-grid" id="productGrid">
+                    @foreach($bidhaa as $product)
+                    <div class="product-card" 
+                         data-id="{{ $product->id }}" 
+                         data-name="{{ $product->jina }}" 
+                         data-price="{{ $product->bei_kuuza }}" 
+                         data-stock="{{ $product->idadi }}"
+                         data-image="{{ $product->image_data_url ?? '' }}">
+                        
+                        <!-- Display image -->
+                        @if($product->image_data_url)
+                            <img src="{{ $product->image_data_url }}" 
+                                 alt="{{ $product->jina }}" 
+                                 class="product-image"
+                                 loading="lazy"
+                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/50x50?text={{ urlencode($product->jina) }}'">
+                        @else
+                            <img src="https://via.placeholder.com/50x50?text={{ urlencode($product->jina) }}" 
+                                 alt="{{ $product->jina }}" 
+                                 class="product-image"
+                                 loading="lazy">
+                        @endif
+                        
+                        <div class="product-name">{{ $product->jina }}</div>
+                        <div class="product-details">
+                            <span>{{ $product->aina }}</span>
+                            @if($product->kipimo)
+                                <span>{{ $product->kipimo }}</span>
+                            @endif
+                        </div>
+                        <div class="product-price">{{ number_format($product->bei_kuuza, 0) }} TZS</div>
+                        
+                        @if($product->idadi > 0)
+                            <button class="add-btn" onclick="addToOrder({{ $product->id }}, '{{ addslashes($product->jina) }}', '{{ addslashes($product->aina) }}', '{{ addslashes($product->kipimo) }}', {{ $product->bei_kuuza }}, {{ $product->idadi }})">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        @else
+                            <button class="add-btn" disabled>
+                                <i class="fas fa-times"></i> Out
+                            </button>
+                        @endif
+                        
+                        <span class="stock-badge {{ $product->idadi > 10 ? 'stock-available' : ($product->idadi > 0 ? 'stock-low' : 'stock-out') }}">
+                            {{ $product->idadi > 0 ? $product->idadi : '0' }}
+                        </span>
+                    </div>
+                    @endforeach
+                </div>
             </div>
             
             <!-- Right: Current Order Panel -->
@@ -741,10 +801,10 @@
                     <!-- Order Header -->
                     <div class="order-header">
                         <div class="flex items-center gap-2">
-                            <h3>Current Order</h3>
+                            <h3>Oda ya Sasa</h3>
                             <span class="order-count" id="orderItemCount">0</span>
                         </div>
-                        <button class="text-gray-400 hover:text-red-500 transition text-xs" onclick="clearOrder()" title="Clear Order">
+                        <button class="text-gray-400 hover:text-red-500 transition text-xs" onclick="clearOrder()" title="Futa Oda">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </div>
@@ -753,7 +813,7 @@
                     <div class="order-items" id="orderItems">
                         <div class="text-center text-gray-400 py-4">
                             <i class="fas fa-shopping-cart text-xl mb-1"></i>
-                            <p class="text-xs">No items in order</p>
+                            <p class="text-xs">Hakuna bidhaa katika oda</p>
                         </div>
                     </div>
                     
@@ -761,13 +821,13 @@
                     <div class="order-footer">
                         <!-- Subtotal -->
                         <div class="order-total">
-                            <span class="label">Subtotal</span>
+                            <span class="label">Jumla ndogo</span>
                             <span class="amount" id="orderSubtotal">0 TZS</span>
                         </div>
                         
                         <!-- Discount -->
                         <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs text-gray-600">Discount</span>
+                            <span class="text-xs text-gray-600">Punguzo</span>
                             <div class="flex items-center gap-1">
                                 <span class="text-xs text-gray-500">%</span>
                                 <input type="number" id="orderDiscount" value="0" min="0" max="100" 
@@ -778,17 +838,17 @@
                         
                         <!-- Total -->
                         <div class="order-total mb-1">
-                            <span class="label font-bold">Total</span>
+                            <span class="label font-bold">Jumla</span>
                             <span class="amount" id="orderTotal">0 TZS</span>
                         </div>
                         
                         <!-- Action Buttons -->
                         <div class="order-actions">
                             <button class="btn-success" onclick="processPayment()">
-                                <i class="fas fa-money-bill-wave"></i> Pay & Generate
+                                <i class="fas fa-money-bill-wave"></i> Lipa na Uza
                             </button>
                             <button class="btn-secondary" onclick="saveOrder()">
-                                <i class="fas fa-save"></i> Save
+                                <i class="fas fa-save"></i> Hifadhi
                             </button>
                         </div>
                     </div>
@@ -806,40 +866,40 @@
         </button>
         
         <div class="preview-header">
-            <h3 id="previewOrderNumber">Order #ORD-20250101-0001</h3>
-            <p id="previewOrderDate">Date: 01/01/2025 14:30</p>
+            <h3 id="previewOrderNumber">Oda #ORD-20250101-0001</h3>
+            <p id="previewOrderDate">Tarehe: 01/01/2025 14:30</p>
         </div>
         
         <div class="preview-order-info">
             <div class="info-item">
-                <strong>Customer:</strong> <span id="previewCustomerName">Walk-in Customer</span>
+                <strong>Mteja:</strong> <span id="previewCustomerName">Mteja wa Kutembea</span>
             </div>
             <div class="info-item">
-                <strong>Phone:</strong> <span id="previewCustomerPhone">-</span>
+                <strong>Simu:</strong> <span id="previewCustomerPhone">-</span>
             </div>
             <div class="info-item">
-                <strong>Status:</strong> <span id="previewOrderStatus" class="order-status status-saved">Saved</span>
+                <strong>Hali:</strong> <span id="previewOrderStatus" class="order-status status-saved">Imehifadhiwa</span>
             </div>
             <div class="info-item">
-                <strong>Items:</strong> <span id="previewItemCount">0</span>
+                <strong>Bidhaa:</strong> <span id="previewItemCount">0</span>
             </div>
         </div>
         
         <!-- Order Receipt -->
         <div class="receipt-print" id="orderReceiptContent">
             <div class="company-name" id="receiptCompanyName">{{ $companyName ?? 'Mauzo Sheet' }}</div>
-            <div style="text-align:center;font-size:10px;margin-bottom:2px;">Your Trusted Shop</div>
-            <div style="text-align:center;font-size:10px;margin-bottom:2px;">Order #ORD-20250101-0001</div>
-            <div style="text-align:center;font-size:10px;margin-bottom:4px;">Date: 01/01/2025 14:30</div>
+            <div style="text-align:center;font-size:10px;margin-bottom:2px;">Duka Lako la Kuaminika</div>
+            <div style="text-align:center;font-size:10px;margin-bottom:2px;">Oda #ORD-20250101-0001</div>
+            <div style="text-align:center;font-size:10px;margin-bottom:4px;">Tarehe: 01/01/2025 14:30</div>
             <div class="receipt-line"></div>
             <div style="font-size:10px;margin:2px 0;">
-                <strong>Customer:</strong> Walk-in Customer
+                <strong>Mteja:</strong> Mteja wa Kutembea
             </div>
             <div style="font-size:10px;margin:2px 0;">
-                <strong>Phone:</strong> -
+                <strong>Simu:</strong> -
             </div>
             <div style="font-size:10px;margin:2px 0;">
-                <strong>Status:</strong> Saved
+                <strong>Hali:</strong> Imehifadhiwa
             </div>
             <div class="receipt-line"></div>
             <div id="receiptItemsList"></div>
@@ -852,23 +912,26 @@
         
         <div class="preview-actions" id="previewActions">
             <button class="btn-success" onclick="previewPayOrder()">
-                <i class="fas fa-money-bill-wave"></i> Pay
+                <i class="fas fa-money-bill-wave"></i> Lipa
             </button>
             <button class="btn-success" style="background:#25D366;" onclick="previewWhatsAppOrder()">
                 <i class="fab fa-whatsapp"></i> WhatsApp
             </button>
             <button class="btn-danger" onclick="previewDeleteOrder()">
-                <i class="fas fa-trash"></i> Delete
+                <i class="fas fa-trash"></i> Futa
             </button>
             <button class="btn-primary" onclick="previewDownloadOrder()">
-                <i class="fas fa-download"></i> Download
+                <i class="fas fa-download"></i> Pakua
             </button>
             <button class="btn-secondary" onclick="closeOrderPreview()">
-                <i class="fas fa-times"></i> Close
+                <i class="fas fa-times"></i> Funga
             </button>
         </div>
     </div>
 </div>
+
+<!-- Toast Notification Container -->
+<div class="toast-container" id="toastContainer"></div>
 
 <script>
 // Order Management System
@@ -878,11 +941,18 @@ let orderSubtotal = 0;
 let placedOrders = [];
 let currentPreviewOrder = null;
 let companyName = '{{ $companyName ?? 'Mauzo Sheet' }}';
+let autoRefreshInterval = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadPlacedOrders();
     updateOrderStats();
+    updateTabBadge();
+    
+    // Auto-refresh every 10 seconds
+    autoRefreshInterval = setInterval(function() {
+        loadPlacedOrders();
+    }, 10000);
 });
 
 // Real-time search
@@ -899,7 +969,7 @@ document.getElementById('productSearch').addEventListener('input', function() {
 // Add product to order
 function addToOrder(id, name, aina, kipimo, price, stock) {
     if (stock <= 0) {
-        showNotification('Product is out of stock!', 'error');
+        showNotification('Bidhaa imeisha!', 'error');
         return;
     }
     
@@ -907,7 +977,7 @@ function addToOrder(id, name, aina, kipimo, price, stock) {
     
     if (existingItem) {
         if (existingItem.qty >= stock) {
-            showNotification('Not enough stock available!', 'error');
+            showNotification('Hakuna hisa za kutosha!', 'error');
             return;
         }
         existingItem.qty += 1;
@@ -925,7 +995,7 @@ function addToOrder(id, name, aina, kipimo, price, stock) {
     }
     
     updateOrderDisplay();
-    showNotification(`Added ${name} to order`, 'success');
+    showNotification(`${name} imeongezwa kwenye oda!`, 'success');
 }
 
 // Update order display
@@ -937,7 +1007,7 @@ function updateOrderDisplay() {
         container.innerHTML = `
             <div class="text-center text-gray-400 py-4">
                 <i class="fas fa-shopping-cart text-xl mb-1"></i>
-                <p class="text-xs">No items in order</p>
+                <p class="text-xs">Hakuna bidhaa katika oda</p>
             </div>
         `;
         countDisplay.textContent = '0';
@@ -996,7 +1066,7 @@ function updateQty(index, change) {
         const card = document.querySelector(`.product-card[data-id="${item.id}"]`);
         const stock = card ? parseInt(card.dataset.stock) : 999;
         if (newQty > stock) {
-            showNotification('Not enough stock available!', 'error');
+            showNotification('Hakuna hisa za kutosha!', 'error');
             return;
         }
         item.qty = newQty;
@@ -1024,17 +1094,17 @@ function calculateTotal() {
 // Clear order
 function clearOrder() {
     if (orderItems.length === 0) return;
-    if (confirm('Clear all items from current order?')) {
+    if (confirm('Futa bidhaa zote kutoka kwenye oda?')) {
         orderItems = [];
         updateOrderDisplay();
-        showNotification('Order cleared', 'info');
+        showNotification('Oda imefutwa', 'info');
     }
 }
 
 // Save order
 function saveOrder() {
     if (orderItems.length === 0) {
-        showNotification('No items to save', 'error');
+        showNotification('Hakuna bidhaa za kuhifadhi', 'error');
         return;
     }
     
@@ -1050,7 +1120,7 @@ function saveOrder() {
         discount: parseFloat(document.getElementById('orderDiscount').value) || 0,
         total: orderTotal,
         status: 'saved',
-        customer_name: 'Walk-in Customer'
+        customer_name: 'Mteja wa Kutembea'
     };
     
     fetch('/orders', {
@@ -1064,26 +1134,27 @@ function saveOrder() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
+            showNotification('Oda imehifadhiwa!', 'success');
             loadPlacedOrders();
             updateOrderStats();
+            updateTabBadge();
             orderItems = [];
             updateOrderDisplay();
             document.getElementById('placedOrdersSectionTop').style.display = 'block';
         } else {
-            showNotification(data.message || 'Failed to save order', 'error');
+            showNotification(data.message || 'Imeshindwa kuhifadhi oda', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Failed to save order', 'error');
+        showNotification('Imeshindwa kuhifadhi oda', 'error');
     });
 }
 
-// Process payment
+// Process payment - Lipa na Uza
 function processPayment() {
     if (orderItems.length === 0) {
-        showNotification('No items to process', 'error');
+        showNotification('Hakuna bidhaa za kuchakata', 'error');
         return;
     }
     
@@ -1099,7 +1170,7 @@ function processPayment() {
         discount: parseFloat(document.getElementById('orderDiscount').value) || 0,
         total: orderTotal,
         status: 'paid',
-        customer_name: 'Walk-in Customer'
+        customer_name: 'Mteja wa Kutembea'
     };
     
     fetch('/orders', {
@@ -1113,19 +1184,20 @@ function processPayment() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Order paid and generated successfully!', 'success');
+            showNotification('Mauzo yamerekodiwa!', 'success');
             loadPlacedOrders();
             updateOrderStats();
+            updateTabBadge();
             orderItems = [];
             updateOrderDisplay();
             document.getElementById('placedOrdersSectionTop').style.display = 'block';
         } else {
-            showNotification(data.message || 'Failed to process payment', 'error');
+            showNotification(data.message || 'Imeshindwa kuchakata malipo', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Failed to process payment', 'error');
+        showNotification('Imeshindwa kuchakata malipo', 'error');
     });
 }
 
@@ -1143,6 +1215,7 @@ function loadPlacedOrders() {
             placedOrders = data.data;
             displayPlacedOrders();
             updateOrderStats();
+            updateTabBadge();
         }
     })
     .catch(error => console.error('Error loading orders:', error));
@@ -1156,31 +1229,31 @@ function displayPlacedOrders() {
     countBadge.textContent = placedOrders.length;
     
     if (placedOrders.length === 0) {
-        list.innerHTML = `<div class="text-center text-gray-400 py-3"><p class="text-xs">No placed orders yet</p></div>`;
+        list.innerHTML = `<div class="text-center text-gray-400 py-3"><p class="text-xs">Hakuna oda zilizowekwa</p></div>`;
         return;
     }
     
     let html = '';
     placedOrders.forEach(order => {
         let statusClass = 'status-saved';
-        let statusLabel = 'Saved';
+        let statusLabel = 'Imehifadhiwa';
         
         if (order.status === 'paid') {
             statusClass = 'status-paid';
-            statusLabel = 'Paid';
+            statusLabel = 'Imelipwa';
         } else if (order.status === 'confirmed') {
             statusClass = 'status-confirmed';
-            statusLabel = 'Confirmed';
+            statusLabel = 'Imethibitishwa';
         } else if (order.status === 'cancelled') {
             statusClass = 'status-cancelled';
-            statusLabel = 'Cancelled';
+            statusLabel = 'Imefutwa';
         }
         
         html += `
             <div class="placed-order-item-top">
                 <div class="order-info" onclick="previewOrder('${order.id}')">
                     <div class="order-id">${order.order_number}</div>
-                    <div class="order-date">${new Date(order.created_at).toLocaleString()} • ${order.items ? order.items.length : 0} items</div>
+                    <div class="order-date">${new Date(order.created_at).toLocaleString()} • ${order.items ? order.items.length : 0} bidhaa</div>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="order-status ${statusClass}">${statusLabel}</span>
@@ -1199,38 +1272,53 @@ function displayPlacedOrders() {
 // Refresh orders
 function refreshOrders() {
     loadPlacedOrders();
-    showNotification('Orders refreshed', 'info');
+    showNotification('Oda zimefresheshwa', 'info');
+}
+
+// Update tab badge (red number for saved orders)
+function updateTabBadge() {
+    const savedOrders = placedOrders.filter(o => o.status === 'saved').length;
+    const badge = document.getElementById('draft-orders-count');
+    
+    if (badge) {
+        if (savedOrders > 0) {
+            badge.textContent = savedOrders;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
 }
 
 // Preview order
 function previewOrder(orderId) {
     const order = placedOrders.find(o => o.id == orderId || o.order_number === orderId);
     if (!order) {
-        showNotification('Order not found', 'error');
+        showNotification('Oda haijapatikana', 'error');
         return;
     }
     
     currentPreviewOrder = order;
     
     // Populate preview
-    document.getElementById('previewOrderNumber').textContent = `Order #${order.order_number}`;
-    document.getElementById('previewOrderDate').textContent = `Date: ${new Date(order.created_at).toLocaleString()}`;
-    document.getElementById('previewCustomerName').textContent = order.customer_name || 'Walk-in Customer';
+    document.getElementById('previewOrderNumber').textContent = `Oda #${order.order_number}`;
+    document.getElementById('previewOrderDate').textContent = `Tarehe: ${new Date(order.created_at).toLocaleString()}`;
+    document.getElementById('previewCustomerName').textContent = order.customer_name || 'Mteja wa Kutembea';
     document.getElementById('previewCustomerPhone').textContent = order.customer_phone || '-';
     document.getElementById('previewItemCount').textContent = order.items ? order.items.length : 0;
     
     const statusEl = document.getElementById('previewOrderStatus');
-    let statusLabel = 'Saved';
+    let statusLabel = 'Imehifadhiwa';
     let statusClass = 'status-saved';
     
     if (order.status === 'paid') {
-        statusLabel = 'Paid';
+        statusLabel = 'Imelipwa';
         statusClass = 'status-paid';
     } else if (order.status === 'confirmed') {
-        statusLabel = 'Confirmed';
+        statusLabel = 'Imethibitishwa';
         statusClass = 'status-confirmed';
     } else if (order.status === 'cancelled') {
-        statusLabel = 'Cancelled';
+        statusLabel = 'Imefutwa';
         statusClass = 'status-cancelled';
     }
     
@@ -1245,19 +1333,19 @@ function previewOrder(orderId) {
     if (order.status === 'saved' || order.status === 'confirmed') {
         actionsContainer.innerHTML = `
             <button class="btn-success" onclick="previewPayOrder()">
-                <i class="fas fa-money-bill-wave"></i> Pay
+                <i class="fas fa-money-bill-wave"></i> Lipa
             </button>
             <button class="btn-success" style="background:#25D366;" onclick="previewWhatsAppOrder()">
                 <i class="fab fa-whatsapp"></i> WhatsApp
             </button>
             <button class="btn-danger" onclick="previewDeleteOrder()">
-                <i class="fas fa-trash"></i> Delete
+                <i class="fas fa-trash"></i> Futa
             </button>
             <button class="btn-primary" onclick="previewDownloadOrder()">
-                <i class="fas fa-download"></i> Download
+                <i class="fas fa-download"></i> Pakua
             </button>
             <button class="btn-secondary" onclick="closeOrderPreview()">
-                <i class="fas fa-times"></i> Close
+                <i class="fas fa-times"></i> Funga
             </button>
         `;
     } else {
@@ -1266,13 +1354,13 @@ function previewOrder(orderId) {
                 <i class="fab fa-whatsapp"></i> WhatsApp
             </button>
             <button class="btn-primary" onclick="previewDownloadOrder()">
-                <i class="fas fa-download"></i> Download
+                <i class="fas fa-download"></i> Pakua
             </button>
             <button class="btn-danger" onclick="previewDeleteOrder()">
-                <i class="fas fa-trash"></i> Delete
+                <i class="fas fa-trash"></i> Futa
             </button>
             <button class="btn-secondary" onclick="closeOrderPreview()">
-                <i class="fas fa-times"></i> Close
+                <i class="fas fa-times"></i> Funga
             </button>
         `;
     }
@@ -1288,16 +1376,16 @@ function previewWhatsAppOrder() {
     const items = order.items || [];
     let message = `🏪 *${companyName}*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*ORDER DETAILS*\n`;
-    message += `Order: ${order.order_number}\n`;
-    message += `Date: ${new Date(order.created_at).toLocaleString()}\n`;
-    message += `Customer: ${order.customer_name || 'Walk-in Customer'}\n`;
+    message += `*MAELEZO YA ODA*\n`;
+    message += `Oda: ${order.order_number}\n`;
+    message += `Tarehe: ${new Date(order.created_at).toLocaleString()}\n`;
+    message += `Mteja: ${order.customer_name || 'Mteja wa Kutembea'}\n`;
     if (order.customer_phone) {
-        message += `Phone: ${order.customer_phone}\n`;
+        message += `Simu: ${order.customer_phone}\n`;
     }
-    message += `Status: ${order.status === 'paid' ? '✅ Paid' : order.status === 'cancelled' ? '❌ Cancelled' : '⏳ Pending'}\n`;
+    message += `Hali: ${order.status === 'paid' ? '✅ Imelipwa' : order.status === 'cancelled' ? '❌ Imefutwa' : '⏳ Inasubiri'}\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*ITEMS*\n`;
+    message += `*BIDHAA*\n`;
     
     items.forEach(item => {
         const total = item.total || (item.price * item.qty);
@@ -1312,20 +1400,17 @@ function previewWhatsAppOrder() {
     
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     if (discount > 0) {
-        message += `Subtotal: ${formatCurrency(total + discount)}\n`;
-        message += `Discount: -${formatCurrency(discount)}\n`;
+        message += `Jumla Ndogo: ${formatCurrency(total + discount)}\n`;
+        message += `Punguzo: -${formatCurrency(discount)}\n`;
     }
-    message += `*TOTAL: ${formatCurrency(total)}*\n`;
+    message += `*JUMLA: ${formatCurrency(total)}*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     message += `Asante kwa kununua! 🛍️`;
     
-    // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
     
-    // Get customer phone from order
     let phoneNumber = order.customer_phone || '';
     if (phoneNumber) {
-        // Clean phone number
         phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
         if (phoneNumber.startsWith('0')) {
             phoneNumber = '255' + phoneNumber.substring(1);
@@ -1336,7 +1421,6 @@ function previewWhatsAppOrder() {
         }
     }
     
-    // Open WhatsApp
     let whatsappUrl;
     if (phoneNumber && phoneNumber.length === 12) {
         whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
@@ -1351,23 +1435,23 @@ function previewWhatsAppOrder() {
 function quickWhatsAppOrder(orderId) {
     const order = placedOrders.find(o => o.id == orderId || o.order_number === orderId);
     if (!order) {
-        showNotification('Order not found', 'error');
+        showNotification('Oda haijapatikana', 'error');
         return;
     }
     
     const items = order.items || [];
     let message = `🏪 *${companyName}*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*ORDER DETAILS*\n`;
-    message += `Order: ${order.order_number}\n`;
-    message += `Date: ${new Date(order.created_at).toLocaleString()}\n`;
-    message += `Customer: ${order.customer_name || 'Walk-in Customer'}\n`;
+    message += `*MAELEZO YA ODA*\n`;
+    message += `Oda: ${order.order_number}\n`;
+    message += `Tarehe: ${new Date(order.created_at).toLocaleString()}\n`;
+    message += `Mteja: ${order.customer_name || 'Mteja wa Kutembea'}\n`;
     if (order.customer_phone) {
-        message += `Phone: ${order.customer_phone}\n`;
+        message += `Simu: ${order.customer_phone}\n`;
     }
-    message += `Status: ${order.status === 'paid' ? '✅ Paid' : order.status === 'cancelled' ? '❌ Cancelled' : '⏳ Pending'}\n`;
+    message += `Hali: ${order.status === 'paid' ? '✅ Imelipwa' : order.status === 'cancelled' ? '❌ Imefutwa' : '⏳ Inasubiri'}\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `*ITEMS*\n`;
+    message += `*BIDHAA*\n`;
     
     items.forEach(item => {
         const total = item.total || (item.price * item.qty);
@@ -1382,10 +1466,10 @@ function quickWhatsAppOrder(orderId) {
     
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     if (discount > 0) {
-        message += `Subtotal: ${formatCurrency(total + discount)}\n`;
-        message += `Discount: -${formatCurrency(discount)}\n`;
+        message += `Jumla Ndogo: ${formatCurrency(total + discount)}\n`;
+        message += `Punguzo: -${formatCurrency(discount)}\n`;
     }
-    message += `*TOTAL: ${formatCurrency(total)}*\n`;
+    message += `*JUMLA: ${formatCurrency(total)}*\n`;
     message += `━━━━━━━━━━━━━━━━━━━━━━━━\n`;
     message += `Asante kwa kununua! 🛍️`;
     
@@ -1419,10 +1503,8 @@ function generateOrderReceipt(order) {
     const items = order.items || [];
     let subtotal = 0;
     
-    // Update header
     document.getElementById('receiptCompanyName').textContent = companyName;
     
-    // Items list
     let itemsHtml = '';
     items.forEach(item => {
         const total = item.total || (item.price * item.qty);
@@ -1439,25 +1521,24 @@ function generateOrderReceipt(order) {
     });
     document.getElementById('receiptItemsList').innerHTML = itemsHtml;
     
-    // Totals
     const discount = order.discount || 0;
     const total = order.total || subtotal;
     let totalsHtml = '';
     if (discount > 0) {
         totalsHtml += `
             <div class="receipt-item">
-                <span>Subtotal</span>
+                <span>Jumla Ndogo</span>
                 <span>${formatCurrency(subtotal)}</span>
             </div>
             <div class="receipt-item">
-                <span>Discount</span>
+                <span>Punguzo</span>
                 <span>-${formatCurrency(discount)}</span>
             </div>
         `;
     }
     totalsHtml += `
         <div class="receipt-total">
-            <span>TOTAL</span>
+            <span>JUMLA</span>
             <span>${formatCurrency(total)}</span>
         </div>
     `;
@@ -1479,24 +1560,25 @@ function previewPayOrder() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Order paid successfully!', 'success');
+            showNotification('Mauzo yamerekodiwa!', 'success');
             closeOrderPreview();
             loadPlacedOrders();
             updateOrderStats();
+            updateTabBadge();
         } else {
-            showNotification(data.message || 'Failed to pay order', 'error');
+            showNotification(data.message || 'Imeshindwa kulipa oda', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Failed to pay order', 'error');
+        showNotification('Imeshindwa kulipa oda', 'error');
     });
 }
 
 // Delete order from preview
 function previewDeleteOrder() {
     if (!currentPreviewOrder) return;
-    if (!confirm('Delete this order?')) return;
+    if (!confirm('Futa oda hii?')) return;
     
     fetch(`/orders/${currentPreviewOrder.id}`, {
         method: 'DELETE',
@@ -1507,17 +1589,18 @@ function previewDeleteOrder() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Order deleted successfully!', 'success');
+            showNotification('Oda imefutwa!', 'success');
             closeOrderPreview();
             loadPlacedOrders();
             updateOrderStats();
+            updateTabBadge();
         } else {
-            showNotification(data.message || 'Failed to delete order', 'error');
+            showNotification(data.message || 'Imeshindwa kufuta oda', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Failed to delete order', 'error');
+        showNotification('Imeshindwa kufuta oda', 'error');
     });
 }
 
@@ -1536,7 +1619,7 @@ function previewDownloadOrder() {
     printWindow.document.write(`
         <html>
         <head>
-            <title>Order #${currentPreviewOrder.order_number}</title>
+            <title>Oda #${currentPreviewOrder.order_number}</title>
             <style>
                 body { font-family: 'Courier New', monospace; padding: 16px; }
                 .company-name { font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 2px; }
@@ -1581,13 +1664,23 @@ function formatCurrency(amount) {
     return amount.toLocaleString('en-TZ', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' TZS';
 }
 
-// Show notification
+// Show notification - Centered Top
 function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-    notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg text-white ${bgColor} text-sm`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>${message}`;
-    document.body.appendChild(notification);
-    setTimeout(() => { notification.style.opacity = '0'; setTimeout(() => notification.remove(), 300); }, 3000);
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    const iconMap = {
+        'success': 'fa-check-circle',
+        'error': 'fa-exclamation-circle',
+        'info': 'fa-info-circle',
+        'warning': 'fa-exclamation-triangle'
+    };
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `<i class="fas ${iconMap[type] || 'fa-info-circle'} mr-2"></i>${message}`;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 </script>

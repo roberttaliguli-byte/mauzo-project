@@ -1,0 +1,47 @@
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300  1) <?php
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300  2) 
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300  3) use Illuminate\Database\Migrations\Migration;
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300  4) use Illuminate\Database\Schema\Blueprint;
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300  5) use Illuminate\Support\Facades\Schema;
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300  6) 
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300  7) return new class extends Migration
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300  8) {
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300  9)     public function up(): void
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 10)     {
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 11)         Schema::create('mauzos', function (Blueprint $table) {
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 12)             $table->id();
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 13)             $table->foreignId('company_id')->constrained()->onDelete('cascade'); // ✅ ADD
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 14)             $table->foreignId('bidhaa_id')->constrained('bidhaas')->onDelete('cascade');
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 15)             $table->foreignId('madeni_id')->nullable()->constrained()->onDelete('cascade'); // ✅ ADD (nullable for non-debt sales)
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 16)             $table->string('receipt_no'); // ✅ ADD receipt number
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 17)             
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 18)             // Product details
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 19)             $table->integer('idadi');
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 20)             $table->decimal('bei', 10, 2);
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 21)             
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 22)             // Discount handling - CRITICAL
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 23)             $table->decimal('punguzo', 10, 2)->default(0);
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 24)             $table->enum('punguzo_aina', ['bidhaa', 'jumla'])->default('bidhaa'); // ✅ MUST ADD THIS
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 25)             
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 26)             // Totals
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 27)             $table->decimal('jumla', 10, 2);
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 28)             
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 29)             // Debt tracking
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 30)             $table->boolean('is_debt_repayment')->default(false); // ✅ ADD
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 31)             
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 32)             // Optional: For reprints tracking
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 33)             $table->integer('reprint_count')->default(0);
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 34)             
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 35)             $table->timestamps();
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 36)             
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 37)             // Indexes for better performance
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 38)             $table->index('receipt_no');
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 39)             $table->index('created_at');
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 40)         });
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 41)     }
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 42) 
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 43)     public function down(): void
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 44)     {
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 45)         Schema::dropIfExists('mauzos');
+^b806c29 (roberttaliguli-byte 2025-12-18 15:31:34 +0300 46)     }
+06116070 (roberttaliguli-byte 2026-02-02 13:27:43 +0300 47) };

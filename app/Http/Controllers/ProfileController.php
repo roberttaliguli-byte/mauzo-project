@@ -45,7 +45,7 @@ class ProfileController extends Controller
         // Complete list of Tanzanian regions
         $regions = [
             "Arusha", "Dar es Salaam", "Dodoma", "Geita", "Iringa", "Kagera", "Katavi",
-            "Kigoma", "Kilimanjaro", "Lindi", "Manyara", "Mara", "Mbeya", "Morogoro",
+            "Kigoma", "Kilimanjaro", "Lindi", "Manyara", "Mara","Mwanza", "Mbeya", "Morogoro",
             "Mtwara", "Njombe", "Pwani", "Ruvuma", "Rukwa", "Shinyanga", "Singida",
             "Simiyu", "Songwe", "Tabora", "Tanga", "Zanzibar North", "Zanzibar South", 
             "Zanzibar Urban/West"

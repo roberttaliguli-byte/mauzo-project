@@ -15,10 +15,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
-        /* ============================================
-           SINGLE TEMPLATE - WORKS FOR ALL COMPANIES
-           ============================================ */
-        
         :root {
             --primary: #f59e0b;
             --primary-dark: #d97706;
@@ -46,7 +42,6 @@
             padding-bottom: 100px;
         }
         
-        /* ===== LOADING ===== */
         .page-loader {
             position: fixed;
             top: 0;
@@ -78,14 +73,13 @@
         
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* ===== HERO ===== */
         .hero-section {
             position: relative;
             background: linear-gradient(135deg, var(--dark) 0%, #374151 100%);
             color: white;
-            padding: 50px 16px 70px;
+            padding: 40px 16px 60px;
             overflow: hidden;
-            min-height: 320px;
+            min-height: 280px;
             display: flex;
             align-items: center;
         }
@@ -137,7 +131,7 @@
         .hero-badge i { color: var(--primary); }
         
         .hero-title {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 800;
             line-height: 1.15;
             margin-bottom: 8px;
@@ -146,7 +140,7 @@
         .hero-title span { color: var(--primary); }
         
         .hero-subtitle {
-            font-size: 16px;
+            font-size: 15px;
             color: rgba(255,255,255,0.8);
             max-width: 500px;
             margin-bottom: 16px;
@@ -243,11 +237,154 @@
             color: rgba(255,255,255,0.6);
         }
         
-        /* ===== COMPANY PROFILE ===== */
+        /* Customer Login Bar */
+        .customer-login-bar {
+            max-width: 1200px;
+            margin: -20px auto 20px;
+            padding: 0 16px;
+            position: relative;
+            z-index: 5;
+        }
+        
+        .customer-login-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .customer-login-card .icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .customer-login-card .info {
+            flex: 1;
+            min-width: 140px;
+        }
+        
+        .customer-login-card .info .greeting {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .customer-login-card .info .sub {
+            font-size: 11px;
+            color: var(--gray);
+        }
+        
+        .customer-login-card .code-input {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            min-width: 200px;
+            flex-wrap: wrap;
+        }
+        
+        .customer-login-card .code-input input {
+            flex: 1;
+            padding: 8px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-family: monospace;
+            outline: none;
+            transition: var(--transition);
+            min-width: 120px;
+        }
+        
+        .customer-login-card .code-input input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+        }
+        
+        .customer-login-card .code-input .btn-login {
+            padding: 8px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        
+        .customer-login-card .code-input .btn-login:hover {
+            background: var(--primary-dark);
+        }
+        
+        .customer-login-card .code-input .btn-logout {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        
+        .customer-login-card .code-input .btn-logout:hover {
+            background: #dc2626;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Company Profile */
         .company-profile {
             position: relative;
             z-index: 2;
-            margin-top: -30px;
             padding: 0 16px;
             max-width: 1200px;
             margin-left: auto;
@@ -266,8 +403,8 @@
         }
         
         .company-logo {
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
             border-radius: var(--radius-sm);
             background: var(--light);
             display: flex;
@@ -278,6 +415,7 @@
             color: var(--primary);
             overflow: hidden;
             flex-shrink: 0;
+            border: 2px solid #e5e7eb;
         }
         
         .company-logo img {
@@ -342,7 +480,7 @@
         .contact-btn-call { background: var(--dark); color: white; }
         .contact-btn-call:hover { background: #374151; transform: translateY(-2px); }
         
-        /* ===== PRODUCTS ===== */
+        /* Products */
         .products-section {
             max-width: 1200px;
             margin: 24px auto 0;
@@ -373,7 +511,6 @@
             color: var(--gray);
         }
         
-        /* ===== CATEGORY FILTERS ===== */
         .category-filters {
             display: flex;
             flex-wrap: nowrap;
@@ -412,7 +549,6 @@
             color: white;
         }
         
-        /* ===== PRODUCT GRID ===== */
         .product-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -513,7 +649,7 @@
         .product-card .add-btn:hover { background: var(--primary-dark); }
         .product-card .add-btn:disabled { background: #d1d5db; cursor: not-allowed; }
         
-        /* ===== FLOATING CART ===== */
+        /* Floating Cart */
         .floating-cart {
             position: fixed;
             bottom: 20px;
@@ -560,7 +696,6 @@
             justify-content: center;
         }
         
-        /* ===== CART PANEL ===== */
         .cart-overlay {
             position: fixed;
             top: 0;
@@ -729,7 +864,7 @@
         
         .cart-panel .footer .checkout-btn:hover { background: var(--secondary-dark); }
         
-        /* ===== CHECKOUT MODAL ===== */
+        /* Checkout Modal */
         .checkout-modal {
             position: fixed;
             top: 0;
@@ -757,11 +892,6 @@
             padding: 24px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.2);
             animation: slideUp 0.3s ease;
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
         }
         
         .checkout-modal .modal-content .modal-header {
@@ -819,6 +949,24 @@
             min-height: 60px;
         }
         
+        .checkout-modal .modal-content .customer-info-display {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: var(--radius-sm);
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .checkout-modal .modal-content .customer-info-display .label {
+            font-size: 11px;
+            color: var(--gray);
+        }
+        
+        .checkout-modal .modal-content .customer-info-display .value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
         .checkout-modal .modal-content .order-summary {
             background: var(--light);
             border-radius: var(--radius-sm);
@@ -861,7 +1009,7 @@
         .checkout-modal .modal-content .submit-btn:hover { background: var(--secondary-dark); }
         .checkout-modal .modal-content .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        /* ===== ORDER SUCCESS ===== */
+        /* Order Success */
         .order-success { text-align: center; padding: 20px 0; }
         .order-success .icon {
             font-size: 56px;
@@ -884,44 +1032,52 @@
         }
         .order-success .message { color: var(--gray); margin: 8px 0 16px; }
         
-        /* ===== TOAST ===== */
+        /* Toast - Centered Top */
         .toast-container {
             position: fixed;
-            top: 16px;
-            right: 16px;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            align-items: center;
+            gap: 8px;
             max-width: 90%;
+            width: 400px;
+            pointer-events: none;
         }
         
         .toast {
-            padding: 10px 16px;
+            padding: 12px 24px;
             border-radius: var(--radius-sm);
             color: white;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            animation: slideInRight 0.3s ease;
+            animation: slideDown 0.4s ease forwards;
+            width: 100%;
+            text-align: center;
+            pointer-events: auto;
         }
         
-        .toast-success { background: var(--secondary); }
+        .toast-success { background: #10b981; }
         .toast-error { background: #ef4444; }
         .toast-info { background: #3b82f6; }
+        .toast-warning { background: #f59e0b; }
         
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
         
         .toast-out {
-            animation: slideOutRight 0.3s ease forwards;
+            animation: slideUp 0.3s ease forwards;
         }
         
-        @keyframes slideOutRight {
-            from { opacity: 1; transform: translateX(0); }
-            to { opacity: 0; transform: translateX(50px); }
+        @keyframes slideUp {
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 0; transform: translateY(-30px) scale(0.95); }
         }
         
         .spinner {
@@ -934,7 +1090,6 @@
             animation: spin 0.8s ease infinite;
         }
         
-        /* ===== EMPTY STATE ===== */
         .empty-state {
             text-align: center;
             padding: 40px 0;
@@ -950,10 +1105,10 @@
         .empty-state p { font-size: 16px; font-weight: 500; }
         .empty-state .sub { font-size: 14px; }
         
-        /* ===== RESPONSIVE ===== */
+        /* Responsive */
         @media (max-width: 768px) {
-            .hero-title { font-size: 26px; }
-            .hero-subtitle { font-size: 15px; }
+            .hero-title { font-size: 24px; }
+            .hero-subtitle { font-size: 14px; }
             .hero-actions .btn-hero { width: 100%; justify-content: center; }
             .hero-stats { gap: 16px; }
             .hero-stats-item .number { font-size: 18px; }
@@ -962,6 +1117,7 @@
             .company-info .meta { justify-content: center; }
             .company-contact { margin-left: 0; justify-content: center; width: 100%; }
             .company-contact .contact-btn { flex: 1; justify-content: center; }
+            .company-logo { width: 60px; height: 60px; }
             
             .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .product-card .info { padding: 10px; }
@@ -974,22 +1130,84 @@
             .category-filter { font-size: 12px; padding: 5px 12px; }
             
             .checkout-modal .modal-content { padding: 16px; margin: 8px; }
+            
+            .customer-login-card { flex-direction: column; text-align: center; }
+            .customer-login-card .code-input { width: 100%; flex-direction: column; }
+            .customer-login-card .code-input input { width: 100%; }
+            .customer-login-card .code-input .btn-login,
+            .customer-login-card .code-input .btn-logout { width: 100%; justify-content: center; }
+            
+            .customer-login-card .code-input .find-code-section {
+                flex-direction: column;
+                width: 100%;
+            }
         }
         
         @media (max-width: 480px) {
-            .hero-section { padding: 30px 12px 50px; min-height: 260px; }
-            .hero-title { font-size: 22px; }
+            .hero-section { padding: 30px 12px 50px; min-height: 240px; }
+            .hero-title { font-size: 20px; }
             .product-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .company-logo { width: 50px; height: 50px; }
             
             .floating-cart { bottom: 12px; right: 12px; }
             .cart-toggle { width: 48px; height: 48px; font-size: 18px; }
         }
         
-        /* ===== UTILITY ===== */
         .hidden { display: none !important; }
         .text-center { text-align: center; }
         .mt-8 { margin-top: 8px; }
         .mb-8 { margin-bottom: 8px; }
+        .gap-2 { gap: 8px; }
+        .flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .w-full { width: 100%; }
+        .flex-col { flex-direction: column; }
+        
+        /* Find Code Section */
+        .find-code-section {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            border-top: 1px dashed #e5e7eb;
+            padding-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .find-code-section input {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .find-code-section .btn-find {
+            padding: 8px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        
+        .find-code-section .btn-find:hover {
+            background: #2563eb;
+        }
+        
+        .login-code-section {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        
+        .login-code-section input {
+            flex: 1;
+            min-width: 120px;
+        }
     </style>
 </head>
 <body>
@@ -1047,14 +1265,85 @@
         </div>
     </section>
 
+    <!-- ===== CUSTOMER CODE LOGIN BAR ===== -->
+    <div class="customer-login-bar">
+        <div class="customer-login-card">
+            <div class="icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="info">
+                @if($customer)
+                    <div class="greeting">
+                        <i class="fas fa-check-circle text-emerald-600"></i> Welcome back, <span id="customerGreeting">{{ $customer->jina }}</span>!
+                    </div>
+                    <div class="sub">
+                        <i class="fas fa-id-card"></i> Code: <strong id="customerCodeDisplay">{{ $customer->customer_code }}</strong>
+                        <button onclick="copyCodeToClipboard('{{ $customer->customer_code }}')" class="text-primary hover:text-primary-dark" style="background:none;border:none;cursor:pointer;font-size:11px;">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </div>
+                @else
+                    <div class="greeting">Welcome! Have a customer code?</div>
+                    <div class="sub">Enter your code for faster checkout or find your code below</div>
+                @endif
+            </div>
+            <div class="code-input" id="customerCodeSection">
+                @if($customer)
+                    <a href="{{ route('customer.orders', ['identifier' => $company->id]) }}" 
+                       class="btn-login" 
+                       style="background:#3b82f6;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:8px;color:white;font-weight:600;font-size:13px;transition:all 0.3s ease;cursor:pointer;border:none;">
+                        <i class="fas fa-history"></i> My Orders
+                    </a>
+                    <button class="btn-logout" onclick="logoutCustomer()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                @else
+                    <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
+                        <!-- Login with Code -->
+                        <div class="login-code-section">
+                            <input type="text" id="customerCodeInput" placeholder="Enter your code (e.g., CUST-202601-0001)" class="uppercase">
+                            <button class="btn-login" onclick="loginCustomer()">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </button>
+                        </div>
+                        
+                        <!-- Find My Code by Phone -->
+                        <div class="find-code-section">
+                            <input type="tel" id="findPhoneInput" placeholder="Enter your phone number to find code">
+                            <button class="btn-find" onclick="findCustomerCode()">
+                                <i class="fas fa-search"></i> Find Code
+                            </button>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FIND CODE MODAL ===== -->
+    <div class="modal" id="findCodeModal">
+        <div class="modal-content">
+            <button onclick="closeFindCodeModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:20px;color:#9ca3af;cursor:pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+            <div id="findCodeResult">
+                <div style="text-align:center;padding:20px 0;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:40px;color:#f59e0b;"></i>
+                    <p style="margin-top:12px;color:#6b7280;">Searching...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== COMPANY PROFILE ===== -->
     <section class="company-profile">
         <div class="company-card">
             <div class="company-logo">
                 @if($company->logo)
-                    <img src="{{ asset('storage/' . $company->logo) }}" alt="{{ $company->company_name }}">
+                    <img src="{{ asset('storage/' . $company->logo) }}" alt="{{ $company->company_name }}" 
+                         onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23f3f4f6%22/%3E%3Ctext x=%2240%22 y=%2245%22 text-anchor=%22middle%22 font-family=%22Arial%22 font-size=%2224%22 fill=%22%239ca3af%22%3E{{ strtoupper(substr($company->company_name, 0, 2)) }}%3C/text%3E%3C/svg%3E';">
                 @else
-                    {{ strtoupper(substr($company->company_name, 0, 2)) }}
+                    <span style="font-size:32px;font-weight:700;color:var(--primary);">{{ strtoupper(substr($company->company_name, 0, 2)) }}</span>
                 @endif
             </div>
             
@@ -1248,6 +1537,19 @@
                     Fill in your details to complete the order
                 </p>
                 
+                <div id="customerInfoDisplay" class="customer-info-display hidden">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-user-check text-emerald-600"></i>
+                        <span class="label">Customer:</span>
+                        <span class="value" id="checkoutCustomerName">-</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <i class="fas fa-id-card text-emerald-600"></i>
+                        <span class="label">Code:</span>
+                        <span class="value font-mono" id="checkoutCustomerCode">-</span>
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label for="customerName">Full Name *</label>
                     <input type="text" id="customerName" placeholder="Enter your full name" required>
@@ -1317,10 +1619,12 @@
         const COMPANY_NAME = '{{ $company->company_name }}';
         const CUSTOMER_TOKEN = '{{ $customerToken }}';
         const STORAGE_KEY = 'showcase_cart_' + COMPANY_ID;
+        const CUSTOMER_SESSION_KEY = 'showcase_customer_' + COMPANY_ID;
         
         // ===== STATE =====
         let cart = [];
         let isCartOpen = false;
+        let loggedInCustomer = null;
         
         // ===== DOM REFS =====
         const cartItemsEl = document.getElementById('cartItems');
@@ -1331,18 +1635,262 @@
         const cartOverlayEl = document.getElementById('cartOverlay');
         const productGridEl = document.getElementById('productGrid');
         const searchInputEl = document.getElementById('searchProducts');
-        const categoryFiltersEl = document.getElementById('categoryFilters');
         const productCountEl = document.getElementById('productCount');
+        
+        // ===== CUSTOMER CODE FUNCTIONS =====
+        function loginCustomer() {
+            const input = document.getElementById('customerCodeInput');
+            const code = input.value.trim().toUpperCase();
+            
+            if (!code) {
+                showToast('Tafadhali ingiza msimbo wako wa mteja', 'error');
+                return;
+            }
+            
+            // Validate code format
+            if (!code.startsWith('CUST-') && !code.startsWith('CUST')) {
+                showToast('Msimbo wa mteja si sahihi. Unapaswa kuanza na CUST-', 'error');
+                return;
+            }
+            
+            // Send request to validate code
+            fetch(`/shop/customer/validate/${COMPANY_ID}?code=${encodeURIComponent(code)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loggedInCustomer = data.customer;
+                    sessionStorage.setItem(CUSTOMER_SESSION_KEY, JSON.stringify(loggedInCustomer));
+                    location.reload();
+                } else {
+                    showToast(data.message || 'Msimbo si sahihi', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Hitilafu ya mtandao', 'error');
+            });
+        }
+        
+        function logoutCustomer() {
+            // No confirm - direct action
+            fetch(`/shop/customer/logout/${COMPANY_ID}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    sessionStorage.removeItem(CUSTOMER_SESSION_KEY);
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Hitilafu ya mtandao', 'error');
+            });
+        }
+        
+        function copyCodeToClipboard(code) {
+            if (!code) return;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Msimbo umenakiliwa!', 'success');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('Msimbo umenakiliwa!', 'success');
+            });
+        }
+        
+        // ===== FIND CUSTOMER CODE BY PHONE =====
+        function findCustomerCode() {
+            const phoneInput = document.getElementById('findPhoneInput');
+            const phone = phoneInput.value.trim();
+            
+            if (!phone) {
+                showToast('Tafadhali ingiza namba yako ya simu', 'error');
+                phoneInput.focus();
+                return;
+            }
+            
+            const cleanPhone = phone.replace(/[^0-9]/g, '');
+            if (cleanPhone.length < 7) {
+                showToast('Tafadhali ingiza namba halali ya simu', 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('findCodeModal');
+            const result = document.getElementById('findCodeResult');
+            modal.style.display = 'flex';
+            
+            result.innerHTML = `
+                <div style="text-align:center;padding:20px 0;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:40px;color:#f59e0b;"></i>
+                    <p style="margin-top:12px;color:#6b7280;">Inatafuta msimbo wako...</p>
+                </div>
+            `;
+            
+            fetch(`/shop/customer/find-code/${COMPANY_ID}?phone=${encodeURIComponent(cleanPhone)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.customer) {
+                    const customer = data.customer;
+                    const registeredDate = customer.created_at || 'N/A';
+                    const registeredFrom = customer.registered_from === 'showcase' ? 'Imejiandikisha kupitia Duka la Mtandaoni' : 'Imejiandikisha na Duka';
+                    
+                    result.innerHTML = `
+                        <div style="text-align:center;padding:10px 0;">
+                            <div style="width:64px;height:64px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                                <i class="fas fa-check-circle" style="font-size:32px;color:#10b981;"></i>
+                            </div>
+                            <h3 style="font-size:18px;font-weight:700;color:#1f2937;">Mteja Amepatikana!</h3>
+                            <p style="color:#6b7280;font-size:14px;margin:4px 0;">
+                                <strong>${customer.jina || 'N/A'}</strong>
+                            </p>
+                            <div style="background:#f3f4f6;padding:12px;border-radius:8px;margin:12px 0;">
+                                <p style="font-size:12px;color:#6b7280;">Msimbo Wako wa Mteja</p>
+                                <p style="font-size:24px;font-weight:700;color:#f59e0b;font-family:monospace;letter-spacing:1px;">
+                                    ${customer.customer_code || 'N/A'}
+                                </p>
+                            </div>
+                            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;">
+                                <button onclick="copyCodeToClipboard('${customer.customer_code}')" 
+                                        style="padding:8px 20px;background:#f59e0b;color:white;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.3s ease;">
+                                    <i class="fas fa-copy"></i> Nakili Msimbo
+                                </button>
+                                <button onclick="autoLoginWithCode('${customer.customer_code}')" 
+                                        style="padding:8px 20px;background:#10b981;color:white;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;transition:all 0.3s ease;">
+                                    <i class="fas fa-sign-in-alt"></i> Ingia Sasa
+                                </button>
+                                <button onclick="closeFindCodeModal()" 
+                                        style="padding:8px 20px;background:#f3f4f6;color:#1f2937;border:none;border-radius:8px;font-weight:500;font-size:13px;cursor:pointer;transition:all 0.3s ease;">
+                                    <i class="fas fa-times"></i> Funga
+                                </button>
+                            </div>
+                            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;">
+                                <p style="font-size:11px;color:#9ca3af;">
+                                    <i class="far fa-calendar-alt"></i> Imejiandikisha: ${registeredDate}
+                                </p>
+                                <p style="font-size:11px;color:#9ca3af;">
+                                    <i class="fas fa-info-circle"></i> ${registeredFrom}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div style="text-align:center;padding:10px 0;">
+                            <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                                <i class="fas fa-user-slash" style="font-size:32px;color:#ef4444;"></i>
+                            </div>
+                            <h3 style="font-size:18px;font-weight:700;color:#1f2937;">Hakuna Mteja Aliyepatikana</h3>
+                            <p style="color:#6b7280;font-size:14px;margin:4px 0;">${data.message || 'Hakuna mteja aliyepatikana kwa namba hii ya simu.'}</p>
+                            <p style="color:#9ca3af;font-size:12px;margin-top:8px;">
+                                Tafadhali weka order kwanza ili ujiandikishe, au wasiliana na duka.
+                            </p>
+                            <button onclick="closeFindCodeModal()" 
+                                    style="margin-top:16px;padding:8px 30px;background:#f3f4f6;color:#1f2937;border:none;border-radius:8px;font-weight:500;font-size:13px;cursor:pointer;">
+                                <i class="fas fa-times"></i> Funga
+                            </button>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                result.innerHTML = `
+                    <div style="text-align:center;padding:10px 0;">
+                        <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size:32px;color:#ef4444;"></i>
+                        </div>
+                        <h3 style="font-size:18px;font-weight:700;color:#1f2937;">Hitilafu</h3>
+                        <p style="color:#6b7280;font-size:14px;">Hitilafu ya mtandao. Tafadhali jaribu tena.</p>
+                        <button onclick="closeFindCodeModal()" 
+                                style="margin-top:16px;padding:8px 30px;background:#f3f4f6;color:#1f2937;border:none;border-radius:8px;font-weight:500;font-size:13px;cursor:pointer;">
+                            <i class="fas fa-times"></i> Funga
+                        </button>
+                    </div>
+                `;
+            });
+        }
+        
+        function autoLoginWithCode(code) {
+            closeFindCodeModal();
+            const input = document.getElementById('customerCodeInput');
+            if (input) {
+                input.value = code;
+            }
+            showToast('Msimbo umeingizwa! Inaingiza...', 'success');
+            setTimeout(() => {
+                loginCustomer();
+            }, 500);
+        }
+        
+        function closeFindCodeModal() {
+            document.getElementById('findCodeModal').style.display = 'none';
+        }
+        
+        // Close modal on overlay click
+        document.getElementById('findCodeModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFindCodeModal();
+        });
+        
+        // Enter key on phone input
+        document.getElementById('findPhoneInput')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                findCustomerCode();
+            }
+        });
+        
+        // Enter key on code input
+        document.getElementById('customerCodeInput')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loginCustomer();
+            }
+        });
         
         // ===== INIT =====
         document.addEventListener('DOMContentLoaded', function() {
-            // Hide loader
             setTimeout(() => {
                 document.getElementById('pageLoader').classList.add('hidden');
             }, 500);
             
-            // Load cart from localStorage
             loadCart();
+            
+            const savedCustomer = sessionStorage.getItem(CUSTOMER_SESSION_KEY);
+            if (savedCustomer) {
+                try {
+                    loggedInCustomer = JSON.parse(savedCustomer);
+                } catch (e) {
+                    console.error('Error loading customer session', e);
+                }
+            }
             
             // Category filters
             document.querySelectorAll('.category-filter').forEach(btn => {
@@ -1353,16 +1901,15 @@
                 });
             });
             
-            // Search with debounce
             searchInputEl.addEventListener('input', debounce(function() {
                 searchProducts(this.value);
             }, 300));
             
-            // Close cart on Escape
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     if (cartPanelEl.classList.contains('open')) toggleCart();
                     if (document.getElementById('checkoutModal').classList.contains('active')) closeCheckout();
+                    closeFindCodeModal();
                 }
             });
         });
@@ -1370,7 +1917,7 @@
         // ===== CART FUNCTIONS =====
         function addToCart(id, name, price, stock) {
             if (stock <= 0) {
-                showToast('Product is out of stock', 'error');
+                showToast('Bidhaa imeisha!', 'error');
                 return;
             }
             
@@ -1378,7 +1925,7 @@
             
             if (existing) {
                 if (existing.qty >= stock) {
-                    showToast('Not enough stock available', 'error');
+                    showToast('Hakuna hisa za kutosha!', 'error');
                     return;
                 }
                 existing.qty += 1;
@@ -1388,16 +1935,14 @@
             
             updateCart();
             saveCart();
-            showToast(`${name} added to cart!`, 'success');
+            showToast(`${name} imeongezwa kwenye kikapu!`, 'success');
             
-            // Animate the cart button
             const btn = document.querySelector(`.product-card[data-id="${id}"] .add-btn`);
             if (btn) {
                 btn.style.transform = 'scale(0.9)';
                 setTimeout(() => { btn.style.transform = ''; }, 200);
             }
             
-            // Open cart on mobile
             if (window.innerWidth < 768) {
                 toggleCart();
             }
@@ -1416,7 +1961,7 @@
             if (newQty <= 0) {
                 cart.splice(index, 1);
             } else if (newQty > item.stock) {
-                showToast('Not enough stock available', 'error');
+                showToast('Hakuna hisa za kutosha!', 'error');
                 return;
             } else {
                 item.qty = newQty;
@@ -1437,8 +1982,8 @@
                 cartItemsEl.innerHTML = `
                     <div style="text-align:center;padding:40px 0;color:var(--gray);">
                         <i class="fas fa-shopping-basket" style="font-size:40px;color:#e5e7eb;margin-bottom:8px;"></i>
-                        <p style="font-size:15px;font-weight:500;">Your cart is empty</p>
-                        <p style="font-size:13px;">Start shopping to add items</p>
+                        <p style="font-size:15px;font-weight:500;">Kikapu chako ni tupu</p>
+                        <p style="font-size:13px;">Anza kununua kuongeza bidhaa</p>
                     </div>
                 `;
                 cartFooterEl.style.display = 'none';
@@ -1482,7 +2027,7 @@
         // ===== CHECKOUT =====
         function openCheckout() {
             if (cart.length === 0) {
-                showToast('Your cart is empty', 'error');
+                showToast('Kikapu chako ni tupu', 'error');
                 return;
             }
             
@@ -1496,12 +2041,30 @@
             document.getElementById('checkoutSubtotal').textContent = formatCurrency(total);
             document.getElementById('checkoutTotal').textContent = formatCurrency(total);
             
+            if (loggedInCustomer) {
+                prefillCustomerDetails(loggedInCustomer);
+            }
+            
             document.getElementById('checkoutModal').classList.add('active');
         }
         
         function closeCheckout() {
             document.getElementById('checkoutModal').classList.remove('active');
             if (cart.length === 0) updateCart();
+        }
+        
+        function prefillCustomerDetails(customer) {
+            if (!customer) return;
+            
+            document.getElementById('customerName').value = customer.jina || '';
+            document.getElementById('customerPhone').value = customer.simu || '';
+            document.getElementById('customerEmail').value = customer.barua_pepe || '';
+            document.getElementById('deliveryAddress').value = customer.anapoishi || '';
+            
+            const display = document.getElementById('customerInfoDisplay');
+            document.getElementById('checkoutCustomerName').textContent = customer.jina || '-';
+            document.getElementById('checkoutCustomerCode').textContent = customer.customer_code || '-';
+            display.classList.remove('hidden');
         }
         
         function placeOrder() {
@@ -1512,25 +2075,23 @@
             const orderType = document.getElementById('orderType').value;
             const instructions = document.getElementById('specialInstructions').value.trim();
             
-            // Validate
             if (!name) {
-                showToast('Please enter your full name', 'error');
+                showToast('Tafadhali ingiza jina lako kamili', 'error');
                 document.getElementById('customerName').focus();
                 return;
             }
             
             if (!phone) {
-                showToast('Please enter your phone number', 'error');
+                showToast('Tafadhali ingiza namba yako ya simu', 'error');
                 document.getElementById('customerPhone').focus();
                 return;
             }
             
             if (!/^[0-9]{7,15}$/.test(phone.replace(/[^0-9]/g, ''))) {
-                showToast('Please enter a valid phone number', 'error');
+                showToast('Tafadhali ingiza namba halali ya simu', 'error');
                 return;
             }
             
-            // Build order data
             const items = cart.map(item => ({
                 product_id: item.id,
                 quantity: item.qty
@@ -1548,14 +2109,14 @@
                 order_type: orderType,
                 subtotal: subtotal,
                 delivery_fee: 0,
-                total: subtotal
+                total: subtotal,
+                customer_code: loggedInCustomer ? loggedInCustomer.customer_code : null
             };
             
-            // Disable button
             const btn = document.querySelector('.submit-btn');
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Processing...';
+            btn.innerHTML = '<span class="spinner"></span> Inachakata...';
             
             fetch(`/shop/${COMPANY_ID}/order`, {
                 method: 'POST',
@@ -1575,26 +2136,54 @@
                     document.getElementById('orderSuccess').style.display = 'block';
                     document.getElementById('orderNumberDisplay').textContent = data.order_number;
                     
+                    let successHtml = `
+                        <div class="icon"><i class="fas fa-check-circle"></i></div>
+                        <h3>Order Imewekwa!</h3>
+                        <div class="order-number">${data.order_number}</div>
+                        <p class="message">Asante kwa order yako. Tutathibitisha hivi karibuni.</p>
+                    `;
+                    
+                    if (data.is_new_customer && data.customer_code) {
+                        successHtml += `
+                            <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:12px;border-radius:8px;margin:12px 0;">
+                                <p style="color:#065f46;font-weight:600;">
+                                    <i class="fas fa-id-card"></i> Msimbo Wako wa Mteja: 
+                                    <strong style="font-family:monospace;font-size:16px;">${data.customer_code}</strong>
+                                </p>
+                                <p style="color:#6b7280;font-size:12px;margin-top:4px;">
+                                    Hifadhi msimbo huu kwa ajili ya kununua haraka wakati ujao!
+                                </p>
+                            </div>
+                        `;
+                    }
+                    
+                    successHtml += `
+                        <button class="btn-hero btn-hero-primary" onclick="closeCheckout()" style="margin-top:8px;width:100%;justify-content:center;">
+                            <i class="fas fa-shopping-bag"></i> Endelea Kununua
+                        </button>
+                    `;
+                    
+                    document.getElementById('orderSuccess').innerHTML = successHtml;
+                    
                     cart = [];
                     saveCart();
                     updateCart();
                     
-                    showToast('Order placed successfully!', 'success');
+                    showToast('Order imewekwa kikamilifu!', 'success');
                     
-                    // Play notification sound if supported
                     try {
                         const audio = new Audio('/sounds/order-placed.mp3');
                         audio.play().catch(() => {});
                     } catch (e) {}
                 } else {
-                    showToast(data.message || 'Failed to place order', 'error');
+                    showToast(data.message || 'Imeshindwa kuweka order', 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 btn.disabled = false;
                 btn.innerHTML = originalText;
-                showToast('Network error. Please try again.', 'error');
+                showToast('Hitilafu ya mtandao. Tafadhali jaribu tena.', 'error');
             });
         }
         
@@ -1655,7 +2244,6 @@
                 const data = localStorage.getItem(STORAGE_KEY);
                 if (data) {
                     cart = JSON.parse(data);
-                    // Verify stock with current product cards
                     cart = cart.filter(item => {
                         const card = document.querySelector(`.product-card[data-id="${item.id}"]`);
                         if (card) {
@@ -1689,8 +2277,14 @@
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
+            const iconMap = {
+                'success': 'fa-check-circle',
+                'error': 'fa-exclamation-circle',
+                'info': 'fa-info-circle',
+                'warning': 'fa-exclamation-triangle'
+            };
             toast.className = `toast toast-${type}`;
-            toast.innerHTML = message;
+            toast.innerHTML = `<i class="fas ${iconMap[type] || 'fa-info-circle'} mr-2"></i>${message}`;
             container.appendChild(toast);
             
             setTimeout(() => {
@@ -1699,7 +2293,6 @@
             }, 3000);
         }
         
-        // Close modal on overlay click
         document.getElementById('checkoutModal').addEventListener('click', function(e) {
             if (e.target === this) closeCheckout();
         });

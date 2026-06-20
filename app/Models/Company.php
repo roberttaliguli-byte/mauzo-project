@@ -5,16 +5,30 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class Company extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'company_name', 'owner_name', 'owner_gender', 'owner_dob',
-        'location', 'region', 'phone', 'email', 'business_type', 'hear_about_us',
-        'is_verified', 'package', 'database_name', 
-        'package_start', 'package_end', 'is_user_approved'
+        'company_name', 
+        'owner_name', 
+        'owner_gender', 
+        'owner_dob',
+        'location', 
+        'region', 
+        'phone', 
+        'email', 
+        'business_type', 
+        'hear_about_us',
+        'is_verified', 
+        'package', 
+        'database_name', 
+        'package_start', 
+        'package_end', 
+        'is_user_approved',
+        'logo' // ADD logo to fillable
     ];
 
     // Cast dates
@@ -83,7 +97,8 @@ class Company extends Model
     {
         return $this->hasMany(\App\Models\Marejesho::class);
     }
-        public function comments()
+    
+    public function comments()
     {
         return $this->hasMany(CompanyComment::class)->latest();
     }
@@ -208,61 +223,85 @@ class Company extends Model
             ];
         }
         return $data;
- 
-       }
-
-public function getSettingsAttribute($value)
-{
-    return json_decode($value, true) ?? [];
-}
-
-public function setSettingsAttribute($value)
-{
-    $this->attributes['settings'] = json_encode($value);
-}
-
-public function getLogoUrlAttribute()
-{
-    if ($this->logo) {
-        return asset('storage/' . $this->logo);
     }
-    return null;
-}
 
-public function getCoverUrlAttribute()
-{
-    if ($this->cover_image) {
-        return asset('storage/' . $this->cover_image);
+    public function getSettingsAttribute($value)
+    {
+        return json_decode($value, true) ?? [];
     }
-    return '/images/default-cover.jpg';
-}
 
-public function getWhatsappNumberAttribute()
-{
-    $settings = $this->settings;
-    if (isset($settings['whatsapp'])) {
-        return $settings['whatsapp'];
+    public function setSettingsAttribute($value)
+    {
+        $this->attributes['settings'] = json_encode($value);
     }
-    if ($this->phone) {
-        return preg_replace('/[^0-9]/', '', $this->phone);
+
+    // GET LOGO URL - THIS RETURNS THE FULL URL FROM DATABASE STORAGE
+    public function getLogoUrlAttribute()
+    {
+        if ($this->logo && Storage::disk('public')->exists($this->logo)) {
+            return asset('storage/' . $this->logo);
+        }
+        return null;
     }
-    return null;
-}
 
-public function getShowcaseUrlAttribute()
-{
-    return route('public.showcase', ['companySlug' => $this->id]);
-}
-
-public function getQrCodeAttribute()
-{
-    // You can use Simple QrCode package
-    // composer require simplesoftwareio/simple-qrcode
-    if (class_exists('SimpleSoftwareIO\QrCode\Facades\QrCode')) {
-        return \SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)
-            ->generate($this->showcase_url);
+    // GET LOGO PATH
+    public function getLogoPathAttribute()
+    {
+        if ($this->logo && Storage::disk('public')->exists($this->logo)) {
+            return Storage::disk('public')->path($this->logo);
+        }
+        return null;
     }
-    return null;
-}
 
+    // CHECK IF COMPANY HAS LOGO
+    public function hasLogo()
+    {
+        return !empty($this->logo) && Storage::disk('public')->exists($this->logo);
+    }
+
+    // DELETE LOGO
+    public function deleteLogo()
+    {
+        if ($this->hasLogo()) {
+            Storage::disk('public')->delete($this->logo);
+            $this->logo = null;
+            $this->save();
+            return true;
+        }
+        return false;
+    }
+
+    public function getCoverUrlAttribute()
+    {
+        if ($this->cover_image) {
+            return asset('storage/' . $this->cover_image);
+        }
+        return '/images/default-cover.jpg';
+    }
+
+    public function getWhatsappNumberAttribute()
+    {
+        $settings = $this->settings;
+        if (isset($settings['whatsapp'])) {
+            return $settings['whatsapp'];
+        }
+        if ($this->phone) {
+            return preg_replace('/[^0-9]/', '', $this->phone);
+        }
+        return null;
+    }
+
+    public function getShowcaseUrlAttribute()
+    {
+        return route('public.showcase', ['companySlug' => $this->id]);
+    }
+
+    public function getQrCodeAttribute()
+    {
+        if (class_exists('SimpleSoftwareIO\QrCode\Facades\QrCode')) {
+            return \SimpleSoftwareIO\QrCode\Facades\QrCode::size(200)
+                ->generate($this->showcase_url);
+        }
+        return null;
+    }
 }

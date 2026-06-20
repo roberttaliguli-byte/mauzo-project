@@ -77,8 +77,8 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/company/info', [ProfileController::class, 'companyInfo'])->name('company.info');
     Route::put('/company/update', [CompanyController::class, 'update'])->name('company.update');
     Route::get('/company/check-email', [CompanyController::class, 'checkEmail'])->name('company.check.email');
-    
-    // Session routes
+    // Delete logo route - Add this inside the auth.any middleware group
+  // Session routes
     Route::get('/check-session', [AuthController::class, 'checkSession'])->name('check.session');
     Route::post('/cleanup-session', [AuthController::class, 'cleanupSession'])->name('cleanup.session');
     
@@ -590,9 +590,29 @@ Route::prefix('mengineyo')->name('mengineyo.')->group(function () {
 
 // Public showcase routes - single template for all companies
 Route::prefix('shop')->group(function () {
+    // ===== CUSTOMER AUTH ROUTES =====
+    
+    // Customer code validation
+    Route::get('/customer/validate/{companyId}', [PublicShowcaseController::class, 'validateCustomer'])
+        ->name('customer.validate');
+    
+    // Customer logout
+    Route::post('/customer/logout/{companyId}', [PublicShowcaseController::class, 'logoutCustomer'])
+        ->name('customer.logout');
+    
+    // ===== SHOWCASE ROUTES =====
+    
     // Main showcase page - accessible via /shop/{companyId} or /shop/{companyName}
     Route::get('/{identifier}', [PublicShowcaseController::class, 'show'])
         ->name('public.showcase');
+    
+    // Customer orders page (view) - MUST BE AFTER main showcase route
+    Route::get('/{identifier}/orders', [PublicShowcaseController::class, 'customerOrders'])
+        ->name('customer.orders');
+    
+    // Get customer orders via AJAX (for live updates) - FIXED URL
+    Route::get('/{companyId}/orders-json', [PublicShowcaseController::class, 'getCustomerOrdersJson'])
+        ->name('customer.orders.json');
     
     // Search products via AJAX
     Route::get('/{companyId}/search', [PublicShowcaseController::class, 'searchProducts'])
@@ -610,3 +630,9 @@ Route::prefix('shop')->group(function () {
     Route::get('/{companyId}/qr', [PublicShowcaseController::class, 'generateQR'])
         ->name('public.qr');
 });
+
+// Customer code lookup by phone
+Route::get('/shop/customer/find-code/{companyId}', [PublicShowcaseController::class, 'findCustomerByPhone'])
+    ->name('customer.find.code');
+
+Route::delete('/company/logo', [CompanyController::class, 'deleteLogo'])->name('company.logo.delete');

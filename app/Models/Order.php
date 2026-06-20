@@ -61,7 +61,7 @@ class Order extends Model
         'transferred_to_cart' => 'boolean'
     ];
 
-   protected $dates = [
+    protected $dates = [
         'created_at',
         'updated_at',
         'paid_at',
@@ -81,5 +81,21 @@ class Order extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Get all Mauzo records created from this order
+     */
+    public function mauzos()
+    {
+        return $this->hasMany(Mauzo::class, 'order_id');
+    }
+
+    /**
+     * Check if order has been transferred to Mauzo
+     */
+    public function getIsTransferredToMauzoAttribute()
+    {
+        return $this->mauzos()->count() > 0;
     }
 }

@@ -113,58 +113,64 @@ class MtejaController extends Controller
         ));
     }
 
-    /**
-     * Store a new customer.
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'jina' => 'required|string|max:255',
-            'simu' => 'required|string|max:20',
-            'barua_pepe' => 'nullable|email|max:255',
-            'anapoishi' => 'nullable|string|max:500',
-            'maelezo' => 'nullable|string',
-        ]);
+/**
+ * Store a new customer (Boss registration)
+ */
+public function store(Request $request)
+{
+    $request->validate([
+        'jina' => 'required|string|max:255',
+        'simu' => 'required|string|max:20',
+        'barua_pepe' => 'nullable|email|max:255',
+        'anapoishi' => 'nullable|string|max:500',
+        'maelezo' => 'nullable|string',
+    ]);
 
-        $companyId = $this->getCompanyId();
+    $companyId = $this->getCompanyId();
 
-        // Check if phone number already exists for this company
-        $existingMteja = Mteja::where('company_id', $companyId)
-            ->where('simu', $request->simu)
-            ->first();
+    // Check if phone number already exists for this company
+    $existingMteja = Mteja::where('company_id', $companyId)
+        ->where('simu', $request->simu)
+        ->first();
 
-        if ($existingMteja) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Namba ya simu tayari ipo kwenye mfumo'
-                ], 422);
-            }
-            return redirect()->back()
-                ->with('error', 'Namba ya simu tayari ipo kwenye mfumo')
-                ->withInput();
-        }
-
-        $mteja = Mteja::create([
-            'jina' => $request->jina,
-            'simu' => $request->simu,
-            'barua_pepe' => $request->barua_pepe,
-            'anapoishi' => $request->anapoishi,
-            'maelezo' => $request->maelezo,
-            'company_id' => $companyId,
-        ]);
-
+    if ($existingMteja) {
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Mteja ameongezwa kikamilifu!',
-                'data' => $mteja
-            ], 201);
+                'success' => false,
+                'message' => 'Namba ya simu tayari ipo kwenye mfumo'
+            ], 422);
         }
-
-        return redirect()->route('wateja.index')
-            ->with('success', 'Mteja ameongezwa kikamilifu!');
+        return redirect()->back()
+            ->with('error', 'Namba ya simu tayari ipo kwenye mfumo')
+            ->withInput();
     }
+
+    // Generate customer code (BOSS method - sequential)
+    $customerCode = Mteja::generateCustomerCode($companyId);
+
+    $mteja = Mteja::create([
+        'customer_code' => $customerCode,
+        'jina' => $request->jina,
+        'simu' => $request->simu,
+        'barua_pepe' => $request->barua_pepe,
+        'anapoishi' => $request->anapoishi,
+        'maelezo' => $request->maelezo,
+        'company_id' => $companyId,
+        'registered_from' => 'boss',
+    ]);
+
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => 'Mteja ameongezwa kikamilifu! Msimbo wake: ' . $customerCode,
+            'data' => $mteja,
+            'customer_code' => $customerCode
+        ], 201);
+    }
+
+    return redirect()->route('wateja.index')
+        ->with('success', 'Mteja ameongezwa kikamilifu! Msimbo wake: ' . $customerCode);
+}
 
     /**
      * Update customer details.

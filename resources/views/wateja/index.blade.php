@@ -22,7 +22,7 @@
     </div>
 
     <!-- Stats with Links -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div class="bg-white p-3 rounded-lg border border-emerald-200 shadow-sm">
             <div class="flex justify-between items-center">
                 <div>
@@ -59,6 +59,15 @@
                 <i class="fas fa-user-plus text-amber-500 text-lg"></i>
             </div>
         </div>
+        <div class="bg-white p-3 rounded-lg border border-emerald-200 shadow-sm">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Wateja Waliosajiliwa</p>
+                    <p class="text-xl font-bold text-emerald-700">{{ $totalWateja }}</p>
+                </div>
+                <i class="fas fa-id-card text-emerald-500 text-lg"></i>
+            </div>
+        </div>
     </div>
 
     <!-- Tabs -->
@@ -73,6 +82,9 @@
             <button data-tab="sms" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
                 <i class="fas fa-envelope mr-2"></i> Tuma SMS
             </button>
+            <button data-tab="dukani" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-store mr-2"></i> Dukani
+            </button>
         </div>
     </div>
 
@@ -85,7 +97,7 @@
                     <input 
                         type="text" 
                         id="search-input"
-                        placeholder="Tafuta mteja, simu, anuani..." 
+                        placeholder="Tafuta mteja, simu, msimbo, anuani..." 
                         class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
                         value="{{ request()->search }}"
                     >
@@ -99,8 +111,8 @@
                         <i class="fas fa-file-pdf mr-1"></i> PDF
                     </button>
                     <a href="{{ route('wateja.ripoti') }}" class="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-medium">
-    <i class="fas fa-chart-pie mr-1"></i> Ripoti
-</a>
+                        <i class="fas fa-chart-pie mr-1"></i> Ripoti
+                    </a>
                 </div>
             </div>
         </div>
@@ -111,20 +123,36 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="bg-emerald-50">
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Mteja</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden sm:table-cell">Simu</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Email</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800">Anuani</th>
-                            <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden lg:table-cell">Tarehe</th>
-                            <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
+                            <th class="px-3 py-2 text-left font-medium text-emerald-800 text-xs">Msimbo</th>
+                            <th class="px-3 py-2 text-left font-medium text-emerald-800">Mteja</th>
+                            <th class="px-3 py-2 text-left font-medium text-emerald-800 hidden sm:table-cell">Simu</th>
+                            <th class="px-3 py-2 text-left font-medium text-emerald-800 hidden md:table-cell">Email</th>
+                            <th class="px-3 py-2 text-left font-medium text-emerald-800 hidden lg:table-cell">Anuani</th>
+                            <th class="px-3 py-2 text-left font-medium text-emerald-800 hidden xl:table-cell">Tarehe</th>
+                            <th class="px-3 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
                         </tr>
                     </thead>
                     <tbody id="wateja-tbody" class="divide-y divide-gray-100">
                         @forelse($wateja as $item)
                             <tr class="mteja-row hover:bg-gray-50" data-mteja='@json($item)'>
-                                <td class="px-4 py-2">
+                                <td class="px-3 py-2">
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-xs font-mono bg-gray-100 px-2 py-0.5 rounded text-emerald-700 font-bold">
+                                            {{ $item->customer_code ?? '--' }}
+                                        </span>
+                                        @if($item->customer_code)
+                                        <button class="copy-code-btn text-emerald-600 hover:text-emerald-800" 
+                                                data-code="{{ $item->customer_code }}" 
+                                                title="Nakili Msimbo"
+                                                onclick="event.stopPropagation(); copyCode('{{ $item->customer_code }}')">
+                                            <i class="fas fa-copy text-xs"></i>
+                                        </button>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="px-3 py-2">
                                     <div class="flex items-center">
-                                        <div class="h-8 w-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold text-sm mr-2">
+                                        <div class="h-8 w-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold text-sm mr-2 flex-shrink-0">
                                             {{ substr($item->jina, 0, 1) }}
                                         </div>
                                         <div>
@@ -133,50 +161,50 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-2 hidden sm:table-cell">
+                                <td class="px-3 py-2 hidden sm:table-cell">
                                     <div class="text-sm text-gray-700">{{ $item->simu }}</div>
                                     @if($item->barua_pepe)
                                     <div class="text-xs text-gray-500 truncate max-w-[150px]">{{ $item->barua_pepe }}</div>
                                     @endif
                                 </td>
-                                <td class="px-4 py-2 hidden md:table-cell">
+                                <td class="px-3 py-2 hidden md:table-cell">
                                     <div class="text-sm text-gray-700">{{ $item->barua_pepe ?? '--' }}</div>
                                 </td>
-                                <td class="px-4 py-2">
+                                <td class="px-3 py-2 hidden lg:table-cell">
                                     <div class="text-xs text-gray-700 truncate max-w-[150px]">{{ $item->anapoishi ?? '--' }}</div>
                                 </td>
-                                <td class="px-4 py-2 hidden lg:table-cell">
+                                <td class="px-3 py-2 hidden xl:table-cell">
                                     <div class="text-xs text-gray-500">{{ $item->created_at->format('d/m/Y') }}</div>
                                 </td>
-                                <td class="px-4 py-2 text-center print:hidden">
-                                    <div class="flex justify-center space-x-2">
+                                <td class="px-3 py-2 text-center print:hidden">
+                                    <div class="flex justify-center space-x-1">
                                         <button class="view-mteja-btn text-blue-600 hover:text-blue-800"
                                                 data-id="{{ $item->id }}" title="Angalia Maelezo">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="fas fa-eye text-sm"></i>
                                         </button>
                                         <button class="edit-mteja-btn text-emerald-600 hover:text-emerald-800"
                                                 data-id="{{ $item->id }}" title="Badili">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="fas fa-edit text-sm"></i>
                                         </button>
                                         @if($item->simu)
                                         <button class="sms-mteja-btn text-purple-600 hover:text-purple-800"
                                                 data-id="{{ $item->id }}" data-phone="{{ $item->simu }}" data-name="{{ $item->jina }}" title="Tuma SMS">
-                                            <i class="fas fa-envelope"></i>
+                                            <i class="fas fa-envelope text-sm"></i>
                                         </button>
                                         <a href="tel:{{ $item->simu }}" class="text-green-600 hover:text-green-800" title="Piga Simu">
-                                            <i class="fas fa-phone"></i>
+                                            <i class="fas fa-phone text-sm"></i>
                                         </a>
                                         @endif
                                         <button class="delete-mteja-btn text-red-600 hover:text-red-800"
                                                 data-id="{{ $item->id }}" data-name="{{ $item->jina }}" title="Futa">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="fas fa-trash text-sm"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
                                     <i class="fas fa-users text-3xl mb-2 text-gray-300"></i>
                                     <p>Hakuna wateja bado</p>
                                 </td>
@@ -199,6 +227,9 @@
     <div id="sajili-tab-content" class="tab-content hidden">
         <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
             <h2 class="text-sm font-semibold text-gray-800 mb-4">Sajili Mteja Mpya</h2>
+            <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg mb-4 text-xs text-emerald-800">
+                <i class="fas fa-info-circle mr-1"></i> Kila mteja atapewa msimbo wa kipekee (Customer Code) ambao atatumia kuweka order kwenye duka lako
+            </div>
             <form method="POST" action="{{ route('wateja.store') }}" id="mteja-form" class="space-y-4">
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -328,7 +359,7 @@
                 </div>
             </form>
 
-            <!-- SMS History - Hidden by default, shows on click -->
+            <!-- SMS History -->
             <div class="mt-6 pt-4 border-t border-gray-200">
                 <button onclick="toggleSmsHistory()" 
                         class="w-full flex items-center justify-between px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
@@ -345,6 +376,99 @@
                         <p class="text-xs text-gray-500 text-center py-4">Hakuna historia ya SMS</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: Dukani - Customer Code Lookup -->
+    <div id="dukani-tab-content" class="tab-content hidden">
+        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-store text-emerald-600 text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-gray-800">Dukani - Tafuta Mteja</h2>
+                    <p class="text-xs text-gray-500">Tafuta mteja kwa msimbo wake au maelezo mengine</p>
+                </div>
+            </div>
+
+            <!-- Search Customer -->
+            <div class="mb-4">
+                <div class="relative">
+                    <input type="text" 
+                           id="customer-search-input"
+                           placeholder="Ingiza msimbo wa mteja (CUST-202601-0001), jina, au simu..." 
+                           class="w-full pl-10 pr-4 py-3 border-2 border-emerald-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-500"></i>
+                    <div id="customer-search-spinner" class="absolute right-3 top-1/2 transform -translate-y-1/2 hidden">
+                        <i class="fas fa-spinner fa-spin text-emerald-500"></i>
+                    </div>
+                </div>
+                <div id="customer-search-results" class="hidden mt-2 border border-emerald-200 rounded-lg bg-white shadow-xl max-h-80 overflow-y-auto"></div>
+            </div>
+
+            <!-- Customer Details -->
+            <div id="customer-details-container" class="hidden">
+                <div class="bg-gradient-to-r from-emerald-50 to-amber-50 p-4 rounded-lg border border-emerald-200">
+                    <div class="flex items-start gap-4">
+                        <div class="h-16 w-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl flex-shrink-0">
+                            <span id="customer-detail-initial">M</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 id="customer-detail-name" class="text-lg font-bold text-gray-800">-</h3>
+                                <span id="customer-detail-code" class="text-xs font-mono bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold">-</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-sm">
+                                <div><span class="text-gray-500">Simu:</span> <span id="customer-detail-phone" class="font-medium">-</span></div>
+                                <div><span class="text-gray-500">Email:</span> <span id="customer-detail-email" class="font-medium">-</span></div>
+                                <div class="sm:col-span-2"><span class="text-gray-500">Anuani:</span> <span id="customer-detail-address" class="font-medium">-</span></div>
+                                <div class="sm:col-span-2"><span class="text-gray-500">Tarehe ya Usajili:</span> <span id="customer-detail-date" class="font-medium">-</span></div>
+                            </div>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <button onclick="copyCode(document.getElementById('customer-detail-code').textContent)" 
+                                        class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-xs font-medium">
+                                    <i class="fas fa-copy mr-1"></i> Nakili Msimbo
+                                </button>
+                                <a id="customer-detail-call" href="#" 
+                                   class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs font-medium">
+                                    <i class="fas fa-phone mr-1"></i> Piga Simu
+                                </a>
+                                <button id="customer-detail-sms" 
+                                        class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs font-medium">
+                                    <i class="fas fa-envelope mr-1"></i> Tuma SMS
+                                </button>
+                                <button onclick="openCustomerOrders()" 
+                                        class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs font-medium">
+                                    <i class="fas fa-shopping-bag mr-1"></i> Oda Zake
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Orders History -->
+                <div id="customer-orders-container" class="hidden mt-4">
+                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                            <h4 class="text-sm font-semibold text-gray-700">
+                                <i class="fas fa-history mr-2 text-emerald-600"></i> Historia ya Oda
+                            </h4>
+                            <span id="customer-orders-count" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">0 oda</span>
+                        </div>
+                        <div id="customer-orders-list" class="max-h-60 overflow-y-auto divide-y divide-gray-100">
+                            <div class="px-4 py-3 text-center text-gray-500 text-sm">Hakuna oda za mteja huyu</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Customer Selected -->
+            <div id="no-customer-selected" class="text-center py-8">
+                <i class="fas fa-search text-4xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500 text-sm">Tafuta mteja kwa msimbo wake ili kuona maelezo yake</p>
+                <p class="text-xs text-gray-400 mt-1">Mfano: CUST-202601-0001</p>
             </div>
         </div>
     </div>
@@ -369,6 +493,10 @@
             </div>
 
             <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs text-gray-500">Msimbo wa Mteja:</span>
+                    <span id="view-customer-code" class="text-xs font-mono font-bold text-emerald-700"></span>
+                </div>
                 <div class="flex justify-between">
                     <span class="text-xs text-gray-500">Simu:</span>
                     <span id="view-phone" class="text-xs text-gray-900 font-medium"></span>
@@ -422,6 +550,7 @@
                     <label class="block text-xs font-medium text-gray-700 mb-1">Mteja</label>
                     <p id="sms-customer-name" class="text-sm font-medium text-gray-900"></p>
                     <p id="sms-customer-phone" class="text-xs text-gray-500"></p>
+                    <p id="sms-customer-code" class="text-xs font-mono text-emerald-600"></p>
                     <input type="hidden" name="recipients" id="sms-recipient-single">
                 </div>
                 <div>
@@ -488,6 +617,9 @@
                     <textarea name="maelezo" id="edit-notes" rows="3"
                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
                 </div>
+                <div class="bg-gray-50 p-2 rounded">
+                    <p class="text-xs text-gray-500">Msimbo wa Mteja: <span id="edit-customer-code" class="font-mono font-bold text-emerald-700"></span></p>
+                </div>
             </div>
             <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
                 <button type="button" id="close-edit-modal"
@@ -539,36 +671,16 @@
 
 @push('scripts')
 <script>
-// Global variable to track history visibility
-let historyVisible = false;
-
-// Toggle SMS History visibility
-function toggleSmsHistory() {
-    const container = document.getElementById('sms-history-container');
-    const icon = document.getElementById('history-icon');
-    
-    if (historyVisible) {
-        container.classList.add('hidden');
-        icon.classList.remove('fa-chevron-up');
-        icon.classList.add('fa-chevron-down');
-        historyVisible = false;
-    } else {
-        container.classList.remove('hidden');
-        icon.classList.remove('fa-chevron-down');
-        icon.classList.add('fa-chevron-up');
-        historyVisible = true;
-        
-        // Load history only when first opened
-        if (window.watejaManager && document.getElementById('sms-history').innerHTML.includes('Hakuna historia')) {
-            window.watejaManager.loadSmsHistory();
-        }
-    }
-}
+// ============================================
+// WATEJA MANAGER - Full Controller
+// ============================================
 
 class SmartWatejaManager {
     constructor() {
         this.currentTab = this.getSavedTab() || 'taarifa';
         this.searchTimeout = null;
+        this.customerSearchTimeout = null;
+        this.selectedCustomer = null;
         this.init();
     }
 
@@ -578,6 +690,7 @@ class SmartWatejaManager {
         this.setupAjaxForms();
         this.initSmsFeatures();
         this.refreshSmsStats();
+        this.initCustomerSearch();
     }
 
     getSavedTab() {
@@ -588,20 +701,18 @@ class SmartWatejaManager {
         sessionStorage.setItem('wateja_tab', tab);
     }
 
+    // ===== SMS FEATURES =====
     initSmsFeatures() {
-        // SMS message character counter
         const smsMessage = document.getElementById('sms-message');
         if (smsMessage) {
             smsMessage.addEventListener('input', (e) => {
                 const length = e.target.value.length;
                 document.getElementById('message-chars').textContent = length;
-                
                 const parts = Math.ceil(length / 153);
                 document.getElementById('parts-count').textContent = parts;
             });
         }
 
-        // Single SMS message counter
         const singleMessage = document.getElementById('single-sms-message');
         if (singleMessage) {
             singleMessage.addEventListener('input', (e) => {
@@ -609,7 +720,6 @@ class SmartWatejaManager {
             });
         }
 
-        // SMS form submission
         const smsForm = document.getElementById('sms-form');
         if (smsForm) {
             smsForm.addEventListener('submit', async (e) => {
@@ -618,7 +728,6 @@ class SmartWatejaManager {
             });
         }
 
-        // Single SMS form submission
         const singleSmsForm = document.getElementById('single-sms-form');
         if (singleSmsForm) {
             singleSmsForm.addEventListener('submit', async (e) => {
@@ -626,88 +735,6 @@ class SmartWatejaManager {
                 await this.sendSms(singleSmsForm);
                 document.getElementById('single-sms-modal').classList.add('hidden');
             });
-        }
-    }
-
-    async loadSmsHistory() {
-        try {
-            const response = await fetch('{{ route("sms.logs") }}?limit=20', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-            
-            const data = await response.json();
-            const historyDiv = document.getElementById('sms-history');
-            const historyCount = document.getElementById('history-count');
-            
-            if (data.logs && data.logs.data && data.logs.data.length > 0) {
-                historyCount.textContent = data.logs.total || data.logs.data.length;
-                
-                historyDiv.innerHTML = data.logs.data.map(log => `
-                    <div class="bg-gray-50 rounded p-3 text-xs border border-gray-200 hover:shadow-sm transition-shadow">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex justify-between mb-2">
-                                    <span class="font-medium text-gray-900">${log.recipient}</span>
-                                    <span class="px-2 py-0.5 text-xs rounded-full 
-                                        ${log.status === 'PENDING_ENROUTE' || log.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : 
-                                          log.status === 'REJECTED' || log.status.includes('FAILED') ? 'bg-red-100 text-red-800' : 
-                                          'bg-blue-100 text-blue-800'}">
-                                        ${log.status}
-                                    </span>
-                                </div>
-                                <p class="text-gray-700 mt-1 leading-relaxed">${this.escapeHtml(log.message)}</p>
-                                <div class="flex justify-between mt-2 text-gray-400">
-                                    <span><i class="fas fa-envelope mr-1"></i> Sehemu: ${log.sms_count}</span>
-                                    <span><i class="far fa-clock mr-1"></i> ${new Date(log.sent_at).toLocaleString()}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                historyCount.textContent = '0';
-                historyDiv.innerHTML = '<p class="text-xs text-gray-500 text-center py-4"><i class="fas fa-inbox mr-2"></i> Hakuna historia ya SMS</p>';
-            }
-        } catch (error) {
-            console.error('Failed to load SMS history', error);
-            document.getElementById('sms-history').innerHTML = '<p class="text-xs text-red-500 text-center py-4">Hitilafu katika kupakia historia</p>';
-        }
-    }
-    
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    async refreshSmsStats() {
-        try {
-            const response = await fetch('{{ route("sms.stats") }}', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                // Update stats in SMS tab
-                document.getElementById('stat-total').textContent = data.total_sent;
-                document.getElementById('stat-today').textContent = data.today_sent;
-                document.getElementById('stat-month').textContent = data.month_sent;
-                
-                // Update history count badge
-                const historyCount = document.getElementById('history-count');
-                if (historyCount && data.total_sent) {
-                    historyCount.textContent = data.total_sent;
-                }
-            }
-        } catch (error) {
-            console.error('Failed to fetch SMS stats:', error);
         }
     }
 
@@ -742,11 +769,7 @@ class SmartWatejaManager {
                     document.getElementById('single-sms-message').value = '';
                     document.getElementById('single-message-chars').textContent = '0';
                 }
-                
-                // Refresh stats and update history count
                 await this.refreshSmsStats();
-                
-                // If history is visible, reload it
                 if (historyVisible) {
                     await this.loadSmsHistory();
                 }
@@ -762,6 +785,258 @@ class SmartWatejaManager {
         }
     }
 
+    async refreshSmsStats() {
+        try {
+            const response = await fetch('{{ route("sms.stats") }}', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('stat-total').textContent = data.total_sent;
+                document.getElementById('stat-today').textContent = data.today_sent;
+                document.getElementById('stat-month').textContent = data.month_sent;
+                const historyCount = document.getElementById('history-count');
+                if (historyCount && data.total_sent) historyCount.textContent = data.total_sent;
+            }
+        } catch (error) {
+            console.error('Failed to fetch SMS stats:', error);
+        }
+    }
+
+    async loadSmsHistory() {
+        try {
+            const response = await fetch('{{ route("sms.logs") }}?limit=20', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+            const historyDiv = document.getElementById('sms-history');
+            const historyCount = document.getElementById('history-count');
+            
+            if (data.logs && data.logs.data && data.logs.data.length > 0) {
+                historyCount.textContent = data.logs.total || data.logs.data.length;
+                historyDiv.innerHTML = data.logs.data.map(log => `
+                    <div class="bg-gray-50 rounded p-3 text-xs border border-gray-200 hover:shadow-sm transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex justify-between mb-2">
+                                    <span class="font-medium text-gray-900">${log.recipient}</span>
+                                    <span class="px-2 py-0.5 text-xs rounded-full 
+                                        ${log.status === 'PENDING_ENROUTE' || log.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : 
+                                          log.status === 'REJECTED' || log.status.includes('FAILED') ? 'bg-red-100 text-red-800' : 
+                                          'bg-blue-100 text-blue-800'}">
+                                        ${log.status}
+                                    </span>
+                                </div>
+                                <p class="text-gray-700 mt-1 leading-relaxed">${this.escapeHtml(log.message)}</p>
+                                <div class="flex justify-between mt-2 text-gray-400">
+                                    <span><i class="fas fa-envelope mr-1"></i> Sehemu: ${log.sms_count}</span>
+                                    <span><i class="far fa-clock mr-1"></i> ${new Date(log.sent_at).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                historyCount.textContent = '0';
+                historyDiv.innerHTML = '<p class="text-xs text-gray-500 text-center py-4"><i class="fas fa-inbox mr-2"></i> Hakuna historia ya SMS</p>';
+            }
+        } catch (error) {
+            console.error('Failed to load SMS history', error);
+        }
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ===== CUSTOMER SEARCH (Dukani Tab) =====
+    initCustomerSearch() {
+        const searchInput = document.getElementById('customer-search-input');
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(this.customerSearchTimeout);
+            const query = e.target.value.trim();
+            const resultsContainer = document.getElementById('customer-search-results');
+            const spinner = document.getElementById('customer-search-spinner');
+
+            if (query.length < 2) {
+                resultsContainer.classList.add('hidden');
+                return;
+            }
+
+            spinner.classList.remove('hidden');
+            this.customerSearchTimeout = setTimeout(() => {
+                this.searchCustomers(query);
+            }, 300);
+        });
+    }
+
+    async searchCustomers(query) {
+        const resultsContainer = document.getElementById('customer-search-results');
+        const spinner = document.getElementById('customer-search-spinner');
+
+        try {
+            const response = await fetch(`/wateja/search?query=${encodeURIComponent(query)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+
+            spinner.classList.add('hidden');
+
+            if (data.success && data.wateja && data.wateja.length > 0) {
+                resultsContainer.innerHTML = data.wateja.map(customer => `
+                    <div class="customer-search-item px-4 py-3 border-b border-gray-100 hover:bg-emerald-50 cursor-pointer transition"
+                         onclick="window.watejaManager.selectCustomer(${customer.id})"
+                         data-id="${customer.id}">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-medium text-gray-900 text-sm">${customer.jina}</div>
+                                <div class="text-xs text-gray-500">
+                                    ${customer.customer_code ? `<span class="font-mono text-emerald-600">${customer.customer_code}</span> • ` : ''}
+                                    ${customer.simu || ''}
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-400">
+                                ${customer.anapoishi || ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                resultsContainer.classList.remove('hidden');
+            } else {
+                resultsContainer.innerHTML = `
+                    <div class="px-4 py-3 text-center text-gray-500 text-sm">
+                        <i class="fas fa-search text-gray-300 mb-1"></i>
+                        <p>Hakuna mteja anayelingana na "${query}"</p>
+                    </div>
+                `;
+                resultsContainer.classList.remove('hidden');
+            }
+        } catch (error) {
+            spinner.classList.add('hidden');
+            resultsContainer.innerHTML = `
+                <div class="px-4 py-3 text-center text-red-500 text-sm">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Hitilafu ya kutafuta</p>
+                </div>
+            `;
+            resultsContainer.classList.remove('hidden');
+        }
+    }
+
+    async selectCustomer(customerId) {
+        const resultsContainer = document.getElementById('customer-search-results');
+        resultsContainer.classList.add('hidden');
+        document.getElementById('customer-search-input').value = '';
+
+        try {
+            const response = await fetch(`/wateja/${customerId}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                this.selectedCustomer = data.data;
+                this.displayCustomerDetails(data.data);
+                await this.loadCustomerOrders(data.data.id);
+            }
+        } catch (error) {
+            this.showNotification('Hitilafu ya kupata maelezo', 'error');
+        }
+    }
+
+    displayCustomerDetails(customer) {
+        document.getElementById('no-customer-selected').classList.add('hidden');
+        document.getElementById('customer-details-container').classList.remove('hidden');
+
+        document.getElementById('customer-detail-initial').textContent = customer.jina ? customer.jina.charAt(0).toUpperCase() : 'M';
+        document.getElementById('customer-detail-name').textContent = customer.jina || '-';
+        document.getElementById('customer-detail-code').textContent = customer.customer_code || '--';
+        document.getElementById('customer-detail-phone').textContent = customer.simu || '-';
+        document.getElementById('customer-detail-email').textContent = customer.barua_pepe || '-';
+        document.getElementById('customer-detail-address').textContent = customer.anapoishi || '-';
+        document.getElementById('customer-detail-date').textContent = customer.created_at ? new Date(customer.created_at).toLocaleDateString() : '-';
+
+        const callLink = document.getElementById('customer-detail-call');
+        if (customer.simu) {
+            callLink.href = `tel:${customer.simu}`;
+            callLink.classList.remove('hidden');
+        } else {
+            callLink.classList.add('hidden');
+        }
+
+        const smsButton = document.getElementById('customer-detail-sms');
+        if (customer.simu) {
+            smsButton.onclick = () => this.showSingleSmsModal(customer.simu, customer.jina, customer.customer_code);
+            smsButton.classList.remove('hidden');
+        } else {
+            smsButton.classList.add('hidden');
+        }
+
+        // Store for orders
+        this.selectedCustomer = customer;
+    }
+
+    async loadCustomerOrders(customerId) {
+        try {
+            const response = await fetch(`/orders/customer/${customerId}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+
+            const container = document.getElementById('customer-orders-container');
+            const list = document.getElementById('customer-orders-list');
+            const count = document.getElementById('customer-orders-count');
+
+            if (data.success && data.orders && data.orders.length > 0) {
+                container.classList.remove('hidden');
+                count.textContent = `${data.orders.length} oda`;
+
+                list.innerHTML = data.orders.map(order => `
+                    <div class="px-4 py-3 hover:bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <div class="text-sm font-medium text-gray-800">${order.order_number}</div>
+                            <div class="text-xs text-gray-500">${new Date(order.created_at).toLocaleString()}</div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-medium text-emerald-600">${this.formatCurrency(order.total)}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full 
+                                ${order.status === 'paid' ? 'bg-green-100 text-green-800' : 
+                                  order.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
+                                  order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                  'bg-yellow-100 text-yellow-800'}">
+                                ${order.status}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.classList.remove('hidden');
+                count.textContent = '0 oda';
+                list.innerHTML = `<div class="px-4 py-3 text-center text-gray-500 text-sm">Hakuna oda za mteja huyu</div>`;
+            }
+        } catch (error) {
+            console.error('Error loading orders:', error);
+        }
+    }
+
+    formatCurrency(amount) {
+        return amount.toLocaleString('en-TZ', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' TZS';
+    }
+
+    openCustomerOrders() {
+        const container = document.getElementById('customer-orders-container');
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.toggle('hidden');
+        }
+    }
+
+    // ===== TAB MANAGEMENT =====
     showTab(tabName) {
         document.querySelectorAll('.tab-button').forEach(button => {
             if (button.dataset.tab === tabName) {
@@ -777,20 +1052,26 @@ class SmartWatejaManager {
             content.classList.add('hidden');
         });
         
-        document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
+        const tabContent = document.getElementById(`${tabName}-tab-content`);
+        if (tabContent) tabContent.classList.remove('hidden');
         this.currentTab = tabName;
+        this.saveTab(tabName);
         
-        if (tabName === 'sms') {
-            this.refreshSmsStats();
+        if (tabName === 'sms') this.refreshSmsStats();
+        if (tabName === 'dukani') {
+            document.getElementById('no-customer-selected').classList.remove('hidden');
+            document.getElementById('customer-details-container').classList.add('hidden');
+            document.getElementById('customer-search-input').value = '';
+            document.getElementById('customer-search-results').classList.add('hidden');
         }
     }
 
+    // ===== EVENT BINDING =====
     bindEvents() {
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', (e) => {
                 const tab = e.target.closest('.tab-button').dataset.tab;
                 this.showTab(tab);
-                this.saveTab(tab);
             });
         });
 
@@ -808,6 +1089,7 @@ class SmartWatejaManager {
         this.bindModalEvents();
     }
 
+    // ===== MTEGA ACTIONS =====
     bindMtejaActions() {
         document.querySelectorAll('.view-mteja-btn').forEach(button => {
             button.addEventListener('click', (e) => {
@@ -829,7 +1111,11 @@ class SmartWatejaManager {
             button.addEventListener('click', (e) => {
                 const phone = button.dataset.phone;
                 const name = button.dataset.name;
-                this.showSingleSmsModal(phone, name);
+                // Get customer code from the row
+                const row = button.closest('.mteja-row');
+                const mteja = row ? JSON.parse(row.dataset.mteja) : null;
+                const code = mteja ? mteja.customer_code : null;
+                this.showSingleSmsModal(phone, name, code);
             });
         });
 
@@ -842,6 +1128,7 @@ class SmartWatejaManager {
         });
     }
 
+    // ===== MODALS =====
     bindModalEvents() {
         const viewModal = document.getElementById('view-modal');
         const closeViewBtn = document.getElementById('close-view-modal');
@@ -869,27 +1156,6 @@ class SmartWatejaManager {
         });
     }
 
-    filterWateja(searchTerm) {
-        const rows = document.querySelectorAll('.mteja-row');
-        let found = false;
-        
-        rows.forEach(row => {
-            const mteja = JSON.parse(row.dataset.mteja);
-            const searchText = `${mteja.jina} ${mteja.simu} ${mteja.barua_pepe} ${mteja.anapoishi}`.toLowerCase();
-            
-            if (searchText.includes(searchTerm) || !searchTerm) {
-                row.classList.remove('hidden');
-                found = true;
-            } else {
-                row.classList.add('hidden');
-            }
-        });
-
-        if (!found && searchTerm) {
-            this.showNotification('Hakuna wateja wanaolingana', 'info');
-        }
-    }
-
     viewMteja(mteja) {
         const viewModal = document.getElementById('view-modal');
         if (!viewModal) return;
@@ -902,6 +1168,7 @@ class SmartWatejaManager {
         document.getElementById('view-address').textContent = mteja.anapoishi || '--';
         document.getElementById('view-date').textContent = mteja.created_at ? new Date(mteja.created_at).toLocaleDateString() : '--';
         document.getElementById('view-notes').textContent = mteja.maelezo || 'Hakuna maelezo';
+        document.getElementById('view-customer-code').textContent = mteja.customer_code || 'Hakuna msimbo';
 
         const callButton = document.getElementById('call-button');
         if (mteja.simu) {
@@ -915,7 +1182,7 @@ class SmartWatejaManager {
         if (mteja.simu) {
             smsButton.onclick = () => {
                 viewModal.classList.add('hidden');
-                this.showSingleSmsModal(mteja.simu, mteja.jina);
+                this.showSingleSmsModal(mteja.simu, mteja.jina, mteja.customer_code);
             };
             smsButton.classList.remove('hidden');
         } else {
@@ -934,17 +1201,19 @@ class SmartWatejaManager {
         document.getElementById('edit-email').value = mteja.barua_pepe || '';
         document.getElementById('edit-address').value = mteja.anapoishi || '';
         document.getElementById('edit-notes').value = mteja.maelezo || '';
+        document.getElementById('edit-customer-code').textContent = mteja.customer_code || 'Hakuna msimbo';
         
         editForm.action = `/wateja/${mteja.id}`;
         document.getElementById('edit-modal').classList.remove('hidden');
     }
 
-    showSingleSmsModal(phone, name) {
+    showSingleSmsModal(phone, name, code) {
         const smsModal = document.getElementById('single-sms-modal');
         if (!smsModal) return;
 
         document.getElementById('sms-customer-name').textContent = name;
         document.getElementById('sms-customer-phone').textContent = `Namba: ${phone}`;
+        document.getElementById('sms-customer-code').textContent = code ? `Msimbo: ${code}` : '';
         document.getElementById('sms-recipient-single').value = phone;
         document.getElementById('single-sms-message').value = '';
         document.getElementById('single-message-chars').textContent = '0';
@@ -962,12 +1231,35 @@ class SmartWatejaManager {
         deleteModal.classList.remove('hidden');
     }
 
+    // ===== FILTER =====
+    filterWateja(searchTerm) {
+        const rows = document.querySelectorAll('.mteja-row');
+        let found = false;
+        
+        rows.forEach(row => {
+            const mteja = JSON.parse(row.dataset.mteja);
+            const searchText = `${mteja.jina} ${mteja.simu} ${mteja.barua_pepe} ${mteja.anapoishi} ${mteja.customer_code || ''}`.toLowerCase();
+            
+            if (searchText.includes(searchTerm) || !searchTerm) {
+                row.classList.remove('hidden');
+                found = true;
+            } else {
+                row.classList.add('hidden');
+            }
+        });
+
+        if (!found && searchTerm) {
+            this.showNotification('Hakuna wateja wanaolingana', 'info');
+        }
+    }
+
+    // ===== AJAX FORMS =====
     setupAjaxForms() {
         const mtejaForm = document.getElementById('mteja-form');
         if (mtejaForm) {
             mtejaForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await this.submitForm(mtejaForm, 'Mteja ameongezwa!');
+                await this.submitForm(mtejaForm, 'Mteja ameongezwa! Msimbo wake umetengenezwa.');
                 mtejaForm.reset();
             });
         }
@@ -1013,7 +1305,7 @@ class SmartWatejaManager {
 
             if (response.ok && data.success) {
                 this.showNotification(data.message || successMessage, 'success');
-                setTimeout(() => window.location.reload(), 1000);
+                setTimeout(() => window.location.reload(), 1500);
             } else {
                 const error = data.errors ? Object.values(data.errors)[0][0] : data.message;
                 this.showNotification(error || 'Hitilafu imetokea', 'error');
@@ -1026,6 +1318,7 @@ class SmartWatejaManager {
         }
     }
 
+    // ===== NOTIFICATIONS =====
     showNotification(message, type = 'info') {
         const container = document.getElementById('notification-container');
         if (!container) return;
@@ -1050,11 +1343,64 @@ class SmartWatejaManager {
     }
 }
 
-// Global functions
-async function refreshSmsStats() {
-    if (window.watejaManager) {
-        await window.watejaManager.refreshSmsStats();
+// ============================================
+// GLOBAL FUNCTIONS
+// ============================================
+
+let historyVisible = false;
+let watejaManager = null;
+
+function toggleSmsHistory() {
+    const container = document.getElementById('sms-history-container');
+    const icon = document.getElementById('history-icon');
+    
+    if (historyVisible) {
+        container.classList.add('hidden');
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+        historyVisible = false;
+    } else {
+        container.classList.remove('hidden');
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+        historyVisible = true;
+        if (watejaManager) watejaManager.loadSmsHistory();
     }
+}
+
+function copyCode(code) {
+    if (!code || code === '--') {
+        watejaManager.showNotification('Hakuna msimbo wa kunakili', 'warning');
+        return;
+    }
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+            watejaManager.showNotification('Msimbo umenakiliwa!', 'success');
+        }).catch(() => fallbackCopyCode(code));
+    } else {
+        fallbackCopyCode(code);
+    }
+}
+
+function fallbackCopyCode(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        watejaManager.showNotification('Msimbo umenakiliwa!', 'success');
+    } catch (err) {
+        watejaManager.showNotification('Imeshindwa kunakili', 'error');
+    }
+    document.body.removeChild(textarea);
+}
+
+async function refreshSmsStats() {
+    if (watejaManager) await watejaManager.refreshSmsStats();
 }
 
 async function testSmsConnection() {
@@ -1065,16 +1411,14 @@ async function testSmsConnection() {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         });
-        
         const data = await response.json();
-        
         if (data.success) {
-            window.watejaManager.showNotification(data.message, 'success');
+            watejaManager.showNotification(data.message, 'success');
         } else {
-            window.watejaManager.showNotification(data.message, 'error');
+            watejaManager.showNotification(data.message, 'error');
         }
     } catch (error) {
-        window.watejaManager.showNotification('Test failed: ' + error.message, 'error');
+        watejaManager.showNotification('Test failed: ' + error.message, 'error');
     }
 }
 
@@ -1082,17 +1426,14 @@ function selectAllCustomers() {
     const phoneNumbers = [];
     document.querySelectorAll('.mteja-row').forEach(row => {
         const mteja = JSON.parse(row.dataset.mteja);
-        if (mteja.simu) {
-            phoneNumbers.push(mteja.simu);
-        }
+        if (mteja.simu) phoneNumbers.push(mteja.simu);
     });
     
     if (phoneNumbers.length > 0) {
-        const recipientsField = document.getElementById('sms-recipients');
-        recipientsField.value = phoneNumbers.join('\n');
-        window.watejaManager.showNotification(`${phoneNumbers.length} wateja wamechaguliwa`, 'success');
+        document.getElementById('sms-recipients').value = phoneNumbers.join('\n');
+        watejaManager.showNotification(`${phoneNumbers.length} wateja wamechaguliwa`, 'success');
     } else {
-        window.watejaManager.showNotification('Hakuna wateja wenye namba za simu', 'warning');
+        watejaManager.showNotification('Hakuna wateja wenye namba za simu', 'warning');
     }
 }
 
@@ -1101,6 +1442,10 @@ function clearSmsForm() {
     document.getElementById('sms-message').value = '';
     document.getElementById('message-chars').textContent = '0';
     document.getElementById('parts-count').textContent = '1';
+}
+
+function openCustomerOrders() {
+    if (watejaManager) watejaManager.openCustomerOrders();
 }
 
 function printWateja() {
@@ -1112,6 +1457,7 @@ function printWateja() {
         const mteja = JSON.parse(row.dataset.mteja);
         tableRows += `
             <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${mteja.customer_code || '--'}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${mteja.jina}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${mteja.simu}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${mteja.barua_pepe || '--'}</td>
@@ -1129,11 +1475,12 @@ function printWateja() {
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; }
                 table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; }
+                th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
                 th { background-color: #f3f4f6; font-weight: bold; }
                 .header { text-align: center; margin-bottom: 30px; }
                 .header h2 { margin: 0; color: #047857; }
                 .header p { margin: 5px 0 0 0; color: #6b7280; }
+                .code { font-family: monospace; color: #047857; font-weight: bold; }
             </style>
         </head>
         <body>
@@ -1144,6 +1491,7 @@ function printWateja() {
             <table>
                 <thead>
                     <tr>
+                        <th>Msimbo</th>
                         <th>Jina</th>
                         <th>Simu</th>
                         <th>Email</th>
@@ -1166,9 +1514,12 @@ function exportPDF() {
     window.open(`${window.location.pathname}?${search.toString()}`, '_blank');
 }
 
-// Initialize
+// ============================================
+// INITIALIZE
+// ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    window.watejaManager = new SmartWatejaManager();
+    watejaManager = new SmartWatejaManager();
+    window.watejaManager = watejaManager;
 });
 </script>
 @endpush
