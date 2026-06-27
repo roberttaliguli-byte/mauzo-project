@@ -230,7 +230,6 @@ Route::middleware(['auth.any'])->group(function () {
         }
     })->name('api.send.package.email');
     
-// ================================
 // Wateja Routes (accessible by both)
 // ================================
 Route::get('/wateja', [MtejaController::class, 'index'])->name('wateja.index');
@@ -238,7 +237,8 @@ Route::post('/wateja', [MtejaController::class, 'store'])->name('wateja.store');
 Route::put('/wateja/{mteja}', [MtejaController::class, 'update'])->name('wateja.update');
 Route::delete('/wateja/{mteja}', [MtejaController::class, 'destroy'])->name('wateja.destroy');
 Route::get('/wateja/ripoti', [MtejaController::class, 'ripoti'])->name('wateja.ripoti');
-
+// Make sure this route is defined
+Route::post('/wateja/generate-missing-codes', [MtejaController::class, 'generateMissingCodes'])->name('wateja.generate-missing-codes');
 // SMS Routes - Make sure these are inside the auth.any group
 Route::post('/send-sms', [MtejaController::class, 'sendSms'])->name('sms.send');
 Route::get('/sms-logs', [MtejaController::class, 'getSmsLogs'])->name('sms.logs');
@@ -278,22 +278,13 @@ Route::post('/send-receipt-sms-simple', [MauzoController::class, 'sendReceiptSms
 Route::post('/send-receipt-sms', [MauzoController::class, 'sendReceiptSms'])->name('send.receipt.sms');
     
 // Add these inside the auth.any middleware group
-// Order routes - Add these to your routes file
 Route::prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('orders.index');
     Route::post('/', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/placed', [OrderController::class, 'getPlacedOrders'])->name('orders.placed');
     Route::get('/stats', [OrderController::class, 'getStats'])->name('orders.stats');
-    Route::get('/products', [OrderController::class, 'getProducts'])->name('orders.products');
     Route::get('/product/barcode/{barcode}', [OrderController::class, 'getProductByBarcode'])->name('orders.product.barcode');
     Route::get('/customers', [OrderController::class, 'searchCustomers'])->name('orders.customers');
-    
-    // Kikapu routes
-    Route::get('/kikapu', [OrderController::class, 'getKikapuItems'])->name('orders.kikapu');
-    Route::post('/kikapu', [OrderController::class, 'sendToKikapu'])->name('orders.kikapu.send');
-    Route::post('/kikapu/process', [OrderController::class, 'processKikapuSales'])->name('orders.kikapu.process');
-    Route::delete('/kikapu', [OrderController::class, 'clearKikapu'])->name('orders.kikapu.clear');
-    
     Route::get('/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::get('/{id}/invoice', [OrderController::class, 'generateInvoice'])->name('orders.invoice');
     Route::get('/{id}/share-whatsapp', [OrderController::class, 'shareWhatsApp'])->name('orders.share-whatsapp');

@@ -1,10 +1,10 @@
 <?php
-// app/Models/Bidhaa.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Bidhaa extends Model
 {
@@ -24,7 +24,10 @@ class Bidhaa extends Model
         'expiry',
         'barcode',
         'company_id',
-        'image',
+        'image',        // Keep for backward compatibility
+        'image_path',
+        'image_mime_type',
+        'image_size',
     ];
 
     protected $casts = [
@@ -32,22 +35,83 @@ class Bidhaa extends Model
         'bei_nunua' => 'decimal:2',
         'bei_kuuza' => 'decimal:2',
         'bei_uzo_jumla' => 'decimal:2',
-        'expiry' => 'date',
+        'expiry' => 'date:Y-m-d',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'image_size' => 'integer',
     ];
 
-    // Get image as base64 for display
-    public function getImageBase64Attribute()
+    protected $appends = [
+        'image_url',
+        'image_base64',
+        'formatted_image_size',
+        'has_image'
+    ];
+
+    /**
+     * Get image URL (for filesystem storage)
+     */
+    public function getImageUrlAttribute()
     {
-        if ($this->image) {
-            $mimeType = $this->getImageMimeType();
-            return 'data:' . $mimeType . ';base64,' . base64_encode($this->image);
+        if ($this->image_path) {
+            return asset('storage/' . $this->image_path);
         }
         return null;
     }
 
-    // Get image mime type
+    /**
+     * Get image as base64 (for backward compatibility)
+     */
+    public function getImageBase64Attribute()
+    {
+        // Check filesystem first
+        if ($this->image_path) {
+            $path = storage_path('app/public/' . $this->image_path);
+            if (file_exists($path)) {
+                $content = file_get_contents($path);
+                $mimeType = $this->image_mime_type ?: mime_content_type($path);
+                return 'data:' . $mimeType . ';base64,' . base64_encode($content);
+            }
+        }
+        
+        // Fallback to BLOB for backward compatibility
+        if ($this->image) {
+            $mimeType = $this->getImageMimeType();
+            return 'data:' . $mimeType . ';base64,' . base64_encode($this->image);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get formatted image size
+     */
+    public function getFormattedImageSizeAttribute()
+    {
+        if ($this->image_size) {
+            $size = $this->image_size;
+            if ($size < 1024) {
+                return $size . ' B';
+            } elseif ($size < 1024 * 1024) {
+                return number_format($size / 1024, 2) . ' KB';
+            } else {
+                return number_format($size / (1024 * 1024), 2) . ' MB';
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Check if product has image
+     */
+    public function getHasImageAttribute()
+    {
+        return !empty($this->image_path) || !empty($this->image);
+    }
+
+    /**
+     * Legacy: Get image mime type (for backward compatibility)
+     */
     private function getImageMimeType()
     {
         if (empty($this->image)) {
@@ -61,16 +125,22 @@ class Bidhaa extends Model
         return $mimeType ?: 'image/jpeg';
     }
 
-    // Get image URL (data URI)
-    public function getImageUrlAttribute()
-    {
-        return $this->image_base64;
-    }
-
-    // Check if product has image
+    /**
+     * Check if product has image (legacy method)
+     */
     public function hasImage()
     {
-        return !empty($this->image);
+        return $this->has_image;
+    }
+
+    // Get image as base64 for display (legacy)
+    public function getImageBase64LegacyAttribute()
+    {
+        if ($this->image) {
+            $mimeType = $this->getImageMimeType();
+            return 'data:' . $mimeType . ';base64,' . base64_encode($this->image);
+        }
+        return null;
     }
 
     public function getCurrentPriceAttribute(): float
@@ -198,7 +268,7 @@ class Bidhaa extends Model
             }
         });
 
-        // ===== IMPORTANT: Delete associated records when product is deleted =====
+        // Delete associated records when product is deleted
         static::deleting(function ($bidhaa) {
             // Delete all Mauzo records associated with this product
             $bidhaa->mauzos()->delete();
@@ -208,6 +278,11 @@ class Bidhaa extends Model
             
             // Delete all Manunuzi records associated with this product
             $bidhaa->manunuzi()->delete();
+            
+            // Delete image file if exists
+            if ($bidhaa->image_path) {
+                Storage::disk('public')->delete($bidhaa->image_path);
+            }
             
             // Log the deletion
             \Log::info("Product deleted: {$bidhaa->jina} (ID: {$bidhaa->id}) - All associated records deleted");

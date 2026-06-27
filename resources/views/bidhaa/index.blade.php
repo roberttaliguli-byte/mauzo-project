@@ -248,18 +248,23 @@
                     @forelse($bidhaa as $item)
                     <tr class="product-row hover:bg-gray-50" data-product='@json($item)'>
                         <td class="px-3 py-2 text-center align-middle">
-                            @if($item->image)
-                                @php
-                                    // Detect mime type from binary data
-                                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                                    $mimeType = finfo_buffer($finfo, $item->image);
-                                    finfo_close($finfo);
-                                    $base64Image = base64_encode($item->image);
-                                @endphp
-                                <img src="data:{{ $mimeType }};base64,{{ $base64Image }}" 
-                                     alt="{{ $item->jina }}" 
-                                     class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" 
-                                     onclick="showImageModalFromBase64('{{ $mimeType }}', '{{ $base64Image }}', '{{ addslashes($item->jina) }}')">
+                            @if($item->has_image)
+                                @if($item->image_url)
+                                    <img src="{{ $item->image_url }}" 
+                                         alt="{{ $item->jina }}" 
+                                         class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" 
+                                         onclick="showImageModal('{{ $item->image_url }}', '{{ addslashes($item->jina) }}')">
+                                @elseif($item->image_base64)
+                                    <img src="{{ $item->image_base64 }}" 
+                                         alt="{{ $item->jina }}" 
+                                         class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" 
+                                         onclick="showImageModal('{{ $item->image_base64 }}', '{{ addslashes($item->jina) }}')">
+                                @else
+                                    <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto cursor-pointer" 
+                                         onclick="showNotification('Hakuna picha ya bidhaa hii', 'info')">
+                                        <i class="fas fa-image text-gray-400 text-sm"></i>
+                                    </div>
+                                @endif
                             @else
                                 <div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto cursor-pointer" 
                                      onclick="showNotification('Hakuna picha ya bidhaa hii', 'info')">
@@ -274,6 +279,9 @@
                                     <div class="text-xs text-gray-500 sm:hidden truncate">{{ $item->aina }}</div>
                                     @if($item->barcode)
                                     <div class="text-xs text-emerald-600 font-mono truncate">#{{ $item->barcode }}</div>
+                                    @endif
+                                    @if($item->image_size)
+                                    <div class="text-xs text-gray-400 truncate">{{ $item->formatted_image_size }}</div>
                                     @endif
                                 </div>
                             </div>
@@ -329,7 +337,7 @@
                         </td>
                         <td class="px-3 py-2 text-center align-middle print:hidden">
                             <div class="flex justify-center space-x-1">
-                                @if($canEditProduct)
+                                @if($canEditDelete)
                                     <button class="edit-product-btn text-emerald-600 hover:text-emerald-800 p-1"
                                             data-id="{{ $item->id }}" title="Badili">
                                         <i class="fas fa-edit text-sm"></i>
@@ -370,6 +378,22 @@
             </div>
         </div>
         @endif
+    </div>
+</div>
+
+<!-- Image Preview Modal -->
+<div id="image-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-75"></div>
+    <div class="modal-content bg-white rounded-lg shadow-lg max-w-2xl w-full mx-auto z-50">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-sm font-semibold text-gray-800" id="image-modal-title">Picha ya Bidhaa</h3>
+            <button onclick="closeImageModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-4 flex justify-center">
+            <img id="image-modal-img" src="" alt="Product Image" class="max-w-full max-h-96 object-contain">
+        </div>
     </div>
 </div>
 
@@ -1032,6 +1056,58 @@
 @endpush
 @push('styles')
 <style>
+#search-input {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #d1d5db !important;
+    z-index: 10 !important;
+}
+
+#search-input:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 1px #10b981 !important;
+    outline: none !important;
+}
+
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+#search-results-dropdown {
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #10b981 #f3f4f6;
+}
+
+#search-results-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+#search-results-dropdown::-webkit-scrollbar-track {
+    background: #f3f4f6;
+}
+
+#search-results-dropdown::-webkit-scrollbar-thumb {
+    background-color: #10b981;
+    border-radius: 20px;
+}
+</style>
+
+<style>
 /* Table fixed layout for consistent heights */
 .table-fixed {
     table-layout: fixed;
@@ -1155,7 +1231,31 @@ function formatNumber(num, decimals = 2) {
     return parseFloat(num).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
-// Function to show image modal from base64 data
+// ===== ENHANCED IMAGE HANDLING FUNCTIONS =====
+
+/**
+ * Show image modal with support for both URL and base64
+ * @param {string} imageSrc - Image source (URL or base64)
+ * @param {string} productName - Name of the product
+ */
+function showImageModal(imageSrc, productName) {
+    const modal = document.getElementById('image-modal');
+    const modalImg = document.getElementById('image-modal-img');
+    const modalTitle = document.getElementById('image-modal-title');
+    
+    if (modal && modalImg) {
+        modalImg.src = imageSrc;
+        modalTitle.textContent = 'Picha: ' + productName;
+        modal.classList.remove('hidden');
+    }
+}
+
+/**
+ * Show image modal from base64 data (legacy support)
+ * @param {string} mimeType - MIME type of the image
+ * @param {string} base64Data - Base64 encoded image data
+ * @param {string} productName - Name of the product
+ */
 function showImageModalFromBase64(mimeType, base64Data, productName) {
     const modal = document.getElementById('image-modal');
     const modalImg = document.getElementById('image-modal-img');
@@ -1168,35 +1268,77 @@ function showImageModalFromBase64(mimeType, base64Data, productName) {
     }
 }
 
-// Legacy function for backward compatibility
-function showImageModal(imageUrl, productName) {
-    // Check if it's a data URL (from database) or file URL
-    if (imageUrl && imageUrl.startsWith('data:')) {
-        const modal = document.getElementById('image-modal');
-        const modalImg = document.getElementById('image-modal-img');
-        const modalTitle = document.getElementById('image-modal-title');
-        
-        if (modal && modalImg) {
-            modalImg.src = imageUrl;
-            modalTitle.textContent = 'Picha: ' + productName;
-            modal.classList.remove('hidden');
-        }
-    } else {
-        // Try to use as is (file storage fallback)
-        const modal = document.getElementById('image-modal');
-        const modalImg = document.getElementById('image-modal-img');
-        const modalTitle = document.getElementById('image-modal-title');
-        
-        if (modal && modalImg) {
-            modalImg.src = imageUrl;
-            modalTitle.textContent = 'Picha: ' + productName;
-            modal.classList.remove('hidden');
-        }
-    }
-}
-
+/**
+ * Close the image modal
+ */
 function closeImageModal() {
     document.getElementById('image-modal')?.classList.add('hidden');
+}
+
+/**
+ * Format file size for display
+ * @param {number} bytes - File size in bytes
+ * @returns {string} Formatted file size
+ */
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+/**
+ * Get image source from product data
+ * @param {Object} product - Product object
+ * @returns {string|null} Image source URL or null
+ */
+function getProductImageSrc(product) {
+    if (!product) return null;
+    
+    // Priority 1: Image URL (filesystem storage)
+    if (product.image_url) {
+        return product.image_url;
+    }
+    
+    // Priority 2: Image base64 (legacy BLOB storage)
+    if (product.image_base64) {
+        return product.image_base64;
+    }
+    
+    // Priority 3: Raw image data (try to use as base64)
+    if (product.image) {
+        // Check if it's already a data URL
+        if (product.image.startsWith('data:')) {
+            return product.image;
+        }
+        
+        // Check if it's a file path
+        if (product.image.startsWith('/') || product.image.startsWith('http')) {
+            return product.image;
+        }
+        
+        // Try to use as base64
+        try {
+            atob(product.image);
+            return 'data:image/jpeg;base64,' + product.image;
+        } catch (e) {
+            // Not valid base64
+            return null;
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * Check if product has an image
+ * @param {Object} product - Product object
+ * @returns {boolean} True if product has image
+ */
+function productHasImage(product) {
+    if (!product) return false;
+    return !!(product.image_url || product.image_base64 || product.image);
 }
 
 // Image preview for add form
@@ -1235,10 +1377,17 @@ if (editImageInput) {
     });
 }
 
+/**
+ * Validate and preview image file
+ * @param {File} file - The image file
+ * @param {string} previewImgId - ID of the preview image element
+ * @param {string} previewContainerId - ID of the preview container
+ * @returns {boolean} True if validation passes
+ */
 function validateAndPreviewImage(file, previewImgId, previewContainerId) {
-    // Validate file size (1KB to 5500KB = 5.5MB)
+    // Validate file size (1KB to 10MB for new system)
     const minSize = 1 * 1024; // 1KB in bytes
-    const maxSize = 5500 * 1024; // 5500KB in bytes
+    const maxSize = 10240 * 1024; // 10MB in bytes (increased for compression handling)
     
     if (file.size < minSize) {
         showNotification('Picha ni ndogo sana. Ukubwa lazima uwe angalau 1KB', 'error');
@@ -1246,7 +1395,7 @@ function validateAndPreviewImage(file, previewImgId, previewContainerId) {
     }
     
     if (file.size > maxSize) {
-        showNotification(`Picha ni kubwa sana. Ukubwa unaruhusiwa 1KB - 5,500KB. Faili yako: ${(file.size / 1024).toFixed(2)}KB`, 'error');
+        showNotification(`Picha ni kubwa sana. Ukubwa unaruhusiwa hadi 10MB. Faili yako: ${(file.size / 1024 / 1024).toFixed(2)}MB`, 'error');
         return false;
     }
     
@@ -1615,6 +1764,9 @@ function searchAllProducts(searchTerm) {
     });
 }
 
+/**
+ * Create a product row for the table with enhanced image handling
+ */
 function createProductRow(product) {
     const row = document.createElement('tr');
     row.className = 'product-row hover:bg-gray-50';
@@ -1654,52 +1806,74 @@ function createProductRow(product) {
     
     let actionButtons = '';
     if (isBoss || canEditDelete) {
-        actionButtons = `<div class="flex justify-center space-x-2"><button class="edit-product-btn text-emerald-600 hover:text-emerald-800" data-id="${product.id}" title="Badili"><i class="fas fa-edit"></i></button><button class="delete-product-btn text-red-600 hover:text-red-800" data-id="${product.id}" data-name="${(product.jina || '').replace(/'/g, "\\'")}" title="Futa"><i class="fas fa-trash"></i></button></div>`;
+        actionButtons = `<div class="flex justify-center space-x-2">
+            <button class="edit-product-btn text-emerald-600 hover:text-emerald-800" data-id="${product.id}" title="Badili">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="delete-product-btn text-red-600 hover:text-red-800" data-id="${product.id}" data-name="${(product.jina || '').replace(/'/g, "\\'")}" title="Futa">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>`;
     } else {
-        actionButtons = `<span class="text-gray-400 cursor-not-allowed" title="Huwezi kurekebisha au kufuta"><i class="fas fa-lock mr-1"></i> Hakuna ruhusa</span>`;
+        actionButtons = `<span class="text-gray-400 cursor-not-allowed" title="Huwezi kurekebisha au kufuta">
+            <i class="fas fa-lock mr-1"></i> Hakuna ruhusa
+        </span>`;
     }
     
-    const wholesaleHtml = product.bei_uzo_jumla ? `<div><span class="text-xs text-gray-500">Jumla:</span><span class="text-sm font-bold text-blue-700">${parseFloat(product.bei_uzo_jumla).toLocaleString()} TZS</span></div>` : '';
+    const wholesaleHtml = product.bei_uzo_jumla ? 
+        `<div><span class="text-xs text-gray-500">Jumla:</span><span class="text-sm font-bold text-blue-700">${parseFloat(product.bei_uzo_jumla).toLocaleString()} TZS</span></div>` : '';
     
-    // Check if image exists and create appropriate HTML
+    // Get image source using the helper function
+    const imageSrc = getProductImageSrc(product);
+    const hasImage = productHasImage(product);
+    
+    // Build image HTML
     let imageHtml = '';
-    if (product.image) {
-        // If product.image is a base64 string directly
-        if (product.image.startsWith('/') || product.image.startsWith('http')) {
-            // File path (legacy)
-            imageHtml = `<img src="${product.image}" alt="${product.jina}" class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); showImageModal('${product.image}', '${product.jina.replace(/'/g, "\\'")}')">`;
-        } else if (product.image.startsWith('data:')) {
-            // Already a data URL
-            imageHtml = `<img src="${product.image}" alt="${product.jina}" class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); showImageModal('${product.image}', '${product.jina.replace(/'/g, "\\'")}')">`;
-        } else {
-            // Try to use as base64 (might be from API response)
-            try {
-                // Check if it's valid base64
-                atob(product.image);
-                imageHtml = `<img src="data:image/jpeg;base64,${product.image}" alt="${product.jina}" class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" onclick="event.stopPropagation(); showImageModal('data:image/jpeg;base64,${product.image}', '${product.jina.replace(/'/g, "\\'")}')">`;
-            } catch (e) {
-                // Not valid base64, treat as regular string
-                imageHtml = `<div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto"><i class="fas fa-image text-gray-400 text-sm"></i></div>`;
-            }
-        }
+    if (hasImage && imageSrc) {
+        const escapedName = (product.jina || '').replace(/'/g, "\\'");
+        imageHtml = `<img src="${imageSrc}" 
+            alt="${product.jina || ''}" 
+            class="h-10 w-10 object-cover rounded-full border border-gray-200 cursor-pointer hover:opacity-80" 
+            onclick="event.stopPropagation(); showImageModal('${imageSrc}', '${escapedName}')">`;
     } else {
-        imageHtml = `<div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto"><i class="fas fa-image text-gray-400 text-sm"></i></div>`;
+        imageHtml = `<div class="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+            <i class="fas fa-image text-gray-400 text-sm"></i>
+        </div>`;
     }
+    
+    // Image size display
+    const imageSizeHtml = product.formatted_image_size ? 
+        `<div class="text-xs text-gray-400 truncate">${product.formatted_image_size}</div>` : '';
     
     row.innerHTML = `
         <td class="px-3 py-2 text-center align-middle">${imageHtml}</td>
         <td class="px-3 py-2 align-middle">
             <div class="flex items-center">
                 <div class="min-w-0">
-                    <div class="font-medium text-gray-900 text-sm truncate">${product.jina || ''}</div>
+                    <div class="font-medium text-gray-900 text-sm truncate" title="${product.jina || ''}">${product.jina || ''}</div>
                     <div class="text-xs text-gray-500 sm:hidden truncate">${product.aina || ''}</div>
                     ${product.barcode ? `<div class="text-xs text-emerald-600 font-mono">#${product.barcode}</div>` : ''}
+                    ${imageSizeHtml}
                 </div>
             </div>
         </td>
-        <td class="px-3 py-2 hidden sm:table-cell"><span class="text-sm text-gray-700">${product.aina || ''}</span>${product.kipimo ? `<span class="text-xs text-gray-500 block">${product.kipimo}</span>` : ''}</td>
-        <td class="px-3 py-2 text-center"><span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${stockClass}">${formattedIdadi}</span></td>
-        <td class="px-3 py-2 text-right"><div class="space-y-1"><div><span class="text-xs text-gray-500">Rejareja:</span><span class="text-sm font-bold text-emerald-700">${parseFloat(product.bei_kuuza || 0).toLocaleString()} TZS</span></div>${wholesaleHtml}</div>${canViewPrice ? `<div class="text-xs text-gray-500 mt-1">Nunua: ${parseFloat(product.bei_nunua || 0).toLocaleString()} TZS</div>` : ''}</td>
+        <td class="px-3 py-2 hidden sm:table-cell">
+            <span class="text-sm text-gray-700">${product.aina || ''}</span>
+            ${product.kipimo ? `<span class="text-xs text-gray-500 block">${product.kipimo}</span>` : ''}
+        </td>
+        <td class="px-3 py-2 text-center">
+            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${stockClass}">${formattedIdadi}</span>
+        </td>
+        <td class="px-3 py-2 text-right">
+            <div class="space-y-1">
+                <div>
+                    <span class="text-xs text-gray-500">Rejareja:</span>
+                    <span class="text-sm font-bold text-emerald-700">${parseFloat(product.bei_kuuza || 0).toLocaleString()} TZS</span>
+                </div>
+                ${wholesaleHtml}
+            </div>
+            ${canViewPrice ? `<div class="text-xs text-gray-500 mt-1">Nunua: ${parseFloat(product.bei_nunua || 0).toLocaleString()} TZS</div>` : ''}
+        </td>
         <td class="px-3 py-2 hidden lg:table-cell">${expiryHtml}</td>
         <td class="px-3 py-2 text-center print:hidden">${actionButtons}</td>
     `;
@@ -1764,6 +1938,9 @@ function handleDeleteClick(e) {
     deleteProduct(productId, productName);
 }
 
+/**
+ * Edit product with enhanced image handling
+ */
 function editProduct(product) {
     if (!isBoss && !canEditDelete) return;
     
@@ -1787,28 +1964,35 @@ function editProduct(product) {
     document.getElementById('edit-barcode').value = product.barcode || '';
     document.getElementById('edit-form').action = `/bidhaa/${product.id}`;
     
-    // Handle image display in edit modal
-    if (product.image && product.image !== 'null' && product.image !== null) {
-        const currentImageContainer = document.getElementById('current-image-container');
-        const currentImage = document.getElementById('current-product-image');
+    // Enhanced image handling in edit modal
+    const currentImageContainer = document.getElementById('current-image-container');
+    const currentImage = document.getElementById('current-product-image');
+    const imageSizeDisplay = document.getElementById('current-image-size');
+    
+    // Check if product has image using the helper function
+    const hasImage = productHasImage(product);
+    const imageSrc = getProductImageSrc(product);
+    
+    if (hasImage && imageSrc) {
         if (currentImageContainer && currentImage) {
-            // Check if image is base64 or file path
-            if (product.image.startsWith('data:') || product.image.startsWith('/') || product.image.startsWith('http')) {
-                currentImage.src = product.image;
-            } else {
-                // Try as base64
-                try {
-                    atob(product.image);
-                    currentImage.src = 'data:image/jpeg;base64,' + product.image;
-                } catch (e) {
-                    currentImage.src = '/storage/' + product.image;
+            currentImage.src = imageSrc;
+            currentImageContainer.classList.remove('hidden');
+            
+            // Display image size if available
+            if (imageSizeDisplay) {
+                if (product.formatted_image_size) {
+                    imageSizeDisplay.textContent = 'Ukubwa: ' + product.formatted_image_size;
+                } else if (product.image_size) {
+                    imageSizeDisplay.textContent = 'Ukubwa: ' + formatFileSize(product.image_size);
+                } else {
+                    imageSizeDisplay.textContent = '';
                 }
             }
-            currentImageContainer.classList.remove('hidden');
         }
-        document.getElementById('edit-image-preview')?.classList.add('hidden');
     } else {
-        document.getElementById('current-image-container')?.classList.add('hidden');
+        if (currentImageContainer) {
+            currentImageContainer.classList.add('hidden');
+        }
     }
     
     // Add delete image button handler
@@ -1821,6 +2005,7 @@ function editProduct(product) {
         };
     }
     
+    document.getElementById('edit-image-preview')?.classList.add('hidden');
     document.getElementById('edit-modal').classList.remove('hidden');
 }
 
@@ -2113,7 +2298,27 @@ function displaySearchResultsForTaarifa(products) {
     let html = '';
     products.forEach(product => {
         const stockClass = product.idadi <= 0 ? 'text-red-600' : (product.idadi < 10 ? 'text-amber-600' : 'text-emerald-600');
-        html += `<div class="search-result-item p-3 border-b border-gray-100 hover:bg-emerald-50 cursor-pointer focus:bg-emerald-50 focus:outline-none" tabindex="0" data-id="${product.id}" data-jina="${product.jina}" data-aina="${product.aina}" data-barcode="${product.barcode || ''}" data-idadi="${product.idadi}"><div class="flex justify-between"><div><div class="font-medium text-gray-900">${product.jina}</div><div class="text-xs text-gray-600">${product.aina} ${product.barcode ? `#${product.barcode}` : ''}</div></div><div class="text-right"><span class="text-xs font-medium ${stockClass}">${formatNumber(product.idadi, 2)}</span></div></div></div>`;
+        // Show image in search results
+        const imageSrc = product.image_url || product.image_base64 || '';
+        const imageHtml = imageSrc ? 
+            `<img src="${imageSrc}" class="h-8 w-8 object-cover rounded-full border border-gray-200 mr-2">` : 
+            `<div class="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center mr-2"><i class="fas fa-image text-gray-400 text-xs"></i></div>`;
+        
+        html += `<div class="search-result-item p-3 border-b border-gray-100 hover:bg-emerald-50 cursor-pointer focus:bg-emerald-50 focus:outline-none flex items-center" tabindex="0" 
+            data-id="${product.id}" 
+            data-jina="${product.jina}" 
+            data-aina="${product.aina}" 
+            data-barcode="${product.barcode || ''}" 
+            data-idadi="${product.idadi}">
+            ${imageHtml}
+            <div class="flex-1">
+                <div class="font-medium text-gray-900 text-sm">${product.jina}</div>
+                <div class="text-xs text-gray-600">${product.aina} ${product.barcode ? `#${product.barcode}` : ''}</div>
+            </div>
+            <div class="text-right">
+                <span class="text-xs font-medium ${stockClass}">${formatNumber(product.idadi, 2)}</span>
+            </div>
+        </div>`;
     });
     resultsDropdown.innerHTML = html;
     resultsDropdown.classList.remove('hidden');
@@ -2236,14 +2441,12 @@ function printProductDetails() {
     printWindow.document.close();
     printWindow.print();
 }
-// Add these functions to the existing script section
 
 // ===== SHOWCASE LINK GENERATION =====
 let currentShowcaseLink = '';
 let currentQRCodeData = '';
 
 function generateShowcaseLink() {
-    // Get company ID from the page
     const companyId = getCompanyId();
     
     if (!companyId) {
@@ -2251,15 +2454,12 @@ function generateShowcaseLink() {
         return;
     }
     
-    // Generate the showcase URL
     const baseUrl = window.location.origin;
     currentShowcaseLink = `${baseUrl}/shop/${companyId}`;
     
-    // Display the link
     document.getElementById('showcaseLinkInput').value = currentShowcaseLink;
     document.getElementById('showcaseLinkContainer').classList.remove('hidden');
     
-    // Animate the container
     const container = document.getElementById('showcaseLinkContainer');
     container.style.animation = 'fadeIn 0.5s ease';
     
@@ -2267,33 +2467,26 @@ function generateShowcaseLink() {
 }
 
 function getCompanyId() {
-    // Try to get company ID from multiple sources
-    // 1. From the app container dataset
     const appContainer = document.getElementById('app-container');
     if (appContainer && appContainer.dataset.companyId) {
         return appContainer.dataset.companyId;
     }
     
-    // 2. From the URL
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('company')) {
         return urlParams.get('company');
     }
     
-    // 3. From meta tag
     const metaTag = document.querySelector('meta[name="company-id"]');
     if (metaTag) {
         return metaTag.content;
     }
     
-    // 4. From the user's company (via Laravel)
-    // This will be populated from the backend
     const companyIdElement = document.getElementById('company-id-data');
     if (companyIdElement) {
         return companyIdElement.value;
     }
     
-    // 5. Default to 1 if nothing found (for demo)
     return 1;
 }
 
@@ -2306,7 +2499,6 @@ function copyShowcaseLink() {
         navigator.clipboard.writeText(input.value);
         showNotification('Link copied to clipboard!', 'success');
     } catch (err) {
-        // Fallback
         document.execCommand('copy');
         showNotification('Link copied to clipboard!', 'success');
     }
@@ -2395,13 +2587,11 @@ function printShowcaseLink() {
 }
 
 function getCompanyName() {
-    // Try to get company name from the page
     const companyNameElement = document.getElementById('company-name-data');
     if (companyNameElement) {
         return companyNameElement.value;
     }
     
-    // Try to get from page title
     const titleElement = document.querySelector('title');
     if (titleElement) {
         const title = titleElement.textContent;
@@ -2410,15 +2600,12 @@ function getCompanyName() {
         }
     }
     
-    // Default
     return 'Our Shop';
 }
 
 function generateQRCode() {
     if (!currentShowcaseLink) {
-        // Generate link first if not available
         generateShowcaseLink();
-        // Wait a moment then generate QR
         setTimeout(() => {
             generateQRCodeActual();
         }, 500);
@@ -2431,13 +2618,11 @@ function generateQRCodeActual() {
     const container = document.getElementById('qrCodeContainer');
     const display = document.getElementById('qrCodeDisplay');
     
-    // Use QR Server API
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(currentShowcaseLink)}&bgcolor=ffffff&color=059669&margin=10`;
     
     display.innerHTML = `<img src="${qrUrl}" alt="QR Code" class="w-48 h-48 object-contain" style="max-width:200px;height:200px;" id="qrImage">`;
     container.classList.remove('hidden');
     
-    // Store QR data for download
     currentQRCodeData = qrUrl;
     
     showNotification('QR Code generated successfully!', 'success');
@@ -2450,7 +2635,6 @@ function downloadQRCode() {
         return;
     }
     
-    // Create download link
     const link = document.createElement('a');
     link.download = `showcase-qr-${getCompanyName().toLowerCase().replace(/\s/g, '-')}.png`;
     link.href = qrImage.src;

@@ -82,9 +82,7 @@
             <button data-tab="sms" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
                 <i class="fas fa-envelope mr-2"></i> Tuma SMS
             </button>
-            <button data-tab="dukani" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
-                <i class="fas fa-store mr-2"></i> Dukani
-            </button>
+         
         </div>
     </div>
 
@@ -113,6 +111,13 @@
                     <a href="{{ route('wateja.ripoti') }}" class="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-medium">
                         <i class="fas fa-chart-pie mr-1"></i> Ripoti
                     </a>
+                    <!-- Add this button near the search/export buttons -->
+<form method="POST" action="{{ route('wateja.generate-missing-codes') }}">
+    @csrf
+    <button type="submit" class="px-3 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 text-sm font-medium">
+        <i class="fas fa-qrcode mr-1"></i> Tengeneza Misimbo
+    </button>
+</form>
                 </div>
             </div>
         </div>
@@ -380,98 +385,7 @@
         </div>
     </div>
 
-    <!-- TAB 4: Dukani - Customer Code Lookup -->
-    <div id="dukani-tab-content" class="tab-content hidden">
-        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-store text-emerald-600 text-xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-sm font-semibold text-gray-800">Dukani - Tafuta Mteja</h2>
-                    <p class="text-xs text-gray-500">Tafuta mteja kwa msimbo wake au maelezo mengine</p>
-                </div>
-            </div>
 
-            <!-- Search Customer -->
-            <div class="mb-4">
-                <div class="relative">
-                    <input type="text" 
-                           id="customer-search-input"
-                           placeholder="Ingiza msimbo wa mteja (CUST-202601-0001), jina, au simu..." 
-                           class="w-full pl-10 pr-4 py-3 border-2 border-emerald-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
-                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-emerald-500"></i>
-                    <div id="customer-search-spinner" class="absolute right-3 top-1/2 transform -translate-y-1/2 hidden">
-                        <i class="fas fa-spinner fa-spin text-emerald-500"></i>
-                    </div>
-                </div>
-                <div id="customer-search-results" class="hidden mt-2 border border-emerald-200 rounded-lg bg-white shadow-xl max-h-80 overflow-y-auto"></div>
-            </div>
-
-            <!-- Customer Details -->
-            <div id="customer-details-container" class="hidden">
-                <div class="bg-gradient-to-r from-emerald-50 to-amber-50 p-4 rounded-lg border border-emerald-200">
-                    <div class="flex items-start gap-4">
-                        <div class="h-16 w-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl flex-shrink-0">
-                            <span id="customer-detail-initial">M</span>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h3 id="customer-detail-name" class="text-lg font-bold text-gray-800">-</h3>
-                                <span id="customer-detail-code" class="text-xs font-mono bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold">-</span>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 text-sm">
-                                <div><span class="text-gray-500">Simu:</span> <span id="customer-detail-phone" class="font-medium">-</span></div>
-                                <div><span class="text-gray-500">Email:</span> <span id="customer-detail-email" class="font-medium">-</span></div>
-                                <div class="sm:col-span-2"><span class="text-gray-500">Anuani:</span> <span id="customer-detail-address" class="font-medium">-</span></div>
-                                <div class="sm:col-span-2"><span class="text-gray-500">Tarehe ya Usajili:</span> <span id="customer-detail-date" class="font-medium">-</span></div>
-                            </div>
-                            <div class="mt-3 flex flex-wrap gap-2">
-                                <button onclick="copyCode(document.getElementById('customer-detail-code').textContent)" 
-                                        class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-xs font-medium">
-                                    <i class="fas fa-copy mr-1"></i> Nakili Msimbo
-                                </button>
-                                <a id="customer-detail-call" href="#" 
-                                   class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs font-medium">
-                                    <i class="fas fa-phone mr-1"></i> Piga Simu
-                                </a>
-                                <button id="customer-detail-sms" 
-                                        class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-xs font-medium">
-                                    <i class="fas fa-envelope mr-1"></i> Tuma SMS
-                                </button>
-                                <button onclick="openCustomerOrders()" 
-                                        class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs font-medium">
-                                    <i class="fas fa-shopping-bag mr-1"></i> Oda Zake
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Orders History -->
-                <div id="customer-orders-container" class="hidden mt-4">
-                    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                        <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                            <h4 class="text-sm font-semibold text-gray-700">
-                                <i class="fas fa-history mr-2 text-emerald-600"></i> Historia ya Oda
-                            </h4>
-                            <span id="customer-orders-count" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">0 oda</span>
-                        </div>
-                        <div id="customer-orders-list" class="max-h-60 overflow-y-auto divide-y divide-gray-100">
-                            <div class="px-4 py-3 text-center text-gray-500 text-sm">Hakuna oda za mteja huyu</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- No Customer Selected -->
-            <div id="no-customer-selected" class="text-center py-8">
-                <i class="fas fa-search text-4xl text-gray-300 mb-3"></i>
-                <p class="text-gray-500 text-sm">Tafuta mteja kwa msimbo wake ili kuona maelezo yake</p>
-                <p class="text-xs text-gray-400 mt-1">Mfano: CUST-202601-0001</p>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- View Details Modal -->
@@ -1513,6 +1427,7 @@ function exportPDF() {
     search.set('export', 'pdf');
     window.open(`${window.location.pathname}?${search.toString()}`, '_blank');
 }
+
 
 // ============================================
 // INITIALIZE

@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/BidhaaController.php
 
 namespace App\Http\Controllers;
 
@@ -22,6 +21,9 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class BidhaaController extends Controller
 {
@@ -82,76 +84,75 @@ class BidhaaController extends Controller
         return in_array($uwezo, ['mkubwa']);
     }
 
-    // Compress and convert image to binary for database storage
-    private function compressAndConvertImageToBinary($image)
-    {
-        try {
-            // Validate file size (1KB to 5500KB)
-            $imageSize = $image->getSize();
-            $minSize = 1 * 1024; // 1KB
-            $maxSize = 5500 * 1024; // 5500KB
-            
-            if ($imageSize < $minSize) {
-                throw new \Exception('Picha ni ndogo sana. Ukubwa lazima uwe angalau 1KB');
-            }
-            
-            if ($imageSize > $maxSize) {
-                throw new \Exception('Picha ni kubwa sana. Ukubwa unaruhusiwa 1KB - 5500KB');
-            }
-            
-            // Get image content
-            $imageContent = file_get_contents($image->getPathname());
-            
-            // Compress if size > 1MB
-            if ($imageSize > 1024 * 1024) {
-                $imageResource = null;
-                $compressedContent = null;
-                
-                switch ($image->getMimeType()) {
-                    case 'image/jpeg':
-                    case 'image/jpg':
-                        $imageResource = imagecreatefromjpeg($image->getPathname());
-                        if ($imageResource) {
-                            ob_start();
-                            imagejpeg($imageResource, null, 75);
-                            $compressedContent = ob_get_clean();
-                            imagedestroy($imageResource);
-                        }
-                        break;
-                    case 'image/png':
-                        $imageResource = imagecreatefrompng($image->getPathname());
-                        if ($imageResource) {
-                            imagesavealpha($imageResource, true);
-                            ob_start();
-                            imagepng($imageResource, null, 8);
-                            $compressedContent = ob_get_clean();
-                            imagedestroy($imageResource);
-                        }
-                        break;
-                    case 'image/webp':
-                        $imageResource = imagecreatefromwebp($image->getPathname());
-                        if ($imageResource) {
-                            ob_start();
-                            imagewebp($imageResource, null, 75);
-                            $compressedContent = ob_get_clean();
-                            imagedestroy($imageResource);
-                        }
-                        break;
-                    default:
-                        $compressedContent = $imageContent;
-                        break;
-                }
-                
-                return $compressedContent ?: $imageContent;
-            }
-            
-            return $imageContent;
-            
-        } catch (\Exception $e) {
-            \Log::error('Image compression error: ' . $e->getMessage());
-            return file_get_contents($image->getPathname());
-        }
+private function processAndStoreImage($image)
+{
+    $validator = Validator::make(['image' => $image], [
+        'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240'
+    ]);
+
+    if ($validator->fails()) {
+        throw new \Exception('Picha si sahihi: ' . $validator->errors()->first());
     }
+
+    try {
+        $originalSize = $image->getSize();
+        $needCompression = $originalSize > 2 * 1024 * 1024;
+        
+        // Create image instance
+        $manager = new ImageManager(new Driver());
+        $img = $manager->read($image->getPathname());
+        
+        $quality = 85;
+        $maxWidth = 1200;
+        $maxHeight = 1200;
+        
+        if ($needCompression) {
+            if ($originalSize > 5 * 1024 * 1024) {
+                $quality = 60;
+                $maxWidth = 800;
+                $maxHeight = 800;
+            } elseif ($originalSize > 3 * 1024 * 1024) {
+                $quality = 70;
+                $maxWidth = 1000;
+                $maxHeight = 1000;
+            }
+        }
+        
+        if ($img->width() > $maxWidth || $img->height() > $maxHeight) {
+            $img->scaleDown($maxWidth, $maxHeight);
+        }
+        
+        $extension = $image->getClientOriginalExtension();
+        $filename = 'products/' . uniqid() . '_' . time() . '.' . $extension;
+        
+        // Save with compression
+        $img->toJpeg($quality)->save(storage_path('app/public/' . $filename));
+        
+        $finalSize = Storage::disk('public')->size($filename);
+        
+        return [
+            'path' => $filename,
+            'mime_type' => $image->getMimeType(),
+            'size' => $finalSize,
+            'original_size' => $originalSize,
+            'compressed' => $needCompression
+        ];
+        
+    } catch (\Exception $e) {
+        \Log::error('Image error: ' . $e->getMessage());
+        // Fallback: store original
+        $filename = 'products/' . uniqid() . '_' . time() . '.' . $image->getClientOriginalExtension();
+        Storage::disk('public')->putFileAs('products', $image, basename($filename));
+        
+        return [
+            'path' => $filename,
+            'mime_type' => $image->getMimeType(),
+            'size' => $image->getSize(),
+            'original_size' => $image->getSize(),
+            'compressed' => false
+        ];
+    }
+}
 
     public function index(Request $request)
     {
@@ -354,7 +355,11 @@ class BidhaaController extends Controller
                     'barcode' => $item->barcode,
                     'stock_status' => $stockStatus,
                     'has_image' => $item->hasImage(),
-                    'image_base64' => $item->image ? base64_encode($item->image) : null
+                    'image_url' => $item->image_url,
+                    'image_base64' => $item->image_base64,
+                    'image_mime_type' => $item->image_mime_type,
+                    'image_size' => $item->image_size,
+                    'formatted_image_size' => $item->formatted_image_size
                 ];
             });
             
@@ -425,7 +430,11 @@ class BidhaaController extends Controller
                     'expiry' => $expiryDate,
                     'barcode' => $product->barcode,
                     'has_image' => $product->hasImage(),
-                    'image_base64' => $product->image ? base64_encode($product->image) : null
+                    'image_url' => $product->image_url,
+                    'image_base64' => $product->image_base64,
+                    'image_mime_type' => $product->image_mime_type,
+                    'image_size' => $product->image_size,
+                    'formatted_image_size' => $product->formatted_image_size
                 ]
             ]);
 
@@ -457,7 +466,7 @@ class BidhaaController extends Controller
                     return $query->where('company_id', $this->getCompanyId());
                 })
             ],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5500',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -492,11 +501,20 @@ class BidhaaController extends Controller
             ? $validated['bei_uzo_jumla'] 
             : null;
 
-        // Handle image upload - store as BLOB in database
+        // Handle image upload - store in filesystem with compression
         if ($request->hasFile('image')) {
             try {
-                $imageBinary = $this->compressAndConvertImageToBinary($request->file('image'));
-                $validated['image'] = $imageBinary;
+                $imageData = $this->processAndStoreImage($request->file('image'));
+                $validated['image_path'] = $imageData['path'];
+                $validated['image_mime_type'] = $imageData['mime_type'];
+                $validated['image_size'] = $imageData['size'];
+                $validated['image'] = null; // Clear BLOB field
+                
+                // Log compression if needed
+                if ($imageData['compressed']) {
+                    \Log::info("Image compressed: Original: " . number_format($imageData['original_size'] / 1024, 2) . "KB, Compressed: " . number_format($imageData['size'] / 1024, 2) . "KB");
+                }
+                
             } catch (\Exception $e) {
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
@@ -559,7 +577,7 @@ class BidhaaController extends Controller
                     })
                     ->ignore($bidhaa->id)
             ],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5500',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -585,11 +603,20 @@ class BidhaaController extends Controller
 
         $validated = $validator->validated();
         
-        // Handle image upload - store as BLOB in database
+        // Handle image upload
         if ($request->hasFile('image')) {
             try {
-                $imageBinary = $this->compressAndConvertImageToBinary($request->file('image'));
-                $validated['image'] = $imageBinary;
+                // Delete old image if exists
+                if ($bidhaa->image_path) {
+                    Storage::disk('public')->delete($bidhaa->image_path);
+                }
+                
+                $imageData = $this->processAndStoreImage($request->file('image'));
+                $validated['image_path'] = $imageData['path'];
+                $validated['image_mime_type'] = $imageData['mime_type'];
+                $validated['image_size'] = $imageData['size'];
+                $validated['image'] = null; // Clear BLOB field
+                
             } catch (\Exception $e) {
                 if ($request->ajax() || $request->wantsJson()) {
                     return response()->json([
@@ -620,7 +647,14 @@ class BidhaaController extends Controller
         
         if ($request->has('expiry')) $updateData['expiry'] = $validated['expiry'];
         if ($request->has('barcode')) $updateData['barcode'] = $validated['barcode'];
-        if ($request->hasFile('image')) $updateData['image'] = $validated['image'];
+        
+        // Add image data if new image uploaded
+        if ($request->hasFile('image')) {
+            $updateData['image_path'] = $validated['image_path'];
+            $updateData['image_mime_type'] = $validated['image_mime_type'];
+            $updateData['image_size'] = $validated['image_size'];
+            $updateData['image'] = null;
+        }
         
         $bidhaa->update($updateData);
 
@@ -655,6 +689,11 @@ class BidhaaController extends Controller
                 ->with('error', 'Huna ruhusa ya kufuta bidhaa.');
         }
 
+        // Delete image file
+        if ($bidhaa->image_path) {
+            Storage::disk('public')->delete($bidhaa->image_path);
+        }
+
         $bidhaa->delete();
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -683,7 +722,8 @@ class BidhaaController extends Controller
         }
         
         try {
-            $count = Bidhaa::where('company_id', $companyId)->count();
+            $products = Bidhaa::where('company_id', $companyId)->get();
+            $count = $products->count();
             
             if ($count === 0) {
                 return response()->json([
@@ -692,6 +732,14 @@ class BidhaaController extends Controller
                 ]);
             }
             
+            // Delete all image files
+            foreach ($products as $product) {
+                if ($product->image_path) {
+                    Storage::disk('public')->delete($product->image_path);
+                }
+            }
+            
+            // Delete all products
             Bidhaa::where('company_id', $companyId)->delete();
             
             return response()->json([
@@ -722,7 +770,18 @@ class BidhaaController extends Controller
         }
         
         try {
-            $bidhaa->update(['image' => null]);
+            // Delete file from storage
+            if ($bidhaa->image_path) {
+                Storage::disk('public')->delete($bidhaa->image_path);
+            }
+            
+            // Clear image fields
+            $bidhaa->update([
+                'image_path' => null,
+                'image_mime_type' => null,
+                'image_size' => null,
+                'image' => null // Clear BLOB too
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -1534,6 +1593,7 @@ class BidhaaController extends Controller
                 'expiry' => $bidhaa->expiry ? $bidhaa->expiry->format('Y-m-d') : null,
                 'imeundwa' => $bidhaa->created_at->format('d/m/Y H:i'),
                 'has_image' => $bidhaa->hasImage(),
+                'image_url' => $bidhaa->image_url,
             ],
             'statistics' => [
                 'tarehe_ya_kwanza' => $bidhaa->created_at->format('d/m/Y'),
@@ -1576,7 +1636,7 @@ class BidhaaController extends Controller
             ]);
         }
         
-        $products = $query->orderBy('jina')->get(['id', 'jina', 'aina', 'barcode', 'idadi', 'bei_kuuza', 'bei_uzo_jumla', 'bei_kiasi_cha_chaguo', 'image']);
+        $products = $query->orderBy('jina')->get(['id', 'jina', 'aina', 'barcode', 'idadi', 'bei_kuuza', 'bei_uzo_jumla', 'bei_kiasi_cha_chaguo', 'image', 'image_path', 'image_mime_type', 'image_size']);
         
         // Convert images to base64 for response
         $products = $products->map(function($product) {
@@ -1590,7 +1650,11 @@ class BidhaaController extends Controller
                 'bei_uzo_jumla' => $product->bei_uzo_jumla,
                 'bei_kiasi_cha_chaguo' => $product->bei_kiasi_cha_chaguo,
                 'has_image' => $product->hasImage(),
-                'image_base64' => $product->image ? base64_encode($product->image) : null
+                'image_url' => $product->image_url,
+                'image_base64' => $product->image_base64,
+                'image_mime_type' => $product->image_mime_type,
+                'image_size' => $product->image_size,
+                'formatted_image_size' => $product->formatted_image_size
             ];
         });
         

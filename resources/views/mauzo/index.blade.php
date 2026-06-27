@@ -83,40 +83,41 @@
         </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-2 mb-4">
-        <div class="flex flex-wrap gap-1" id="tab-nav">
-            <button id="sehemu-tab" class="tab-button pb-2 px-3 transition-colors flex items-center border-b-2 border-white text-white font-semibold whitespace-nowrap text-sm" data-tab="sehemu">
-                <i class="fas fa-cash-register mr-2 text-xs"></i>Sehemu ya Mauzo
-            </button>
-            <!-- Add this inside your tab-nav div -->
-<button id="weka-order-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="weka-order">
-    <i class="fas fa-clipboard-list mr-2 text-xs"></i>Weka Order
-    <span id="draft-orders-count" class="ml-1 bg-yellow-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
-</button>
-            <button id="barcode-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="barcode">
-                <i class="fas fa-barcode mr-2 text-xs"></i>Barcode
-            </button>
-            <button id="taarifa-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="taarifa">
-                <i class="fas fa-file-alt mr-2 text-xs"></i>Taarifa
-            </button>
-            <button id="jumla-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="jumla">
-                <i class="fas fa-chart-bar mr-2 text-xs"></i>Jumla
-            </button>
-            <button id="kikapu-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white relative whitespace-nowrap text-sm" data-tab="kikapu">
-                <i class="fas fa-shopping-cart mr-2 text-xs"></i>Kikapu
-                <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
-            </button>
-            <button id="risiti-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="risiti">
-                <i class="fas fa-receipt mr-2 text-xs"></i>Risiti
-            </button>
-
-            <button id="pokeaorder-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="pokeaorder">
-    <i class="fas fa-clipboard-check mr-2 text-xs"></i>Pokea Order
-    <span id="pokea-orders-count" class="ml-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
-</button>
-        </div>
+<!-- Tab Navigation - Only ONE order tab -->
+<div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-2 mb-4">
+    <div class="flex flex-wrap gap-1" id="tab-nav">
+        <button id="sehemu-tab" class="tab-button pb-2 px-3 transition-colors flex items-center border-b-2 border-white text-white font-semibold whitespace-nowrap text-sm" data-tab="sehemu">
+            <i class="fas fa-cash-register mr-2 text-xs"></i>Sehemu ya Mauzo
+        </button>
+        
+        <!-- SINGLE ORDER TAB - Shows both Weka Order and Orders Approved -->
+        <button id="weka-order-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="weka-order">
+            <i class="fas fa-clipboard-list mr-2 text-xs"></i>Weka Order
+            <span id="new-order-badge-tab" class="ml-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+        </button>
+        
+        <button id="barcode-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="barcode">
+            <i class="fas fa-barcode mr-2 text-xs"></i>Barcode
+        </button>
+        
+        <button id="taarifa-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="taarifa">
+            <i class="fas fa-file-alt mr-2 text-xs"></i>Taarifa
+        </button>
+        
+        <button id="jumla-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="jumla">
+            <i class="fas fa-chart-bar mr-2 text-xs"></i>Jumla
+        </button>
+        
+        <button id="kikapu-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white relative whitespace-nowrap text-sm" data-tab="kikapu">
+            <i class="fas fa-shopping-cart mr-2 text-xs"></i>Kikapu
+            <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
+        </button>
+        
+        <button id="risiti-tab" class="tab-button pb-2 px-3 transition-colors flex items-center text-green-100 hover:text-white whitespace-nowrap text-sm" data-tab="risiti">
+            <i class="fas fa-receipt mr-2 text-xs"></i>Risiti
+        </button>
     </div>
+</div>
 
 <!-- TAB 1: Sehemu ya Mauzo -->
 <div id="sehemu-tab-content" class="tab-content active">
@@ -1407,8 +1408,6 @@
 </div>
     <!-- Include Orders Partial -->
 @include('mauzo.partial-order')
-
-@include('mauzo.partial-pokeaorder')
 
 <!-- Modals -->
 <!-- Delete Sale Modal -->

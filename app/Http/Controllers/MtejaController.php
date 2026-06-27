@@ -511,4 +511,34 @@ public function ripoti(Request $request)
         $result = $this->smsService->testConnection();
         return response()->json($result);
     }
+    /**
+ * Generate customer codes for all customers who don't have one
+ */
+public function generateMissingCodes(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    
+    $customersWithoutCode = Mteja::where('company_id', $companyId)
+        ->whereNull('customer_code')
+        ->orWhere('customer_code', '')
+        ->get();
+    
+    $generated = 0;
+    foreach ($customersWithoutCode as $customer) {
+        $customer->customer_code = Mteja::generateCustomerCode($companyId);
+        $customer->save();
+        $generated++;
+    }
+    
+    if ($request->ajax() || $request->wantsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => "Msimbo umetengenezwa kwa wateja {$generated}",
+            'generated' => $generated
+        ]);
+    }
+    
+    return redirect()->back()
+        ->with('success', "Msimbo umetengenezwa kwa wateja {$generated}");
+}
 }

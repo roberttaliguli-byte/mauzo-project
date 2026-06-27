@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Storage;
 
 class PublicShowcaseController extends Controller
 {
@@ -43,10 +44,10 @@ class PublicShowcaseController extends Controller
             ->orderBy('jina')
             ->get();
 
-        // Process product images
+        // Process product images - supports both filesystem and BLOB storage
         foreach ($products as $product) {
             $product->image_data_url = $this->getProductImageUrl($product);
-            $product->has_image = !empty($product->image);
+            $product->has_image = $product->has_image; // Uses the accessor from model
         }
 
         // Get featured products
@@ -109,22 +110,58 @@ class PublicShowcaseController extends Controller
     }
 
     /**
-     * Get product image as base64 data URL
+     * Get product image as base64 data URL or file URL
+     * Supports both filesystem storage and BLOB storage
+     * 
+     * @param \App\Models\Bidhaa $product
+     * @return string|null
      */
     private function getProductImageUrl($product)
     {
-        if (empty($product->image)) {
+        // 1. Check if product has image using the model's hasImage method
+        if (!$product->has_image) {
             return null;
         }
 
-        try {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mimeType = finfo_buffer($finfo, $product->image);
-            finfo_close($finfo);
-            return 'data:' . $mimeType . ';base64,' . base64_encode($product->image);
-        } catch (\Exception $e) {
-            return null;
+        // 2. Try filesystem storage first (image_path)
+        if ($product->image_path) {
+            // Try direct file access
+            $path = storage_path('app/public/' . $product->image_path);
+            if (file_exists($path)) {
+                try {
+                    $content = file_get_contents($path);
+                    $mimeType = $product->image_mime_type ?: mime_content_type($path);
+                    return 'data:' . $mimeType . ';base64,' . base64_encode($content);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to read image from filesystem: ' . $e->getMessage());
+                }
+            }
+            
+            // Try using Storage facade
+            if (Storage::disk('public')->exists($product->image_path)) {
+                try {
+                    $content = Storage::disk('public')->get($product->image_path);
+                    $mimeType = $product->image_mime_type ?: Storage::disk('public')->mimeType($product->image_path);
+                    return 'data:' . $mimeType . ';base64,' . base64_encode($content);
+                } catch (\Exception $e) {
+                    Log::warning('Failed to read image from storage: ' . $e->getMessage());
+                }
+            }
         }
+
+        // 3. Fallback to BLOB storage (legacy)
+        if (!empty($product->image)) {
+            try {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_buffer($finfo, $product->image);
+                finfo_close($finfo);
+                return 'data:' . $mimeType . ';base64,' . base64_encode($product->image);
+            } catch (\Exception $e) {
+                Log::warning('Failed to read image from BLOB: ' . $e->getMessage());
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -222,7 +259,7 @@ class PublicShowcaseController extends Controller
 
         foreach ($products as $product) {
             $product->image_data_url = $this->getProductImageUrl($product);
-            $product->has_image = !empty($product->image);
+            $product->has_image = $product->has_image;
         }
 
         return response()->json([
@@ -632,7 +669,7 @@ class PublicShowcaseController extends Controller
     }
 
     /**
-     * Process order payment and create Mauzo records - FIXED
+     * Process order payment and create Mauzo records
      */
     private function processOrderPayment($order, $company, $authUser = null)
     {
@@ -749,7 +786,7 @@ class PublicShowcaseController extends Controller
     }
 
     /**
-     * Place order from showcase - FIXED
+     * Place order from showcase
      */
     public function placeOrder(Request $request, $companyId)
     {
@@ -983,5 +1020,50 @@ class PublicShowcaseController extends Controller
             ]
         ]);
     }
-    
+
+    /**
+     * Find customer code by phone number (API endpoint for AJAX)
+     */
+    public function findCustomerCode(Request $request, $companyId)
+    {
+        $company = Company::find($companyId);
+        if (!$company) {
+            return response()->json(['success' => false, 'message' => 'Company not found'], 404);
+        }
+
+        $phone = $request->get('phone');
+        if (!$phone) {
+            return response()->json(['success' => false, 'message' => 'Phone number is required'], 400);
+        }
+
+        $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+        
+        if (strlen($cleanPhone) < 7) {
+            return response()->json(['success' => false, 'message' => 'Invalid phone number format'], 400);
+        }
+
+        $customer = Mteja::where('company_id', $company->id)
+            ->where('simu', $cleanPhone)
+            ->first();
+
+        if (!$customer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No customer found with this phone number. Please place an order first to register.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer found!',
+            'customer' => [
+                'id' => $customer->id,
+                'jina' => $customer->jina,
+                'simu' => $customer->simu,
+                'customer_code' => $customer->customer_code,
+                'registered_from' => $customer->registered_from ?? 'boss',
+                'created_at' => $customer->created_at ? $customer->created_at->format('d/m/Y') : 'N/A',
+            ]
+        ]);
+    }
 }
