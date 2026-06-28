@@ -50,7 +50,7 @@ class UserReportController extends Controller
     }
     
     /**
-     * Clean UTF-8 string to prevent encoding errors
+     * Clean UTF-8 string to prevent encoding errors - More aggressive version
      */
     private function cleanUtf8String($value)
     {
@@ -59,20 +59,30 @@ class UserReportController extends Controller
         }
         
         if (is_string($value)) {
+            // First, try to detect and convert encoding
+            $encoding = mb_detect_encoding($value, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
+            
+            if ($encoding && $encoding !== 'UTF-8') {
+                $value = mb_convert_encoding($value, 'UTF-8', $encoding);
+            }
+            
             // Remove invalid UTF-8 characters
             $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
             
             // Remove control characters except newlines and tabs
             $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $value);
             
-            return $value;
+            // Remove any remaining invalid sequences
+            $value = preg_replace('/[^\x09\x0A\x0D\x20-\x7E\x80-\x{FFFD}]/u', '', $value);
+            
+            return trim($value);
         }
         
         if (is_array($value)) {
             return array_map([$this, 'cleanUtf8String'], $value);
         }
         
-        if (is_object($value)) {
+        if (is_object($value) && !($value instanceof \Illuminate\Support\Collection)) {
             $cleaned = clone $value;
             foreach (get_object_vars($cleaned) as $key => $prop) {
                 $cleaned->$key = $this->cleanUtf8String($prop);
@@ -80,7 +90,33 @@ class UserReportController extends Controller
             return $cleaned;
         }
         
+        if ($value instanceof \Illuminate\Support\Collection) {
+            return $value->map(function($item) {
+                return $this->cleanUtf8String($item);
+            });
+        }
+        
         return $value;
+    }
+    
+    /**
+     * Convert data to safe JSON array
+     */
+    private function toSafeArray($data)
+    {
+        // First clean all data
+        $cleaned = $this->cleanUtf8String($data);
+        
+        // Convert to array if needed
+        if ($cleaned instanceof \Illuminate\Support\Collection) {
+            $cleaned = $cleaned->toArray();
+        } elseif ($cleaned instanceof \Illuminate\Database\Eloquent\Model) {
+            $cleaned = $cleaned->toArray();
+        } elseif (is_object($cleaned)) {
+            $cleaned = (array) $cleaned;
+        }
+        
+        return $cleaned;
     }
     
     // Show report selection page
@@ -120,13 +156,13 @@ class UserReportController extends Controller
             $data['displayFrom'] = $dateRange['start'] ? $dateRange['start']->format('d/m/Y') : null;
             $data['displayTo'] = $dateRange['end'] ? $dateRange['end']->format('d/m/Y') : null;
 
-            // Clean all UTF-8 data before returning
-            $cleanedData = $this->cleanUtf8String($data);
+            // Convert everything to safe array and clean
+            $safeData = $this->toSafeArray($data);
 
             return response()->json([
                 'success' => true,
-                'data' => $cleanedData
-            ]);
+                'data' => $safeData
+            ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
 
         } catch (\Exception $e) {
             \Log::error('Generate report error: ' . $e->getMessage());
@@ -167,7 +203,7 @@ class UserReportController extends Controller
             $data['displayTo'] = $dateRange['end'] ? $dateRange['end']->format('d/m/Y') : null;
 
             // Clean data before passing to PDF
-            $cleanedData = $this->cleanUtf8String($data);
+            $cleanedData = $this->toSafeArray($data);
 
             // Generate PDF
             $pdf = PDF::loadView('user.reports.pdf', $cleanedData);
@@ -227,11 +263,6 @@ class UserReportController extends Controller
             foreach ($sales as $sale) {
                 if (!$sale->bidhaa) continue;
                 
-                // Clean product data
-                $sale->bidhaa->jina = $this->cleanUtf8String($sale->bidhaa->jina);
-                $sale->bidhaa->aina = $this->cleanUtf8String($sale->bidhaa->aina);
-                $sale->bidhaa->kipimo = $this->cleanUtf8String($sale->bidhaa->kipimo);
-                
                 $lipaKwaType = $sale->lipa_kwa_type ?? null;
                 $sale->formatted_payment = $this->formatPaymentMethod($sale->lipa_kwa, $lipaKwaType);
                 $sale->formatted_idadi = $this->formatDecimal($sale->idadi);
@@ -273,7 +304,6 @@ class UserReportController extends Controller
                         break;
                     case 'lipa_namba':
                         $totalMobileSales += $sale->jumla;
-                        // Categorize by specific mobile money type
                         $mobileKey = $paymentType ?? 'other_lipa_namba';
                         if (!in_array($mobileKey, ['mpesa', 'mixx_by_yas', 'airtel_money', 'halopesa'])) {
                             $mobileKey = 'other_lipa_namba';
@@ -283,7 +313,6 @@ class UserReportController extends Controller
                         break;
                     case 'bank':
                         $totalBankSales += $sale->jumla;
-                        // Categorize by specific bank type
                         $bankKey = $paymentType ?? 'other_bank';
                         if (!in_array($bankKey, ['crdb', 'nmb', 'nbc'])) {
                             $bankKey = 'other_bank';
@@ -308,12 +337,6 @@ class UserReportController extends Controller
 
             // Add formatted payment method to repayments
             foreach ($debtRepayments as $repayment) {
-                if ($repayment->madeni && $repayment->madeni->bidhaa) {
-                    $repayment->madeni->bidhaa->jina = $this->cleanUtf8String($repayment->madeni->bidhaa->jina);
-                    $repayment->madeni->bidhaa->aina = $this->cleanUtf8String($repayment->madeni->bidhaa->aina);
-                    $repayment->madeni->bidhaa->kipimo = $this->cleanUtf8String($repayment->madeni->bidhaa->kipimo);
-                }
-                
                 $lipaKwaType = $repayment->lipa_kwa_type ?? null;
                 $repayment->formatted_payment = $this->formatPaymentMethod($repayment->lipa_kwa, $lipaKwaType);
                 $repayment->formatted_idadi = $this->formatDecimal($repayment->madeni->idadi ?? 0);
@@ -382,9 +405,9 @@ class UserReportController extends Controller
                 $allTransactions->push([
                     'type' => 'Mauzo',
                     'date' => $sale->created_at,
-                    'product_name' => $this->cleanUtf8String($sale->bidhaa->jina ?? 'N/A'),
-                    'product_aina' => $this->cleanUtf8String($sale->bidhaa->aina ?? 'N/A'),
-                    'product_kipimo' => $this->cleanUtf8String($sale->bidhaa->kipimo ?? 'N/A'),
+                    'product_name' => $sale->bidhaa->jina ?? 'N/A',
+                    'product_aina' => $sale->bidhaa->aina ?? 'N/A',
+                    'product_kipimo' => $sale->bidhaa->kipimo ?? 'N/A',
                     'idadi' => $sale->formatted_idadi,
                     'payment_method' => $sale->formatted_payment,
                     'amount' => $sale->jumla,
@@ -407,9 +430,9 @@ class UserReportController extends Controller
                 $allTransactions->push([
                     'type' => 'Marejesho ya Deni',
                     'date' => $repayment->tarehe,
-                    'product_name' => $this->cleanUtf8String($productName),
-                    'product_aina' => $this->cleanUtf8String($productAina),
-                    'product_kipimo' => $this->cleanUtf8String($productKipimo),
+                    'product_name' => $productName,
+                    'product_aina' => $productAina,
+                    'product_kipimo' => $productKipimo,
                     'idadi' => $repayment->formatted_idadi,
                     'payment_method' => $repayment->formatted_payment,
                     'amount' => $repayment->kiasi,
@@ -543,12 +566,6 @@ class UserReportController extends Controller
             $processedManunuzi = [];
 
             foreach ($manunuzi as $purchase) {
-                if ($purchase->bidhaa) {
-                    $purchase->bidhaa->jina = $this->cleanUtf8String($purchase->bidhaa->jina);
-                    $purchase->bidhaa->aina = $this->cleanUtf8String($purchase->bidhaa->aina);
-                    $purchase->bidhaa->kipimo = $this->cleanUtf8String($purchase->bidhaa->kipimo);
-                }
-                
                 // Format IDADI to handle decimals properly
                 $purchase->formatted_idadi = $this->formatDecimal($purchase->idadi);
                 $purchase->unit_cost = $purchase->idadi > 0 ? $purchase->bei / $purchase->idadi : 0;
@@ -614,19 +631,12 @@ class UserReportController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            // Clean expense descriptions
-            foreach ($matumizi as $expense) {
-                $expense->maelezo = $this->cleanUtf8String($expense->maelezo);
-                $expense->aina = $this->cleanUtf8String($expense->aina);
-            }
-
             // Calculate totals by category
             $totalsByCategory = [];
             $totalExpenses = 0;
 
             foreach ($matumizi as $expense) {
                 $category = $expense->aina ?: 'Zingine';
-                $category = $this->cleanUtf8String($category);
                 $totalExpenses += $expense->gharama;
                 
                 if (!isset($totalsByCategory[$category])) {
@@ -707,7 +717,6 @@ class UserReportController extends Controller
             $totalBank = 0;
             
             foreach ($salesByMethod as $item) {
-                $item->lipa_kwa = $this->cleanUtf8String($item->lipa_kwa);
                 switch($item->lipa_kwa ?? 'cash') {
                     case 'cash': $totalCash += $item->total; break;
                     case 'lipa_namba': $totalMobile += $item->total; break;
@@ -716,7 +725,6 @@ class UserReportController extends Controller
             }
             
             foreach ($debtsByMethod as $item) {
-                $item->lipa_kwa = $this->cleanUtf8String($item->lipa_kwa);
                 switch($item->lipa_kwa ?? 'cash') {
                     case 'cash': $totalCash += $item->total; break;
                     case 'lipa_namba': $totalMobile += $item->total; break;
@@ -851,7 +859,7 @@ class UserReportController extends Controller
                     $q->whereDate('tarehe', '<=', $dateRange['end']->format('Y-m-d'));
                 })
                 ->with(['madeni.bidhaa'])
-                ->orderBy('tarehe', 'asc') // Process in chronological order
+                ->orderBy('tarehe', 'asc')
                 ->get();
 
             // Track each debt's repayment progress
@@ -863,7 +871,6 @@ class UserReportController extends Controller
                     $debtId = $debt->id;
                     $repaymentAmount = $marejesho->kiasi;
 
-                    // Initialize debt tracking if not exists
                     if (!isset($debtProgress[$debtId])) {
                         $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
                         $quantity = $debt->idadi;
@@ -881,39 +888,29 @@ class UserReportController extends Controller
                     $progress = &$debtProgress[$debtId];
                     $remainingAmount = $repaymentAmount;
 
-                    // Stage 1: Recover cost first
                     if (!$progress['is_cost_recovered']) {
                         $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
 
                         if ($remainingAmount <= $remainingToRecover) {
-                            // All goes to cost recovery
                             $progress['recovered_so_far'] += $remainingAmount;
-                            // No profit from this repayment
                             $remainingAmount = 0;
                         } else {
-                            // Part goes to cost recovery, rest is profit
                             $costPortion = $remainingToRecover;
                             $progress['recovered_so_far'] += $costPortion;
                             $progress['is_cost_recovered'] = true;
-
-                            // Remaining is profit
                             $profitPortion = $remainingAmount - $costPortion;
                             $faidaMarejesho += $profitPortion;
                             $remainingAmount = 0;
                         }
                     }
 
-                    // Stage 2: If cost already recovered, all is profit
                     if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
                         $faidaMarejesho += $remainingAmount;
                     }
                 }
             }
 
-            // Fedha Dukani
             $fedhaDukani = $jumlaMapato - $jumlaMatumizi;
-
-            // Faida Halisi
             $totalProfit = $faidaMauzo + $faidaMarejesho;
             $faidaHalisi = $totalProfit - $jumlaMatumizi;
 
