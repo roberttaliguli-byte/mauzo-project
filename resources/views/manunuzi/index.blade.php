@@ -24,7 +24,7 @@
     })) }}</div>
 
     <!-- Hidden data - all manunuzi for searching -->
-    <div id="all-manunuzi-data" style="display:none;">{{ json_encode($allManunuzi ?? $manunuzi->map(function($m) {
+    <div id="all-manunuzi-data" style="display:none;">{{ json_encode($allManunuzi->map(function($m) {
         return [
             'id' => $m->id,
             'bidhaa_id' => $m->bidhaa_id,
@@ -36,6 +36,8 @@
             'simu' => $m->simu,
             'mengineyo' => $m->mengineyo,
             'created_at' => $m->created_at,
+            'created_at_formatted' => $m->created_at ? $m->created_at->format('d/m/Y') : '',
+            'created_time' => $m->created_at ? $m->created_at->format('H:i') : '',
             'bidhaa' => $m->bidhaa ? [
                 'id' => $m->bidhaa->id,
                 'jina' => $m->bidhaa->jina,
@@ -194,6 +196,8 @@
                                     'simu' => $item->simu,
                                     'mengineyo' => $item->mengineyo,
                                     'created_at' => $item->created_at,
+                                    'created_at_formatted' => $item->created_at ? $item->created_at->format('d/m/Y') : '',
+                                    'created_time' => $item->created_at ? $item->created_at->format('H:i') : '',
                                     'bidhaa' => $item->bidhaa ? [
                                         'id' => $item->bidhaa->id,
                                         'jina' => $item->bidhaa->jina,
@@ -258,22 +262,16 @@
                 </table>
             </div>
             
-            @if(isset($manunuzi) && $manunuzi->hasPages())
             <div class="px-4 py-3 border-t border-gray-200 flex justify-between items-center">
                 <span class="manunuzi-pagination-info text-sm text-gray-600">
                     Inaonyesha <span id="visible-count">{{ $manunuzi->count() }}</span> kati ya <span id="total-count">{{ $manunuzi->total() }}</span> manunuzi
                 </span>
-                <div>
-                    {{ $manunuzi->links() }}
+                <div id="pagination-links">
+                    @if(isset($manunuzi) && $manunuzi->hasPages())
+                        {{ $manunuzi->links() }}
+                    @endif
                 </div>
             </div>
-            @elseif(isset($manunuzi) && $manunuzi->count() > 0)
-            <div class="px-4 py-3 border-t border-gray-200">
-                <span class="manunuzi-pagination-info text-sm text-gray-600">
-                    Inaonyesha <span id="visible-count">{{ $manunuzi->count() }}</span> kati ya <span id="total-count">{{ $manunuzi->count() }}</span> manunuzi
-                </span>
-            </div>
-            @endif
         </div>
     </div>
 
@@ -591,14 +589,18 @@
 #bidhaa-search-results {
     z-index: 1000;
 }
+.search-highlight {
+    background-color: #fef08a;
+    padding: 0 2px;
+    border-radius: 2px;
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
 // ============================================
-// MANUNUZI MANAGER - COMPLETE WORKING VERSION
-// SEARCHES THROUGH ALL MANUNUZI DATA
+// MANUNUZI MANAGER - SEARCHES ALL DATA
 // ============================================
 
 (function() {
@@ -612,8 +614,12 @@
             this.isSubmitting = false;
             this.searchTimeout = null;
             this.allManunuziData = [];
+            this.filteredData = [];
             this.bidhaaData = [];
             this.totalManunuziCount = 0;
+            this.currentSearchTerm = '';
+            this.currentPage = 1;
+            this.perPage = 10;
             
             // Load data
             this.loadData();
@@ -632,24 +638,16 @@
                     this.bidhaaData = [];
                 }
                 
-                // Load ALL manunuzi data from hidden div (for searching)
+                // Load ALL manunuzi data from hidden div
                 const allManunuziElement = document.getElementById('all-manunuzi-data');
                 if (allManunuziElement) {
                     this.allManunuziData = JSON.parse(allManunuziElement.textContent);
                     this.totalManunuziCount = this.allManunuziData.length;
+                    this.filteredData = [...this.allManunuziData];
                 } else {
-                    // Fallback: load from table rows
                     this.allManunuziData = [];
-                    const rows = document.querySelectorAll('.manunuzi-row');
-                    rows.forEach(row => {
-                        try {
-                            const data = JSON.parse(row.dataset.manunuzi);
-                            this.allManunuziData.push(data);
-                        } catch(e) {
-                            // Skip invalid rows
-                        }
-                    });
-                    this.totalManunuziCount = this.allManunuziData.length;
+                    this.filteredData = [];
+                    this.totalManunuziCount = 0;
                 }
                 
                 console.log('Loaded ' + this.allManunuziData.length + ' total manunuzi, ' + this.bidhaaData.length + ' bidhaa');
@@ -657,6 +655,7 @@
                 console.warn('Error loading data:', e);
                 this.bidhaaData = [];
                 this.allManunuziData = [];
+                this.filteredData = [];
                 this.totalManunuziCount = 0;
             }
         }
@@ -748,87 +747,240 @@
         }
 
         // ============================================
-        // SEARCH - SEARCHES THROUGH ALL MANUNUZI DATA
+        // SEARCH - SEARCHES THROUGH ALL DATA
         // ============================================
         setupSearch() {
             const searchInput = document.getElementById('search-input');
             if (!searchInput) return;
 
+            // Initial search from URL parameter
+            const initialSearch = searchInput.value;
+            if (initialSearch) {
+                this.currentSearchTerm = initialSearch.toLowerCase().trim();
+                this.filterAllManunuzi(this.currentSearchTerm);
+            }
+
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(this.searchTimeout);
                 this.searchTimeout = setTimeout(() => {
                     const searchTerm = e.target.value.toLowerCase().trim();
+                    this.currentSearchTerm = searchTerm;
                     this.filterAllManunuzi(searchTerm);
                 }, 300);
             });
         }
 
         filterAllManunuzi(searchTerm) {
-            const tbody = document.getElementById('manunuzi-tbody');
-            if (!tbody) return;
+            // Reset to page 1 when searching
+            this.currentPage = 1;
             
-            // Get all rows
-            const rows = tbody.querySelectorAll('.manunuzi-row');
-            let found = 0;
-            
-            // If no search term, show all rows and update pagination info
             if (!searchTerm) {
-                rows.forEach(row => row.classList.remove('hidden'));
-                this.updateVisibleCount(rows.length, this.totalManunuziCount);
-                return;
+                this.filteredData = [...this.allManunuziData];
+            } else {
+                // Search through ALL data
+                this.filteredData = this.allManunuziData.filter(item => {
+                    const searchText = `
+                        ${item.bidhaa?.jina || ''}
+                        ${item.bidhaa?.aina || ''}
+                        ${item.saplaya || ''}
+                        ${item.simu || ''}
+                        ${item.mengineyo || ''}
+                    `.toLowerCase();
+                    return searchText.includes(searchTerm);
+                });
             }
             
-            // Filter through ALL rows using the data-manunuzi attribute
-            rows.forEach(row => {
-                let manunuzi;
-                try {
-                    manunuzi = JSON.parse(row.dataset.manunuzi);
-                } catch(e) {
-                    row.classList.add('hidden');
-                    return;
-                }
-                
-                // Search in all relevant fields
-                const searchText = `
-                    ${manunuzi.bidhaa?.jina || ''}
-                    ${manunuzi.bidhaa?.aina || ''}
-                    ${manunuzi.saplaya || ''}
-                    ${manunuzi.simu || ''}
-                    ${manunuzi.mengineyo || ''}
-                `.toLowerCase();
-                
-                if (searchText.includes(searchTerm)) {
-                    row.classList.remove('hidden');
-                    found++;
-                } else {
-                    row.classList.add('hidden');
-                }
-            });
+            // Update the table with filtered data
+            this.renderTable();
             
-            // Update visible count
-            this.updateVisibleCount(found, this.totalManunuziCount);
+            // Update pagination info
+            this.updatePaginationInfo();
             
             // Show notification if no results
-            if (found === 0) {
+            if (this.filteredData.length === 0 && searchTerm) {
                 this.showNotification('Hakuna manunuzi zinazolingana na "' + searchTerm + '"', 'info');
             }
         }
 
-        updateVisibleCount(visible, total) {
+        renderTable() {
+            const tbody = document.getElementById('manunuzi-tbody');
+            if (!tbody) return;
+            
+            // Calculate pagination
+            const start = (this.currentPage - 1) * this.perPage;
+            const end = start + this.perPage;
+            const pageData = this.filteredData.slice(start, end);
+            
+            if (pageData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            <i class="fas fa-shopping-cart text-3xl mb-2 text-gray-300"></i>
+                            <p>Hakuna manunuzi yanayolingana</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            pageData.forEach(item => {
+                const formattedIdadi = parseFloat(item.idadi || 0);
+                const displayIdadi = formattedIdadi % 1 === 0 ? Math.floor(formattedIdadi) : formattedIdadi.toFixed(2);
+                
+                html += `
+                    <tr class="manunuzi-row hover:bg-gray-50" data-manunuzi='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
+                        <td class="px-4 py-2">
+                            <div class="text-xs text-gray-900">${item.created_at_formatted || ''}</div>
+                            <div class="text-xs text-gray-500">${item.created_time || ''}</div>
+                        </td>
+                        <td class="px-4 py-2 hidden sm:table-cell">
+                            <div class="font-medium text-gray-900 text-sm">${this.highlightText(item.bidhaa?.jina || '--', this.currentSearchTerm)}</div>
+                            <div class="text-xs text-gray-500">${this.highlightText(item.bidhaa?.aina || '--', this.currentSearchTerm)}</div>
+                            ${item.bidhaa?.kipimo ? `<div class="text-xs text-gray-400">${item.bidhaa.kipimo}</div>` : ''}
+                        </td>
+                        <td class="px-4 py-2 text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                                ${displayIdadi}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2 text-right">
+                            <div class="text-sm font-bold text-emerald-700">${parseFloat(item.bei || 0).toFixed(2)}</div>
+                            <div class="text-xs text-gray-500">@ ${parseFloat(item.unit_cost || 0).toFixed(2)}</div>
+                        </td>
+                        <td class="px-4 py-2 text-right">
+                            <div class="text-sm font-bold text-green-700">${parseFloat(item.bidhaa?.bei_kuuza || 0).toFixed(2)}</div>
+                        </td>
+                        <td class="px-4 py-2 hidden lg:table-cell">
+                            <div class="text-xs text-gray-700">${this.highlightText(item.saplaya || '--', this.currentSearchTerm)}</div>
+                            ${item.simu ? `<div class="text-xs text-gray-400">${this.highlightText(item.simu, this.currentSearchTerm)}</div>` : ''}
+                        </td>
+                        <td class="px-4 py-2 text-center print:hidden">
+                            <div class="flex justify-center space-x-2">
+                                <button class="edit-manunuzi-btn text-emerald-600 hover:text-emerald-800"
+                                        data-id="${item.id}" title="Badili">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-manunuzi-btn text-red-600 hover:text-red-800"
+                                        data-id="${item.id}" data-name="${item.bidhaa?.jina || 'Bidhaa'}" title="Futa">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            
+            // Re-bind action buttons
+            this.setupActionButtons();
+        }
+
+        highlightText(text, searchTerm) {
+            if (!text || !searchTerm || searchTerm.length < 2) return text;
+            const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+            return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        updatePaginationInfo() {
+            const visibleCount = this.filteredData.length;
+            const totalCount = this.allManunuziData.length;
+            
             const visibleCountSpan = document.getElementById('visible-count');
             const totalCountSpan = document.getElementById('total-count');
-            
-            if (visibleCountSpan) {
-                visibleCountSpan.textContent = visible;
-            }
-            if (totalCountSpan) {
-                totalCountSpan.textContent = total || this.totalManunuziCount;
-            }
-            
-            // Update pagination info text
             const paginationInfo = document.querySelector('.manunuzi-pagination-info');
+            
+            if (visibleCountSpan) visibleCountSpan.textContent = visibleCount;
+            if (totalCountSpan) totalCountSpan.textContent = totalCount;
+            
             if (paginationInfo) {
-                paginationInfo.textContent = `Inaonyesha ${visible} kati ya ${total || this.totalManunuziCount} manunuzi`;
+                paginationInfo.textContent = `Inaonyesha ${visibleCount} kati ya ${totalCount} manunuzi`;
+            }
+            
+            // Update pagination links
+            this.updatePaginationLinks();
+        }
+
+        updatePaginationLinks() {
+            const paginationContainer = document.getElementById('pagination-links');
+            if (!paginationContainer) return;
+            
+            const totalPages = Math.ceil(this.filteredData.length / this.perPage);
+            
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+            
+            let html = '<nav class="flex items-center space-x-1">';
+            
+            // Previous button
+            html += `
+                <button onclick="window.manunuziManager.goToPage(${this.currentPage - 1})" 
+                        class="px-3 py-1 rounded text-sm ${this.currentPage <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}"
+                        ${this.currentPage <= 1 ? 'disabled' : ''}>
+                    &laquo;
+                </button>
+            `;
+            
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            if (startPage > 1) {
+                html += `<button onclick="window.manunuziManager.goToPage(1)" class="px-3 py-1 rounded text-sm text-gray-700 hover:bg-gray-100">1</button>`;
+                if (startPage > 2) {
+                    html += `<span class="px-2 text-gray-400">...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <button onclick="window.manunuziManager.goToPage(${i})" 
+                            class="px-3 py-1 rounded text-sm ${i === this.currentPage ? 'bg-emerald-600 text-white' : 'text-gray-700 hover:bg-gray-100'}">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<span class="px-2 text-gray-400">...</span>`;
+                }
+                html += `<button onclick="window.manunuziManager.goToPage(${totalPages})" class="px-3 py-1 rounded text-sm text-gray-700 hover:bg-gray-100">${totalPages}</button>`;
+            }
+            
+            // Next button
+            html += `
+                <button onclick="window.manunuziManager.goToPage(${this.currentPage + 1})" 
+                        class="px-3 py-1 rounded text-sm ${this.currentPage >= totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}"
+                        ${this.currentPage >= totalPages ? 'disabled' : ''}>
+                    &raquo;
+                </button>
+            `;
+            
+            html += '</nav>';
+            paginationContainer.innerHTML = html;
+        }
+
+        goToPage(page) {
+            const totalPages = Math.ceil(this.filteredData.length / this.perPage);
+            if (page < 1 || page > totalPages) return;
+            
+            this.currentPage = page;
+            this.renderTable();
+            this.updatePaginationLinks();
+            
+            // Scroll to top of table
+            const tableContainer = document.querySelector('.bg-white.rounded-lg.border.border-gray-200.shadow-sm.overflow-hidden');
+            if (tableContainer) {
+                tableContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
 
@@ -1020,8 +1172,12 @@
         // ============================================
         setupActionButtons() {
             document.querySelectorAll('.edit-manunuzi-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const row = button.closest('.manunuzi-row');
+                // Remove existing listeners
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                newButton.addEventListener('click', (e) => {
+                    const row = newButton.closest('.manunuzi-row');
                     if (!row) return;
                     
                     let manunuzi;
@@ -1037,9 +1193,12 @@
             });
 
             document.querySelectorAll('.delete-manunuzi-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const manunuziId = button.dataset.id;
-                    const productName = button.dataset.name || 'Bidhaa';
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                newButton.addEventListener('click', (e) => {
+                    const manunuziId = newButton.dataset.id;
+                    const productName = newButton.dataset.name || 'Bidhaa';
                     this.deleteManunuzi(manunuziId, productName);
                 });
             });
@@ -1152,36 +1311,38 @@
             const end = new Date(endDate);
             end.setHours(23, 59, 59, 999);
             
-            const rows = document.querySelectorAll('.manunuzi-row');
-            let visibleCount = 0;
-            
-            rows.forEach(row => {
-                let manunuzi;
-                try {
-                    manunuzi = JSON.parse(row.dataset.manunuzi);
-                } catch(e) {
-                    return;
-                }
-                
-                const rowDate = new Date(manunuzi.created_at);
-                
-                if (rowDate >= start && rowDate <= end) {
-                    row.classList.remove('hidden');
-                    visibleCount++;
-                } else {
-                    row.classList.add('hidden');
-                }
+            // Filter the ALL data
+            this.filteredData = this.allManunuziData.filter(item => {
+                const itemDate = new Date(item.created_at);
+                return itemDate >= start && itemDate <= end;
             });
+            
+            // Also apply search if there is a search term
+            if (this.currentSearchTerm) {
+                this.filteredData = this.filteredData.filter(item => {
+                    const searchText = `
+                        ${item.bidhaa?.jina || ''}
+                        ${item.bidhaa?.aina || ''}
+                        ${item.saplaya || ''}
+                        ${item.simu || ''}
+                        ${item.mengineyo || ''}
+                    `.toLowerCase();
+                    return searchText.includes(this.currentSearchTerm);
+                });
+            }
+            
+            this.currentPage = 1;
+            this.renderTable();
+            this.updatePaginationInfo();
             
             const dateRangeInfo = document.getElementById('date-range-info');
             const dateRangeText = document.getElementById('date-range-text');
             
-            if (visibleCount > 0) {
+            if (this.filteredData.length > 0) {
                 if (dateRangeInfo) dateRangeInfo.classList.remove('hidden');
                 if (dateRangeText) {
-                    dateRangeText.textContent = `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()} (${visibleCount} manunuzi)`;
+                    dateRangeText.textContent = `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()} (${this.filteredData.length} manunuzi)`;
                 }
-                this.updateVisibleCount(visibleCount, this.totalManunuziCount);
             } else {
                 if (dateRangeInfo) dateRangeInfo.classList.add('hidden');
                 this.showNotification('Hakuna manunuzi katika kipindi hiki', 'info');
@@ -1189,11 +1350,28 @@
         }
 
         clearDateFilter() {
-            const rows = document.querySelectorAll('.manunuzi-row');
-            rows.forEach(row => row.classList.remove('hidden'));
+            // Reset to all data with current search
+            this.filteredData = [...this.allManunuziData];
+            
+            if (this.currentSearchTerm) {
+                this.filteredData = this.filteredData.filter(item => {
+                    const searchText = `
+                        ${item.bidhaa?.jina || ''}
+                        ${item.bidhaa?.aina || ''}
+                        ${item.saplaya || ''}
+                        ${item.simu || ''}
+                        ${item.mengineyo || ''}
+                    `.toLowerCase();
+                    return searchText.includes(this.currentSearchTerm);
+                });
+            }
+            
+            this.currentPage = 1;
+            this.renderTable();
+            this.updatePaginationInfo();
+            
             document.getElementById('date-range-info')?.classList.add('hidden');
             this.setDefaultDates();
-            this.updateVisibleCount(rows.length, this.totalManunuziCount);
         }
 
         // ============================================
@@ -1307,29 +1485,25 @@
         // PRINT & EXPORT
         // ============================================
         printManunuzi() {
-            const rows = document.querySelectorAll('.manunuzi-row:not(.hidden)');
+            // Use filtered data for printing
+            const dataToPrint = this.filteredData;
             
-            if (rows.length === 0) {
+            if (dataToPrint.length === 0) {
                 this.showNotification('Hakuna manunuzi ya kuchapisha', 'warning');
                 return;
             }
             
             let tableRows = '';
-            rows.forEach(row => {
-                let manunuzi;
-                try {
-                    manunuzi = JSON.parse(row.dataset.manunuzi);
-                } catch(e) { return; }
-                
-                const formattedIdadi = parseFloat(manunuzi.idadi || 0).toFixed(2);
+            dataToPrint.forEach(item => {
+                const formattedIdadi = parseFloat(item.idadi || 0).toFixed(2);
                 tableRows += `
                     <tr>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${manunuzi.created_at ? new Date(manunuzi.created_at).toLocaleDateString() : ''}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${this.escapeHtml(manunuzi.bidhaa?.jina || '')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${item.created_at_formatted || ''}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${this.escapeHtml(item.bidhaa?.jina || '')}</td>
                         <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${formattedIdadi}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(manunuzi.bei || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(manunuzi.bidhaa?.bei_kuuza || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td style="border: 1px solid #ddd; padding: 8px;">${this.escapeHtml(manunuzi.saplaya || '--')}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(item.bei || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${parseFloat(item.bidhaa?.bei_kuuza || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${this.escapeHtml(item.saplaya || '--')}</td>
                     </tr>`;
             });
             
@@ -1347,12 +1521,15 @@
                         .header { text-align: center; margin-bottom: 30px; }
                         .header h2 { margin: 0; color: #047857; }
                         .header p { margin: 5px 0 0 0; color: #6b7280; }
+                        .search-info { text-align: center; color: #6b7280; font-size: 14px; margin-top: 10px; }
+                        .total-info { text-align: right; margin-top: 20px; font-weight: bold; }
                     </style>
                 </head>
                 <body>
                     <div class="header">
                         <h2>Orodha ya Manunuzi</h2>
                         <p>${new Date().toLocaleDateString()}</p>
+                        ${this.currentSearchTerm ? `<p class="search-info">Matokeo ya utafutaji: "${this.currentSearchTerm}"</p>` : ''}
                     </div>
                     <table>
                         <thead>
@@ -1369,6 +1546,10 @@
                             ${tableRows}
                         </tbody>
                     </table>
+                    <div class="total-info">
+                        Jumla ya Manunuzi: ${dataToPrint.length} | 
+                        Jumla ya Gharama: ${dataToPrint.reduce((sum, item) => sum + parseFloat(item.bei || 0), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </div>
                 </body>
                 </html>
             `);
