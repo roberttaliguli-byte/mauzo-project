@@ -6,7 +6,7 @@
 @section('page-subtitle', now()->format('d/m/Y'))
 
 @section('content')
-<div class="space-y-4" id="app-container">
+<div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}">
     <!-- Hidden data - bidhaa without images -->
     <div id="bidhaa-data" style="display:none;">{{ json_encode($bidhaa->map(function($b) {
         return [
@@ -126,10 +126,14 @@
                         type="text" 
                         id="search-input"
                         placeholder="Tafuta bidhaa, saplaya, simu..." 
-                        class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         value="{{ request()->search }}"
+                        autocomplete="off"
                     >
                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <button id="clear-search" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
                 <div class="flex gap-2">
                     <button onclick="window.manunuziManager?.printManunuzi()" class="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
@@ -166,6 +170,14 @@
                     </span>
                 </div>
             </div>
+        </div>
+
+        <!-- Search Status -->
+        <div id="search-status" class="text-center text-sm text-gray-600 hidden">
+            <p id="search-result-count"></p>
+            <button onclick="clearManunuziSearch()" class="mt-1 text-xs text-emerald-600 hover:text-emerald-800">
+                <i class="fas fa-times mr-1"></i> Ondoa utafutaji
+            </button>
         </div>
 
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
@@ -594,13 +606,84 @@
     padding: 0 2px;
     border-radius: 2px;
 }
+#search-input {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    background-color: white !important;
+    color: black !important;
+    border: 1px solid #d1d5db !important;
+    z-index: 10 !important;
+}
+#search-input:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 1px #10b981 !important;
+    outline: none !important;
+}
+/* Pagination styling */
+#pagination-links nav {
+    display: inline-flex;
+}
+#pagination-links .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+}
+#pagination-links .page-item {
+    display: inline-block;
+    margin: 0;
+}
+#pagination-links .page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5563;
+    background-color: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+#pagination-links .page-link:hover {
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+    color: #1f2937;
+}
+#pagination-links .active .page-link {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+#pagination-links .disabled .page-link {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+@media (max-width: 640px) {
+    #pagination-links .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    #pagination-links .page-link {
+        min-width: 28px;
+        height: 28px;
+        font-size: 11px;
+        padding: 0 6px;
+    }
+}
 </style>
 @endpush
 
 @push('scripts')
 <script>
 // ============================================
-// MANUNUZI MANAGER - SEARCHES ALL DATA
+// MANUNUZI MANAGER - SEARCHES ALL DATA LIKE BIDHAA
 // ============================================
 
 (function() {
@@ -620,6 +703,7 @@
             this.currentSearchTerm = '';
             this.currentPage = 1;
             this.perPage = 10;
+            this.isSearchActive = false;
             
             // Load data
             this.loadData();
@@ -747,10 +831,12 @@
         }
 
         // ============================================
-        // SEARCH - SEARCHES THROUGH ALL DATA
+        // SEARCH - SEARCHES THROUGH ALL DATA (LIKE BIDHAA)
         // ============================================
         setupSearch() {
             const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clear-search');
+            
             if (!searchInput) return;
 
             // Initial search from URL parameter
@@ -758,16 +844,67 @@
             if (initialSearch) {
                 this.currentSearchTerm = initialSearch.toLowerCase().trim();
                 this.filterAllManunuzi(this.currentSearchTerm);
+                if (clearSearchBtn) {
+                    clearSearchBtn.classList.remove('hidden');
+                }
             }
 
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(this.searchTimeout);
+                const searchTerm = e.target.value.trim();
+                this.currentSearchTerm = searchTerm;
+                
+                if (clearSearchBtn) {
+                    clearSearchBtn.classList.toggle('hidden', !searchTerm);
+                }
+                
                 this.searchTimeout = setTimeout(() => {
-                    const searchTerm = e.target.value.toLowerCase().trim();
-                    this.currentSearchTerm = searchTerm;
-                    this.filterAllManunuzi(searchTerm);
-                }, 300);
+                    if (searchTerm.length >= 2) {
+                        this.isSearchActive = true;
+                        this.filterAllManunuzi(searchTerm.toLowerCase());
+                    } else if (searchTerm.length === 0) {
+                        this.isSearchActive = false;
+                        this.clearSearch();
+                    }
+                }, 400);
             });
+            
+            // Clear search button
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', () => {
+                    this.clearSearch();
+                });
+            }
+        }
+
+        clearSearch() {
+            const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clear-search');
+            const searchStatus = document.getElementById('search-status');
+            
+            if (searchInput) {
+                searchInput.value = '';
+                this.currentSearchTerm = '';
+            }
+            if (clearSearchBtn) {
+                clearSearchBtn.classList.add('hidden');
+            }
+            
+            this.isSearchActive = false;
+            this.filteredData = [...this.allManunuziData];
+            this.currentPage = 1;
+            this.renderTable();
+            this.updatePaginationInfo();
+            
+            if (searchStatus) {
+                searchStatus.classList.add('hidden');
+            }
+            
+            // Show pagination
+            const pagination = document.getElementById('pagination-links');
+            if (pagination && this.allManunuziData.length > this.perPage) {
+                pagination.style.display = 'block';
+            }
         }
 
         filterAllManunuzi(searchTerm) {
@@ -795,6 +932,9 @@
             
             // Update pagination info
             this.updatePaginationInfo();
+            
+            // Update search status
+            this.updateSearchStatus();
             
             // Show notification if no results
             if (this.filteredData.length === 0 && searchTerm) {
@@ -881,6 +1021,31 @@
             if (!text || !searchTerm || searchTerm.length < 2) return text;
             const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
             return text.replace(regex, '<span class="search-highlight">$1</span>');
+        }
+
+        updateSearchStatus() {
+            const searchStatus = document.getElementById('search-status');
+            const searchResultCount = document.getElementById('search-result-count');
+            
+            if (!searchStatus || !searchResultCount) return;
+            
+            if (this.isSearchActive && this.currentSearchTerm) {
+                searchStatus.classList.remove('hidden');
+                const total = this.filteredData.length;
+                const all = this.allManunuziData.length;
+                searchResultCount.innerHTML = `
+                    <div class="bg-emerald-50 p-2 rounded">
+                        <span class="font-bold text-emerald-700">${total}</span> 
+                        <span class="text-gray-600">manunuzi zinaonyeshwa kati ya ${all}</span>
+                        <button onclick="window.manunuziManager.clearSearch()" 
+                                class="ml-2 text-xs bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700">
+                            <i class="fas fa-times mr-1"></i> Ondoa
+                        </button>
+                    </div>
+                `;
+            } else {
+                searchStatus.classList.add('hidden');
+            }
         }
 
         updatePaginationInfo() {
@@ -1334,6 +1499,7 @@
             this.currentPage = 1;
             this.renderTable();
             this.updatePaginationInfo();
+            this.updateSearchStatus();
             
             const dateRangeInfo = document.getElementById('date-range-info');
             const dateRangeText = document.getElementById('date-range-text');
@@ -1369,6 +1535,7 @@
             this.currentPage = 1;
             this.renderTable();
             this.updatePaginationInfo();
+            this.updateSearchStatus();
             
             document.getElementById('date-range-info')?.classList.add('hidden');
             this.setDefaultDates();
@@ -1614,6 +1781,13 @@
         console.log('DOM loaded, initializing ManunuziManager...');
         window.manunuziManager = new ManunuziManager();
     });
+
+    // Global function for clear search (called from HTML)
+    function clearManunuziSearch() {
+        if (window.manunuziManager) {
+            window.manunuziManager.clearSearch();
+        }
+    }
 
 })();
 </script>

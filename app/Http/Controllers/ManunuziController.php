@@ -38,27 +38,23 @@ class ManunuziController extends Controller
         return $user->company_id;
     }
     
-/**
- * Show list of manunuzi and form data (company specific).
- */
 public function index(Request $request)
 {
     $companyId = $this->getCompanyId();
 
-    $perPage = $request->input('per_page', 10);
-
-    // Get ALL manunuzi for this company (for search functionality and reports)
+    // Get ALL manunuzi for this company (for search functionality)
     $allManunuzi = Manunuzi::with('bidhaa')
         ->where('company_id', $companyId)
         ->orderBy('created_at', 'desc')
         ->get();
 
-    // Query for paginated results
+    $perPage = $request->input('per_page', 10);
+
     $query = Manunuzi::with('bidhaa')
         ->where('company_id', $companyId)
         ->orderBy('created_at', 'desc');
 
-    // Search functionality (also applied to paginated results)
+    // Search functionality
     if ($request->has('search') && !empty($request->search)) {
         $search = $request->search;
         $query->where(function($q) use ($search) {
@@ -102,24 +98,16 @@ public function index(Request $request)
         ->whereDate('created_at', today())
         ->sum('bei');
 
-    // PDF Export - use all data
+    // PDF Export
     if ($request->has('export') && $request->export === 'pdf') {
         $data = [
             'manunuzi' => $allManunuzi,
             'title' => 'Orodha ya Manunuzi',
             'date' => now()->format('d/m/Y'),
-            'company_name' => Auth::user()->company_name ?? 'Company',
         ];
         
         $pdf = Pdf::loadView('manunuzi.pdf', $data);
         return $pdf->download('orodha-ya-manunuzi-' . date('Y-m-d') . '.pdf');
-    }
-
-    // Excel Export - use all data
-    if ($request->has('export') && $request->export === 'excel') {
-        // You can implement Excel export here if you have Maatwebsite\Excel
-        // For now, we'll redirect back with a message
-        return back()->with('info', 'Export ya Excel inakuja hivi karibuni');
     }
 
     // Return view with all data
@@ -130,7 +118,7 @@ public function index(Request $request)
         'totalItemsPurchased', 
         'totalCost', 
         'todayCost',
-        'allManunuzi'
+        'allManunuzi' // Pass all data for search
     ));
 }
 
