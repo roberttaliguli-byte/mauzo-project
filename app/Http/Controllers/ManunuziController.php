@@ -38,75 +38,101 @@ class ManunuziController extends Controller
         return $user->company_id;
     }
     
-    /**
-     * Show list of manunuzi and form data (company specific).
-     */
-    public function index(Request $request)
-    {
-        $companyId = $this->getCompanyId();
+/**
+ * Show list of manunuzi and form data (company specific).
+ */
+public function index(Request $request)
+{
+    $companyId = $this->getCompanyId();
 
-        $perPage = $request->input('per_page', 10);
+    $perPage = $request->input('per_page', 10);
 
-        // Only show manunuzi for this company
-        $query = Manunuzi::with('bidhaa')
-            ->where('company_id', $companyId)
-            ->orderBy('created_at', 'desc');
+    // Get ALL manunuzi for this company (for search functionality and reports)
+    $allManunuzi = Manunuzi::with('bidhaa')
+        ->where('company_id', $companyId)
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        // Search functionality
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->whereHas('bidhaa', function($q) use ($search) {
-                $q->where('jina', 'LIKE', "%{$search}%")
-                  ->orWhere('aina', 'LIKE', "%{$search}%");
-            })->orWhere('saplaya', 'LIKE', "%{$search}%")
-              ->orWhere('simu', 'LIKE', "%{$search}%");
-        }
+    // Query for paginated results
+    $query = Manunuzi::with('bidhaa')
+        ->where('company_id', $companyId)
+        ->orderBy('created_at', 'desc');
 
-        $manunuzi = $query->paginate($perPage)
-                         ->appends($request->except('page'));
-
-        // Show only products belonging to this company
-        $bidhaa = Bidhaa::where('company_id', $companyId)->get();
-
-        // Get statistics
-        $todayPurchases = Manunuzi::where('company_id', $companyId)
-            ->whereDate('created_at', today())
-            ->count();
-        
-        $totalItemsPurchased = Manunuzi::where('company_id', $companyId)
-            ->sum('idadi');
-        
-        $totalCost = Manunuzi::where('company_id', $companyId)
-            ->sum('bei');
-        
-        $todayCost = Manunuzi::where('company_id', $companyId)
-            ->whereDate('created_at', today())
-            ->sum('bei');
-
-        // PDF Export
-        if ($request->has('export') && $request->export === 'pdf') {
-            $data = [
-                'manunuzi' => Manunuzi::with('bidhaa')
-                    ->where('company_id', $companyId)
-                    ->orderBy('created_at', 'desc')
-                    ->get(),
-                'title' => 'Orodha ya Manunuzi',
-                'date' => now()->format('d/m/Y'),
-            ];
-            
-            $pdf = Pdf::loadView('manunuzi.pdf', $data);
-            return $pdf->download('orodha-ya-manunuzi-' . date('Y-m-d') . '.pdf');
-        }
-
-        return view('manunuzi.index', compact(
-            'manunuzi', 
-            'bidhaa', 
-            'todayPurchases', 
-            'totalItemsPurchased', 
-            'totalCost', 
-            'todayCost'
-        ));
+    // Search functionality (also applied to paginated results)
+    if ($request->has('search') && !empty($request->search)) {
+        $search = $request->search;
+        $query->where(function($q) use ($search) {
+            $q->whereHas('bidhaa', function($subQ) use ($search) {
+                $subQ->where('jina', 'LIKE', "%{$search}%")
+                     ->orWhere('aina', 'LIKE', "%{$search}%");
+            })
+            ->orWhere('saplaya', 'LIKE', "%{$search}%")
+            ->orWhere('simu', 'LIKE', "%{$search}%")
+            ->orWhere('mengineyo', 'LIKE', "%{$search}%");
+        });
     }
+
+    // Date range filter
+    if ($request->has('start_date') && $request->has('end_date') && 
+        !empty($request->start_date) && !empty($request->end_date)) {
+        $query->whereBetween('created_at', [
+            $request->start_date . ' 00:00:00',
+            $request->end_date . ' 23:59:59'
+        ]);
+    }
+
+    $manunuzi = $query->paginate($perPage)
+                     ->appends($request->except('page'));
+
+    // Show only products belonging to this company
+    $bidhaa = Bidhaa::where('company_id', $companyId)->get();
+
+    // Get statistics
+    $todayPurchases = Manunuzi::where('company_id', $companyId)
+        ->whereDate('created_at', today())
+        ->count();
+    
+    $totalItemsPurchased = Manunuzi::where('company_id', $companyId)
+        ->sum('idadi');
+    
+    $totalCost = Manunuzi::where('company_id', $companyId)
+        ->sum('bei');
+    
+    $todayCost = Manunuzi::where('company_id', $companyId)
+        ->whereDate('created_at', today())
+        ->sum('bei');
+
+    // PDF Export - use all data
+    if ($request->has('export') && $request->export === 'pdf') {
+        $data = [
+            'manunuzi' => $allManunuzi,
+            'title' => 'Orodha ya Manunuzi',
+            'date' => now()->format('d/m/Y'),
+            'company_name' => Auth::user()->company_name ?? 'Company',
+        ];
+        
+        $pdf = Pdf::loadView('manunuzi.pdf', $data);
+        return $pdf->download('orodha-ya-manunuzi-' . date('Y-m-d') . '.pdf');
+    }
+
+    // Excel Export - use all data
+    if ($request->has('export') && $request->export === 'excel') {
+        // You can implement Excel export here if you have Maatwebsite\Excel
+        // For now, we'll redirect back with a message
+        return back()->with('info', 'Export ya Excel inakuja hivi karibuni');
+    }
+
+    // Return view with all data
+    return view('manunuzi.index', compact(
+        'manunuzi', 
+        'bidhaa', 
+        'todayPurchases', 
+        'totalItemsPurchased', 
+        'totalCost', 
+        'todayCost',
+        'allManunuzi'
+    ));
+}
 
     /**
      * Store a new manunuzi and update stock and purchase price (company specific).
