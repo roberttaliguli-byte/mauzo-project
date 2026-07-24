@@ -32,15 +32,18 @@ use App\Http\Controllers\MengineyoController;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\PublicShowcaseController;
 use App\Http\Controllers\UzalishajiController;
-
+use App\Http\Middleware\RegistrationSecurity;
 
 // =========================
 // Public routes
 // =========================
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'registerPost'])->name('register.post');
+Route::middleware([RegistrationSecurity::class])->group(function () {
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'registerPost'])->name('register.post');
+});
+
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login')->middleware('guest');
 Route::post('/login', [AuthController::class, 'loginPost'])->name('login.post');

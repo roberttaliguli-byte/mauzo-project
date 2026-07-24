@@ -21,6 +21,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Cache\RateLimiter;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -104,34 +106,139 @@ class AuthController extends Controller
             }
         }
 
-        return view('auth.register', compact('regions', 'businessTypes', 'hearAboutUsOptions', 'currentStep'));
+        // Generate CSRF token for the form
+        $csrfToken = csrf_token();
+
+        return view('auth.register', compact('regions', 'businessTypes', 'hearAboutUsOptions', 'currentStep', 'csrfToken'));
     }
 
     /**
-     * Handle company + user registration
+     * Handle company + user registration with enhanced security
+     * Removed time-based restrictions - only shows validation errors
      */
     public function registerPost(Request $request)
     {
+        // 1. Honeypot check - Hidden field that bots fill but humans don't see
+        if (!empty($request->input('website'))) {
+            \Log::warning('Bot detected via honeypot', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            // Return success to confuse bot but don't create account
+            return redirect()->route('login')
+                ->with('success', 'Usajili umekamilika! Tafadhali angalia barua pepe yako.');
+        }
+        
+        // 2. Enhanced validation with stricter rules - Shows specific errors
         $validated = $request->validate([
             // Step 1
-            'company_name' => 'required|string|max:255',
-            'owner_name'   => 'required|string|max:255',
+            'company_name' => 'required|string|max:255|min:2',
+            'owner_name'   => 'required|string|max:255|min:2|regex:/^[a-zA-Z\s\.\-]+$/',
             // Step 2
-            'location'     => 'required|string|max:255',
-            'region'       => 'required|string|max:255',
-            'phone'        => 'required|string|max:50',
-            'company_email' => 'required|email|max:255|unique:users,email',
+            'location'     => 'required|string|max:255|min:2',
+            'region'       => 'required|string|max:255|in:Arusha,Dar es Salaam,Dodoma,Geita,Iringa,Kagera,Katavi,Kigoma,Kilimanjaro,Lindi,Manyara,Mara,Mwanza,Mbeya,Morogoro,Mtwara,Njombe,Pwani,Ruvuma,Rukwa,Shinyanga,simiyu,Singida,Tabora,Tanga,Zanzibar North,Zanzibar South,Zanzibar Urban/West',
+            'phone'        => [
+                'required',
+                'string',
+                'max:50',
+                'regex:/^0[0-9]{9}$/',
+                function ($attribute, $value, $fail) {
+                    // Block obviously fake numbers
+                    if (preg_match('/(.)\1{8,}/', $value)) {
+                        $fail('Nambari ya simu sio sahihi.');
+                    }
+                    // Check for common fake patterns
+                    $fakePatterns = ['123456789', '000000000', '111111111', '222222222'];
+                    $cleanNumber = preg_replace('/[^0-9]/', '', $value);
+                    foreach ($fakePatterns as $pattern) {
+                        if (strpos($cleanNumber, $pattern) !== false) {
+                            $fail('Nambari ya simu sio sahihi.');
+                            return;
+                        }
+                    }
+                }
+            ],
+            'company_email' => [
+                'required',
+                'email',
+                'max:255',
+                'unique:users,email',
+                function ($attribute, $value, $fail) {
+                    // Block disposable email domains
+                    $domain = substr(strrchr($value, "@"), 1);
+                    $disposableDomains = [
+                        'mailinator.com', 'guerrillamail.com', '10minutemail.com',
+                        'temp-mail.org', 'yopmail.com', 'throwawaymail.com',
+                        'fakeinbox.com', 'emailondeck.com', 'e4ward.com',
+                        'mailnator.com', 'trashmail.com', 'spambog.com',
+                        'spamgourmet.com', 'spamspam.com', 'spamhere.com',
+                        'spamherelots.com', 'spamhereplease.com', 'spamhole.com',
+                        'spamify.com', 'spam.la', 'spammotel.com', 'spamspot.com',
+                        'spamtrail.com', 'spamfree24.com', 'spamfree24.org',
+                        'spamfree24.net', 'spamfree24.info', 'spamfree24.de',
+                        'spamfree24.eu', 'spamfree24.pl', 'spamfree24.xyz'
+                    ];
+                    
+                    if (in_array($domain, $disposableDomains)) {
+                        $fail('Tafadhali tumia barua pepe halisi, si za muda.');
+                    }
+                    
+                    // Check if domain has valid MX records
+                    if (!checkdnsrr($domain, 'MX')) {
+                        $fail('Barua pepe haijathibitishwa. Tafadhali tumia barua pepe halisi.');
+                    }
+                }
+            ],
             'business_type' => 'required|string|max:100',
             'hear_about_us' => 'required|string|max:100',
             // Step 3
-            'username'     => 'required|string|max:50|unique:users,username',
-            'password'     => 'required|string|min:6|confirmed',
+            'username'     => 'required|string|max:50|min:3|unique:users,username|regex:/^[a-zA-Z0-9_]+$/',
+            'password'     => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!]).+$/',
         ], [
             'company_email.unique' => 'Barua pepe hii tayari imesajiliwa.',
             'username.unique' => 'Jina la mtumiaji tayari limetumika.',
             'business_type.required' => 'Tafadhali chagua aina ya biashara.',
             'hear_about_us.required' => 'Tafadhali chagua umetusikia wapi.',
+            'owner_name.regex' => 'Jina linapaswa kuwa na herufi tu.',
+            'username.regex' => 'Jina la mtumiaji linapaswa kuwa na herufi, namba au underscore tu.',
+            'phone.regex' => 'Nambari ya simu inapaswa kuwa tarakimu 10 kuanzia 0 (Mfano: 0712345678).',
+            'password.regex' => 'Neno la siri linapaswa kuwa na angalau herufi kubwa, herufi ndogo, namba na alama maalum (@,#,$,etc).',
+            'password.min' => 'Neno la siri linapaswa kuwa na angalau herufi 8.',
+            'password.confirmed' => 'Nenosiri halilingani.',
         ]);
+
+        // 3. Check for suspicious input patterns
+        if ($this->isSuspiciousInput($validated['owner_name'])) {
+            \Log::warning('Suspicious name detected in registration', [
+                'ip' => $request->ip(),
+                'name' => $validated['owner_name'],
+                'username' => $validated['username']
+            ]);
+            return back()->withErrors([
+                'owner_name' => 'Jina halisi linahitajika. Tafadhali jaribu tena.'
+            ])->withInput();
+        }
+
+        if ($this->isSuspiciousInput($validated['company_name'])) {
+            \Log::warning('Suspicious company name detected', [
+                'ip' => $request->ip(),
+                'company' => $validated['company_name']
+            ]);
+            return back()->withErrors([
+                'company_name' => 'Jina halisi la kampuni linahitajika.'
+            ])->withInput();
+        }
+
+        // 4. Check for known spam patterns in email
+        if ($this->isSpamEmail($validated['company_email'])) {
+            \Log::warning('Spam email detected', [
+                'ip' => $request->ip(),
+                'email' => $validated['company_email']
+            ]);
+            return back()->withErrors([
+                'company_email' => 'Barua pepe hii inaonekana kuwa ya taka. Tafadhali tumia barua pepe halisi.'
+            ])->withInput();
+        }
 
         // Set default package dates for free trial
         $now = Carbon::now();
@@ -156,7 +263,7 @@ class AuthController extends Controller
         ]);
 
         // Generate email verification token
-        $token = Str::random(40);
+        $token = Str::random(60);
 
         // Create user
         $user = User::create([
@@ -170,21 +277,135 @@ class AuthController extends Controller
             'email_verification_token' => $token,
         ]);
 
+        // Log successful registration
+        \Log::info('New user registered successfully', [
+            'user_id' => $user->id,
+            'company_id' => $company->id,
+            'email' => $user->email,
+            'ip' => $request->ip()
+        ]);
+
         // Send email verification to user
         if ($user->email) {
-            Mail::to($user->email)->send(new VerifyEmail($user));
+            try {
+                Mail::to($user->email)->send(new VerifyEmail($user));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send verification email', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'error' => $e->getMessage()
+                ]);
+                // Continue even if email fails - user can request new verification
+            }
         }
 
         // Find admin users and send notification
         $adminUsers = User::where('role', 'admin')->where('is_approved', 1)->get();
         foreach ($adminUsers as $admin) {
             if ($admin->email) {
-                Mail::to($admin->email)->send(new NewUserRegistrationNotification($user));
+                try {
+                    Mail::to($admin->email)->send(new NewUserRegistrationNotification($user));
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send admin notification', [
+                        'admin_id' => $admin->id,
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         }
 
         return redirect()->route('login')
             ->with('success', 'Usajili umekamilika! Tafadhali angalia barua pepe yako kuthibitisha akaunti.');
+    }
+
+    /**
+     * Check if input contains suspicious patterns
+     */
+    private function isSuspiciousInput($string)
+    {
+        $string = strtolower(trim($string));
+        
+        // If empty or too short
+        if (strlen($string) < 2) {
+            return true;
+        }
+        
+        // Check for random string patterns (no vowels, all consonants)
+        $vowels = ['a', 'e', 'i', 'o', 'u'];
+        $hasVowel = false;
+        foreach ($vowels as $vowel) {
+            if (strpos($string, $vowel) !== false) {
+                $hasVowel = true;
+                break;
+            }
+        }
+        
+        // If no vowels and length > 5, likely random/spam
+        if (!$hasVowel && strlen($string) > 5) {
+            return true;
+        }
+        
+        // Check for repeated characters (more than 4 in a row)
+        if (preg_match('/(.)\1{4,}/', $string)) {
+            return true;
+        }
+        
+        // Check for common spam patterns
+        $spamPatterns = [
+            'test', 'demo', 'sample', 'example', 'fake', 'dummy',
+            'user', 'admin', 'root', 'guest', 'temp', 'temporary'
+        ];
+        
+        foreach ($spamPatterns as $pattern) {
+            if (strpos($string, $pattern) !== false && strlen($string) < 10) {
+                return true;
+            }
+        }
+        
+        // Check if string is mostly numbers
+        if (preg_match('/^[0-9]+$/', $string) && strlen($string) > 3) {
+            return true;
+        }
+        
+        // Check for keyboard patterns (qwerty, asdfgh, etc.)
+        $keyboardPatterns = ['qwerty', 'asdfgh', 'zxcvbn', 'qwertyuiop', 'asdfghjkl'];
+        foreach ($keyboardPatterns as $pattern) {
+            if (strpos($string, $pattern) !== false) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if email is spam
+     */
+    private function isSpamEmail($email)
+    {
+        $email = strtolower($email);
+        
+        // Check for common spam email patterns
+        $spamPatterns = [
+            'test', 'demo', 'example', 'fake', 'dummy', 'spam',
+            'temp', 'temporary', 'random', 'throwaway', 'disposable',
+            'mailinator', 'guerrillamail', '10minutemail', 'yopmail'
+        ];
+        
+        foreach ($spamPatterns as $pattern) {
+            if (strpos($email, $pattern) !== false) {
+                return true;
+            }
+        }
+        
+        // Check for random strings in local part
+        $localPart = explode('@', $email)[0];
+        if (preg_match('/^[a-z0-9]{10,}$/', $localPart)) {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -445,7 +666,9 @@ class AuthController extends Controller
         $request->validate([
             'token' => 'required',
             'email' => 'required|email|exists:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!]).+$/',
+        ], [
+            'password.regex' => 'Neno la siri linapaswa kuwa na angalau herufi kubwa, herufi ndogo, namba na alama maalum.'
         ]);
 
         $status = Password::reset(
