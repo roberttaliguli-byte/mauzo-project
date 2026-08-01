@@ -176,16 +176,39 @@ class AuthController extends Controller
                         'spamify.com', 'spam.la', 'spammotel.com', 'spamspot.com',
                         'spamtrail.com', 'spamfree24.com', 'spamfree24.org',
                         'spamfree24.net', 'spamfree24.info', 'spamfree24.de',
-                        'spamfree24.eu', 'spamfree24.pl', 'spamfree24.xyz'
+                        'spamfree24.eu', 'spamfree24.pl', 'spamfree24.xyz',
+                        'guerrillamail.net', 'guerrillamail.biz', 'guerrillamail.org',
+                        'mailnator.com', 'trash2009.com', 'trashymail.com',
+                        'tyldd.com', 'uggsrock.com', 'wegwerfmail.de',
+                        'wegwerfmail.net', 'wegwerfmail.org', 'wh4f.org',
+                        'whyspam.me', 'willselfdestruct.com', 'winemaven.info',
+                        'wronghead.com', 'wuzup.net', 'xagloo.com',
+                        'xemaps.com', 'xents.com', 'xmaily.com',
+                        'xoxy.net', 'yep.it', 'yogamaven.com',
+                        'yopmail.fr', 'yopmail.net', 'ypmail.webarnak.fr.eu.org',
+                        'yuurok.com', 'zehnminutenmail.de', 'zippymail.info',
+                        'zoaxe.com', 'zoemail.org', 'zomg.info',
+                        'spam4.me', 'spamdecoy.net', 'spamfree.eu',
+                        'spamgourmet.com', 'spamhole.com', 'spamify.com',
+                        'spam.la', 'spammotel.com', 'spamspot.com',
+                        'spamtrail.com', 'spamthis.co.uk', 'spamthisplease.com'
                     ];
                     
-                    if (in_array($domain, $disposableDomains)) {
+                    if (in_array(strtolower($domain), array_map('strtolower', $disposableDomains))) {
                         $fail('Tafadhali tumia barua pepe halisi, si za muda.');
                     }
                     
-                    // Check if domain has valid MX records
-                    if (!checkdnsrr($domain, 'MX')) {
-                        $fail('Barua pepe haijathibitishwa. Tafadhali tumia barua pepe halisi.');
+                    // Check if domain has valid MX records - but only for real domains
+                    // Skip MX check for common providers to avoid false positives
+                    $commonProviders = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 
+                                       'icloud.com', 'mail.com', 'protonmail.com', 'zoho.com',
+                                       'aol.com', 'live.com', 'msn.com'];
+                    
+                    if (!in_array(strtolower($domain), $commonProviders)) {
+                        // Only check MX for non-common providers
+                        if (!checkdnsrr($domain, 'MX')) {
+                            $fail('Barua pepe haijathibitishwa. Tafadhali tumia barua pepe halisi.');
+                        }
                     }
                 }
             ],
@@ -207,7 +230,7 @@ class AuthController extends Controller
             'password.confirmed' => 'Nenosiri halilingani.',
         ]);
 
-        // 3. Check for suspicious input patterns
+        // 3. Check for suspicious input patterns - ONLY for obvious spam/fake names
         if ($this->isSuspiciousInput($validated['owner_name'])) {
             \Log::warning('Suspicious name detected in registration', [
                 'ip' => $request->ip(),
@@ -229,7 +252,7 @@ class AuthController extends Controller
             ])->withInput();
         }
 
-        // 4. Check for known spam patterns in email
+        // 4. Check for spam emails - ONLY obvious spam, NOT legitimate emails
         if ($this->isSpamEmail($validated['company_email'])) {
             \Log::warning('Spam email detected', [
                 'ip' => $request->ip(),
@@ -321,6 +344,7 @@ class AuthController extends Controller
 
     /**
      * Check if input contains suspicious patterns
+     * MODIFIED: Less aggressive, only blocks obvious spam
      */
     private function isSuspiciousInput($string)
     {
@@ -331,40 +355,8 @@ class AuthController extends Controller
             return true;
         }
         
-        // Check for random string patterns (no vowels, all consonants)
-        $vowels = ['a', 'e', 'i', 'o', 'u'];
-        $hasVowel = false;
-        foreach ($vowels as $vowel) {
-            if (strpos($string, $vowel) !== false) {
-                $hasVowel = true;
-                break;
-            }
-        }
-        
-        // If no vowels and length > 5, likely random/spam
-        if (!$hasVowel && strlen($string) > 5) {
-            return true;
-        }
-        
         // Check for repeated characters (more than 4 in a row)
-        if (preg_match('/(.)\1{4,}/', $string)) {
-            return true;
-        }
-        
-        // Check for common spam patterns
-        $spamPatterns = [
-            'test', 'demo', 'sample', 'example', 'fake', 'dummy',
-            'user', 'admin', 'root', 'guest', 'temp', 'temporary'
-        ];
-        
-        foreach ($spamPatterns as $pattern) {
-            if (strpos($string, $pattern) !== false && strlen($string) < 10) {
-                return true;
-            }
-        }
-        
-        // Check if string is mostly numbers
-        if (preg_match('/^[0-9]+$/', $string) && strlen($string) > 3) {
+        if (preg_match('/(.)\1{5,}/', $string)) {
             return true;
         }
         
@@ -376,32 +368,84 @@ class AuthController extends Controller
             }
         }
         
+        // Check for obvious spam terms - but ONLY exact matches or clear spam
+        $spamTerms = ['test', 'demo', 'sample', 'example', 'fake', 'dummy'];
+        
+        // Only block if the string is exactly or mostly the spam term
+        foreach ($spamTerms as $term) {
+            if ($string === $term) {
+                return true;
+            }
+            // If the string contains the term and is short (likely just the term with minor variation)
+            if (strpos($string, $term) !== false && strlen($string) <= strlen($term) + 2) {
+                return true;
+            }
+        }
+        
+        // Check if string is mostly numbers (more than 80% numbers)
+        $digitCount = preg_match_all('/[0-9]/', $string);
+        if ($digitCount > 0 && ($digitCount / strlen($string)) > 0.8) {
+            return true;
+        }
+        
         return false;
     }
 
     /**
      * Check if email is spam
+     * MODIFIED: Only blocks obvious spam emails, not legitimate ones
      */
     private function isSpamEmail($email)
     {
         $email = strtolower($email);
         
-        // Check for common spam email patterns
-        $spamPatterns = [
-            'test', 'demo', 'example', 'fake', 'dummy', 'spam',
-            'temp', 'temporary', 'random', 'throwaway', 'disposable',
-            'mailinator', 'guerrillamail', '10minutemail', 'yopmail'
-        ];
+        // Check for disposable email domains (already handled in validation)
+        // This is just an extra check for domains that might have been missed
         
-        foreach ($spamPatterns as $pattern) {
-            if (strpos($email, $pattern) !== false) {
+        // Check for obvious spam patterns in the local part
+        $localPart = explode('@', $email)[0];
+        
+        // Block if local part is all numbers and more than 10 digits
+        if (preg_match('/^[0-9]{10,}$/', $localPart)) {
+            return true;
+        }
+        
+        // Block if local part is pure random gibberish (no vowels, all consonants, longer than 8 chars)
+        // This is what blocks "fhhdjskaj" - but we need to be more specific
+        // Check if it's truly random gibberish with no recognizable pattern
+        if (strlen($localPart) >= 8) {
+            // Check if it has at least one vowel
+            $vowels = ['a', 'e', 'i', 'o', 'u'];
+            $hasVowel = false;
+            foreach ($vowels as $vowel) {
+                if (strpos($localPart, $vowel) !== false) {
+                    $hasVowel = true;
+                    break;
+                }
+            }
+            
+            // If no vowels AND it's not a common word pattern, it's likely gibberish
+            if (!$hasVowel) {
+                // Check if it matches common name patterns (has recognizable syllables)
+                // This is a simplified check - real names usually have vowels
+                return true;
+            }
+            
+            // Check for repeated patterns (like "fhhdjskaj" - has 'h' repeated)
+            if (preg_match('/(.)\1{2,}/', $localPart)) {
                 return true;
             }
         }
         
-        // Check for random strings in local part
-        $localPart = explode('@', $email)[0];
-        if (preg_match('/^[a-z0-9]{10,}$/', $localPart)) {
+        // Block emails from known spammy domains (already in validation, but double-check)
+        $spamDomains = [
+            'mailinator.com', 'guerrillamail.com', '10minutemail.com',
+            'temp-mail.org', 'yopmail.com', 'throwawaymail.com',
+            'fakeinbox.com', 'emailondeck.com'
+        ];
+        
+        $domain = substr(strrchr($email, "@"), 1);
+        if (in_array($domain, $spamDomains)) {
             return true;
         }
         
