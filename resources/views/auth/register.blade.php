@@ -36,7 +36,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem 1.25rem;
+            padding: clamp(0.75rem, 4vw, 2rem) clamp(0.5rem, 3vw, 1.25rem);
             position: relative;
             background: #0f0d0b;
             overflow-x: hidden;
@@ -130,19 +130,19 @@
             flex-direction: column;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 1.4rem;
+            margin-bottom: clamp(0.85rem, 3vw, 1.4rem);
             opacity: 0;
             animation: riseIn 0.5s ease 0.15s forwards;
         }
         .brand img {
-            width: 48px;
-            height: 48px;
+            width: clamp(38px, 8vw, 48px);
+            height: clamp(38px, 8vw, 48px);
             border-radius: 14px;
             object-fit: cover;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
         }
         .brand-name {
-            font-size: 0.85rem;
+            font-size: clamp(0.72rem, 2vw, 0.85rem);
             font-weight: 600;
             letter-spacing: 0.03em;
             color: #eae3db;
@@ -160,10 +160,11 @@
             }
         }
 
-        /* CARD */
+        /* CARD — fluid width: fills phones nicely, grows generously on desktop.
+           Register has a grid-2 row (Mahali/Mkoa, Simu/Barua Pepe) so it keeps a
+           slightly wider ceiling than the login card to give those columns room. */
         .auth-wrapper {
-            width: 440px;
-            max-width: 440px;
+            width: min(94vw, 460px);
             margin: 0 auto;
             opacity: 0;
             animation: riseIn 0.5s ease 0.22s forwards;
@@ -175,53 +176,23 @@
             backdrop-filter: blur(14px) saturate(1.1);
             -webkit-backdrop-filter: blur(14px) saturate(1.1);
             border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            padding: 2.2rem 2.5rem 2rem;
+            border-radius: clamp(18px, 3vw, 28px);
+            padding: clamp(1.3rem, 4vw, 2.2rem) clamp(1.2rem, 4.5vw, 2.5rem) clamp(1.15rem, 3.5vw, 2rem);
             box-shadow:
                 0 30px 70px -20px rgba(0, 0, 0, 0.8),
                 0 2px 0 rgba(255, 215, 160, 0.15) inset;
             transition: all 0.2s ease;
         }
 
-        @media (min-width: 1200px) {
+        @media (min-width: 900px) {
             .auth-wrapper {
-                width: 460px;
-                max-width: 460px;
-            }
-            .glass {
-                padding: 2.5rem 2.8rem 2.2rem;
+                width: min(40vw, 600px);
             }
         }
 
-        @media (max-width: 900px) {
+        @media (min-width: 1400px) {
             .auth-wrapper {
-                width: min(92vw, 440px);
-            }
-            .glass {
-                padding: 2rem 2rem 1.8rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-            body {
-                padding: 1.25rem 0.8rem;
-            }
-            .auth-wrapper {
-                width: 100%;
-                max-width: 100%;
-            }
-            .glass {
-                padding: 1.7rem 1.5rem 1.5rem;
-                border-radius: 22px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .auth-title {
-                font-size: 1.25rem;
-            }
-            .glass {
-                padding: 1.4rem 1.2rem 1.2rem;
+                width: min(34vw, 640px);
             }
         }
 
@@ -230,14 +201,14 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.75rem;
-            margin-bottom: 1.4rem;
+            gap: 0.6rem;
+            margin-bottom: clamp(1rem, 3vw, 1.4rem);
             flex-wrap: nowrap;
             min-width: 0;
         }
 
         .auth-title {
-            font-size: 1.5rem;
+            font-size: clamp(1.05rem, 4vw, 1.5rem);
             font-weight: 700;
             letter-spacing: -0.02em;
             color: #f5efe9;
@@ -245,6 +216,8 @@
             margin: 0;
             line-height: 1.2;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             flex-shrink: 1;
             min-width: 0;
         }
@@ -252,13 +225,13 @@
         .home-link {
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
-            font-size: 0.76rem;
+            gap: 0.3rem;
+            font-size: clamp(0.62rem, 2vw, 0.76rem);
             font-weight: 600;
             color: #d4cdc4;
             background: rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(4px);
-            padding: 0.25rem 0.9rem 0.25rem 0.7rem;
+            padding: 0.22rem 0.75rem 0.22rem 0.6rem;
             border-radius: 40px;
             text-decoration: none;
             border: 1px solid rgba(255, 215, 160, 0.15);
@@ -273,43 +246,17 @@
             box-shadow: 0 0 20px rgba(217, 119, 6, 0.15);
         }
         .home-link svg {
-            width: 14px;
-            height: 14px;
+            width: clamp(10px, 3vw, 14px);
+            height: clamp(10px, 3vw, 14px);
             stroke: currentColor;
             stroke-width: 2.2;
             fill: none;
             flex-shrink: 0;
         }
 
-        @media (max-width: 420px) {
-            .title-row {
-                gap: 0.4rem;
-            }
-            .auth-title {
-                font-size: 1.05rem;
-            }
-            .home-link {
-                font-size: 0.65rem;
-                padding: 0.2rem 0.6rem 0.2rem 0.5rem;
-                gap: 0.2rem;
-            }
-            .home-link svg {
-                width: 12px;
-                height: 12px;
-            }
-        }
-
         @media (max-width: 360px) {
             .auth-title {
-                font-size: 0.9rem;
-            }
-            .home-link {
-                font-size: 0.55rem;
-                padding: 0.15rem 0.4rem 0.15rem 0.35rem;
-            }
-            .home-link svg {
-                width: 10px;
-                height: 10px;
+                font-size: 0.95rem;
             }
         }
 
@@ -359,7 +306,7 @@
             gap: 0.75rem;
         }
         .progress-text {
-            font-size: 0.72rem;
+            font-size: clamp(0.68rem, 2vw, 0.72rem);
             font-weight: 600;
             color: #c4bdb3;
             white-space: nowrap;
@@ -381,7 +328,7 @@
 
         /* fields */
         .field {
-            margin-bottom: 0.95rem;
+            margin-bottom: clamp(0.8rem, 2.5vw, 0.95rem);
         }
         .field:last-child {
             margin-bottom: 0;
@@ -390,18 +337,18 @@
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
+            gap: clamp(0.6rem, 2.5vw, 0.75rem);
         }
-        @media (max-width: 480px) {
+        @media (max-width: 420px) {
             .grid-2 {
                 grid-template-columns: 1fr;
-                gap: 0.95rem;
+                gap: 0.9rem;
             }
         }
 
         label {
             display: block;
-            font-size: 0.76rem;
+            font-size: clamp(0.7rem, 2vw, 0.76rem);
             font-weight: 600;
             color: #d6cec4;
             margin-bottom: 0.3rem;
@@ -410,8 +357,8 @@
 
         .form-input {
             width: 100%;
-            padding: 0.65rem 0.85rem;
-            font-size: 0.88rem;
+            padding: clamp(0.6rem, 2vw, 0.65rem) clamp(0.7rem, 2.5vw, 0.85rem);
+            font-size: clamp(0.85rem, 2.2vw, 0.88rem);
             border: 1px solid rgba(255, 215, 160, 0.20);
             border-radius: 12px;
             background: rgba(20, 18, 16, 0.70);
@@ -506,7 +453,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 1.4rem;
+            margin-top: clamp(1.1rem, 3vw, 1.4rem);
             gap: 0.75rem;
         }
         .actions.single {
@@ -515,13 +462,13 @@
 
         .btn {
             font-family: inherit;
-            font-size: 0.85rem;
+            font-size: clamp(0.8rem, 2.2vw, 0.85rem);
             font-weight: 600;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s ease;
             border: none;
-            padding: 0.7rem 1.5rem;
+            padding: 0.7rem clamp(1.1rem, 4vw, 1.5rem);
             min-height: 48px;
         }
         .btn-primary {
@@ -544,7 +491,7 @@
         .btn-secondary {
             background: rgba(255, 255, 255, 0.06);
             color: #c4bdb3;
-            padding: 0.7rem 1.2rem;
+            padding: 0.7rem clamp(0.9rem, 3vw, 1.2rem);
             border: 1px solid rgba(255, 215, 160, 0.08);
         }
         .btn-secondary:hover {
@@ -584,8 +531,8 @@
         /* footer */
         .auth-footer {
             text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.78rem;
+            margin-top: clamp(1.15rem, 3vw, 1.5rem);
+            font-size: clamp(0.72rem, 2vw, 0.78rem);
             color: #b0a79c;
         }
         .auth-footer a {
