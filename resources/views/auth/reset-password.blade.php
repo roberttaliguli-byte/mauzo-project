@@ -1,135 +1,271 @@
 @extends('layouts.guest')
 
-@section('title', 'Badilisha Neno la Siri')
+@section('title', 'Weka Neno la Siri Jipya')
 
 @section('content')
-<div class="max-w-sm mx-auto">
-  <!-- Header -->
-  <div class="text-center mb-6">
-    <div class="flex justify-center mb-3">
-      <div class="relative">
-        <div class="absolute inset-0 bg-amber-400/20 rounded-full blur-lg"></div>
-        <div class="relative h-12 w-12 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center shadow-md">
-          <i class="fas fa-key text-white text-lg"></i>
-        </div>
-      </div>
-    </div>
-    <h1 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
-      Weka Neno la Siri Jipya
-    </h1>
+<!-- Header -->
+<div class="text-center mb-6">
+  <h1 class="auth-title">Weka Neno la Siri Jipya</h1>
+  <p class="text-gray-300 text-sm">Weka neno la siri jipya la akaunti yako</p>
+</div>
+
+@if(session('status'))
+<div id="status-alert" class="alert alert-ok">
+  <span>{{ session('status') }}</span>
+  <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
+</div>
+@endif
+
+@if($errors->any())
+<div id="error-alert" class="alert alert-bad">
+  <span>
+    @foreach ($errors->all() as $error)
+      {{ $error }}@if(!$loop->last)<br>@endif
+    @endforeach
+  </span>
+  <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
+</div>
+@endif
+
+<form method="POST" action="{{ route('password.update') }}" class="space-y-4">
+  @csrf
+  <input type="hidden" name="token" value="{{ $token }}">
+
+  <!-- Email -->
+  <div class="field">
+    <label for="email">Barua Pepe</label>
+    <input name="email" id="email" type="email" value="{{ $email ?? old('email') }}" required
+           placeholder="example@kampuni.com"
+           class="form-input @error('email') invalid @enderror"
+           autocomplete="email">
+    <div class="field-error" id="email_message">@error('email'){{ $message }}@enderror</div>
   </div>
 
-  @if(session('status'))
-  <div id="status-alert" class="relative p-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-800 text-white shadow-lg animate-fade-in mb-4">
-    <div class="flex items-center gap-2">
-      <i class="fas fa-info-circle text-white text-sm"></i>
-      <p class="text-sm font-medium">{{ session('status') }}</p>
+  <!-- New Password -->
+  <div class="field">
+    <label for="password">Neno la Siri Jipya</label>
+    <div class="input-wrapper">
+      <input name="password" id="password" type="password" required
+             placeholder="Weka neno la siri jipya"
+             class="form-input @error('password') invalid @enderror"
+             autocomplete="new-password">
+      <button type="button" class="pw-toggle" id="togglePassword" aria-label="Onyesha nenosiri">
+        <svg viewBox="0 0 24 24">
+          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
     </div>
+    <div id="password_hint" class="pw-hint">Angalau herufi 6</div>
+    <div class="field-error" id="password_message">@error('password'){{ $message }}@enderror</div>
   </div>
-  @endif
 
-  @if($errors->any())
-  <div id="error-alert" class="relative p-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-800 text-white shadow-lg animate-fade-in mb-4">
-    <div class="flex items-center gap-2">
-      <i class="fas fa-exclamation-triangle text-white text-sm"></i>
-      <div>
-        @foreach ($errors->all() as $error)
-          <p class="text-sm font-medium">{{ $error }}</p>
-        @endforeach
-      </div>
+  <!-- Confirm Password -->
+  <div class="field">
+    <label for="password_confirmation">Thibitisha Neno la Siri</label>
+    <div class="input-wrapper">
+      <input name="password_confirmation" id="password_confirmation" type="password" required
+             placeholder="Andika tena neno la siri"
+             class="form-input"
+             autocomplete="new-password">
+      <button type="button" class="pw-toggle" id="toggleConfirm" aria-label="Onyesha nenosiri">
+        <svg viewBox="0 0 24 24">
+          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
     </div>
+    <div id="match_status" class="field-error"></div>
   </div>
-  @endif
 
-  <form method="POST" action="{{ route('password.update') }}" class="space-y-4">
-    @csrf
-    <input type="hidden" name="token" value="{{ $token }}">
-    
-    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
-      <div class="text-center mb-4">
-        <h2 class="text-lg font-bold text-amber-400">Neno la Siri Jipya</h2>
-        <p class="text-gray-300 text-sm">Weka neno la siri jipya la akaunti yako</p>
-      </div>
-
-      <div class="space-y-4">
-        <!-- Email -->
-        <div class="group">
-          <label class="block text-sm font-semibold text-gray-200 mb-2">
-            <i class="fas fa-envelope text-amber-400 mr-2"></i>
-            Barua Pepe
-          </label>
-          <input name="email" type="email" value="{{ $email ?? old('email') }}" required
-                 placeholder="example@kampuni.com"
-                 class="w-full rounded-lg py-3 px-4 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 text-sm">
-        </div>
-
-        <!-- New Password -->
-        <div class="group">
-          <label class="block text-sm font-semibold text-gray-200 mb-2">
-            <i class="fas fa-lock text-amber-400 mr-2"></i>
-            Neno la Siri Jipya
-          </label>
-          <input name="password" type="password" required
-                 placeholder="Weka neno la siri jipya"
-                 class="w-full rounded-lg py-3 px-4 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 text-sm">
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="group">
-          <label class="block text-sm font-semibold text-gray-200 mb-2">
-            <i class="fas fa-lock text-amber-400 mr-2"></i>
-            Thibitisha Neno la Siri
-          </label>
-          <input name="password_confirmation" type="password" required
-                 placeholder="Andika tena neno la siri"
-                 class="w-full rounded-lg py-3 px-4 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 text-sm">
-        </div>
-      </div>
-
-      <div class="mt-6">
-        <button type="submit" 
-                class="w-full py-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-md hover:shadow-lg text-sm">
-          <i class="fas fa-sync-alt mr-2"></i> Badilisha Neno la Siri
-        </button>
-      </div>
-    </div>
-  </form>
-
-  <!-- Navigation Links -->
-  <div class="text-center mt-4">
-    <a href="{{ route('login') }}" class="text-amber-400 hover:text-amber-300 text-sm">
-      <i class="fas fa-arrow-left mr-1"></i> Rudi Kwenye Ingia
-    </a>
+  <!-- Submit -->
+  <div class="actions">
+    <button type="submit" id="submitBtn" class="btn-primary">
+      <span class="btn-label">Badilisha Neno la Siri</span>
+      <span class="spinner"></span>
+    </button>
   </div>
+</form>
+
+<!-- Navigation -->
+<div class="auth-footer">
+  <a href="{{ route('login') }}">← Rudi Kwenye Ingia</a>
 </div>
 
 <script>
-  // Auto-hide alerts after 3 seconds
-  setTimeout(() => {
-    const statusAlert = document.getElementById('status-alert');
-    const errorAlert = document.getElementById('error-alert');
-    
-    if (statusAlert) {
-      statusAlert.style.opacity = '0';
-      statusAlert.style.transition = 'opacity 0.5s ease';
-      setTimeout(() => statusAlert.remove(), 500);
-    }
-    
-    if (errorAlert) {
-      errorAlert.style.opacity = '0';
-      errorAlert.style.transition = 'opacity 0.5s ease';
-      setTimeout(() => errorAlert.remove(), 500);
-    }
-  }, 3000);
-</script>
+  (function() {
+    'use strict';
 
-<style>
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-</style>
+    // Auto-hide alerts after 5 seconds
+    setTimeout(() => {
+      const statusAlert = document.getElementById('status-alert');
+      const errorAlert = document.getElementById('error-alert');
+      
+      if (statusAlert) {
+        statusAlert.style.opacity = '0';
+        statusAlert.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => statusAlert.remove(), 500);
+      }
+      
+      if (errorAlert) {
+        errorAlert.style.opacity = '0';
+        errorAlert.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => errorAlert.remove(), 500);
+      }
+    }, 5000);
+
+    // Toggle password visibility
+    function setupToggle(buttonId, inputId) {
+      const btn = document.getElementById(buttonId);
+      const input = document.getElementById(inputId);
+      if (btn && input) {
+        btn.addEventListener('click', function() {
+          const isPassword = input.type === 'password';
+          input.type = isPassword ? 'text' : 'password';
+          const svg = this.querySelector('svg');
+          if (svg) {
+            if (isPassword) {
+              svg.innerHTML = `
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              `;
+            } else {
+              svg.innerHTML = `
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                <circle cx="12" cy="12" r="3"/>
+              `;
+            }
+          }
+        });
+      }
+    }
+
+    setupToggle('togglePassword', 'password');
+    setupToggle('toggleConfirm', 'password_confirmation');
+
+    // Password validation and confirmation check
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('password_confirmation');
+    const matchStatus = document.getElementById('match_status');
+    const passwordHint = document.getElementById('password_hint');
+
+    passwordInput.addEventListener('input', function() {
+      const value = this.value;
+      if (value.length > 0 && value.length < 6) {
+        passwordHint.classList.add('show');
+        passwordHint.style.color = '#fca5a5';
+      } else if (value.length >= 6) {
+        passwordHint.classList.remove('show');
+      } else {
+        passwordHint.classList.remove('show');
+      }
+      checkMatch();
+    });
+
+    confirmInput.addEventListener('input', checkMatch);
+
+    function checkMatch() {
+      const password = passwordInput.value;
+      const confirm = confirmInput.value;
+      
+      if (confirm.length === 0) {
+        matchStatus.classList.remove('show');
+        return;
+      }
+      
+      if (password === confirm && password.length >= 6) {
+        matchStatus.textContent = '✓ Nenosiri linalingana';
+        matchStatus.style.color = '#86efac';
+        matchStatus.classList.add('show');
+      } else {
+        matchStatus.textContent = '✗ Nenosiri halilingani';
+        matchStatus.style.color = '#fca5a5';
+        matchStatus.classList.add('show');
+      }
+    }
+
+    // Form submission validation
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (form && submitBtn) {
+      form.addEventListener('submit', function(e) {
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+        const confirm = document.getElementById('password_confirmation');
+        let hasError = false;
+
+        // Clear previous errors
+        document.querySelectorAll('.form-input').forEach(el => el.classList.remove('invalid'));
+        document.querySelectorAll('.field-error').forEach(el => el.classList.remove('show'));
+
+        // Validate email
+        if (!email.value.trim()) {
+          email.classList.add('invalid');
+          const msg = document.getElementById('email_message');
+          if (msg) {
+            msg.textContent = 'Tafadhali weka barua pepe yako.';
+            msg.classList.add('show');
+          }
+          hasError = true;
+        }
+
+        // Validate password
+        if (!password.value.trim()) {
+          password.classList.add('invalid');
+          const msg = document.getElementById('password_message');
+          if (msg) {
+            msg.textContent = 'Tafadhali weka neno la siri jipya.';
+            msg.classList.add('show');
+          }
+          hasError = true;
+        } else if (password.value.length < 6) {
+          password.classList.add('invalid');
+          const msg = document.getElementById('password_message');
+          if (msg) {
+            msg.textContent = 'Neno la siri lazima liwe na angalau herufi 6.';
+            msg.classList.add('show');
+          }
+          hasError = true;
+        }
+
+        // Validate confirmation
+        if (password.value !== confirm.value) {
+          confirm.classList.add('invalid');
+          matchStatus.textContent = '✗ Nenosiri halilingani';
+          matchStatus.style.color = '#fca5a5';
+          matchStatus.classList.add('show');
+          hasError = true;
+        }
+
+        if (hasError) {
+          e.preventDefault();
+          return;
+        }
+
+        // Show loading state
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+      });
+    }
+
+    // Clear error state on input
+    document.querySelectorAll('.form-input').forEach(input => {
+      input.addEventListener('input', function() {
+        this.classList.remove('invalid');
+        const msgId = this.id + '_message';
+        const msg = document.getElementById(msgId);
+        if (msg) {
+          msg.textContent = '';
+          msg.classList.remove('show');
+        }
+        if (this.id === 'password' || this.id === 'password_confirmation') {
+          checkMatch();
+        }
+      });
+    });
+
+    console.log('✅ Reset Password page loaded');
+  })();
+</script>
 @endsection

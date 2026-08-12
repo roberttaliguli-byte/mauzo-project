@@ -114,7 +114,7 @@ class AuthController extends Controller
 
     /**
      * Handle company + user registration with enhanced security
-     * Removed time-based restrictions - only shows validation errors
+     * Password now only requires minimum 6 characters - no complexity rules
      */
     public function registerPost(Request $request)
     {
@@ -129,7 +129,7 @@ class AuthController extends Controller
                 ->with('success', 'Usajili umekamilika! Tafadhali angalia barua pepe yako.');
         }
         
-        // 2. Enhanced validation with stricter rules - Shows specific errors
+        // 2. Enhanced validation - Password now only requires min 6 characters
         $validated = $request->validate([
             // Step 1
             'company_name' => 'required|string|max:255|min:2',
@@ -216,7 +216,8 @@ class AuthController extends Controller
             'hear_about_us' => 'required|string|max:100',
             // Step 3
             'username'     => 'required|string|max:50|min:3|unique:users,username|regex:/^[a-zA-Z0-9_]+$/',
-            'password'     => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!]).+$/',
+            // PASSWORD: Only requires minimum 6 characters - no complexity rules
+            'password'     => 'required|string|min:6|confirmed',
         ], [
             'company_email.unique' => 'Barua pepe hii tayari imesajiliwa.',
             'username.unique' => 'Jina la mtumiaji tayari limetumika.',
@@ -225,8 +226,7 @@ class AuthController extends Controller
             'owner_name.regex' => 'Jina linapaswa kuwa na herufi tu.',
             'username.regex' => 'Jina la mtumiaji linapaswa kuwa na herufi, namba au underscore tu.',
             'phone.regex' => 'Nambari ya simu inapaswa kuwa tarakimu 10 kuanzia 0 (Mfano: 0712345678).',
-            'password.regex' => 'Neno la siri linapaswa kuwa na angalau herufi kubwa, herufi ndogo, namba na alama maalum (@,#,$,etc).',
-            'password.min' => 'Neno la siri linapaswa kuwa na angalau herufi 8.',
+            'password.min' => 'Neno la siri linapaswa kuwa na angalau herufi 6.',
             'password.confirmed' => 'Nenosiri halilingani.',
         ]);
 
@@ -703,16 +703,18 @@ class AuthController extends Controller
     }
 
     /**
-     * Reset the password
+     * Reset the password - Updated to allow simple passwords (min 6 chars)
      */
     public function resetPassword(Request $request)
     {
         $request->validate([
             'token' => 'required',
             'email' => 'required|email|exists:users,email',
-            'password' => 'required|string|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$%^&+=!]).+$/',
+            // Password only requires minimum 6 characters - no complexity rules
+            'password' => 'required|string|min:6|confirmed',
         ], [
-            'password.regex' => 'Neno la siri linapaswa kuwa na angalau herufi kubwa, herufi ndogo, namba na alama maalum.'
+            'password.min' => 'Neno la siri linapaswa kuwa na angalau herufi 6.',
+            'password.confirmed' => 'Nenosiri halilingani.'
         ]);
 
         $status = Password::reset(

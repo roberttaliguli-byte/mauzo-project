@@ -4,1305 +4,747 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>MauzoSheetAI | Sajili Kampuni</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>MauzoSheetAI | Jisajili</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --amber: #d97706;
+            --amber-dark: #b45309;
+            --amber-soft: rgba(217, 119, 6, 0.20);
+            --ink: #0b0a09;
+            --muted: #5a5550;
+            --border: #d6d0c8;
+            --paper: #fffcf7;
+            --glass-bg: rgba(20, 18, 16, 0.85);
+            --glass-border: rgba(255, 215, 160, 0.20);
+            --danger: #c2410c;
+            --ok: #15803d;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body { height: 100%; }
 
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: radial-gradient(ellipse at 50% 0%, #fef3c7 0%, #fde68a 20%, #d97706 50%, #78350f 100%);
+            color: #f0ebe5;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
+            padding: 2rem 1.25rem;
             position: relative;
+            background: #0f0d0b;
             overflow-x: hidden;
         }
 
+        /* Background with blur */
         body::before {
-            content: '';
+            content: "";
             position: fixed;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
-            top: -200px;
-            right: -200px;
-            pointer-events: none;
-            animation: floatBlob 20s ease-in-out infinite;
+            inset: 0;
+            background:
+                linear-gradient(145deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.45) 100%),
+                url("/bg.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(6px) saturate(1.1);
+            transform: scale(1.05);
+            z-index: -2;
         }
 
         body::after {
-            content: '';
+            content: "";
             position: fixed;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            bottom: -150px;
-            left: -150px;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.50) 100%);
+            z-index: -1;
+        }
+
+        /* Loading */
+        #loadingScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: #0f0d0b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            transition: opacity 0.45s ease, visibility 0.45s ease;
+        }
+        #loadingScreen.hide {
+            opacity: 0;
+            visibility: hidden;
             pointer-events: none;
-            animation: floatBlob 25s ease-in-out infinite reverse;
         }
-
-        @keyframes floatBlob {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -30px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px) saturate(1.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 
-                0 20px 60px -20px rgba(0, 0, 0, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6);
-            border-radius: 24px;
-            transition: all 0.3s ease;
-        }
-
-        .glass-card:hover {
-            box-shadow: 
-                0 30px 80px -20px rgba(0, 0, 0, 0.35),
-                inset 0 1px 0 rgba(255, 255, 255, 0.6);
-        }
-
-        .register-card-wrapper {
-            width: 100%;
-            max-width: 640px;
-            margin: 0 auto;
+        .loading-mark {
             position: relative;
-            z-index: 10;
-            animation: cardFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .loading-mark img {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            object-fit: cover;
+            animation: markIn 0.5s ease forwards;
+        }
+        .loading-mark::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid #3d3a36;
+            border-top-color: var(--amber);
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes markIn {
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Brand */
+        .brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.4rem;
+            opacity: 0;
+            animation: riseIn 0.5s ease 0.15s forwards;
+        }
+        .brand img {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            object-fit: cover;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+        .brand-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            color: #eae3db;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.6);
         }
 
-        @keyframes cardFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(24px) scale(0.98);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .glass-card > *:not(:last-child) {
-            padding-left: 2rem;
-            padding-right: 2rem;
+        /* Auth wrapper - narrow */
+        .auth-wrapper {
+            width: 460px;
+            max-width: 460px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: riseIn 0.5s ease 0.22s forwards;
         }
 
-        .glass-card > *:last-child {
-            padding-left: 2rem;
-            padding-right: 2rem;
+        .glass {
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(14px) saturate(1.1);
+            -webkit-backdrop-filter: blur(14px) saturate(1.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 2.2rem 2.5rem 2rem;
+            box-shadow:
+                0 30px 70px -20px rgba(0,0,0,0.8),
+                0 2px 0 rgba(255, 215, 160, 0.15) inset;
+            transition: all 0.2s ease;
+        }
+
+        @media (min-width: 1200px) {
+            .auth-wrapper { width: 480px; max-width: 480px; }
+            .glass { padding: 2.5rem 2.8rem 2.2rem; }
+        }
+
+        @media (max-width: 900px) {
+            .auth-wrapper { width: min(92vw, 460px); }
+            .glass { padding: 2rem 2rem 1.8rem; }
         }
 
         @media (max-width: 640px) {
-            .glass-card > *:not(:last-child) {
-                padding-left: 1.25rem;
-                padding-right: 1.25rem;
-            }
-            .glass-card > *:last-child {
-                padding-left: 1.25rem;
-                padding-right: 1.25rem;
-            }
-            .register-card-wrapper {
-                max-width: 100%;
-            }
-            body {
-                padding: 0.75rem;
-            }
+            body { padding: 1.25rem 0.8rem; }
+            .auth-wrapper { width: 100%; max-width: 100%; }
+            .glass { padding: 1.7rem 1.25rem 1.5rem; border-radius: 22px; }
         }
 
-        .logo-circle {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border: 2px solid rgba(251, 191, 36, 0.3);
-            box-shadow: 0 8px 24px rgba(217, 119, 6, 0.15);
-            transition: all 0.3s ease;
-        }
-
-        .logo-circle:hover {
-            transform: scale(1.05);
-            box-shadow: 0 12px 32px rgba(217, 119, 6, 0.25);
-        }
-
-        .logo-img-small {
-            height: 32px;
-            width: auto;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
-        }
-
-        h1 {
-            font-size: 1.75rem !important;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #78350f, #d97706);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .subtitle {
-            font-size: 0.9rem !important;
-            color: #6b7280;
-            font-weight: 400;
-        }
-
-        .stepper-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0;
-            padding: 0.5rem 0 0.25rem;
-        }
-
-        .step-item {
-            display: flex;
-            align-items: center;
-            gap: 0;
-        }
-
-        .step-dot {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
+        .auth-title {
+            font-size: 1.5rem;
             font-weight: 700;
-            border: 2px solid #e5e7eb;
-            background: #f9fafb;
-            color: #9ca3af;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            flex-shrink: 0;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.2rem;
+            color: #f5efe9;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
-        .step-dot.active {
-            border-color: #d97706;
-            background: #d97706;
-            color: white;
-            box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15), 0 4px 12px rgba(217, 119, 6, 0.3);
-            transform: scale(1.05);
-        }
-
-        .step-dot.completed {
-            border-color: #22c55e;
-            background: #22c55e;
-            color: white;
-            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
-        }
-
-        .step-dot .check-mark {
-            display: none;
-        }
-
-        .step-dot.completed .step-number {
-            display: none;
-        }
-
-        .step-dot.completed .check-mark {
-            display: block;
-        }
-
-        .step-line {
-            width: 48px;
-            height: 2px;
-            background: #e5e7eb;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .step-line .line-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #d97706, #f59e0b);
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-            border-radius: 2px;
-        }
-
-        .step-line.completed .line-fill {
-            width: 100%;
-        }
-
-        .step-line.partial .line-fill {
-            width: 50%;
-        }
-
-        .step-label {
-            text-align: center;
-            font-size: 0.65rem;
-            font-weight: 500;
-            color: #9ca3af;
-            margin-top: 0.4rem;
-            transition: color 0.3s ease;
-            letter-spacing: 0.02em;
-        }
-
-        .step-label.active {
-            color: #d97706;
-        }
-
-        .step-label.completed {
-            color: #22c55e;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-            position: relative;
-        }
-
-        .form-group:last-of-type {
-            margin-bottom: 0;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.35rem;
-            letter-spacing: 0.01em;
-            transition: color 0.2s ease;
-        }
-
-        .form-label .label-icon {
-            margin-right: 0.4rem;
-            color: #d97706;
-            font-size: 0.85rem;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            font-size: 0.9rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 14px;
-            background: #fafbfc;
-            color: #111827;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            outline: none;
-            font-family: inherit;
-            appearance: none;
-        }
-
-        .form-input:hover {
-            border-color: #d1d5db;
-            background: #ffffff;
-        }
-
-        .form-input:focus {
-            border-color: #d97706;
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1), 0 4px 12px rgba(0, 0, 0, 0.04);
-            transform: translateY(-1px);
-        }
-
-        .form-input.valid {
-            border-color: #22c55e;
-            background: #f0fdf4;
-        }
-
-        .form-input.valid:focus {
-            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
-        }
-
-        .form-input.invalid {
-            border-color: #ef4444;
-            background: #fef2f2;
-        }
-
-        .form-input.invalid:focus {
-            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
-        }
-
-        .form-input:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        select.form-input {
-            padding-right: 2.5rem;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 12px;
-            cursor: pointer;
-        }
-
-        select.form-input:focus {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d97706' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-        }
-
-        .validation-message {
-            font-size: 0.75rem;
-            margin-top: 0.35rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            opacity: 0;
-            transform: translateY(-4px);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            height: 0;
-            overflow: hidden;
-            pointer-events: none;
-        }
-
-        .validation-message.visible {
-            opacity: 1;
-            transform: translateY(0);
-            height: auto;
-            overflow: visible;
-            pointer-events: auto;
-        }
-
-        .validation-message.valid {
-            color: #22c55e;
-        }
-
-        .validation-message.invalid {
-            color: #ef4444;
-        }
-
-        .validation-message .msg-icon {
-            font-size: 0.7rem;
-            flex-shrink: 0;
-        }
-
-        .password-toggle {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #9ca3af;
-            cursor: pointer;
-            padding: 0.25rem;
-            transition: all 0.2s ease;
-            font-size: 1rem;
-        }
-
-        .password-toggle:hover {
-            color: #6b7280;
-        }
-
-        .password-toggle:focus {
-            outline: none;
-            color: #d97706;
-        }
-
-        .password-strength-container {
-            margin-top: 0.5rem;
-        }
-
-        .password-strength-bar {
-            height: 4px;
-            border-radius: 4px;
-            background: #e5e7eb;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .password-strength-fill {
-            height: 100%;
-            border-radius: 4px;
-            width: 0%;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .password-strength-fill.weak {
-            width: 25%;
-            background: #ef4444;
-        }
-
-        .password-strength-fill.medium {
-            width: 50%;
-            background: #f59e0b;
-        }
-
-        .password-strength-fill.strong {
-            width: 75%;
-            background: #22c55e;
-        }
-
-        .password-strength-fill.excellent {
-            width: 100%;
-            background: #059669;
-        }
-
-        .password-strength-label {
-            font-size: 0.7rem;
-            font-weight: 500;
-            margin-top: 0.25rem;
-            opacity: 0;
-            transition: all 0.3s ease;
-            height: 0;
-            overflow: hidden;
-        }
-
-        .password-strength-label.visible {
-            opacity: 1;
-            height: auto;
-            margin-top: 0.25rem;
-        }
-
-        .password-strength-label.weak { color: #ef4444; }
-        .password-strength-label.medium { color: #f59e0b; }
-        .password-strength-label.strong { color: #22c55e; }
-        .password-strength-label.excellent { color: #059669; }
-
-        .password-checklist {
-            margin-top: 0.5rem;
-            display: none;
-            animation: slideDown 0.3s ease forwards;
-        }
-
-        .password-checklist.visible {
-            display: block;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .checklist-item {
-            display: flex;
+        /* Home link inside card */
+        .home-link {
+            display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            font-size: 0.7rem;
-            padding: 0.15rem 0;
-            color: #9ca3af;
-            transition: all 0.3s ease;
-        }
-
-        .checklist-item.met {
-            color: #22c55e;
-        }
-
-        .checklist-item .check-icon {
-            font-size: 0.6rem;
-            width: 14px;
-            flex-shrink: 0;
-            transition: all 0.3s ease;
-        }
-
-        .password-sample {
-            font-size: 0.7rem;
-            color: #6b7280;
-            background: #f3f4f6;
-            padding: 0.2rem 0.7rem;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            margin-top: 0.25rem;
-            font-family: monospace;
-            border: 1px solid #e5e7eb;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #d97706, #b45309);
-            border: none;
-            padding: 0.65rem 1.75rem;
-            border-radius: 14px;
-            color: white;
+            font-size: 0.76rem;
             font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
-            position: relative;
-            overflow: hidden;
-            font-family: inherit;
+            color: #d4cdc4;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(4px);
+            padding: 0.25rem 0.9rem 0.25rem 0.7rem;
+            border-radius: 40px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 215, 160, 0.15);
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+            width: fit-content;
+        }
+        .home-link:hover {
+            background: rgba(255, 215, 160, 0.12);
+            border-color: var(--amber);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(217, 119, 6, 0.15);
+        }
+        .home-link svg {
+            width: 13px;
+            height: 13px;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            fill: none;
         }
 
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(217, 119, 6, 0.35);
-        }
-
-        .btn-primary:active:not(:disabled) {
-            transform: translateY(0px);
-            box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .btn-primary .spinner {
-            display: none;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.7s linear infinite;
-        }
-
-        .btn-primary.loading .btn-text {
-            visibility: hidden;
-        }
-
-        .btn-primary.loading .spinner {
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid #d97706;
-            padding: 0.65rem 1.5rem;
-            border-radius: 14px;
-            color: #d97706;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: inherit;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: #d97706;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2);
-        }
-
-        .btn-secondary:active:not(:disabled) {
-            transform: translateY(0px);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .step-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            font-size: 0.7rem;
-            font-weight: 600;
-            padding: 0.2rem 0.7rem;
-            border-radius: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .step-badge.complete {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .step-badge.incomplete {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .alert-card {
-            border-radius: 16px;
-            padding: 0.9rem 1.25rem;
-            margin-bottom: 1.25rem;
+        /* Alerts */
+        .alert {
             display: flex;
             align-items: flex-start;
-            gap: 0.75rem;
-            animation: slideInAlert 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            justify-content: space-between;
+            gap: 0.6rem;
+            font-size: 0.76rem;
+            padding: 0.5rem 0.7rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.06);
         }
-
-        @keyframes slideInAlert {
-            from {
-                opacity: 0;
-                transform: translateY(-12px) scale(0.98);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .alert-success {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-        }
-
-        .alert-error {
-            background: #fef2f2;
-            border: 1px solid #fca5a5;
-        }
-
-        .alert-icon {
-            font-size: 1rem;
-            flex-shrink: 0;
-            margin-top: 0.1rem;
-        }
-
-        .alert-success .alert-icon { color: #22c55e; }
-        .alert-error .alert-icon { color: #ef4444; }
-
-        .alert-content {
-            flex: 1;
-        }
-
-        .alert-title {
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 0.1rem;
-        }
-
-        .alert-success .alert-title { color: #166534; }
-        .alert-error .alert-title { color: #991b1b; }
-
-        .alert-message {
-            font-size: 0.8rem;
-            color: #4b5563;
-        }
-
-        .alert-close {
+        .alert-ok { color: #86efac; border-color: rgba(134, 239, 172, 0.2); }
+        .alert-bad { color: #fca5a5; border-color: rgba(252, 165, 165, 0.15); }
+        .alert button {
             background: none;
             border: none;
-            color: #9ca3af;
+            color: inherit;
+            opacity: 0.5;
             cursor: pointer;
-            padding: 0.25rem;
-            transition: color 0.2s ease;
             font-size: 0.85rem;
+            line-height: 1;
+            padding: 0 0.2rem;
+        }
+        .alert button:hover { opacity: 1; }
+
+        /* Progress */
+        .progress-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.1rem;
+            gap: 0.75rem;
+        }
+        .progress-text {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #c4bdb3;
+            white-space: nowrap;
+        }
+        .progress-track {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,215,160,0.15);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--amber);
+            border-radius: 4px;
+            width: 33.33%;
+            transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .alert-close:hover {
-            color: #6b7280;
-        }
-
-        #website {
-            display: none !important;
-            position: absolute !important;
-            left: -9999px !important;
-            top: -9999px !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            width: 0 !important;
-            pointer-events: none !important;
-        }
-
-        .step-transition {
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .step-hidden {
-            display: none;
-        }
+        /* Fields */
+        .field { margin-bottom: 0.95rem; }
+        .field:last-child { margin-bottom: 0; }
 
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 0.75rem;
         }
-
-        @media (max-width: 640px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-                gap: 0.5rem;
-            }
+        @media (max-width: 480px) {
+            .grid-2 { grid-template-columns: 1fr; gap: 0.95rem; }
         }
 
-        .footer-link a {
-            color: #d97706;
+        label {
+            display: block;
+            font-size: 0.76rem;
             font-weight: 600;
-            transition: color 0.2s ease;
-            text-decoration: none;
+            color: #d6cec4;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.01em;
         }
 
-        .footer-link a:hover {
-            color: #b45309;
+        .form-input {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.88rem;
+            border: 1px solid rgba(255, 215, 160, 0.20);
+            border-radius: 12px;
+            background: rgba(20, 18, 16, 0.70);
+            backdrop-filter: blur(2px);
+            color: #f0ebe5;
+            outline: none;
+            font-family: inherit;
+            appearance: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+        .form-input::placeholder { color: #887e74; }
+        .form-input:focus {
+            border-color: var(--amber);
+            background: rgba(28, 25, 22, 0.85);
+            box-shadow: 0 0 0 4px var(--amber-soft), 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .form-input.invalid {
+            border-color: #dc7a5a;
+        }
+        .form-input.invalid:focus {
+            box-shadow: 0 0 0 4px rgba(194, 65, 12, 0.20);
         }
 
-        .top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 50;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-            padding: 0.6rem 1.5rem;
+        select.form-input {
+            padding-right: 2.3rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23887e74' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.9rem center;
+            background-size: 11px;
+            cursor: pointer;
+            color: #f0ebe5;
+        }
+        select.form-input option { background: #1a1816; color: #f0ebe5; }
+
+        .field-error {
+            font-size: 0.68rem;
+            color: #fca5a5;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        .field-error.show { display: block; }
+
+        .input-wrapper { position: relative; }
+        .pw-toggle {
+            position: absolute;
+            right: 0.7rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 0.2rem;
+            cursor: pointer;
+            color: #a09589;
+            display: flex;
+            transition: color 0.15s ease;
+        }
+        .pw-toggle:hover { color: #e8e0d8; }
+        .pw-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.8; fill: none; }
+
+        .pw-hint {
+            font-size: 0.68rem;
+            color: #a09589;
+            margin-top: 0.35rem;
+            display: none;
+        }
+        .pw-hint.show { display: block; }
+        .pw-hint.bad { color: #fca5a5; }
+
+        /* Buttons */
+        .actions {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-top: 1.4rem;
+            gap: 0.75rem;
         }
+        .actions.single { justify-content: flex-end; }
 
-        @media (max-width: 640px) {
-            .top-bar {
-                padding: 0.5rem 1rem;
-            }
-        }
-
-        .brand-container {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .brand-logo {
-            height: 30px;
-            width: auto;
-            border-radius: 8px;
-        }
-
-        .brand-text {
-            font-weight: 700;
-            font-size: 0.9rem;
-            color: #78350f;
-            letter-spacing: -0.01em;
-        }
-
-        .home-link {
-            background: rgba(217, 119, 6, 0.08);
-            border-radius: 40px;
-            padding: 0.35rem 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.75rem;
+        .btn {
+            font-family: inherit;
+            font-size: 0.85rem;
             font-weight: 600;
-            color: #78350f;
+            border-radius: 12px;
+            cursor: pointer;
             transition: all 0.2s ease;
-            text-decoration: none;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            min-height: 48px;
         }
-
-        .home-link:hover {
-            background: rgba(217, 119, 6, 0.15);
-            transform: translateY(-1px);
+        .btn-primary {
+            background: var(--amber);
+            color: #fff;
+            box-shadow: 0 8px 24px -6px rgba(217, 119, 6, 0.45);
+            flex: 1;
         }
-
-        .home-link i {
-            font-size: 0.7rem;
-            color: #d97706;
+        .btn-primary:hover:not(:disabled) {
+            background: var(--amber-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px -8px rgba(217, 119, 6, 0.55);
         }
-
-        .card-content {
-            padding: 2rem 2rem 1.5rem;
-            max-height: calc(100vh - 120px);
-            overflow-y: auto;
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
-
-        .card-content::-webkit-scrollbar {
-            width: 4px;
+        .btn-secondary {
+            background: rgba(255,255,255,0.06);
+            color: #c4bdb3;
+            padding: 0.7rem 1.2rem;
+            border: 1px solid rgba(255,215,160,0.08);
         }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); color: #fff; }
 
-        .card-content::-webkit-scrollbar-track {
-            background: transparent;
+        .btn .spinner {
+            display: none;
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto;
         }
+        .btn.loading .btn-label { visibility: hidden; position: absolute; }
+        .btn.loading { position: relative; }
+        .btn.loading .spinner { display: inline-block; }
 
-        .card-content::-webkit-scrollbar-thumb {
-            background: #d1d5db;
-            border-radius: 4px;
-        }
+        /* Steps */
+        .step-panel { display: none; }
+        .step-panel.active { display: block; }
 
-        @media (max-width: 640px) {
-            .card-content {
-                padding: 1.25rem 1.25rem 1rem;
-                max-height: calc(100vh - 100px);
-            }
-        }
-
-        .form-footer {
+        /* Footer */
+        .auth-footer {
+            text-align: center;
             margin-top: 1.5rem;
-            padding-top: 1.25rem;
-            border-top: 1px solid #f3f4f6;
+            font-size: 0.78rem;
+            color: #b0a79c;
+        }
+        .auth-footer a {
+            color: #dba459;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+        .auth-footer a:hover { color: #f0c78a; text-decoration: underline; }
+
+        /* Honeypot */
+        #website-wrapper {
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- TOP BAR -->
-    <div class="top-bar">
-        <div class="brand-container">
-            <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI" class="brand-logo" onerror="this.src='https://placehold.co/60x60/d97706/white?text=M'">
-            <span class="brand-text">MauzoSheetAI</span>
+    <!-- LOADING -->
+    <div id="loadingScreen">
+        <div class="loading-mark">
+            <img src="{{ asset('logo11.png') }}" alt="MauzoSheetAI" onerror="this.src='https://placehold.co/40x40/d97706/white?text=M'">
         </div>
-        <a href="{{ route('landing') }}" class="home-link">
-            <i class="fas fa-home"></i>
-            <span>Nyumbani</span>
-        </a>
     </div>
 
-    <!-- REGISTRATION CARD -->
-    <div class="register-card-wrapper">
-        <div class="glass-card">
+    <div>
+        <div class="brand">
+            <img src="{{ asset('logo11.png') }}" alt="MauzoSheetAI" onerror="this.src='https://placehold.co/48x48/d97706/white?text=M'">
+            <span class="brand-name">MauzoSheetAI</span>
+        </div>
 
-            <!-- HEADER -->
-            <div class="text-center pt-6 pb-4 border-b border-gray-100/50">
-                <div class="logo-circle rounded-2xl flex items-center justify-center mx-auto mb-3">
-                    <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI" class="logo-img-small" onerror="this.src='https://placehold.co/50x50/d97706/white?text=M'">
-                </div>
-                <h1 class="font-extrabold tracking-tight">Sajili Kampuni</h1>
-                <p class="subtitle mt-0.5">Anza kutumia MauzoSheetAI leo</p>
-            </div>
+        <div class="auth-wrapper">
+            <div class="glass">
 
-            <!-- ALERTS -->
-            <div style="padding-left:2rem;padding-right:2rem;padding-top:0.75rem;">
+                <!-- Home Link -->
+                <a href="{{ route('landing') }}" class="home-link">
+                    <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
+                    Nyumbani
+                </a>
+
+                <h1 class="auth-title">Jisajili</h1>
+
+                <!-- Alerts -->
                 @if(session('success'))
-                    <div class="alert-card alert-success" id="successAlert">
-                        <i class="fas fa-check-circle alert-icon"></i>
-                        <div class="alert-content">
-                            <div class="alert-title">Imefanikiwa!</div>
-                            <div class="alert-message">{{ session('success') }}</div>
-                        </div>
-                        <button class="alert-close" onclick="this.closest('.alert-card').remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
+                    <div class="alert alert-ok" id="successAlert">
+                        <span>{{ session('success') }}</span>
+                        <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
                     </div>
-                    <script>setTimeout(() => { let el = document.getElementById('successAlert'); if(el) el.remove(); }, 5000);</script>
+                    <script>setTimeout(() => { document.getElementById('successAlert')?.remove(); }, 5000);</script>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert-card alert-error" id="errorAlert">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
-                        <div class="alert-content">
-                            <div class="alert-title">Hitilafu!</div>
-                            <div class="alert-message">{{ session('error') }}</div>
-                        </div>
-                        <button class="alert-close" onclick="this.closest('.alert-card').remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
+                    <div class="alert alert-bad" id="errorAlert">
+                        <span>{{ session('error') }}</span>
+                        <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
                     </div>
                 @endif
 
                 @if ($errors->any())
-                    <div class="alert-card alert-error" id="validationAlert">
-                        <i class="fas fa-exclamation-triangle alert-icon"></i>
-                        <div class="alert-content">
-                            <div class="alert-title">Tafadhali sahihisha makosa</div>
-                            <div class="alert-message">
-                                @foreach ($errors->all() as $error)
-                                    <p class="text-xs">{{ $error }}</p>
-                                @endforeach
-                            </div>
-                        </div>
-                        <button class="alert-close" onclick="this.closest('.alert-card').remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
+                    <div class="alert alert-bad" id="validationAlert">
+                        <span>
+                            @foreach ($errors->all() as $error)
+                                {{ $error }}@if(!$loop->last)<br>@endif
+                            @endforeach
+                        </span>
+                        <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
                     </div>
-                    <script>setTimeout(() => { let el = document.getElementById('validationAlert'); if(el) el.remove(); }, 8000);</script>
                 @endif
-            </div>
 
-            <!-- CARD CONTENT -->
-            <div class="card-content">
-
-                <!-- PREMIUM STEPPER -->
-                <div class="stepper-container mb-5">
-                    @php
-                        $currentStep = $currentStep ?? 1;
-                    @endphp
-                    @foreach([1, 2, 3] as $step)
-                        <div class="step-item">
-                            <div class="step-dot 
-                                @if($step == $currentStep) active 
-                                @elseif($step < $currentStep) completed 
-                                @endif" 
-                                data-step="{{ $step }}">
-                                <span class="step-number">{{ $step }}</span>
-                                <span class="check-mark"><i class="fas fa-check text-white"></i></span>
-                            </div>
-                            @if($step < 3)
-                                <div class="step-line 
-                                    @if($step < $currentStep) completed 
-                                    @elseif($step == $currentStep) partial 
-                                    @endif">
-                                    <div class="line-fill"></div>
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
+                <div class="progress-row">
+                    <span class="progress-text" id="progressText">Hatua 1 kati ya 3</span>
+                    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
                 </div>
 
-                <!-- STEP LABELS -->
-                <div class="flex justify-between text-center px-1 mb-5" style="font-size:0.65rem;font-weight:500;color:#9ca3af;">
-                    <span class="step-label @if($currentStep >= 1) active @endif">Kampuni</span>
-                    <span class="step-label @if($currentStep >= 2) active @endif">Mawasiliano</span>
-                    <span class="step-label @if($currentStep >= 3) active @endif">Akaunti</span>
-                </div>
-
-                <!-- FORM -->
                 <form id="multiStepForm" method="POST" action="{{ route('register.post') }}">
                     @csrf
 
-                    <!-- Honeypot -->
                     <div id="website-wrapper">
                         <input type="text" id="website" name="website" value="" tabindex="-1" autocomplete="off">
                     </div>
                     <input type="hidden" name="form_start_time" id="form_start_time" value="">
 
                     <!-- STEP 1 -->
-                    <div class="step-transition @if(($currentStep ?? 1) != 1) step-hidden @endif" data-step="1">
-                        <div class="form-group">
-                            <label class="form-label" for="company_name">
-                                <i class="fas fa-building label-icon"></i>Jina la Kampuni
-                            </label>
-                            <div class="input-wrapper">
-                                <input name="company_name" id="company_name" value="{{ old('company_name') }}" required
-                                    placeholder="Mfano: MauzoShop Ltd"
-                                    class="form-input"
-                                    minlength="2" maxlength="255"
-                                    data-validate="company_name"
-                                    autocomplete="organization">
-                            </div>
-                            <div class="validation-message" id="company_name_message"></div>
+                    <div class="step-panel @if(($currentStep ?? 1) == 1) active @endif" data-step="1">
+                        <div class="field">
+                            <label for="company_name">Jina la Kampuni</label>
+                            <input name="company_name" id="company_name" value="{{ old('company_name') }}" required
+                                placeholder="Mfano: MauzoShop Ltd"
+                                class="form-input" minlength="2" maxlength="255"
+                                data-validate="company_name" autocomplete="organization">
+                            <div class="field-error" id="company_name_message"></div>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="owner_name">
-                                <i class="fas fa-user-tie label-icon"></i>Jina la Mmiliki
-                            </label>
-                            <div class="input-wrapper">
-                                <input name="owner_name" id="owner_name" value="{{ old('owner_name') }}" required
-                                    placeholder="Jina kamili la mmiliki"
-                                    class="form-input"
-                                    pattern="[a-zA-Z\s\.\-]+" minlength="2" maxlength="255"
-                                    data-validate="owner_name"
-                                    autocomplete="name">
-                            </div>
-                            <div class="validation-message" id="owner_name_message"></div>
+                        <div class="field">
+                            <label for="owner_name">Jina la Mmiliki</label>
+                            <input name="owner_name" id="owner_name" value="{{ old('owner_name') }}" required
+                                placeholder="Jina kamili la mmiliki"
+                                class="form-input" pattern="[a-zA-Z\s\.\-]+" minlength="2" maxlength="255"
+                                data-validate="owner_name" autocomplete="name">
+                            <div class="field-error" id="owner_name_message"></div>
                         </div>
-
+                        <div class="grid-2">
+                            <div class="field">
+                                <label for="location">Mahali</label>
+                                <input name="location" id="location" value="{{ old('location') }}" required
+                                    placeholder="Eneo" class="form-input" minlength="2" maxlength="255"
+                                    data-validate="location" autocomplete="address-level2">
+                                <div class="field-error" id="location_message"></div>
+                            </div>
+                            <div class="field">
+                                <label for="region">Mkoa</label>
+                                <select name="region" id="region" required class="form-input" data-validate="region">
+                                    <option value="">Chagua Mkoa</option>
+                                    @php $regions = ["Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi","Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mwanza","Mbeya","Morogoro","Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","Simiyu","Singida","Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"]; @endphp
+                                    @foreach($regions as $region)
+                                        <option value="{{ $region }}" {{ old('region')==$region ? 'selected' : '' }}>{{ $region }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="field-error" id="region_message"></div>
+                            </div>
+                        </div>
                         <input type="hidden" name="owner_gender" value="male">
                         <input type="hidden" name="owner_dob" value="2000-01-01">
 
-                        <div class="flex items-center justify-between mt-5">
-                            <span class="step-badge incomplete" id="step1_badge">
-                                <i class="fas fa-times"></i> Haijakamilika
-                            </span>
-                            <button type="button" data-action="next" id="step1_next"
-                                class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span class="btn-text">Endelea <i class="fas fa-arrow-right ml-1"></i></span>
-                                <span class="spinner"></span>
+                        <div class="actions single">
+                            <button type="button" data-action="next" id="step1_next" class="btn btn-primary" disabled>
+                                <span class="btn-label">Endelea</span><span class="spinner"></span>
                             </button>
                         </div>
                     </div>
 
                     <!-- STEP 2 -->
-                    <div class="step-transition @if(($currentStep ?? 1) != 2) step-hidden @endif" data-step="2">
+                    <div class="step-panel @if(($currentStep ?? 1) == 2) active @endif" data-step="2">
                         <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label" for="location">
-                                    <i class="fas fa-map-marker-alt label-icon"></i>Mahali
-                                </label>
-                                <div class="input-wrapper">
-                                    <input name="location" id="location" value="{{ old('location') }}" required
-                                        placeholder="Eneo"
-                                        class="form-input"
-                                        minlength="2" maxlength="255"
-                                        data-validate="location"
-                                        autocomplete="address-level2">
-                                </div>
-                                <div class="validation-message" id="location_message"></div>
+                            <div class="field">
+                                <label for="phone">Simu</label>
+                                <input name="phone" id="phone" value="{{ old('phone') }}" required
+                                    placeholder="07XXXXXXXX" class="form-input" pattern="^0[0-9]{9}$" maxlength="10" minlength="10"
+                                    data-validate="phone" autocomplete="tel">
+                                <div class="field-error" id="phone_message"></div>
                             </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="region">
-                                    <i class="fas fa-map-pin label-icon"></i>Mkoa
-                                </label>
-                                <div class="input-wrapper">
-                                    <select name="region" id="region" required class="form-input" data-validate="region">
-                                        <option value="">Chagua Mkoa</option>
-                                        @php $regions = ["Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi","Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mwanza","Mbeya","Morogoro","Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","Simiyu","Singida","Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"]; @endphp
-                                        @foreach($regions as $region)
-                                            <option value="{{ $region }}" {{ old('region')==$region ? 'selected' : '' }}>{{ $region }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="validation-message" id="region_message"></div>
+                            <div class="field">
+                                <label for="company_email">Barua Pepe</label>
+                                <input name="company_email" id="company_email" type="email" value="{{ old('company_email') }}" required
+                                    placeholder="info@kampuni.com" class="form-input" maxlength="255"
+                                    data-validate="email" autocomplete="email">
+                                <div class="field-error" id="company_email_message"></div>
                             </div>
                         </div>
 
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label" for="phone">
-                                    <i class="fas fa-phone-alt label-icon"></i>Simu
-                                </label>
-                                <div class="input-wrapper">
-                                    <input name="phone" id="phone" value="{{ old('phone') }}" required
-                                        placeholder="07XXXXXXXX"
-                                        class="form-input"
-                                        pattern="^0[0-9]{9}$" maxlength="10" minlength="10"
-                                        data-validate="phone"
-                                        autocomplete="tel">
-                                </div>
-                                <div class="validation-message" id="phone_message"></div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label" for="company_email">
-                                    <i class="fas fa-envelope label-icon"></i>Barua Pepe
-                                </label>
-                                <div class="input-wrapper">
-                                    <input name="company_email" id="company_email" type="email" value="{{ old('company_email') }}" required
-                                        placeholder="info@kampuni.com"
-                                        class="form-input"
-                                        maxlength="255"
-                                        data-validate="email"
-                                        autocomplete="email">
-                                </div>
-                                <div class="validation-message" id="company_email_message"></div>
-                            </div>
+                        <div class="field">
+                            <label for="business_type">Aina ya Biashara</label>
+                            <select name="business_type" id="business_type" required class="form-input" data-validate="business_type">
+                                <option value="">Chagua aina</option>
+                                <option value="retail_shop" {{ old('business_type')=='retail_shop' ? 'selected' : '' }}>Retail Shop / Duka</option>
+                                <option value="mini_market" {{ old('business_type')=='mini_market' ? 'selected' : '' }}>Mini Market</option>
+                                <option value="supermarket" {{ old('business_type')=='supermarket' ? 'selected' : '' }}>Supermarket</option>
+                                <option value="pharmacy" {{ old('business_type')=='pharmacy' ? 'selected' : '' }}>Pharmacy / Dawa</option>
+                                <option value="hardware" {{ old('business_type')=='hardware' ? 'selected' : '' }}>Hardware</option>
+                                <option value="stationery" {{ old('business_type')=='stationery' ? 'selected' : '' }}>Stationery</option>
+                                <option value="restaurant" {{ old('business_type')=='restaurant' ? 'selected' : '' }}>Restaurant</option>
+                                <option value="hotel" {{ old('business_type')=='hotel' ? 'selected' : '' }}>Hotel</option>
+                                <option value="salon" {{ old('business_type')=='salon' ? 'selected' : '' }}>Salon / Kinyozi</option>
+                                <option value="electronics" {{ old('business_type')=='electronics' ? 'selected' : '' }}>Electronics</option>
+                                <option value="wholesale" {{ old('business_type')=='wholesale' ? 'selected' : '' }}>Jumla / Wholesale</option>
+                                <option value="other" {{ old('business_type')=='other' ? 'selected' : '' }}>Nyingine</option>
+                            </select>
+                            <div class="field-error" id="business_type_message"></div>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="business_type">
-                                <i class="fas fa-store label-icon"></i>Aina ya Biashara
-                            </label>
-                            <div class="input-wrapper">
-                                <select name="business_type" id="business_type" required class="form-input" data-validate="business_type">
-                                    <option value="">Chagua aina</option>
-                                    <option value="retail_shop" {{ old('business_type')=='retail_shop' ? 'selected' : '' }}>Retail Shop / Duka</option>
-                                    <option value="mini_market" {{ old('business_type')=='mini_market' ? 'selected' : '' }}>Mini Market</option>
-                                    <option value="supermarket" {{ old('business_type')=='supermarket' ? 'selected' : '' }}>Supermarket</option>
-                                    <option value="pharmacy" {{ old('business_type')=='pharmacy' ? 'selected' : '' }}>Pharmacy / Dawa</option>
-                                    <option value="hardware" {{ old('business_type')=='hardware' ? 'selected' : '' }}>Hardware</option>
-                                    <option value="stationery" {{ old('business_type')=='stationery' ? 'selected' : '' }}>Stationery</option>
-                                    <option value="restaurant" {{ old('business_type')=='restaurant' ? 'selected' : '' }}>Restaurant</option>
-                                    <option value="hotel" {{ old('business_type')=='hotel' ? 'selected' : '' }}>Hotel</option>
-                                    <option value="salon" {{ old('business_type')=='salon' ? 'selected' : '' }}>Salon / Kinyozi</option>
-                                    <option value="electronics" {{ old('business_type')=='electronics' ? 'selected' : '' }}>Electronics</option>
-                                    <option value="wholesale" {{ old('business_type')=='wholesale' ? 'selected' : '' }}>Jumla / Wholesale</option>
-                                    <option value="other" {{ old('business_type')=='other' ? 'selected' : '' }}>Nyingine</option>
-                                </select>
-                            </div>
-                            <div class="validation-message" id="business_type_message"></div>
+                        <div class="field">
+                            <label for="hear_about_us">Umetusikia Wapi?</label>
+                            <select name="hear_about_us" id="hear_about_us" required class="form-input" data-validate="hear_about_us">
+                                <option value="">Chagua</option>
+                                <option value="friend" {{ old('hear_about_us')=='friend' ? 'selected' : '' }}>Rafiki</option>
+                                <option value="facebook" {{ old('hear_about_us')=='facebook' ? 'selected' : '' }}>Facebook</option>
+                                <option value="instagram" {{ old('hear_about_us')=='instagram' ? 'selected' : '' }}>Instagram</option>
+                                <option value="tiktok" {{ old('hear_about_us')=='tiktok' ? 'selected' : '' }}>TikTok</option>
+                                <option value="whatsapp" {{ old('hear_about_us')=='whatsapp' ? 'selected' : '' }}>WhatsApp</option>
+                                <option value="google" {{ old('hear_about_us')=='google' ? 'selected' : '' }}>Google Search</option>
+                                <option value="invited" {{ old('hear_about_us')=='invited' ? 'selected' : '' }}>Nimealikwa</option>
+                                <option value="advertisement" {{ old('hear_about_us')=='advertisement' ? 'selected' : '' }}>Tangazo</option>
+                                <option value="other" {{ old('hear_about_us')=='other' ? 'selected' : '' }}>Nyingine</option>
+                            </select>
+                            <div class="field-error" id="hear_about_us_message"></div>
                         </div>
 
-                        <div class="form-group">
-                            <label class="form-label" for="hear_about_us">
-                                <i class="fas fa-bullhorn label-icon"></i>Umetusikia Wapi?
-                            </label>
-                            <div class="input-wrapper">
-                                <select name="hear_about_us" id="hear_about_us" required class="form-input" data-validate="hear_about_us">
-                                    <option value="">Chagua</option>
-                                    <option value="friend" {{ old('hear_about_us')=='friend' ? 'selected' : '' }}>Rafiki</option>
-                                    <option value="facebook" {{ old('hear_about_us')=='facebook' ? 'selected' : '' }}>Facebook</option>
-                                    <option value="instagram" {{ old('hear_about_us')=='instagram' ? 'selected' : '' }}>Instagram</option>
-                                    <option value="tiktok" {{ old('hear_about_us')=='tiktok' ? 'selected' : '' }}>TikTok</option>
-                                    <option value="whatsapp" {{ old('hear_about_us')=='whatsapp' ? 'selected' : '' }}>WhatsApp</option>
-                                    <option value="google" {{ old('hear_about_us')=='google' ? 'selected' : '' }}>Google Search</option>
-                                    <option value="invited" {{ old('hear_about_us')=='invited' ? 'selected' : '' }}>Nimealikwa</option>
-                                    <option value="advertisement" {{ old('hear_about_us')=='advertisement' ? 'selected' : '' }}>Tangazo</option>
-                                    <option value="other" {{ old('hear_about_us')=='other' ? 'selected' : '' }}>Nyingine</option>
-                                </select>
-                            </div>
-                            <div class="validation-message" id="hear_about_us_message"></div>
-                        </div>
-
-                        <div class="flex items-center justify-between mt-5">
-                            <button type="button" data-action="prev" class="btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Rudi
+                        <div class="actions">
+                            <button type="button" data-action="prev" class="btn btn-secondary">Rudi</button>
+                            <button type="button" data-action="next" id="step2_next" class="btn btn-primary" disabled>
+                                <span class="btn-label">Endelea</span><span class="spinner"></span>
                             </button>
-                            <div class="flex items-center gap-3">
-                                <span class="step-badge incomplete" id="step2_badge">
-                                    <i class="fas fa-times"></i> Haijakamilika
-                                </span>
-                                <button type="button" data-action="next" id="step2_next"
-                                    class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <span class="btn-text">Endelea <i class="fas fa-arrow-right ml-1"></i></span>
-                                    <span class="spinner"></span>
-                                </button>
-                            </div>
                         </div>
                     </div>
 
                     <!-- STEP 3 -->
-                    <div class="step-transition @if(($currentStep ?? 1) != 3) step-hidden @endif" data-step="3">
-                        <div class="form-group">
-                            <label class="form-label" for="username">
-                                <i class="fas fa-user-circle label-icon"></i>Jina la Mtumiaji
-                            </label>
-                            <div class="input-wrapper">
-                                <input name="username" id="username" value="{{ old('username') }}" required
-                                    placeholder="Jina la kuingia mfumo"
-                                    class="form-input"
-                                    pattern="^[a-zA-Z0-9_]+$" minlength="3" maxlength="50"
-                                    data-validate="username"
-                                    autocomplete="username">
-                            </div>
-                            <div class="validation-message" id="username_message"></div>
+                    <div class="step-panel @if(($currentStep ?? 1) == 3) active @endif" data-step="3">
+                        <div class="field">
+                            <label for="username">Jina la Mtumiaji</label>
+                            <input name="username" id="username" value="{{ old('username') }}" required
+                                placeholder="Jina la kuingia mfumo" class="form-input"
+                                pattern="^[a-zA-Z0-9_]+$" minlength="3" maxlength="50"
+                                data-validate="username" autocomplete="username">
+                            <div class="field-error" id="username_message"></div>
                         </div>
 
                         <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label" for="password">
-                                    <i class="fas fa-lock label-icon"></i>Neno la Siri
-                                </label>
+                            <div class="field">
+                                <label for="password">Neno la Siri</label>
                                 <div class="input-wrapper">
                                     <input type="password" name="password" id="password" required
-                                        placeholder="Mfano: Mauzo@123"
-                                        class="form-input"
-                                        minlength="8"
-                                        data-validate="password"
-                                        autocomplete="new-password">
-                                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Show password">
-                                        <i class="fas fa-eye"></i>
+                                        placeholder="Neno la siri" class="form-input" minlength="6"
+                                        data-validate="password" autocomplete="new-password">
+                                    <button type="button" class="pw-toggle" id="togglePassword" aria-label="Onyesha nenosiri">
+                                        <svg id="eyeIconPw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </button>
                                 </div>
-                                <div class="validation-message" id="password_message"></div>
-
-                                <div class="password-strength-container">
-                                    <div class="password-strength-bar">
-                                        <div class="password-strength-fill" id="strengthFill"></div>
-                                    </div>
-                                    <div class="password-strength-label" id="strengthLabel"></div>
-                                </div>
-
-                                <div class="password-checklist" id="passwordChecklist">
-                                    <div class="checklist-item" id="cl-length">
-                                        <span class="check-icon"><i class="fas fa-times"></i></span>
-                                        Angalau herufi 8
-                                    </div>
-                                    <div class="checklist-item" id="cl-uppercase">
-                                        <span class="check-icon"><i class="fas fa-times"></i></span>
-                                        Angalau herufi kubwa
-                                    </div>
-                                    <div class="checklist-item" id="cl-lowercase">
-                                        <span class="check-icon"><i class="fas fa-times"></i></span>
-                                        Angalau herufi ndogo
-                                    </div>
-                                    <div class="checklist-item" id="cl-number">
-                                        <span class="check-icon"><i class="fas fa-times"></i></span>
-                                        Angalau namba
-                                    </div>
-                                    <div class="checklist-item" id="cl-special">
-                                        <span class="check-icon"><i class="fas fa-times"></i></span>
-                                        Angalau alama maalum (@,#,$,etc)
-                                    </div>
-                                </div>
-
-                                <div class="password-sample">
-                                    <i class="fas fa-info-circle"></i> Mfano: <strong>Mauzo@123</strong>
-                                </div>
+                                <div class="pw-hint" id="pwHint">Angalau herufi 6.</div>
+                                <div class="field-error" id="password_message"></div>
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label" for="password_confirmation">
-                                    <i class="fas fa-check-circle label-icon"></i>Thibitisha
-                                </label>
+                            <div class="field">
+                                <label for="password_confirmation">Thibitisha</label>
                                 <div class="input-wrapper">
                                     <input type="password" name="password_confirmation" id="password_confirmation" required
-                                        placeholder="Andika tena"
-                                        class="form-input"
-                                        data-validate="password_confirm"
-                                        autocomplete="new-password">
-                                    <button type="button" class="password-toggle" id="toggleConfirm" aria-label="Show password">
-                                        <i class="fas fa-eye"></i>
+                                        placeholder="Andika tena" class="form-input"
+                                        data-validate="password_confirm" autocomplete="new-password">
+                                    <button type="button" class="pw-toggle" id="toggleConfirm" aria-label="Onyesha nenosiri">
+                                        <svg id="eyeIconConfirm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </button>
                                 </div>
-                                <div class="validation-message" id="password_confirmation_message"></div>
+                                <div class="field-error" id="password_confirmation_message"></div>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between mt-5">
-                            <button type="button" data-action="prev" class="btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Rudi
+                        <div class="actions">
+                            <button type="button" data-action="prev" class="btn btn-secondary">Rudi</button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" disabled>
+                                <span class="btn-label">Sajili</span><span class="spinner"></span>
                             </button>
-                            <div class="flex items-center gap-3">
-                                <span class="step-badge incomplete" id="step3_badge">
-                                    <i class="fas fa-times"></i> Haijakamilika
-                                </span>
-                                <button type="submit" id="submitBtn"
-                                    class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <span class="btn-text"><i class="fas fa-check-circle mr-1"></i> Sajili</span>
-                                    <span class="spinner"></span>
-                                </button>
-                            </div>
                         </div>
                     </div>
 
                 </form>
 
-                <!-- FOOTER -->
-                <div class="form-footer text-center">
-                    <p class="text-sm text-gray-500">
-                        Una akaunti tayari?
-                        <a href="{{ route('login') }}" class="link-primary">Ingia hapa</a>
-                    </p>
+                <div class="auth-footer">
+                    Una akaunti tayari? <a href="{{ route('login') }}">Ingia</a>
                 </div>
 
             </div>
         </div>
     </div>
 
-    <!-- ========================================= -->
-    <!-- JAVASCRIPT - AUTO-VALIDATION & NAVIGATION -->
-    <!-- ========================================= -->
     <script>
         (function() {
             'use strict';
 
-            const form = document.getElementById('multiStepForm');
-            const steps = Array.from(document.querySelectorAll('.step-transition'));
-            let currentStep = {{ $currentStep ?? 1 }} - 1;
-            const stepDots = document.querySelectorAll('.step-dot');
-            const stepLines = document.querySelectorAll('.step-line');
-            const stepLabels = document.querySelectorAll('.step-label');
+            document.getElementById('form_start_time').value = Date.now();
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    document.getElementById('loadingScreen').classList.add('hide');
+                }, 350);
+            });
 
-            // Validation rules - only show errors when user makes a mistake
+            const form = document.getElementById('multiStepForm');
+            const panels = Array.from(document.querySelectorAll('.step-panel'));
+            let currentStep = ({{ $currentStep ?? 1 }} - 1);
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            // Validation rules - password now only requires min 6 chars
             const validations = {
                 company_name: {
                     validate: (v) => v.trim().length >= 2,
-                    msg: 'Jina la kampuni lazima liwe na angalau herufi 2'
+                    msg: 'Jina la kampuni linahitajika (angalau herufi 2).'
                 },
                 owner_name: {
                     validate: (v) => /^[a-zA-Z\s\.\-]+$/.test(v) && v.trim().length >= 2,
-                    msg: 'Jina lazima liwe na herufi tu na angalau herufi 2'
+                    msg: 'Jina liwe herufi tu, angalau herufi 2.'
                 },
                 location: {
                     validate: (v) => v.trim().length >= 2,
-                    msg: 'Tafadhali weka eneo lako'
+                    msg: 'Tafadhali weka eneo lako.'
                 },
                 region: {
                     validate: (v) => v !== '',
-                    msg: 'Tafadhali chagua mkoa wako'
+                    msg: 'Tafadhali chagua mkoa wako.'
                 },
                 phone: {
                     validate: (v) => /^0[0-9]{9}$/.test(v),
-                    msg: 'Nambari ya simu lazima iwe tarakimu 10 kuanzia 0'
+                    msg: 'Tafadhali weka namba sahihi ya simu.'
                 },
                 email: {
                     validate: (v) => {
@@ -1311,482 +753,217 @@
                         if (!re.test(v)) return false;
                         const domain = v.split('@')[1];
                         const disposable = ['mailinator.com', 'guerrillamail.com', '10minutemail.com',
-                            'temp-mail.org', 'yopmail.com', 'throwawaymail.com', 'fakeinbox.com'
-                        ];
+                            'temp-mail.org', 'yopmail.com', 'throwawaymail.com', 'fakeinbox.com'];
                         return !disposable.includes(domain);
                     },
-                    msg: 'Tafadhali tumia barua pepe halisi'
+                    msg: 'Tafadhali tumia barua pepe halisi.'
                 },
                 business_type: {
                     validate: (v) => v !== '',
-                    msg: 'Tafadhali chagua aina ya biashara'
+                    msg: 'Tafadhali chagua aina ya biashara.'
                 },
                 hear_about_us: {
                     validate: (v) => v !== '',
-                    msg: 'Tafadhali chagua umetusikia wapi'
+                    msg: 'Tafadhali chagua umetusikia wapi.'
                 },
                 username: {
                     validate: (v) => /^[a-zA-Z0-9_]{3,50}$/.test(v),
-                    msg: 'Jina la mtumiaji lazima liwe na herufi, namba au underscore, angalau 3'
+                    msg: 'Jina la mtumiaji: herufi, namba au underscore, angalau 3.'
                 },
                 password: {
-                    validate: (v) => {
-                        return v.length >= 8 &&
-                            /[A-Z]/.test(v) &&
-                            /[a-z]/.test(v) &&
-                            /\d/.test(v) &&
-                            /[@#$%^&+=!]/.test(v);
-                    },
-                    msg: 'Nenosiri lazima liwe na angalau herufi 8, herufi kubwa, herufi ndogo, namba na alama maalum'
+                    validate: (v) => v.length >= 6,
+                    msg: 'Nenosiri lazima liwe na angalau herufi 6.'
                 },
                 password_confirm: {
                     validate: (v) => {
                         const pwd = document.getElementById('password');
                         return pwd && v === pwd.value && v.length > 0;
                     },
-                    msg: 'Nenosiri halilingani'
+                    msg: 'Nenosiri halilingani.'
                 }
             };
 
-            // Validate single field - only show error when user has typed something
-            function validateField(field) {
+            function setFieldError(field, show, customMsg) {
+                const input = document.getElementById(field === 'password_confirm' ? 'password_confirmation' : field);
+                const msgId = field === 'password_confirm' ? 'password_confirmation_message' : field + '_message';
+                const msgEl = document.getElementById(msgId);
+                if (!input) return;
+                if (show) {
+                    input.classList.add('invalid');
+                    if (msgEl) {
+                        msgEl.textContent = customMsg || (validations[field] && validations[field].msg) || '';
+                        msgEl.classList.add('show');
+                    }
+                } else {
+                    input.classList.remove('invalid');
+                    if (msgEl) {
+                        msgEl.textContent = '';
+                        msgEl.classList.remove('show');
+                    }
+                }
+            }
+
+            function validateField(field, forceShow) {
                 const input = document.getElementById(field);
                 if (!input) return true;
-
                 const rule = validations[field];
                 if (!rule) return true;
 
                 const value = input.value;
-                const hasValue = value !== '' && value !== null && value !== undefined;
                 const isValid = rule.validate(value);
-                const msgEl = document.getElementById(field + '_message');
 
-                // Password fields handled separately
-                if (field === 'password' || field === 'password_confirm') {
-                    if (field === 'password') {
-                        updatePasswordStrength(value);
-                    }
-                    if (field === 'password_confirm') {
-                        updatePasswordConfirm(value);
-                    }
-                    // Only return false if there's a value and it's invalid
-                    if (hasValue && !isValid) return false;
-                    return true;
-                }
+                if (field === 'password') updatePasswordHint(value);
 
-                // Only show validation if user has typed something
-                if (!hasValue) {
-                    input.classList.remove('valid', 'invalid');
-                    if (msgEl) {
-                        msgEl.className = 'validation-message';
-                        msgEl.innerHTML = '';
-                        msgEl.classList.remove('visible');
-                    }
+                if (value === '' || value === null || value === undefined) {
+                    setFieldError(field, false);
                     return false;
                 }
 
-                if (isValid) {
-                    input.classList.remove('invalid');
-                    input.classList.add('valid');
-                    if (msgEl) {
-                        msgEl.className = 'validation-message valid visible';
-                        msgEl.innerHTML = '<span class="msg-icon"><i class="fas fa-check-circle"></i></span> Inaonekana vizuri';
-                    }
-                } else {
-                    input.classList.remove('valid');
-                    input.classList.add('invalid');
-                    if (msgEl) {
-                        msgEl.className = 'validation-message invalid visible';
-                        msgEl.innerHTML = '<span class="msg-icon"><i class="fas fa-exclamation-circle"></i></span> ' + rule.msg;
-                    }
-                }
-
+                setFieldError(field, !isValid && (forceShow || true));
                 return isValid;
             }
 
-            // Password strength
-            function updatePasswordStrength(password) {
-                const fill = document.getElementById('strengthFill');
-                const label = document.getElementById('strengthLabel');
-                const checklist = document.getElementById('passwordChecklist');
-
-                const checks = {
-                    length: password.length >= 8,
-                    uppercase: /[A-Z]/.test(password),
-                    lowercase: /[a-z]/.test(password),
-                    number: /\d/.test(password),
-                    special: /[@#$%^&+=!]/.test(password)
-                };
-
-                // Update checklist
-                const clMap = {
-                    length: 'cl-length',
-                    uppercase: 'cl-uppercase',
-                    lowercase: 'cl-lowercase',
-                    number: 'cl-number',
-                    special: 'cl-special'
-                };
-
-                let metCount = 0;
-                Object.keys(checks).forEach(key => {
-                    const el = document.getElementById(clMap[key]);
-                    if (el) {
-                        const icon = el.querySelector('.check-icon i');
-                        if (checks[key]) {
-                            el.classList.add('met');
-                            el.classList.remove('unmet');
-                            if (icon) { icon.className = 'fas fa-check'; }
-                            metCount++;
-                        } else {
-                            el.classList.remove('met');
-                            el.classList.add('unmet');
-                            if (icon) { icon.className = 'fas fa-times'; }
-                        }
-                    }
-                });
-
-                // Show checklist only if password has length > 0
-                if (password.length > 0) {
-                    checklist.classList.add('visible');
-                } else {
-                    checklist.classList.remove('visible');
-                }
-
-                // Update strength bar
-                let strength = 'weak';
-                let labelText = 'Dhaifu';
+            function updatePasswordHint(password) {
+                const hint = document.getElementById('pwHint');
                 if (password.length === 0) {
-                    fill.className = 'password-strength-fill';
-                    fill.style.width = '0%';
-                    label.className = 'password-strength-label';
-                    label.textContent = '';
+                    hint.classList.remove('show', 'bad');
                     return;
                 }
-
-                if (metCount <= 2) {
-                    strength = 'weak';
-                    labelText = 'Dhaifu';
-                } else if (metCount === 3) {
-                    strength = 'medium';
-                    labelText = 'Wastani';
-                } else if (metCount === 4) {
-                    strength = 'strong';
-                    labelText = 'Nzuri';
-                } else {
-                    strength = 'excellent';
-                    labelText = 'Bora!';
-                }
-
-                fill.className = 'password-strength-fill ' + strength;
-                label.className = 'password-strength-label ' + strength + ' visible';
-                label.textContent = labelText;
-
-                // Validate password field - only show error if user has typed
-                const pwdInput = document.getElementById('password');
-                const msgEl = document.getElementById('password_message');
-                const isValid = checks.length && checks.uppercase && checks.lowercase && checks.number && checks.special;
-
-                if (password.length > 0) {
-                    if (isValid) {
-                        pwdInput.classList.remove('invalid');
-                        pwdInput.classList.add('valid');
-                        if (msgEl) {
-                            msgEl.className = 'validation-message valid visible';
-                            msgEl.innerHTML = '<span class="msg-icon"><i class="fas fa-check-circle"></i></span> Inaonekana vizuri';
-                        }
-                    } else {
-                        pwdInput.classList.remove('valid');
-                        pwdInput.classList.add('invalid');
-                        if (msgEl) {
-                            msgEl.className = 'validation-message invalid visible';
-                            msgEl.innerHTML = '<span class="msg-icon"><i class="fas fa-exclamation-circle"></i></span> Nenosiri halikidhi mahitaji';
-                        }
-                    }
-                } else {
-                    pwdInput.classList.remove('valid', 'invalid');
-                    if (msgEl) {
-                        msgEl.className = 'validation-message';
-                        msgEl.innerHTML = '';
-                        msgEl.classList.remove('visible');
-                    }
-                }
-
-                return isValid;
-            }
-
-            // Password confirm
-            function updatePasswordConfirm(value) {
-                const pwd = document.getElementById('password');
-                const input = document.getElementById('password_confirmation');
-                const msgEl = document.getElementById('password_confirmation_message');
-
-                if (value.length === 0) {
-                    input.classList.remove('valid', 'invalid');
-                    if (msgEl) {
-                        msgEl.className = 'validation-message';
-                        msgEl.innerHTML = '';
-                        msgEl.classList.remove('visible');
-                    }
-                    return false;
-                }
-
-                const isValid = value === pwd.value;
-
+                const isValid = validations.password.validate(password);
                 if (isValid) {
-                    input.classList.remove('invalid');
-                    input.classList.add('valid');
-                    if (msgEl) {
-                        msgEl.className = 'validation-message valid visible';
-                        msgEl.innerHTML = '<span class="msg-icon"><i class="fas fa-check-circle"></i></span> Nenosiri linalingana';
-                    }
+                    hint.classList.remove('show');
                 } else {
-                    input.classList.remove('valid');
-                    input.classList.add('invalid');
-                    if (msgEl) {
-                        msgEl.className = 'validation-message invalid visible';
-                        msgEl.innerHTML = '<span class="msg-icon"><i class="fas fa-exclamation-circle"></i></span> Nenosiri halilingani';
-                    }
+                    hint.classList.add('show');
                 }
-
-                return isValid;
             }
 
-            // Get fields in a step
             function getStepFields(stepIndex) {
-                const step = steps[stepIndex];
-                if (!step) return [];
-                return Array.from(step.querySelectorAll('[data-validate]')).map(el => el.id);
+                const panel = panels[stepIndex];
+                if (!panel) return [];
+                return Array.from(panel.querySelectorAll('[data-validate]')).map(el => el.id);
             }
 
-            // Validate entire step
-            function validateStep(stepIndex) {
+            function validateStep(stepIndex, forceShow) {
                 const fields = getStepFields(stepIndex);
                 let allValid = true;
-
                 fields.forEach(field => {
-                    const isValid = validateField(field);
-                    if (!isValid) allValid = false;
+                    if (!validateField(field, forceShow)) allValid = false;
                 });
-
-                // Special: check password confirm
                 if (stepIndex === 2) {
-                    const confirmValid = validateField('password_confirm');
-                    if (!confirmValid) allValid = false;
+                    const confirmInput = document.getElementById('password_confirmation');
+                    const confirmValid = validations.password_confirm.validate(confirmInput.value);
+                    if (confirmInput.value === '') {
+                        allValid = false;
+                        if (forceShow) setFieldError('password_confirm', false);
+                    } else {
+                        setFieldError('password_confirm', !confirmValid && forceShow);
+                        if (!confirmValid) allValid = false;
+                    }
                 }
-
                 return allValid;
             }
 
-            // Update step badge
-            function updateStepBadge(stepIndex) {
-                const badge = document.getElementById('step' + (stepIndex + 1) + '_badge');
-                if (!badge) return;
-
-                const isValid = validateStep(stepIndex);
-                if (isValid) {
-                    badge.className = 'step-badge complete';
-                    badge.innerHTML = '<i class="fas fa-check"></i> Imekamilika';
-                } else {
-                    badge.className = 'step-badge incomplete';
-                    badge.innerHTML = '<i class="fas fa-times"></i> Haijakamilika';
+            function updateNextButtonState(stepIndex) {
+                const btn = document.getElementById('step' + (stepIndex + 1) + '_next') || document.getElementById('submitBtn');
+                if (!btn) return;
+                const fields = getStepFields(stepIndex);
+                let allFilled = fields.every(f => document.getElementById(f).value.trim() !== '');
+                if (stepIndex === 2) {
+                    allFilled = allFilled && document.getElementById('password_confirmation').value.trim() !== '';
                 }
-
-                const nextBtn = document.getElementById('step' + (stepIndex + 1) + '_next');
-                if (nextBtn) {
-                    nextBtn.disabled = !isValid;
-                }
+                const isValid = allFilled && validateStep(stepIndex, false);
+                btn.disabled = !isValid;
             }
 
-            // Update stepper UI
-            function updateStepper(activeIndex) {
-                stepDots.forEach((dot, idx) => {
-                    dot.classList.remove('active', 'completed');
-                    dot.querySelector('.step-number').style.display = '';
-                    dot.querySelector('.check-mark').style.display = 'none';
-
-                    if (idx === activeIndex) {
-                        dot.classList.add('active');
-                    } else if (idx < activeIndex) {
-                        dot.classList.add('completed');
-                        dot.querySelector('.step-number').style.display = 'none';
-                        dot.querySelector('.check-mark').style.display = 'block';
-                    }
-                });
-
-                stepLines.forEach((line, idx) => {
-                    line.classList.remove('completed', 'partial');
-                    if (idx < activeIndex) {
-                        line.classList.add('completed');
-                    } else if (idx === activeIndex) {
-                        line.classList.add('partial');
-                    }
-                });
-
-                stepLabels.forEach((label, idx) => {
-                    label.classList.remove('active', 'completed');
-                    if (idx === activeIndex) {
-                        label.classList.add('active');
-                    } else if (idx < activeIndex) {
-                        label.classList.add('completed');
-                    }
-                });
+            function updateProgress() {
+                const pct = ((currentStep + 1) / panels.length) * 100;
+                progressFill.style.width = pct + '%';
+                progressText.textContent = 'Hatua ' + (currentStep + 1) + ' kati ya ' + panels.length;
             }
 
-            // Update steps visibility
-            function updateSteps() {
-                steps.forEach((step, idx) => {
-                    if (idx === currentStep) {
-                        step.classList.remove('step-hidden');
-                        step.style.display = 'block';
-                    } else {
-                        step.classList.add('step-hidden');
-                        step.style.display = 'none';
-                    }
-                });
-
-                updateStepper(currentStep);
-                updateAllBadges();
+            function showStep(index) {
+                panels.forEach((p, idx) => p.classList.toggle('active', idx === index));
+                updateProgress();
+                updateNextButtonState(index);
             }
 
-            function updateAllBadges() {
-                for (let i = 0; i < steps.length; i++) {
-                    updateStepBadge(i);
-                }
-            }
-
-            // Event listeners for all validate fields
             document.querySelectorAll('[data-validate]').forEach(input => {
                 input.addEventListener('input', function() {
-                    const field = this.id;
-                    validateField(field);
-                    updateStepBadge(currentStep);
-
-                    const isStepValid = validateStep(currentStep);
-                    const nextBtn = document.getElementById('step' + (currentStep + 1) + '_next');
-                    if (nextBtn) {
-                        nextBtn.disabled = !isStepValid;
-                    }
+                    validateField(this.id, false);
+                    if (this.id === 'password') validateField('password_confirm', false);
+                    updateNextButtonState(currentStep);
                 });
-
                 input.addEventListener('blur', function() {
-                    validateField(this.id);
-                });
-
-                input.addEventListener('change', function() {
-                    validateField(this.id);
+                    validateField(this.id, true);
                 });
             });
 
-            // Password toggle
-            document.getElementById('togglePassword').addEventListener('click', function() {
-                const input = document.getElementById('password');
-                const icon = this.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'fas fa-eye-slash';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'fas fa-eye';
+            function wireToggle(btnId, inputId) {
+                const btn = document.getElementById(btnId);
+                const input = document.getElementById(inputId);
+                if (btn && input) {
+                    btn.addEventListener('click', function() {
+                        input.type = input.type === 'password' ? 'text' : 'password';
+                    });
                 }
-            });
+            }
+            wireToggle('togglePassword', 'password');
+            wireToggle('toggleConfirm', 'password_confirmation');
 
-            document.getElementById('toggleConfirm').addEventListener('click', function() {
-                const input = document.getElementById('password_confirmation');
-                const icon = this.querySelector('i');
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    icon.className = 'fas fa-eye-slash';
-                } else {
-                    input.type = 'password';
-                    icon.className = 'fas fa-eye';
-                }
-            });
-
-            // Password input listeners
-            const pwdInput = document.getElementById('password');
-            const confirmInput = document.getElementById('password_confirmation');
-
-            pwdInput.addEventListener('input', function() {
-                validateField('password');
-                validateField('password_confirm');
-                updateStepBadge(currentStep);
-            });
-
-            confirmInput.addEventListener('input', function() {
-                validateField('password_confirm');
-                updateStepBadge(currentStep);
-            });
-
-            // Navigation
             document.querySelectorAll('[data-action]').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const action = this.dataset.action;
-
                     if (action === 'next') {
-                        if (!validateStep(currentStep)) {
-                            const step = steps[currentStep];
-                            const firstInvalid = step.querySelector('.form-input.invalid, [data-validate].invalid');
+                        if (!validateStep(currentStep, true)) {
+                            const panel = panels[currentStep];
+                            const firstInvalid = panel.querySelector('.form-input.invalid');
                             if (firstInvalid) {
                                 firstInvalid.focus();
                                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             }
                             return;
                         }
-
-                        if (currentStep < steps.length - 1) {
+                        if (currentStep < panels.length - 1) {
                             currentStep++;
-                            updateSteps();
-                            document.querySelector('.register-card-wrapper').scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'start'
-                            });
+                            showStep(currentStep);
+                            document.querySelector('.auth-wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
                     } else if (action === 'prev' && currentStep > 0) {
                         currentStep--;
-                        updateSteps();
+                        showStep(currentStep);
                     }
                 });
             });
 
-            // Form submit
             form.addEventListener('submit', function(e) {
-                for (let i = 0; i < steps.length; i++) {
-                    if (!validateStep(i)) {
+                for (let i = 0; i < panels.length; i++) {
+                    if (!validateStep(i, true)) {
                         e.preventDefault();
                         currentStep = i;
-                        updateSteps();
-                        const firstInvalid = steps[i].querySelector('.form-input.invalid, [data-validate].invalid');
+                        showStep(i);
+                        const firstInvalid = panels[i].querySelector('.form-input.invalid');
                         if (firstInvalid) {
                             setTimeout(() => {
                                 firstInvalid.focus();
                                 firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }, 300);
+                            }, 250);
                         }
                         return;
                     }
                 }
-
                 const submitBtn = document.getElementById('submitBtn');
                 submitBtn.classList.add('loading');
                 submitBtn.disabled = true;
             });
 
             // Init
-            updateSteps();
-
-            // Initial validation for old values
+            showStep(currentStep);
             setTimeout(() => {
                 document.querySelectorAll('[data-validate]').forEach(input => {
-                    if (input.value) {
-                        validateField(input.id);
-                        updateStepBadge(currentStep);
-                    }
+                    if (input.value) validateField(input.id, false);
                 });
-                updateAllBadges();
-            }, 200);
-
-            console.log('✅ Premium registration UI loaded - validation only shows errors');
-
+                updateNextButtonState(currentStep);
+            }, 100);
         })();
     </script>
 </body>

@@ -53,8 +53,8 @@
 <nav id="navbar" class="sticky top-0 z-50 w-full glass-nav navbar-transition">
   <div class="max-w-7x2 mx-auto px-6 md:px-10 py-4 flex justify-between items-center">
     <div class="flex items-center gap-3">
-      <!-- Logo image from mauzo/public/logo11.jpg -->
-      <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="h-12 w-auto logo-img" onerror="this.onerror=null; this.src='https://placehold.co/200x60/d97706/white?text=MauzoSheetAI';">
+      <!-- Logo image from mauzo/public/logo11.png -->
+      <img src="{{ asset('logo11.png') }}" alt="MauzoSheetAI Logo" class="h-12 w-auto logo-img" onerror="this.onerror=null; this.src='https://placehold.co/200x60/d97706/white?text=MauzoSheetAI';">
       <span class="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-amber-700 to-emerald-800 bg-clip-text text-transparent">MauzoSheet<span class="text-gray-800">AI</span></span>
     </div>
     <div class="hidden md:flex items-center gap-7">

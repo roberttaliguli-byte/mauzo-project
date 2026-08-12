@@ -3,92 +3,136 @@
 @section('title', 'Badilisha Neno la Siri')
 
 @section('content')
-<div class="max-w-sm mx-auto">
-  <!-- Header -->
-  <div class="text-center mb-6">
-    <div class="flex justify-center mb-3">
-      <div class="relative">
-        <div class="absolute inset-0 bg-amber-400/20 rounded-full blur-lg"></div>
-        <div class="relative h-12 w-12 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center shadow-md">
-          <i class="fas fa-key text-white text-lg"></i>
-        </div>
-      </div>
-    </div>
-    <h1 class="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
-      Badilisha Neno la Siri
-    </h1>
+<!-- Header -->
+<div class="text-center mb-6">
+  <h1 class="auth-title">Badilisha Neno la Siri</h1>
+  <p class="text-gray-300 text-sm">Tuma kiungo cha kubadilisha neno la siri kwenye barua pepe yako</p>
+</div>
+
+@if(session('success'))
+<div id="success-alert" class="alert alert-ok">
+  <span>{{ session('success') }}</span>
+  <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
+</div>
+@endif
+
+@if($errors->any())
+<div id="error-alert" class="alert alert-bad">
+  <span>
+    @foreach ($errors->all() as $error)
+      {{ $error }}@if(!$loop->last)<br>@endif
+    @endforeach
+  </span>
+  <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
+</div>
+@endif
+
+<form method="POST" action="{{ route('password.email') }}" class="space-y-4">
+  @csrf
+  
+  <!-- Email Field -->
+  <div class="field">
+    <label for="email">Barua Pepe</label>
+    <input name="email" id="email" type="email" value="{{ old('email') }}" required
+           placeholder="example@kampuni.com"
+           class="form-input @error('email') invalid @enderror"
+           autocomplete="email" autofocus>
+    <div class="field-error" id="email_message">@error('email'){{ $message }}@enderror</div>
   </div>
 
-  @if(session('success'))
-  <div id="success-alert" class="relative p-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-800 text-white shadow-lg animate-fade-in mb-4">
-    <div class="flex items-center gap-2">
-      <i class="fas fa-check text-white text-sm"></i>
-      <p class="text-sm font-medium">{{ session('success') }}</p>
-    </div>
+  <!-- Submit Button -->
+  <div class="actions">
+    <button type="submit" id="submitBtn" class="btn-primary">
+      <span class="btn-label">Tuma Kiungo cha Kubadilisha</span>
+      <span class="spinner"></span>
+    </button>
   </div>
-  @endif
+</form>
 
-  <form method="POST" action="{{ route('password.email') }}" class="space-y-4">
-    @csrf
-    
-    <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700 shadow-lg">
-      <div class="text-center mb-4">
-        <h2 class="text-lg font-bold text-amber-400">Barua Pepe</h2>
-        <p class="text-gray-300 text-sm">Weka barua pepe yako ya akaunti</p>
-      </div>
-
-      <div class="space-y-4">
-        <div class="group">
-          <label class="block text-sm font-semibold text-gray-200 mb-2">
-            <i class="fas fa-envelope text-amber-400 mr-2"></i>
-            Barua Pepe
-          </label>
-          <input name="email" type="email" value="{{ old('email') }}" required
-                 placeholder="example@kampuni.com"
-                 class="w-full rounded-lg py-3 px-4 bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-300 text-sm">
-          @error('email')
-            <p class="text-red-400 text-sm mt-1">{{ $message }}</p>
-          @enderror
-        </div>
-      </div>
-
-      <div class="mt-6">
-        <button type="submit" 
-                class="w-full py-3 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-md hover:shadow-lg text-sm">
-          Tuma Kiungo cha Kubadilisha
-        </button>
-      </div>
-    </div>
-  </form>
-
-  <!-- Navigation Links -->
-  <div class="text-center mt-4">
-    <a href="{{ route('login') }}" class="text-amber-400 hover:text-amber-300 text-sm">
-      <i class="fas fa-arrow-left mr-1"></i> Rudi Kwenye Ingia
-    </a>
-  </div>
+<!-- Navigation Links -->
+<div class="auth-footer">
+  <a href="{{ route('login') }}">← Rudi Kwenye Ingia</a>
 </div>
 
 <script>
-  // Auto-hide alerts after 3 seconds
-  setTimeout(() => {
-    const successAlert = document.getElementById('success-alert');
-    
-    if (successAlert) {
-      successAlert.style.opacity = '0';
-      successAlert.style.transition = 'opacity 0.5s ease';
-      setTimeout(() => successAlert.remove(), 500);
-    }
-  }, 3000);
-</script>
+  (function() {
+    'use strict';
 
-<style>
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-</style>
+    // Auto-hide alerts after 5 seconds
+    setTimeout(() => {
+      const successAlert = document.getElementById('success-alert');
+      const errorAlert = document.getElementById('error-alert');
+      
+      if (successAlert) {
+        successAlert.style.opacity = '0';
+        successAlert.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => successAlert.remove(), 500);
+      }
+      
+      if (errorAlert) {
+        errorAlert.style.opacity = '0';
+        errorAlert.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => errorAlert.remove(), 500);
+      }
+    }, 5000);
+
+    // Form submission loading state
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (form && submitBtn) {
+      form.addEventListener('submit', function(e) {
+        const email = document.getElementById('email');
+        let hasError = false;
+
+        // Clear previous errors
+        document.querySelectorAll('.form-input').forEach(el => el.classList.remove('invalid'));
+        document.querySelectorAll('.field-error').forEach(el => el.classList.remove('show'));
+
+        // Validate email
+        if (!email.value.trim()) {
+          email.classList.add('invalid');
+          const msg = document.getElementById('email_message');
+          if (msg) {
+            msg.textContent = 'Tafadhali weka barua pepe yako.';
+            msg.classList.add('show');
+          }
+          hasError = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+          email.classList.add('invalid');
+          const msg = document.getElementById('email_message');
+          if (msg) {
+            msg.textContent = 'Tafadhali weka barua pepe sahihi.';
+            msg.classList.add('show');
+          }
+          hasError = true;
+        }
+
+        if (hasError) {
+          e.preventDefault();
+          return;
+        }
+
+        // Show loading state
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+      });
+    }
+
+    // Clear error state on input
+    document.querySelectorAll('.form-input').forEach(input => {
+      input.addEventListener('input', function() {
+        this.classList.remove('invalid');
+        const msgId = this.id + '_message';
+        const msg = document.getElementById(msgId);
+        if (msg) {
+          msg.textContent = '';
+          msg.classList.remove('show');
+        }
+      });
+    });
+
+    console.log('✅ Forgot Password page loaded');
+  })();
+</script>
 @endsection
