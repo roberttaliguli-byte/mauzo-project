@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="sw">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>MauzoSheetAI · Ingia</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         :root {
             --amber: #d97706;
@@ -24,7 +28,10 @@
             --ok: #15803d;
         }
 
-        html, body { height: 100%; }
+        html,
+        body {
+            height: 100%;
+        }
 
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -39,39 +46,27 @@
             overflow-x: hidden;
         }
 
-        /* 
-            BACKGROUND IMAGE WITH BLUR
-            The key is using filter: blur() on the background layer
-            while keeping the overlay for readability
-        */
+        /* blurred background image */
         body::before {
             content: "";
             position: fixed;
             inset: 0;
-            background: 
+            background:
                 linear-gradient(145deg, rgba(0, 0, 0, 0.60) 0%, rgba(0, 0, 0, 0.45) 100%),
                 url("/bg.jpg");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            /* 
-                BLUR EFFECT — this blurs the background image
-                Higher value = more blur (e.g., blur(8px) or blur(12px))
-            */
             filter: blur(12px) saturate(1.1);
-            transform: scale(1.05); /* prevents edge artifacts from blur */
+            transform: scale(1.05);
             z-index: -2;
         }
 
-        /* 
-            Optional: additional soft gradient overlay for depth
-            This sits on top of the blurred background
-        */
         body::after {
             content: "";
             position: fixed;
             inset: 0;
-            background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.50) 100%);
+            background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.50) 100%);
             z-index: -1;
         }
 
@@ -118,10 +113,20 @@
             animation: spin 0.9s linear infinite;
         }
         @keyframes markIn {
-            from { opacity: 0; transform: scale(0.85); }
-            to { opacity: 1; transform: scale(1); }
+            from {
+                opacity: 0;
+                transform: scale(0.85);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
         /* brand */
         .brand {
@@ -138,22 +143,28 @@
             height: 48px;
             border-radius: 14px;
             object-fit: cover;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
         }
         .brand-name {
             font-size: 0.85rem;
             font-weight: 600;
             letter-spacing: 0.03em;
             color: #eae3db;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.6);
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
         }
 
         @keyframes riseIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* CARD */
+        /* CARD — wider on phone */
         .auth-wrapper {
             width: 440px;
             max-width: 440px;
@@ -171,42 +182,83 @@
             border-radius: 28px;
             padding: 2.2rem 2.5rem 2rem;
             box-shadow:
-                0 30px 70px -20px rgba(0,0,0,0.8),
+                0 30px 70px -20px rgba(0, 0, 0, 0.8),
                 0 2px 0 rgba(255, 215, 160, 0.15) inset;
             transition: all 0.2s ease;
         }
 
         @media (min-width: 1200px) {
-            .auth-wrapper { width: 460px; max-width: 460px; }
-            .glass { padding: 2.5rem 2.8rem 2.2rem; }
+            .auth-wrapper {
+                width: 460px;
+                max-width: 460px;
+            }
+            .glass {
+                padding: 2.5rem 2.8rem 2.2rem;
+            }
         }
 
         @media (max-width: 900px) {
-            .auth-wrapper { width: min(92vw, 440px); }
-            .glass { padding: 2rem 2rem 1.8rem; }
+            .auth-wrapper {
+                width: min(92vw, 440px);
+            }
+            .glass {
+                padding: 2rem 2rem 1.8rem;
+            }
         }
 
+        /* phone: wider card */
         @media (max-width: 640px) {
-            body { padding: 1.25rem 0.8rem; }
-            .auth-wrapper { width: 100%; max-width: 100%; }
-            .glass { padding: 1.7rem 1.25rem 1.5rem; border-radius: 22px; }
+            body {
+                padding: 1.25rem 0.8rem;
+            }
+            .auth-wrapper {
+                width: 100%;
+                max-width: 100%;
+            }
+            .glass {
+                padding: 1.7rem 1.5rem 1.5rem;
+                border-radius: 22px;
+            }
         }
 
-        /* title */
+        @media (max-width: 480px) {
+            .auth-title {
+                font-size: 1.25rem;
+            }
+            .glass {
+                padding: 1.4rem 1.2rem 1.2rem;
+            }
+        }
+
+        /* --- TITLE + HOME LINK: always on same row, even on phone --- */
+        .title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1.4rem;
+            flex-wrap: nowrap;    /* force single line */
+            min-width: 0;         /* allow shrinking */
+        }
+
         .auth-title {
             font-size: 1.5rem;
             font-weight: 700;
             letter-spacing: -0.02em;
-            margin-bottom: 1.4rem;
             color: #f5efe9;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            margin: 0;
+            line-height: 1.2;
+            white-space: nowrap;   /* keep title on one line */
+            flex-shrink: 1;        /* allow shrink if needed */
+            min-width: 0;          /* flex override */
         }
 
-        /* home link */
+        /* home link — always on right, never wraps below */
         .home-link {
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.35rem;
             font-size: 0.76rem;
             font-weight: 600;
             color: #d4cdc4;
@@ -217,8 +269,8 @@
             text-decoration: none;
             border: 1px solid rgba(255, 215, 160, 0.15);
             transition: all 0.2s ease;
-            margin-bottom: 1rem;
-            width: fit-content;
+            white-space: nowrap;
+            flex-shrink: 0;        /* prevent link from shrinking */
         }
         .home-link:hover {
             background: rgba(255, 215, 160, 0.12);
@@ -227,11 +279,45 @@
             box-shadow: 0 0 20px rgba(217, 119, 6, 0.15);
         }
         .home-link svg {
-            width: 13px;
-            height: 13px;
+            width: 14px;
+            height: 14px;
             stroke: currentColor;
             stroke-width: 2.2;
             fill: none;
+            flex-shrink: 0;
+        }
+
+        /* on very small screens, reduce gap & font to keep both on one line */
+        @media (max-width: 420px) {
+            .title-row {
+                gap: 0.4rem;
+            }
+            .auth-title {
+                font-size: 1.05rem;
+            }
+            .home-link {
+                font-size: 0.65rem;
+                padding: 0.2rem 0.6rem 0.2rem 0.5rem;
+                gap: 0.2rem;
+            }
+            .home-link svg {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .auth-title {
+                font-size: 0.9rem;
+            }
+            .home-link {
+                font-size: 0.55rem;
+                padding: 0.15rem 0.4rem 0.15rem 0.35rem;
+            }
+            .home-link svg {
+                width: 10px;
+                height: 10px;
+            }
         }
 
         /* alerts */
@@ -245,12 +331,18 @@
             border-radius: 12px;
             margin-bottom: 1rem;
             line-height: 1.4;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
-        .alert-ok { color: #86efac; border-color: rgba(134, 239, 172, 0.2); }
-        .alert-bad { color: #fca5a5; border-color: rgba(252, 165, 165, 0.15); }
+        .alert-ok {
+            color: #86efac;
+            border-color: rgba(134, 239, 172, 0.2);
+        }
+        .alert-bad {
+            color: #fca5a5;
+            border-color: rgba(252, 165, 165, 0.15);
+        }
         .alert button {
             background: none;
             border: none;
@@ -261,11 +353,17 @@
             line-height: 1;
             padding: 0 0.2rem;
         }
-        .alert button:hover { opacity: 1; }
+        .alert button:hover {
+            opacity: 1;
+        }
 
         /* fields */
-        .field { margin-bottom: 1rem; }
-        .field:last-of-type { margin-bottom: 0; }
+        .field {
+            margin-bottom: 1rem;
+        }
+        .field:last-of-type {
+            margin-bottom: 0;
+        }
 
         label {
             display: block;
@@ -290,11 +388,13 @@
             appearance: none;
             transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
         }
-        .form-input::placeholder { color: #887e74; }
+        .form-input::placeholder {
+            color: #887e74;
+        }
         .form-input:focus {
             border-color: var(--amber);
             background: rgba(28, 25, 22, 0.85);
-            box-shadow: 0 0 0 4px var(--amber-soft), 0 6px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 0 0 4px var(--amber-soft), 0 6px 20px rgba(0, 0, 0, 0.3);
         }
         .form-input.invalid {
             border-color: #dc7a5a;
@@ -309,9 +409,13 @@
             margin-top: 0.25rem;
             display: none;
         }
-        .field-error.show { display: block; }
+        .field-error.show {
+            display: block;
+        }
 
-        .input-wrapper { position: relative; }
+        .input-wrapper {
+            position: relative;
+        }
         .pw-toggle {
             position: absolute;
             right: 0.7rem;
@@ -325,8 +429,16 @@
             display: flex;
             transition: color 0.15s ease;
         }
-        .pw-toggle:hover { color: #e8e0d8; }
-        .pw-toggle svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.8; fill: none; }
+        .pw-toggle:hover {
+            color: #e8e0d8;
+        }
+        .pw-toggle svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+        }
 
         /* remember & forgot */
         .remember-wrapper {
@@ -364,7 +476,10 @@
             text-decoration: none;
             transition: color 0.15s ease;
         }
-        .forgot-link:hover { color: #f0c78a; text-decoration: underline; }
+        .forgot-link:hover {
+            color: #f0c78a;
+            text-decoration: underline;
+        }
 
         /* button */
         .actions {
@@ -401,22 +516,34 @@
             display: none;
             width: 15px;
             height: 15px;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
             margin: 0 auto;
         }
-        .btn.loading .btn-label { visibility: hidden; position: absolute; }
-        .btn.loading { position: relative; }
-        .btn.loading .spinner { display: inline-block; }
+        .btn.loading .btn-label {
+            visibility: hidden;
+            position: absolute;
+        }
+        .btn.loading {
+            position: relative;
+        }
+        .btn.loading .spinner {
+            display: inline-block;
+        }
 
-        /* footer */
+        /* footer — "Nyumbani" placed after "Jisajili" */
         .auth-footer {
             text-align: center;
             margin-top: 1.5rem;
             font-size: 0.78rem;
             color: #b0a79c;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem 0.9rem;
         }
         .auth-footer a {
             color: #dba459;
@@ -424,16 +551,22 @@
             text-decoration: none;
             transition: color 0.15s ease;
         }
-        .auth-footer a:hover { color: #f0c78a; text-decoration: underline; }
-
-        @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        .auth-footer a:hover {
+            color: #f0c78a;
+            text-decoration: underline;
+        }
+        .footer-divider {
+            color: #5a5550;
+            user-select: none;
         }
 
-        @media (max-width: 480px) {
-            .auth-title { font-size: 1.25rem; }
-            .glass { padding: 1.4rem 1rem 1.2rem; }
-            .home-link { font-size: 0.7rem; padding: 0.2rem 0.7rem; }
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
@@ -442,53 +575,58 @@
     <!-- LOADING -->
     <div id="loadingScreen">
         <div class="loading-mark">
-            <img src="{{ asset('logo11.png') }}" alt="MauzoSheetAI" onerror="this.src='https://placehold.co/40x40/d97706/white?text=M'">
+            <img src="{{ asset('logo11.png') }}" alt="MauzoSheetAI" onerror="this.src='https://placehold.co/40x40/d97706/white?text=M'" />
         </div>
     </div>
 
     <div>
         <!-- Brand -->
         <div class="brand">
-            <img src="{{ asset('logo11.png') }}" alt="MauzoSheetAI" onerror="this.src='https://placehold.co/48x48/d97706/white?text=M'">
+            <img src="{{ asset('logo11.png') }}" alt="MauzoSheetAI" onerror="this.src='https://placehold.co/48x48/d97706/white?text=M'" />
             <span class="brand-name">MauzoSheetAI</span>
         </div>
 
         <div class="auth-wrapper">
             <div class="glass">
 
-                <!-- Home link inside card -->
-                <a href="{{ route('landing') }}" class="home-link">
-                    <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/></svg>
-                    Nyumbani
-                </a>
-
-                <h1 class="auth-title">Ingia kwenye Mfumo</h1>
+                <!-- ✅ TITLE + HOME LINK: always on same row, right side -->
+                <div class="title-row">
+                    <h1 class="auth-title">Ingia kwa mfumo</h1>
+                    <a href="{{ route('landing') }}" class="home-link">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />
+                        </svg>
+                        Nyumbani
+                    </a>
+                </div>
 
                 <!-- Alerts -->
                 @if(session('success'))
-                    <div class="alert alert-ok" id="successAlert">
-                        <span>{{ session('success') }}</span>
-                        <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
-                    </div>
-                    <script>setTimeout(() => { document.getElementById('successAlert')?.remove(); }, 5000);</script>
+                <div class="alert alert-ok" id="successAlert">
+                    <span>{{ session('success') }}</span>
+                    <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
+                </div>
+                <script>
+                    setTimeout(() => { document.getElementById('successAlert')?.remove(); }, 5000);
+                </script>
                 @endif
 
                 @if(session('error') || $errors->has('login'))
-                    <div class="alert alert-bad" id="errorAlert">
-                        <span>{{ $errors->first('login') ?? session('error') }}</span>
-                        <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
-                    </div>
+                <div class="alert alert-bad" id="errorAlert">
+                    <span>{{ $errors->first('login') ?? session('error') }}</span>
+                    <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
+                </div>
                 @endif
 
                 @if ($errors->any() && !$errors->has('login'))
-                    <div class="alert alert-bad" id="validationAlert">
-                        <span>
-                            @foreach ($errors->all() as $error)
-                                {{ $error }}@if(!$loop->last)<br>@endif
-                            @endforeach
-                        </span>
-                        <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
-                    </div>
+                <div class="alert alert-bad" id="validationAlert">
+                    <span>
+                        @foreach ($errors->all() as $error)
+                        {{ $error }}@if(!$loop->last)<br>@endif
+                        @endforeach
+                    </span>
+                    <button type="button" onclick="this.closest('.alert').remove()">&times;</button>
+                </div>
                 @endif
 
                 <form id="loginForm" method="POST" action="{{ route('login.post') }}">
@@ -498,9 +636,9 @@
                     <div class="field">
                         <label for="username">Jina la Mtumiaji</label>
                         <input name="username" id="username" value="{{ old('username') }}" required
-                            placeholder="Weka jina lako la mtumiaji"
-                            class="form-input @error('username') invalid @enderror"
-                            autocomplete="username" autofocus>
+                        placeholder="Weka jina lako la mtumiaji"
+                        class="form-input @error('username') invalid @enderror"
+                        autocomplete="username" autofocus />
                         <div class="field-error" id="username_message">@error('username'){{ $message }}@enderror</div>
                     </div>
 
@@ -509,13 +647,13 @@
                         <label for="password">Neno la Siri</label>
                         <div class="input-wrapper">
                             <input type="password" name="password" id="password" required
-                                placeholder="Weka neno la siri"
-                                class="form-input @error('password') invalid @enderror"
-                                autocomplete="current-password">
+                            placeholder="Weka neno la siri"
+                            class="form-input @error('password') invalid @enderror"
+                            autocomplete="current-password" />
                             <button type="button" class="pw-toggle" id="togglePassword" aria-label="Onyesha nenosiri">
                                 <svg id="eyeIcon" viewBox="0 0 24 24">
-                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
-                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                                    <circle cx="12" cy="12" r="3" />
                                 </svg>
                             </button>
                         </div>
@@ -525,7 +663,7 @@
                     <!-- Remember & Forgot -->
                     <div class="remember-wrapper">
                         <div class="remember-left">
-                            <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                            <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }} />
                             <label for="remember">Kumbuka mimi</label>
                         </div>
                         <a href="{{ route('password.request') }}" class="forgot-link">Umesahau?</a>
@@ -540,8 +678,12 @@
                     </div>
                 </form>
 
+                <!-- ✅ FOOTER: Jisajili · Nyumbani (right after) -->
                 <div class="auth-footer">
-                    Huwa na akaunti? <a href="{{ route('register') }}">Jisajili</a>
+                    <span>Tayari una akaunti?</span>
+                    <a href="{{ route('register') }}">Jisajili hapa</a>
+                    <span class="footer-divider">·</span>
+                   
                 </div>
 
             </div>
@@ -599,14 +741,16 @@
                     if (!username.value.trim()) {
                         username.classList.add('invalid');
                         const msg = document.getElementById('username_message');
-                        if (msg) { msg.textContent = 'Tafadhali weka jina la mtumiaji.'; msg.classList.add('show'); }
+                        if (msg) { msg.textContent = 'Tafadhali weka jina la mtumiaji.';
+                            msg.classList.add('show'); }
                         hasError = true;
                     }
 
                     if (!password.value.trim()) {
                         password.classList.add('invalid');
                         const msg = document.getElementById('password_message');
-                        if (msg) { msg.textContent = 'Tafadhali weka neno la siri.'; msg.classList.add('show'); }
+                        if (msg) { msg.textContent = 'Tafadhali weka neno la siri.';
+                            msg.classList.add('show'); }
                         hasError = true;
                     }
 
@@ -625,7 +769,8 @@
                     this.classList.remove('invalid');
                     const msgId = this.id + '_message';
                     const msg = document.getElementById(msgId);
-                    if (msg) { msg.textContent = ''; msg.classList.remove('show'); }
+                    if (msg) { msg.textContent = '';
+                        msg.classList.remove('show'); }
                 });
             });
 
@@ -633,7 +778,7 @@
                 window.history.replaceState(null, null, window.location.href);
             }
 
-            console.log('✅ MauzoSheetAI Login · with blurred background');
+            console.log('✅ MauzoSheetAI Login · Nyumbani always on right, even on phone');
         })();
     </script>
 </body>
