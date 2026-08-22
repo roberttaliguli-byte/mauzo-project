@@ -280,6 +280,18 @@ Route::post('/send-receipt-sms-simple', [MauzoController::class, 'sendReceiptSms
 // ADD THIS ROUTE - Send receipt via SMS
 Route::post('/send-receipt-sms', [MauzoController::class, 'sendReceiptSms'])->name('send.receipt.sms');
     
+// Route for printing order thermal receipt
+Route::get('/orders/{id}/print-thermal', function($id) {
+    try {
+        $order = \App\Models\Order::findOrFail($id);
+        $company = \App\Models\Company::first(); // Adjust based on your company model
+        
+        return view('orders.thermal-receipt', compact('order', 'company'));
+    } catch (\Exception $e) {
+        abort(404, 'Order not found');
+    }
+})->name('orders.print-thermal');
+
 // Add these inside the auth.any middleware group
 Route::prefix('orders')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('orders.index');

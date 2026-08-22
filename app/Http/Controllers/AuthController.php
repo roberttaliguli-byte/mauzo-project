@@ -34,7 +34,7 @@ class AuthController extends Controller
         $regions = [
             "Arusha","Dar es Salaam","Dodoma","Geita","Iringa","Kagera","Katavi",
             "Kigoma","Kilimanjaro","Lindi","Manyara","Mara","Mwanza","Mbeya","Morogoro",
-            "Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","simiyu","Singida",
+            "Mtwara","Njombe","Pwani","Ruvuma","Rukwa","Shinyanga","Simiyu","Singida",
             "Tabora","Tanga","Zanzibar North","Zanzibar South","Zanzibar Urban/West"
         ];
 
@@ -136,7 +136,7 @@ class AuthController extends Controller
             'owner_name'   => 'required|string|max:255|min:2|regex:/^[a-zA-Z\s\.\-]+$/',
             // Step 2
             'location'     => 'required|string|max:255|min:2',
-            'region'       => 'required|string|max:255|in:Arusha,Dar es Salaam,Dodoma,Geita,Iringa,Kagera,Katavi,Kigoma,Kilimanjaro,Lindi,Manyara,Mara,Mwanza,Mbeya,Morogoro,Mtwara,Njombe,Pwani,Ruvuma,Rukwa,Shinyanga,simiyu,Singida,Tabora,Tanga,Zanzibar North,Zanzibar South,Zanzibar Urban/West',
+            'region'       => 'required|string|max:255|in:Arusha,Dar es Salaam,Dodoma,Geita,Iringa,Kagera,Katavi,Kigoma,Kilimanjaro,Lindi,Manyara,Mara,Mwanza,Mbeya,Morogoro,Mtwara,Njombe,Pwani,Ruvuma,Rukwa,Shinyanga,Simiyu,Singida,Tabora,Tanga,Zanzibar North,Zanzibar South,Zanzibar Urban/West',
             'phone'        => [
                 'required',
                 'string',

@@ -1406,45 +1406,13 @@ function oShare(id){
     }
 }
 
-/* ─────────────────────────────────────────
-   PRINT
-───────────────────────────────────────── */
-function oPrint(id){
-    var o = oOrders.find(function(x){ return String(x.id)===String(id); });
-    if(!o){ oToast('Order haipatikani','error'); return; }
-    var win = window.open('','_blank','width=420,height=650');
-    if(!win){ oToast('Tafadhali ruhusu pop-ups','error'); return; }
-    var rows = (o.items||[]).map(function(item){
-        var qty = item.idadi||item.qty||0;
-        var tot = item.total||(qty*(item.bei||item.price||0))||0;
-        return '<tr><td>'+oEsc(item.jina||item.name)+'</td><td style="text-align:center">'+qty+'</td><td style="text-align:right">'+tot.toLocaleString()+' TZS</td></tr>';
-    }).join('');
-    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Order</title>'
-        +'<style>body{font-family:Arial,sans-serif;padding:16px;max-width:400px;margin:0 auto;font-size:13px}'
-        +'h2{text-align:center;color:#10b981;margin:0 0 2px}.sub{text-align:center;color:#9ca3af;font-size:11px;margin-bottom:10px}'
-        +'.row{display:flex;justify-content:space-between;padding:2px 0}'
-        +'table{width:100%;border-collapse:collapse;margin:10px 0}'
-        +'th,td{padding:5px 3px;border-bottom:1px solid #f3f4f6}th{background:#f9fafb;font-size:11px}'
-        +'.tot{font-size:16px;font-weight:bold;display:flex;justify-content:space-between;border-top:2px solid #374151;padding-top:8px}'
-        +'.foot{text-align:center;font-size:10px;color:#9ca3af;margin-top:12px}'
-        +'@media print{.noprint{display:none}}</style></head><body>'
-        +'<h2>ORDER</h2><div class="sub">'+(o.order_number||'#'+o.id)+'</div>'
-        +'<div class="row"><span>Mteja:</span><span>'+(o.customer_name||'Walk-in')+'</span></div>'
-        +(o.customer_phone?'<div class="row"><span>Simu:</span><span>'+o.customer_phone+'</span></div>':'')
-        +'<div class="row"><span>Hali:</span><span>'+o.status+'</span></div>'
-        +'<div class="row"><span>Tarehe:</span><span>'+new Date(o.created_at).toLocaleString('sw-TZ')+'</span></div>'
-        +'<table><thead><tr><th>Bidhaa</th><th style="text-align:center">Idadi</th><th style="text-align:right">Jumla</th></tr></thead>'
-        +'<tbody>'+rows+'</tbody></table>'
-        +'<div class="tot"><span>JUMLA:</span><span style="color:#10b981">'+((o.total||0).toLocaleString())+' TZS</span></div>'
-        +'<div class="foot">'+new Date().toLocaleString('sw-TZ')+'</div>'
-        +'<div class="noprint" style="text-align:center;margin-top:14px">'
-        +'<button onclick="window.print()" style="padding:8px 20px;background:#10b981;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Chapisha</button>'
-        +'</div>'
-        +'<script>setTimeout(function(){window.print();},400);<\/script>'
-        +'</body></html>');
-    win.document.close();
+function oPrint(id) {
+    // Open thermal receipt in new window
+    var win = window.open('/orders/' + id + '/print-thermal', '_blank', 'width=420,height=650');
+    if (!win) {
+        oToast('Tafadhali ruhusu pop-ups', 'error');
+    }
 }
-
 /* ─────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────── */
