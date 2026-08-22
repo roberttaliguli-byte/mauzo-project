@@ -18,38 +18,42 @@
 .o-internal-tabs {
     display: flex;
     gap: 4px;
-    background: #f3f4f6;
+    background: #f0f0f0;
     padding: 4px;
-    border-radius: 10px;
+    border-radius: 6px;
     margin-bottom: 12px;
+    border: 1px solid #d0d0d0;
 }
 .o-internal-tab {
     flex: 1;
     padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
     font-size: 13px;
     font-weight: 500;
-    color: #6b7280;
+    color: #444;
     background: transparent;
     cursor: pointer;
     transition: all 0.15s;
     text-align: center;
 }
 .o-internal-tab:hover {
-    color: #374151;
+    background: #e8e8e8;
+    color: #222;
 }
 .o-internal-tab.active {
     background: #fff;
-    color: #065f46;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    color: #2c5f2d;
+    border-color: #2c5f2d;
+    border-style: solid;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     font-weight: 600;
 }
 .o-internal-tab .badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #ef4444;
+    background: #cc0000;
     color: #fff;
     font-size: 10px;
     font-weight: 700;
@@ -61,31 +65,30 @@
 }
 
 /* =============================================
-   PRODUCT CARDS
+   PRODUCT CARDS - Traditional Style
    ============================================= */
 .order-product-card {
     cursor: pointer;
-    border: 2px solid #e5e7eb;
-    background: #fff;
-    border-radius: 10px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+    border-radius: 4px;
     overflow: hidden;
-    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
 .order-product-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-    border-color: #10b981;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border-color: #2c5f2d;
 }
 .order-product-card.oos { opacity:0.5; pointer-events:none; }
 .opc-img {
     width:100%; height:110px;
     object-fit:cover; display:block;
-    background:#f3f4f6;
+    background:#e8e8e8;
 }
 .opc-ph {
     width:100%; height:110px;
     display:flex; align-items:center; justify-content:center;
-    background:#f3f4f6; color:#9ca3af;
+    background:#e8e8e8; color:#888;
 }
 @media (min-width:768px){
     .opc-img,.opc-ph { height:140px; }
@@ -99,134 +102,154 @@
     grid-template-columns: repeat(auto-fill, minmax(130px,1fr));
     gap:10px;
 }
-@media (max-width:640px){ .order-grid { grid-template-columns:repeat(2,1fr); gap:8px; } }
+@media (max-width:640px){ .order-grid { grid-template-columns:repeat(2,1fr); gap:6px; } }
 @media (min-width:768px){ .order-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); } }
 .order-products-scroll { max-height:45vh; overflow-y:auto; }
 .order-products-scroll::-webkit-scrollbar{width:4px;}
-.order-products-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px;}
+.order-products-scroll::-webkit-scrollbar-thumb{background:#bbb;border-radius:2px;}
 
 /* =============================================
-   CART MODAL - Centered at top
+   CART MODAL - Traditional style
    ============================================= */
 .o-cart-backdrop {
     position:fixed; inset:0;
-    background:rgba(0,0,0,0.45);
+    background:rgba(0,0,0,0.5);
     z-index:400;
     display:none;
     align-items:flex-start;
     justify-content:center;
-    padding:20px 12px;
+    padding:30px 16px;
     overflow-y:auto;
 }
 .o-cart-backdrop.open { display:flex; }
 .o-cart-box {
     background:#fff;
-    border-radius:16px;
+    border-radius:6px;
     width:100%;
     max-width:520px;
     max-height:85vh;
     display:flex;
     flex-direction:column;
-    box-shadow:0 24px 60px rgba(0,0,0,0.25);
+    box-shadow:0 8px 30px rgba(0,0,0,0.2);
     animation:oFadeIn 0.2s ease;
     margin-top:10px;
+    border: 1px solid #ccc;
 }
 .o-cart-head {
-    padding:14px 16px 12px;
-    border-bottom:1px solid #f3f4f6;
+    padding:12px 16px;
+    border-bottom:2px solid #e0e0e0;
     display:flex; align-items:center; justify-content:space-between;
     flex-shrink:0;
+    background: #f5f5f5;
+}
+.o-cart-head .font-bold {
+    font-family: 'Georgia', serif;
+    color: #2c5f2d;
 }
 .o-cart-items { overflow-y:auto; flex:1; padding:0 16px; }
 .o-cart-items::-webkit-scrollbar{width:4px;}
-.o-cart-items::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px;}
+.o-cart-items::-webkit-scrollbar-thumb{background:#bbb;border-radius:2px;}
 .o-cart-foot {
     padding:12px 16px 14px;
-    border-top:1px solid #f3f4f6;
+    border-top:2px solid #e0e0e0;
     flex-shrink:0;
+    background: #f9f9f9;
 }
 .cart-row {
     display:flex; align-items:center; gap:8px;
-    padding:8px 0; border-bottom:1px solid #f9fafb;
+    padding:8px 0; border-bottom:1px solid #eee;
 }
 .cart-row:last-child{border:none;}
 .cart-thumb {
-    width:46px; height:46px; border-radius:8px;
+    width:46px; height:46px; border-radius:4px;
     overflow:hidden; flex-shrink:0;
-    background:#f3f4f6;
+    background:#e8e8e8;
     display:flex; align-items:center; justify-content:center;
-    color:#9ca3af;
+    color:#888;
 }
 .cart-thumb img{width:100%;height:100%;object-fit:cover;}
 .qty-btn {
-    width:26px;height:26px;border-radius:50%;
-    border:1.5px solid #d1d5db;background:#fff;
+    width:26px;height:26px;border-radius:4px;
+    border:1px solid #aaa;background:#fff;
     display:flex;align-items:center;justify-content:center;
-    cursor:pointer;color:#374151;font-size:12px;
+    cursor:pointer;color:#333;font-size:12px;
     transition:background 0.12s;
 }
-.qty-btn:hover{background:#f3f4f6;}
+.qty-btn:hover{background:#e8e8e8;}
 
 /* =============================================
-   STATUS BADGES
+   STATUS BADGES - Traditional
    ============================================= */
-.o-badge{padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:600;display:inline-block;}
-.b-saved    {background:#fef3c7;color:#92400e;}
-.b-confirmed{background:#dbeafe;color:#1e40af;}
-.b-paid     {background:#d1fae5;color:#065f46;}
-.b-cancelled{background:#fee2e2;color:#991b1b;}
+.o-badge{padding:2px 10px;border-radius:3px;font-size:11px;font-weight:600;display:inline-block;border:1px solid transparent;}
+.b-saved    {background:#fff3cd;color:#856404;border-color:#ffc107;}
+.b-confirmed{background:#d1ecf1;color:#0c5460;border-color:#17a2b8;}
+.b-paid     {background:#d4edda;color:#155724;border-color:#28a745;}
+.b-cancelled{background:#f8d7da;color:#721c24;border-color:#dc3545;}
 
 /* =============================================
-   ORDERS TABLE
+   ORDERS TABLE - Traditional
    ============================================= */
-.order-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.order-table-wrap table{min-width:580px;width:100%;}
+.order-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #ccc;border-radius:4px;}
+.order-table-wrap table{min-width:580px;width:100%;border-collapse:collapse;}
+.order-table-wrap th {
+    background: #f0f0f0;
+    color: #333;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #ccc;
+}
+.order-table-wrap td {
+    border-bottom: 1px solid #eee;
+}
 @media (max-width:640px){
     .order-table-wrap table{min-width:480px;font-size:12px;}
     .order-table-wrap td,.order-table-wrap th{padding:5px 7px;}
 }
 
 /* =============================================
-   FILTER BUTTONS
+   FILTER BUTTONS - Traditional
    ============================================= */
 .o-fbtn {
-    padding:5px 12px; border-radius:8px; font-size:12px; font-weight:500;
-    border:2px solid #d1d5db; color:#6b7280; background:#fff;
+    padding:5px 14px; border-radius:4px; font-size:12px; font-weight:500;
+    border:1px solid #aaa; color:#444; background:#f5f5f5;
     cursor:pointer; transition:all 0.13s; white-space:nowrap;
 }
-.o-fbtn:hover,.o-fbtn.on{ border-color:#10b981; color:#065f46; background:#f0fdf4; }
-.o-fbtn.on{ font-weight:600; }
+.o-fbtn:hover{ background:#e8e8e8; border-color:#888; }
+.o-fbtn.on{ background:#2c5f2d; border-color:#2c5f2d; color:#fff; }
 
 /* =============================================
-   CUSTOMER MODAL TABS
+   CUSTOMER MODAL TABS - Traditional
    ============================================= */
 .ctab-btn{
     flex:1; padding:9px; border:none; background:transparent;
-    font-size:13px; font-weight:500; color:#6b7280;
+    font-size:13px; font-weight:500; color:#555;
     border-bottom:2px solid transparent; cursor:pointer; transition:all 0.13s;
 }
-.ctab-btn.on{color:#10b981;border-bottom-color:#10b981;font-weight:600;}
+.ctab-btn.on{color:#2c5f2d;border-bottom-color:#2c5f2d;font-weight:600;background:#f5f5f5;}
 .ctab-pane{display:none;}
 .ctab-pane.on{display:block;}
 
 /* =============================================
-   ORANGE ADD BUTTON
+   ORANGE ADD BUTTON - Traditional
    ============================================= */
 .btn-add-orange {
-    background: #f59e0b !important;
-    border-color: #d97706 !important;
+    background: #d4a017 !important;
+    border: 1px solid #b8860b !important;
     color: #fff !important;
+    border-radius: 4px !important;
 }
 .btn-add-orange:hover {
-    background: #d97706 !important;
-    border-color: #b45309 !important;
+    background: #b8860b !important;
+    border-color: #8b6914 !important;
 }
 .btn-add-orange i {
     color: #fff;
 }
 
 /* =============================================
-   TOASTS - Centered at top
+   TOASTS - Traditional style
    ============================================= */
 #o-toast-wrap{
     position:fixed; top:20px; left:50%; transform:translateX(-50%);
@@ -235,18 +258,19 @@
     max-width:90%;
 }
 .o-toast{
-    padding:12px 24px; border-radius:12px;
+    padding:10px 24px; border-radius:4px;
     font-size:14px; font-weight:500; color:#fff;
-    box-shadow:0 6px 24px rgba(0,0,0,0.15);
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
     animation:oFadeIn 0.25s ease;
     max-width:400px;
     text-align:center;
     pointer-events:auto;
+    border: 1px solid rgba(255,255,255,0.2);
 }
-.ot-success{background:#10b981;}
-.ot-error  {background:#ef4444;}
-.ot-info   {background:#3b82f6;}
-.ot-warning{background:#f59e0b;}
+.ot-success{background:#2c5f2d;}
+.ot-error  {background:#cc0000;}
+.ot-info   {background:#0056b3;}
+.ot-warning{background:#b8860b;}
 
 /* =============================================
    CART BADGE - Always visible with count
@@ -255,7 +279,7 @@
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
-    background: #ef4444;
+    background: #cc0000;
     color: #fff;
     font-size: 10px;
     font-weight: 700;
@@ -273,7 +297,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #ef4444;
+    background: #cc0000;
     color: #fff;
     font-size: 10px;
     font-weight: 700;
@@ -285,30 +309,39 @@
     animation: oPulse 1.2s infinite;
 }
 @keyframes oPulse{
-    0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(239,68,68,0.5);}
-    50%{transform:scale(1.15);box-shadow:0 0 0 6px rgba(239,68,68,0);}
+    0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(204,0,0,0.5);}
+    50%{transform:scale(1.15);box-shadow:0 0 0 6px rgba(204,0,0,0);}
 }
 
 /* =============================================
-   GENERAL MODALS - Centered at top
+   GENERAL MODALS - Traditional style
    ============================================= */
 .o-modal-wrap {
     position:fixed; inset:0;
     z-index:500;
     display:flex; align-items:flex-start;
     justify-content:center;
-    padding:20px 12px;
+    padding:30px 16px;
     background:rgba(0,0,0,0.5);
     overflow-y:auto;
 }
 .o-modal-wrap.hidden { display:none!important; }
 .o-modal-box {
-    background:#fff; border-radius:14px;
+    background:#fff; border-radius:6px;
     width:100%; max-width:460px;
     max-height:85vh; overflow-y:auto;
-    box-shadow:0 20px 60px rgba(0,0,0,0.2);
+    box-shadow:0 8px 30px rgba(0,0,0,0.2);
     animation:oFadeIn 0.2s ease;
     margin-top:10px;
+    border: 1px solid #ccc;
+}
+.o-modal-box .sticky {
+    background: #f5f5f5;
+    border-bottom: 2px solid #e0e0e0;
+}
+.o-modal-box h3 {
+    font-family: 'Georgia', serif;
+    color: #2c5f2d;
 }
 
 /* =============================================
@@ -363,35 +396,43 @@
         padding: 10px 18px;
         max-width: 90%;
     }
+    .o-cart-head .font-bold {
+        font-size: 14px;
+    }
+    .o-cart-head .text-xs {
+        font-size: 10px;
+    }
 }
 </style>
 
-<!-- Toast wrapper - Centered at top -->
+<!-- Toast wrapper -->
 <div id="o-toast-wrap"></div>
 
 <!-- ============================================ -->
 <!-- SINGLE TAB: Weka Order (contains both views) -->
 <!-- ============================================ -->
 <div id="weka-order-tab-content" class="order-tab-content">
-    <div class="bg-white rounded-xl shadow border border-gray-200 p-3 md:p-4">
+    <div class="bg-white rounded border border-gray-300 p-3 md:p-4" style="border-radius:4px;">
 
         <!-- Header row -->
         <div class="flex flex-wrap items-center justify-between mb-3 gap-2">
             <div>
-                <h2 class="text-base md:text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-clipboard-list text-emerald-600"></i>
+                <h2 class="text-base md:text-lg font-bold text-gray-800 flex items-center gap-2" style="font-family:'Georgia',serif;">
+                    <i class="fas fa-clipboard-list" style="color:#2c5f2d;"></i>
                     Weka Order
                 </h2>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="oOpenCart()"
-                        class="relative bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition">
+                        class="relative text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-2 transition"
+                        style="background:#2c5f2d; border:1px solid #1a3d1a;">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="hidden sm:inline">Kikapu</span>
                     <span id="cart-badge">0</span>
                 </button>
                 <button onclick="oClearCart()"
-                        class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1.5 rounded-lg text-xs transition" title="Futa kikapu">
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-xs transition border border-gray-300"
+                        title="Futa kikapu">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -418,14 +459,15 @@
             <!-- Product filters -->
             <div class="flex flex-wrap gap-2 mb-3">
                 <div class="relative flex-1 min-w-[140px]">
-                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-500 text-sm"></i>
                     <input type="text" id="oprod-search" placeholder="Tafuta bidhaa..."
-                           class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
+                           class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-[#2c5f2d]"
+                           style="border-radius:4px;"
                            oninput="oProdSearch(this.value)">
                 </div>
                 <button onclick="oProdFilter('all',this)" class="o-fbtn on">Zote</button>
                 <button onclick="oProdFilter('jumla',this)" class="o-fbtn">Jumla</button>
-                <button onclick="oProdFilter('low_stock',this)" class="o-fbtn border-yellow-400 text-yellow-600">
+                <button onclick="oProdFilter('low_stock',this)" class="o-fbtn" style="border-color:#b8860b;color:#856404;">
                     <i class="fas fa-exclamation-triangle"></i> Hisa ndogo
                 </button>
             </div>
@@ -466,9 +508,9 @@
                                     </div>
                                 @endif
                                 @if($oos)
-                                    <span class="absolute top-1 right-1 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">Imeisha</span>
+                                    <span class="absolute top-1 right-1 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold" style="background:#cc0000;">Imeisha</span>
                                 @elseif($product->idadi < 5)
-                                    <span class="absolute top-1 right-1 bg-yellow-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">{{ number_format($product->idadi,0) }} zimebaki</span>
+                                    <span class="absolute top-1 right-1 text-white text-[10px] px-1.5 py-0.5 rounded font-semibold" style="background:#b8860b;">{{ number_format($product->idadi,0) }} zimebaki</span>
                                 @endif
                             </div>
 
@@ -479,26 +521,26 @@
                                 </div>
                                 <div class="flex flex-wrap gap-1 mt-0.5 min-h-[18px]">
                                     @if($product->aina)
-                                        <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">{{ $product->aina }}</span>
+                                        <span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded border border-blue-200">{{ $product->aina }}</span>
                                     @endif
                                     @if($product->kipimo)
-                                        <span class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">{{ $product->kipimo }}</span>
+                                        <span class="text-[10px] text-green-800 px-1.5 py-0.5 rounded border border-green-200" style="background:#d4edda;">{{ $product->kipimo }}</span>
                                     @endif
                                 </div>
-                                <div class="text-sm font-bold text-emerald-600 mt-1">
+                                <div class="text-sm font-bold mt-1" style="color:#2c5f2d;">
                                     {{ number_format($product->bei_kuuza,0) }} TZS
                                 </div>
                                 @if($product->bei_uzo_jumla && $product->bei_uzo_jumla > 0)
-                                    <div class="text-[10px] text-gray-400">Jumla: {{ number_format($product->bei_uzo_jumla,0) }}</div>
+                                    <div class="text-[10px] text-gray-500">Jumla: {{ number_format($product->bei_uzo_jumla,0) }}</div>
                                 @endif
                                 <!-- ORANGE ADD BUTTON -->
-                                <div class="mt-1.5 w-full btn-add-orange py-1 rounded-lg flex items-center justify-center gap-1 text-[11px] font-semibold">
+                                <div class="mt-1.5 w-full btn-add-orange py-1 rounded flex items-center justify-center gap-1 text-[11px] font-semibold" style="border-radius:4px;">
                                     <i class="fas fa-plus-circle"></i> Ongeza
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-full text-center py-10 text-gray-400">
+                        <div class="col-span-full text-center py-10 text-gray-500">
                             <i class="fas fa-box-open text-4xl mb-2 block"></i>
                             <p class="text-sm">Hakuna bidhaa zilizopatikana</p>
                         </div>
@@ -514,13 +556,13 @@
 
             <!-- Stats -->
             <div class="flex flex-wrap gap-1 text-xs mb-3">
-                <span class="bg-gray-100 px-2 py-1 rounded-lg">Jumla: <b id="stat-total">0</b></span>
-                <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-lg">Saved: <b id="stat-saved">0</b></span>
-                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-lg">Conf: <b id="stat-confirmed">0</b></span>
-                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-lg">Paid: <b id="stat-paid">0</b></span>
-                <span class="bg-red-100 text-red-700 px-2 py-1 rounded-lg">Cancel: <b id="stat-cancelled">0</b></span>
+                <span class="bg-gray-100 px-2 py-1 rounded border border-gray-300">Jumla: <b id="stat-total">0</b></span>
+                <span class="px-2 py-1 rounded border" style="background:#fff3cd;border-color:#ffc107;color:#856404;">Saved: <b id="stat-saved">0</b></span>
+                <span class="px-2 py-1 rounded border" style="background:#d1ecf1;border-color:#17a2b8;color:#0c5460;">Conf: <b id="stat-confirmed">0</b></span>
+                <span class="px-2 py-1 rounded border" style="background:#d4edda;border-color:#28a745;color:#155724;">Paid: <b id="stat-paid">0</b></span>
+                <span class="px-2 py-1 rounded border" style="background:#f8d7da;border-color:#dc3545;color:#721c24;">Cancel: <b id="stat-cancelled">0</b></span>
                 <!-- RED COUNT - Unpaid orders (saved + confirmed) -->
-                <span class="bg-red-500 text-white px-2 py-1 rounded-lg">
+                <span class="text-white px-2 py-1 rounded border" style="background:#cc0000;border-color:#990000;">
                     <i class="fas fa-clock mr-1"></i> Bado: <b id="stat-unpaid">0</b>
                 </span>
             </div>
@@ -533,21 +575,23 @@
                 <button onclick="oOrdersFilter('paid',this)" class="o-fbtn"><i class="fas fa-check-circle mr-1"></i>Paid</button>
                 <button onclick="oOrdersFilter('cancelled',this)" class="o-fbtn"><i class="fas fa-times-circle mr-1"></i>Cancelled</button>
                 <div class="relative flex-1 min-w-[130px]">
-                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-500 text-sm"></i>
                     <input type="text" id="orders-search" placeholder="Tafuta order..."
-                           class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
+                           class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-[#2c5f2d]"
+                           style="border-radius:4px;"
                            oninput="oOrdersSearch(this.value)">
                 </div>
                 <button onclick="oOrdersLoad()"
-                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                        class="text-white px-3 py-1.5 rounded text-xs font-medium transition border"
+                        style="background:#2c5f2d;border-color:#1a3d1a;">
                     <i class="fas fa-sync-alt mr-1"></i>Refresh
                 </button>
             </div>
 
             <!-- Table -->
-            <div class="order-table-wrap rounded-lg border border-gray-200">
+            <div class="order-table-wrap rounded border border-gray-300" style="border-radius:4px;">
                 <table class="w-full">
-                    <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                    <thead style="background:#f0f0f0;">
                         <tr>
                             <th class="border-b px-3 py-2 text-left">#</th>
                             <th class="border-b px-3 py-2 text-left">Mteja</th>
@@ -560,7 +604,7 @@
                     </thead>
                     <tbody id="orders-tbody">
                         <tr>
-                            <td colspan="7" class="text-center py-8 text-gray-400 text-sm">
+                            <td colspan="7" class="text-center py-8 text-gray-500 text-sm">
                                 <i class="fas fa-spinner fa-spin mr-2"></i>Inapakia orders...
                             </td>
                         </tr>
@@ -572,31 +616,33 @@
 </div>
 
 <!-- ============================================ -->
-<!-- CART MODAL - Centered at top                -->
+<!-- CART MODAL - Traditional style               -->
 <!-- ============================================ -->
 <div id="o-cart-backdrop" class="o-cart-backdrop" onclick="oCartBackdropClick(event)">
     <div class="o-cart-box" onclick="event.stopPropagation()">
         <div class="o-cart-head">
             <div class="flex items-center gap-2">
-                <i class="fas fa-shopping-cart text-emerald-600 text-lg"></i>
-                <span class="font-bold text-gray-800">Kikapu chako</span>
-                <span class="text-xs text-gray-400">(<span id="cart-count">0</span> bidhaa)</span>
+                <i class="fas fa-shopping-cart" style="color:#2c5f2d;font-size:18px;"></i>
+                <span class="font-bold text-gray-800" style="font-family:'Georgia',serif;">Kikapu chako</span>
+                <span class="text-xs text-gray-500">(<span id="cart-count">0</span> bidhaa)</span>
             </div>
-            <button onclick="oCloseCart()" class="text-gray-400 hover:text-gray-600 text-xl leading-none w-8 h-8 flex items-center justify-center">&times;</button>
+            <button onclick="oCloseCart()" class="text-gray-500 hover:text-gray-700 text-xl leading-none w-8 h-8 flex items-center justify-center">&times;</button>
         </div>
         <div class="o-cart-items" id="cart-items-wrap"></div>
         <div class="o-cart-foot">
             <div class="flex justify-between items-center mb-3">
-                <span class="text-sm text-gray-500 font-medium">Jumla ya malipo:</span>
-                <span id="cart-total" class="text-xl font-bold text-emerald-700">0 TZS</span>
+                <span class="text-sm text-gray-600 font-medium">Jumla ya malipo:</span>
+                <span id="cart-total" class="text-xl font-bold" style="color:#2c5f2d;font-family:'Georgia',serif;">0 TZS</span>
             </div>
             <div class="flex gap-2">
                 <button onclick="oSaveFlow('saved')"
-                        class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-1">
+                        class="flex-1 text-white py-2.5 rounded text-sm font-semibold transition flex items-center justify-center gap-1 border"
+                        style="background:#d4a017;border-color:#b8860b;">
                     <i class="fas fa-save"></i> Hifadhi
                 </button>
                 <button onclick="oSaveFlow('paid')"
-                        class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-1">
+                        class="flex-1 text-white py-2.5 rounded text-sm font-semibold transition flex items-center justify-center gap-1 border"
+                        style="background:#2c5f2d;border-color:#1a3d1a;">
                     <i class="fas fa-check-circle"></i> Lipa
                 </button>
             </div>
@@ -605,17 +651,17 @@
 </div>
 
 <!-- ============================================ -->
-<!-- MODAL: Customer selection - Centered at top -->
+<!-- MODAL: Customer selection - Traditional style -->
 <!-- ============================================ -->
 <div id="modal-customer" class="o-modal-wrap hidden">
     <div class="o-modal-box">
-        <div class="sticky top-0 bg-white z-10 px-4 pt-4 pb-2 border-b flex items-center justify-between">
-            <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                <i class="fas fa-user text-emerald-600"></i>Chagua Mteja
+        <div class="sticky top-0 z-10 px-4 pt-4 pb-2 border-b flex items-center justify-between" style="background:#f5f5f5;border-bottom:2px solid #e0e0e0;">
+            <h3 class="font-bold text-gray-800 text-base flex items-center gap-2" style="font-family:'Georgia',serif;color:#2c5f2d;">
+                <i class="fas fa-user" style="color:#2c5f2d;"></i>Chagua Mteja
             </h3>
-            <button onclick="oCustModalClose()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            <button onclick="oCustModalClose()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">&times;</button>
         </div>
-        <div class="flex border-b bg-white px-4">
+        <div class="flex border-b bg-gray-50 px-4" style="border-bottom:2px solid #e0e0e0;">
             <button class="ctab-btn on" onclick="oCustTab('existing',this)">
                 <i class="fas fa-users mr-1"></i>Wateja Waliopo
             </button>
@@ -626,36 +672,39 @@
         <div class="p-4">
             <div id="ctab-existing" class="ctab-pane on">
                 <button onclick="oSelectCustomer(null,'Walk-in Customer','')"
-                        class="w-full text-left px-3 py-2.5 rounded-lg border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 mb-3 transition flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 flex-shrink-0">
+                        class="w-full text-left px-3 py-2.5 rounded border-2 mb-3 transition flex items-center gap-3"
+                        style="border-color:#ccc;background:#fafafa;">
+                    <div class="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 flex-shrink-0">
                         <i class="fas fa-user-secret text-sm"></i>
                     </div>
                     <div>
                         <div class="text-sm font-semibold text-gray-700">Walk-in Customer</div>
-                        <div class="text-xs text-gray-400">Mteja asiyesajiliwa</div>
+                        <div class="text-xs text-gray-500">Mteja asiyesajiliwa</div>
                     </div>
                 </button>
                 <div class="relative mb-2">
-                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-500 text-sm"></i>
                     <input type="text" id="cust-search-input" placeholder="Tafuta jina au simu..."
-                           class="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500"
+                           class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-[#2c5f2d]"
+                           style="border-radius:4px;"
                            oninput="oCustSearch(this.value)">
                 </div>
                 <div id="cust-list" class="space-y-1 max-h-52 overflow-y-auto">
                     @forelse($wateja ?? [] as $mteja)
                         <button onclick="oSelectCustomer('{{ $mteja->id }}','{{ addslashes($mteja->jina) }}','{{ $mteja->simu }}')"
-                                class="cust-item w-full text-left px-3 py-2 rounded-lg border border-gray-100 hover:border-emerald-400 hover:bg-emerald-50 transition flex items-center gap-3"
+                                class="cust-item w-full text-left px-3 py-2 rounded border transition flex items-center gap-3"
+                                style="border-color:#e0e0e0;"
                                 data-name="{{ strtolower($mteja->jina) }}" data-simu="{{ $mteja->simu }}">
-                            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm flex-shrink-0">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0" style="background:#2c5f2d;">
                                 {{ strtoupper(substr($mteja->jina,0,1)) }}
                             </div>
                             <div class="min-w-0">
                                 <div class="text-sm font-medium text-gray-800 truncate">{{ $mteja->jina }}</div>
-                                <div class="text-xs text-gray-400">{{ $mteja->simu }}</div>
+                                <div class="text-xs text-gray-500">{{ $mteja->simu }}</div>
                             </div>
                         </button>
                     @empty
-                        <p class="text-center text-gray-400 text-sm py-4">Hakuna wateja walioorodheshwa bado</p>
+                        <p class="text-center text-gray-500 text-sm py-4">Hakuna wateja walioorodheshwa bado</p>
                     @endforelse
                 </div>
             </div>
@@ -664,20 +713,24 @@
                     <div>
                         <label class="text-xs font-semibold text-gray-600 mb-1 block">Jina la Mteja *</label>
                         <input type="text" id="nc-name" placeholder="Jina kamili..."
-                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-[#2c5f2d]"
+                               style="border-radius:4px;">
                     </div>
                     <div>
                         <label class="text-xs font-semibold text-gray-600 mb-1 block">Namba ya Simu *</label>
                         <input type="tel" id="nc-phone" placeholder="0712 345 678..."
-                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-[#2c5f2d]"
+                               style="border-radius:4px;">
                     </div>
                     <div>
                         <label class="text-xs font-semibold text-gray-600 mb-1 block">Anapoishi (hiari)</label>
                         <input type="text" id="nc-address" placeholder="Mtaa, mji..."
-                               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-[#2c5f2d]"
+                               style="border-radius:4px;">
                     </div>
                     <button onclick="oSaveNewCustomer()" id="nc-save-btn"
-                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2">
+                            class="w-full text-white py-2.5 rounded text-sm font-semibold transition flex items-center justify-center gap-2 border"
+                            style="background:#2c5f2d;border-color:#1a3d1a;">
                         <i class="fas fa-user-plus"></i>Ongeza na Endelea
                     </button>
                 </div>
@@ -687,58 +740,58 @@
 </div>
 
 <!-- ============================================ -->
-<!-- MODAL: View Order - Centered at top          -->
+<!-- MODAL: View Order - Traditional style        -->
 <!-- ============================================ -->
 <div id="modal-view-order" class="o-modal-wrap hidden">
     <div class="o-modal-box">
-        <div class="sticky top-0 bg-white z-10 px-4 pt-4 pb-3 border-b flex items-center justify-between">
-            <h3 class="font-bold text-gray-800 text-base flex items-center gap-2">
-                <i class="fas fa-eye text-blue-600"></i>Taarifa za Order
+        <div class="sticky top-0 z-10 px-4 pt-4 pb-3 border-b flex items-center justify-between" style="background:#f5f5f5;border-bottom:2px solid #e0e0e0;">
+            <h3 class="font-bold text-gray-800 text-base flex items-center gap-2" style="font-family:'Georgia',serif;color:#0056b3;">
+                <i class="fas fa-eye" style="color:#0056b3;"></i>Taarifa za Order
             </h3>
-            <button onclick="oViewClose()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            <button onclick="oViewClose()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">&times;</button>
         </div>
         <div class="p-4" id="view-order-body"></div>
     </div>
 </div>
 
 <!-- ============================================ -->
-<!-- MODAL: Edit Status - Centered at top         -->
+<!-- MODAL: Edit Status - Traditional style       -->
 <!-- ============================================ -->
 <div id="modal-edit-status" class="o-modal-wrap hidden">
     <div class="o-modal-box" style="max-width:360px;">
-        <div class="px-4 pt-4 pb-3 border-b flex items-center justify-between">
+        <div class="px-4 pt-4 pb-3 border-b flex items-center justify-between" style="background:#f5f5f5;border-bottom:2px solid #e0e0e0;">
             <h3 class="font-bold text-gray-800 text-base">Badilisha Hali</h3>
-            <button onclick="oEditStatusClose()" class="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            <button onclick="oEditStatusClose()" class="text-gray-500 hover:text-gray-700 text-xl leading-none">&times;</button>
         </div>
         <div class="p-4">
-            <p class="text-sm text-gray-500 mb-4">Order: <strong id="edit-status-num" class="font-mono text-gray-800"></strong></p>
+            <p class="text-sm text-gray-600 mb-4">Order: <strong id="edit-status-num" class="font-mono text-gray-800"></strong></p>
             <div class="grid grid-cols-2 gap-2" id="status-btn-group">
-                <button onclick="oUpdateStatus('saved')" class="py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-semibold transition">Saved</button>
-                <button onclick="oUpdateStatus('confirmed')" class="py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition">Confirmed</button>
-                <button onclick="oUpdateStatus('paid')" class="py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition">Paid</button>
-                <button onclick="oUpdateStatus('cancelled')" class="py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition">Cancelled</button>
+                <button onclick="oUpdateStatus('saved')" class="py-2.5 text-white rounded text-sm font-semibold transition border" style="background:#d4a017;border-color:#b8860b;">Saved</button>
+                <button onclick="oUpdateStatus('confirmed')" class="py-2.5 text-white rounded text-sm font-semibold transition border" style="background:#0056b3;border-color:#004085;">Confirmed</button>
+                <button onclick="oUpdateStatus('paid')" class="py-2.5 text-white rounded text-sm font-semibold transition border" style="background:#2c5f2d;border-color:#1a3d1a;">Paid</button>
+                <button onclick="oUpdateStatus('cancelled')" class="py-2.5 text-white rounded text-sm font-semibold transition border" style="background:#cc0000;border-color:#990000;">Cancelled</button>
             </div>
-            <button onclick="oEditStatusClose()" class="mt-3 w-full py-2 border border-gray-200 rounded-lg text-sm text-gray-500 hover:bg-gray-50 transition">Ghairi</button>
+            <button onclick="oEditStatusClose()" class="mt-3 w-full py-2 border rounded text-sm text-gray-600 hover:bg-gray-50 transition" style="border-color:#ccc;">Ghairi</button>
         </div>
     </div>
 </div>
 
 <!-- ============================================ -->
-<!-- MODAL: Delete Confirm - Centered at top      -->
+<!-- MODAL: Delete Confirm - Traditional style    -->
 <!-- ============================================ -->
 <div id="modal-delete-order" class="o-modal-wrap hidden">
     <div class="o-modal-box" style="max-width:360px;">
-        <div class="px-4 pt-4 pb-3 border-b">
-            <h3 class="font-bold text-red-600 text-base flex items-center gap-2">
+        <div class="px-4 pt-4 pb-3 border-b" style="background:#f5f5f5;border-bottom:2px solid #e0e0e0;">
+            <h3 class="font-bold text-red-700 text-base flex items-center gap-2">
                 <i class="fas fa-exclamation-triangle"></i>Futa Order
             </h3>
         </div>
         <div class="p-4">
             <p class="text-sm text-gray-600 mb-2">Una uhakika unataka kufuta order hii?</p>
-            <p class="text-xs text-gray-400 mb-4">Hatua hii haiwezi kurejeshwa.</p>
+            <p class="text-xs text-gray-500 mb-4">Hatua hii haiwezi kurejeshwa.</p>
             <div class="flex gap-2">
-                <button onclick="oDeleteClose()" class="flex-1 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 transition">Ghairi</button>
-                <button onclick="oConfirmDelete()" id="delete-confirm-btn" class="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition">Futa</button>
+                <button onclick="oDeleteClose()" class="flex-1 py-2 border rounded text-sm hover:bg-gray-50 transition" style="border-color:#ccc;">Ghairi</button>
+                <button onclick="oConfirmDelete()" id="delete-confirm-btn" class="flex-1 py-2 text-white rounded text-sm font-semibold transition" style="background:#cc0000;border:1px solid #990000;">Futa</button>
             </div>
         </div>
     </div>
@@ -833,7 +886,7 @@ document.addEventListener('click', function(e){
 });
 
 /* ─────────────────────────────────────────
-   TOAST - Centered at top
+   TOAST - Traditional style
 ───────────────────────────────────────── */
 function oToast(msg, type){
     type = type || 'info';
@@ -946,7 +999,7 @@ function oAddToCart(card){
     }
     oCartRender();
     oToast(name + ' imeongezwa ✓','success');
-    oOpenCart();
+    // Removed auto-open cart - user clicks when done
 }
 
 function oCartRemove(idx){
@@ -981,7 +1034,7 @@ function oCartRender(){
     if(!wrap) return;
 
     if(oCart.length === 0){
-        wrap.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fas fa-shopping-cart text-4xl mb-2 block"></i><p class="text-sm">Kikapu ni tupu</p><p class="text-xs mt-1">Gusa bidhaa ili kuongeza</p></div>';
+        wrap.innerHTML = '<div class="text-center text-gray-500 py-10"><i class="fas fa-shopping-cart text-4xl mb-2 block"></i><p class="text-sm">Kikapu ni tupu</p><p class="text-xs mt-1">Gusa bidhaa ili kuongeza</p></div>';
         return;
     }
 
@@ -990,13 +1043,13 @@ function oCartRender(){
             ? '<img src="' + oEsc(item.image) + '" alt="" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<i class=\\\"fas fa-box\\\"></i>\'">'
             : '<i class="fas fa-box"></i>';
         var badges = '';
-        if(item.aina)   badges += '<span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">'+oEsc(item.aina)+'</span> ';
-        if(item.kipimo) badges += '<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">'+oEsc(item.kipimo)+'</span>';
+        if(item.aina)   badges += '<span class="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded border border-blue-200">'+oEsc(item.aina)+'</span> ';
+        if(item.kipimo) badges += '<span class="text-[10px] text-green-800 px-1.5 py-0.5 rounded border border-green-200" style="background:#d4edda;">'+oEsc(item.kipimo)+'</span>';
         return '<div class="cart-row">'
             + '<div class="cart-thumb">' + imgHtml + '</div>'
             + '<div class="flex-1 min-w-0">'
             +   '<div class="text-sm font-semibold text-gray-800 truncate">' + oEsc(item.name) + '</div>'
-            +   '<div class="text-xs text-gray-400">' + item.price.toLocaleString() + ' TZS</div>'
+            +   '<div class="text-xs text-gray-500">' + item.price.toLocaleString() + ' TZS</div>'
             +   '<div class="mt-0.5">' + badges + '</div>'
             + '</div>'
             + '<div class="flex items-center gap-1.5 flex-shrink-0">'
@@ -1004,10 +1057,10 @@ function oCartRender(){
             +   '<span class="text-sm font-bold w-5 text-center">' + item.qty + '</span>'
             +   '<button onclick="oCartQty('+idx+',1)" class="qty-btn"><i class="fas fa-plus text-xs"></i></button>'
             + '</div>'
-            + '<div class="text-sm font-bold text-emerald-700 min-w-[56px] text-right flex-shrink-0">'
+            + '<div class="text-sm font-bold min-w-[56px] text-right flex-shrink-0" style="color:#2c5f2d;">'
             +   (item.price * item.qty).toLocaleString()
             + '</div>'
-            + '<button onclick="oCartRemove('+idx+')" class="text-red-400 hover:text-red-600 ml-1 text-sm flex-shrink-0" title="Ondoa">'
+            + '<button onclick="oCartRemove('+idx+')" class="text-red-600 hover:text-red-800 ml-1 text-sm flex-shrink-0" title="Ondoa">'
             +   '<i class="fas fa-times"></i>'
             + '</button>'
             + '</div>';
@@ -1175,7 +1228,7 @@ async function oOrdersLoad(silent){
     } catch(e){
         if(!silent){
             var tbody = document.getElementById('orders-tbody');
-            if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-red-500 text-sm"><i class="fas fa-exclamation-circle mr-1"></i>Hitilafu katika kupakia orders</td></tr>';
+            if(tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-red-700 text-sm"><i class="fas fa-exclamation-circle mr-1"></i>Hitilafu katika kupakia orders</td></tr>';
         }
     }
 }
@@ -1188,7 +1241,7 @@ function oOrdersRender(){
         return mf && ms;
     });
     if(filtered.length === 0){
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-400 text-sm"><i class="fas fa-inbox text-2xl mb-1 block"></i>Hakuna orders zilizopatikana</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500 text-sm"><i class="fas fa-inbox text-2xl mb-1 block"></i>Hakuna orders zilizopatikana</td></tr>';
         return;
     }
     var bClass = {saved:'b-saved',confirmed:'b-confirmed',paid:'b-paid',cancelled:'b-cancelled'};
@@ -1202,23 +1255,23 @@ function oOrdersRender(){
         var date    = o.created_at ? new Date(o.created_at).toLocaleDateString('sw-TZ',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-';
         var canEdit = o.status !== 'paid' && o.status !== 'cancelled';
         var editBtn = canEdit
-            ? '<button onclick="oEditStatus(\''+o.id+'\',\''+oEsc(num)+'\')" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-1.5 rounded text-xs transition" title="Badilisha Hali"><i class="fas fa-edit"></i></button>'
+            ? '<button onclick="oEditStatus(\''+o.id+'\',\''+oEsc(num)+'\')" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-1.5 rounded text-xs transition border border-yellow-300" title="Badilisha Hali"><i class="fas fa-edit"></i></button>'
             : '';
         return '<tr class="border-b hover:bg-gray-50 transition">'
-            + '<td class="px-3 py-2 text-xs font-mono"><span class="bg-gray-100 px-1.5 py-0.5 rounded">'+oEsc(num)+'</span></td>'
+            + '<td class="px-3 py-2 text-xs font-mono"><span class="bg-gray-100 px-1.5 py-0.5 rounded border border-gray-300">'+oEsc(num)+'</span></td>'
             + '<td class="px-3 py-2"><div class="text-sm font-medium">'+oEsc(o.customer_name||'Walk-in')+'</div>'
-            +   (o.customer_phone?'<div class="text-xs text-gray-400">'+oEsc(o.customer_phone)+'</div>':'')
+            +   (o.customer_phone?'<div class="text-xs text-gray-500">'+oEsc(o.customer_phone)+'</div>':'')
             + '</td>'
-            + '<td class="px-3 py-2 text-sm text-gray-500 max-w-[160px]"><div class="truncate">'+oEsc(preview||'—')+more+'</div></td>'
-            + '<td class="px-3 py-2 text-right text-sm font-bold text-emerald-700">'+((o.total||0).toLocaleString())+' TZS</td>'
+            + '<td class="px-3 py-2 text-sm text-gray-600 max-w-[160px]"><div class="truncate">'+oEsc(preview||'—')+more+'</div></td>'
+            + '<td class="px-3 py-2 text-right text-sm font-bold" style="color:#2c5f2d;">'+((o.total||0).toLocaleString())+' TZS</td>'
             + '<td class="px-3 py-2"><span class="o-badge '+(bClass[o.status]||'')+'">'+(bLabel[o.status]||o.status)+'</span></td>'
-            + '<td class="px-3 py-2 text-xs text-gray-400 whitespace-nowrap">'+date+'</td>'
+            + '<td class="px-3 py-2 text-xs text-gray-500 whitespace-nowrap">'+date+'</td>'
             + '<td class="px-3 py-2"><div class="flex flex-wrap gap-1 justify-center">'
-            +   '<button onclick="oView(\''+o.id+'\')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-1.5 rounded text-xs transition" title="Tazama"><i class="fas fa-eye"></i></button>'
-            +   '<button onclick="oShare(\''+o.id+'\')" class="bg-green-100 hover:bg-green-200 text-green-700 p-1.5 rounded text-xs transition" title="Shiriki"><i class="fas fa-share-alt"></i></button>'
-            +   '<button onclick="oPrint(\''+o.id+'\')" class="bg-purple-100 hover:bg-purple-200 text-purple-700 p-1.5 rounded text-xs transition" title="Chapisha"><i class="fas fa-print"></i></button>'
+            +   '<button onclick="oView(\''+o.id+'\')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-1.5 rounded text-xs transition border border-blue-300" title="Tazama"><i class="fas fa-eye"></i></button>'
+            +   '<button onclick="oShare(\''+o.id+'\')" class="bg-green-100 hover:bg-green-200 text-green-700 p-1.5 rounded text-xs transition border border-green-300" title="Shiriki"><i class="fas fa-share-alt"></i></button>'
+            +   '<button onclick="oPrint(\''+o.id+'\')" class="bg-purple-100 hover:bg-purple-200 text-purple-700 p-1.5 rounded text-xs transition border border-purple-300" title="Chapisha"><i class="fas fa-print"></i></button>'
             +   editBtn
-            +   '<button onclick="oDeleteOpen(\''+o.id+'\')" class="bg-red-100 hover:bg-red-200 text-red-700 p-1.5 rounded text-xs transition" title="Futa"><i class="fas fa-trash"></i></button>'
+            +   '<button onclick="oDeleteOpen(\''+o.id+'\')" class="bg-red-100 hover:bg-red-200 text-red-700 p-1.5 rounded text-xs transition border border-red-300" title="Futa"><i class="fas fa-trash"></i></button>'
             + '</div></td></tr>';
     }).join('');
 }
@@ -1256,29 +1309,29 @@ function oView(id){
     var itemsHtml = (o.items||[]).map(function(item){
         var qty = item.idadi||item.qty||0;
         var tot = item.total||(qty*(item.bei||item.price||0))||0;
-        return '<div class="flex justify-between py-1.5 border-b border-gray-100 text-sm last:border-0">'
-            + '<span class="text-gray-700">'+oEsc(item.jina||item.name)+' <span class="text-gray-400">x'+qty+'</span></span>'
-            + '<span class="font-semibold">'+tot.toLocaleString()+' TZS</span>'
+        return '<div class="flex justify-between py-1.5 border-b border-gray-200 text-sm last:border-0">'
+            + '<span class="text-gray-700">'+oEsc(item.jina||item.name)+' <span class="text-gray-500">x'+qty+'</span></span>'
+            + '<span class="font-semibold" style="color:#2c5f2d;">'+tot.toLocaleString()+' TZS</span>'
             + '</div>';
-    }).join('') || '<p class="text-sm text-gray-400 py-2">Hakuna bidhaa</p>';
+    }).join('') || '<p class="text-sm text-gray-500 py-2">Hakuna bidhaa</p>';
 
     var body = document.getElementById('view-order-body');
     if(body){
         body.innerHTML = '<div class="space-y-3">'
-            + '<div class="bg-gray-50 rounded-lg p-3 space-y-1.5 text-sm">'
-            +   '<div class="flex justify-between"><span class="text-gray-500">Order #</span><span class="font-mono font-bold">' + oEsc(o.order_number||'#'+o.id) + '</span></div>'
-            +   '<div class="flex justify-between"><span class="text-gray-500">Mteja</span><span class="font-medium">'+oEsc(o.customer_name||'Walk-in')+'</span></div>'
-            +   (o.customer_phone?'<div class="flex justify-between"><span class="text-gray-500">Simu</span><span>'+oEsc(o.customer_phone)+'</span></div>':'')
-            +   '<div class="flex justify-between"><span class="text-gray-500">Hali</span><span class="o-badge '+(bClass[o.status]||'')+'">'+(bLabel[o.status]||o.status)+'</span></div>'
-            +   '<div class="flex justify-between"><span class="text-gray-500">Tarehe</span><span>'+new Date(o.created_at).toLocaleString('sw-TZ')+'</span></div>'
+            + '<div class="bg-gray-50 rounded p-3 space-y-1.5 text-sm border border-gray-200">'
+            +   '<div class="flex justify-between"><span class="text-gray-600">Order #</span><span class="font-mono font-bold">' + oEsc(o.order_number||'#'+o.id) + '</span></div>'
+            +   '<div class="flex justify-between"><span class="text-gray-600">Mteja</span><span class="font-medium">'+oEsc(o.customer_name||'Walk-in')+'</span></div>'
+            +   (o.customer_phone?'<div class="flex justify-between"><span class="text-gray-600">Simu</span><span>'+oEsc(o.customer_phone)+'</span></div>':'')
+            +   '<div class="flex justify-between"><span class="text-gray-600">Hali</span><span class="o-badge '+(bClass[o.status]||'')+'">'+(bLabel[o.status]||o.status)+'</span></div>'
+            +   '<div class="flex justify-between"><span class="text-gray-600">Tarehe</span><span>'+new Date(o.created_at).toLocaleString('sw-TZ')+'</span></div>'
             + '</div>'
             + '<div><h4 class="text-sm font-semibold text-gray-700 mb-1">Bidhaa:</h4>'
-            +   '<div class="bg-gray-50 rounded-lg px-3 py-1">'+itemsHtml+'</div>'
+            +   '<div class="bg-gray-50 rounded px-3 py-1 border border-gray-200">'+itemsHtml+'</div>'
             + '</div>'
-            + '<div class="flex justify-between items-center border-t pt-2 font-bold"><span>JUMLA:</span><span class="text-emerald-700">'+((o.total||0).toLocaleString())+' TZS</span></div>'
+            + '<div class="flex justify-between items-center border-t pt-2 font-bold" style="border-color:#ccc;"><span>JUMLA:</span><span style="color:#2c5f2d;">'+((o.total||0).toLocaleString())+' TZS</span></div>'
             + '<div class="flex gap-2 pt-1">'
-            +   '<button onclick="oShare(\''+o.id+'\')" class="flex-1 bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded-lg text-sm font-semibold transition"><i class="fas fa-share-alt mr-1"></i>Shiriki</button>'
-            +   '<button onclick="oPrint(\''+o.id+'\')" class="flex-1 bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 rounded-lg text-sm font-semibold transition"><i class="fas fa-print mr-1"></i>Chapisha</button>'
+            +   '<button onclick="oShare(\''+o.id+'\')" class="flex-1 bg-green-100 hover:bg-green-200 text-green-700 py-2 rounded text-sm font-semibold transition border border-green-300"><i class="fas fa-share-alt mr-1"></i>Shiriki</button>'
+            +   '<button onclick="oPrint(\''+o.id+'\')" class="flex-1 bg-purple-100 hover:bg-purple-200 text-purple-700 py-2 rounded text-sm font-semibold transition border border-purple-300"><i class="fas fa-print mr-1"></i>Chapisha</button>'
             + '</div>'
             + '</div>';
     }
