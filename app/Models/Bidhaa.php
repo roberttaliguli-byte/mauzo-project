@@ -28,6 +28,7 @@ class Bidhaa extends Model
         'image_path',
         'image_mime_type',
         'image_size',
+        'updated_by',
     ];
 
     protected $casts = [

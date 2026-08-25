@@ -1663,4 +1663,230 @@ private function processAndStoreImage($image)
             'data' => $products
         ]);
     }
+
+    // ============================================
+// QUICK UPDATE METHODS - ADD TO BidhaaController
+// ============================================
+
+/**
+ * Quick Update page - Accessible by Boss and Mkubwa employees
+ */
+public function quickUpdate(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    $isBoss = $this->isBoss();
+    $canEditDelete = $this->canEditDelete();
+
+    if (!$canEditDelete) {
+        return redirect()->route('bidhaa.index')
+            ->with('error', 'Huna ruhusa ya kutumia Haraka. Inahitaji uwezo mkubwa.');
+    }
+
+    // Get stats for the page
+    $totalProducts = Bidhaa::where('company_id', $companyId)->count();
+    $lowStockProducts = Bidhaa::where('company_id', $companyId)
+        ->where('idadi', '<', 10)
+        ->where('idadi', '>', 0)
+        ->count();
+    
+    $updatedToday = Bidhaa::where('company_id', $companyId)
+        ->whereDate('updated_at', today())
+        ->count();
+
+    return view('bidhaa.quick-update', compact(
+        'isBoss',
+        'canEditDelete',
+        'totalProducts',
+        'lowStockProducts',
+        'updatedToday'
+    ));
+}
+
+/**
+ * Search products for Quick Update
+ */
+public function searchQuickUpdate(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    $search = trim($request->get('q', ''));
+    
+    if (strlen($search) < 1) {
+        return response()->json(['success' => false, 'data' => []]);
+    }
+
+    $products = Bidhaa::where('company_id', $companyId)
+        ->where(function($query) use ($search) {
+            $query->where('jina', 'LIKE', "%{$search}%")
+                  ->orWhere('barcode', 'LIKE', "%{$search}%")
+                  ->orWhere('aina', 'LIKE', "%{$search}%");
+        })
+        ->orderByRaw("CASE 
+            WHEN jina LIKE '{$search}%' THEN 1 
+            WHEN jina LIKE '%{$search}%' THEN 2 
+            ELSE 3 
+        END")
+        ->limit(15)
+        ->get();
+
+    $products = $products->map(function($product) {
+        return [
+            'id' => $product->id,
+            'jina' => $product->jina,
+            'aina' => $product->aina,
+            'kipimo' => $product->kipimo,
+            'barcode' => $product->barcode,
+            'idadi' => (float) $product->idadi,
+            'bei_nunua' => (float) $product->bei_nunua,
+            'bei_kuuza' => (float) $product->bei_kuuza,
+            'expiry' => $product->expiry ? $product->expiry->format('Y-m-d') : null,
+            'image_url' => $product->image_url,
+            'image_base64' => $product->image_base64,
+            'updated_at' => $product->updated_at ? $product->updated_at->toISOString() : null,
+            'updated_by' => $product->updated_by,
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $products,
+        'count' => $products->count()
+    ]);
+}
+
+/**
+ * Quick Update Product via AJAX
+ */
+public function quickUpdateProduct(Request $request, $id)
+{
+    $companyId = $this->getCompanyId();
+    
+    if (!$this->canEditDelete()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Huna ruhusa ya kurekebisha bidhaa'
+        ], 403);
+    }
+
+    $bidhaa = Bidhaa::where('id', $id)
+        ->where('company_id', $companyId)
+        ->firstOrFail();
+
+    $validator = Validator::make($request->all(), [
+        'jina' => 'required|string|max:255',
+        'aina' => 'nullable|string|max:255',
+        'idadi' => 'nullable|numeric|min:0',
+        'bei_nunua' => 'required|numeric|min:0',
+        'bei_kuuza' => 'required|numeric|min:0',
+        'expiry' => 'nullable|date',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    $validated = $validator->validated();
+
+    // Validate price logic
+    if ((float) $validated['bei_kuuza'] < (float) $validated['bei_nunua']) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua'
+        ], 422);
+    }
+
+    // Get user name for updated_by
+    $updatedBy = 'System';
+    if (Auth::check()) {
+        $user = Auth::user();
+        $updatedBy = $user->name ?? $user->username ?? $user->email ?? 'Boss';
+    } elseif (Auth::guard('mfanyakazi')->check()) {
+        $employee = Auth::guard('mfanyakazi')->user();
+        $updatedBy = $employee->jina ?? $employee->name ?? $employee->email ?? 'Mfanyakazi';
+    }
+
+    $updateData = [
+        'jina' => $validated['jina'],
+        'aina' => $validated['aina'] ?? $bidhaa->aina,
+        'bei_nunua' => $validated['bei_nunua'],
+        'bei_kuuza' => $validated['bei_kuuza'],
+        'updated_by' => $updatedBy,
+    ];
+
+    // Update stock if provided
+    if ($request->has('idadi') && $validated['idadi'] !== null) {
+        $updateData['idadi'] = $validated['idadi'];
+        
+        // Record stock change history
+        $stockUpdateType = $request->input('stock_update_type', 'direct');
+        if ($stockUpdateType === 'add') {
+            $oldIdadi = $bidhaa->idadi;
+            $newIdadi = $validated['idadi'];
+            if ($newIdadi > $oldIdadi) {
+                $bidhaa->recordHistory(
+                    'ingizo',
+                    $newIdadi - $oldIdadi,
+                    'Restock via Quick Update by ' . $updatedBy
+                );
+            }
+        }
+    }
+
+    // Update expiry if provided
+    if ($request->has('expiry')) {
+        $updateData['expiry'] = $validated['expiry'];
+    }
+
+    $bidhaa->update($updateData);
+    $bidhaa->refresh();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Bidhaa imehifadhiwa kikamilifu!',
+        'data' => [
+            'id' => $bidhaa->id,
+            'jina' => $bidhaa->jina,
+            'aina' => $bidhaa->aina,
+            'idadi' => (float) $bidhaa->idadi,
+            'bei_nunua' => (float) $bidhaa->bei_nunua,
+            'bei_kuuza' => (float) $bidhaa->bei_kuuza,
+            'expiry' => $bidhaa->expiry ? $bidhaa->expiry->format('Y-m-d') : null,
+            'updated_at' => $bidhaa->updated_at ? $bidhaa->updated_at->toISOString() : null,
+            'updated_by' => $bidhaa->updated_by,
+        ]
+    ]);
+}
+
+/**
+ * Get recently updated products (Optional)
+ */
+public function getRecentlyUpdated(Request $request)
+{
+    $companyId = $this->getCompanyId();
+    $limit = $request->input('limit', 10);
+
+    $products = Bidhaa::where('company_id', $companyId)
+        ->whereNotNull('updated_at')
+        ->orderBy('updated_at', 'desc')
+        ->limit($limit)
+        ->get();
+
+    $products = $products->map(function($product) {
+        return [
+            'id' => $product->id,
+            'jina' => $product->jina,
+            'aina' => $product->aina,
+            'idadi' => (float) $product->idadi,
+            'bei_kuuza' => (float) $product->bei_kuuza,
+            'updated_at' => $product->updated_at ? $product->updated_at->toISOString() : null,
+        ];
+    });
+
+    return response()->json([
+        'success' => true,
+        'data' => $products
+    ]);
+}
 }

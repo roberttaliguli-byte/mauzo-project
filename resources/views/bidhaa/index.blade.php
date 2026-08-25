@@ -166,6 +166,10 @@
         </div>
         
         <div class="flex gap-2">
+            <a href="{{ route('bidhaa.quick-update') }}" 
+   class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+    <i class="fas fa-bolt mr-2"></i> Quick Update
+  </a>
             <button onclick="exportPDF()" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
                 <i class="fas fa-file-pdf mr-1"></i> PDF
             </button>

@@ -306,6 +306,20 @@ Route::prefix('orders')->group(function () {
     Route::post('/{id}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::delete('/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });
+
+// ================================
+// Bidhaa Quick Update Routes
+// ================================
+Route::prefix('bidhaa')->group(function () {
+    Route::get('/quick-update', [BidhaaController::class, 'quickUpdate'])
+        ->name('bidhaa.quick-update');
+    Route::get('/quick-update/search', [BidhaaController::class, 'searchQuickUpdate'])
+        ->name('bidhaa.quick-update.search');
+    Route::put('/quick-update/{id}', [BidhaaController::class, 'quickUpdateProduct'])
+        ->name('bidhaa.quick-update.update');
+    Route::get('/quick-update/recent', [BidhaaController::class, 'getRecentlyUpdated'])
+        ->name('bidhaa.quick-update.recent');
+});
 // ================================
     // Bidhaa Routes (accessible by both)
     // ================================
