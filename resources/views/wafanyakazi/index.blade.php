@@ -63,13 +63,18 @@
 
     <!-- Tabs -->
     <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-        <div class="flex">
+        <div class="flex flex-wrap">
             <button data-tab="taarifa" class="tab-button flex-1 py-3 px-4 text-sm font-medium border-r border-gray-200 bg-emerald-50 text-emerald-700">
                 <i class="fas fa-table mr-2"></i> Orodha
             </button>
             <button data-tab="sajili" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
                 <i class="fas fa-plus mr-2"></i> Sajili
             </button>
+            @if(Auth::guard('web')->check())
+            <button data-tab="salary" class="tab-button flex-1 py-3 px-4 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                <i class="fas fa-money-bill-wave mr-2"></i> Mishahara
+            </button>
+            @endif
         </div>
     </div>
 
@@ -320,6 +325,23 @@
                             Mkubwa anaweza kuona na kufanya shughuli zote kama Mkuu
                         </p>
                     </div>
+
+                    <!-- Salary Field (Only for Boss) -->
+                    @if(Auth::guard('web')->check())
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Mshahara (TZS)</label>
+                        <input type="number" name="salary" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                               placeholder="0" min="0" step="1000" value="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Ruhusu Counter</label>
+                        <div class="flex items-center mt-1">
+                            <input type="checkbox" name="allow_counter_access" id="allow_counter_access" value="1" class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                            <label for="allow_counter_access" class="ml-2 text-sm text-gray-700">Mfanyakazi ataweza kufikia Counter</label>
+                        </div>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- Buttons -->
@@ -336,6 +358,12 @@
             </form>
         </div>
     </div>
+
+<!-- TAB 3: Salary Management (Boss Only) -->
+@if(Auth::guard('web')->check())
+    @include('wafanyakazi.salary-partial')
+@endif
+
 </div>
 
 <!-- View Details Modal -->
@@ -519,6 +547,23 @@
                         <option value="ingia">Ingia</option>
                     </select>
                 </div>
+
+                <!-- Salary (Boss only) -->
+                @if(Auth::guard('web')->check())
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Mshahara (TZS)</label>
+                    <input type="number" name="salary" id="edit-salary"
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           placeholder="0" min="0" step="1000">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Ruhusu Counter</label>
+                    <div class="flex items-center mt-1">
+                        <input type="checkbox" name="allow_counter_access" id="edit-allow-counter" value="1" class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                        <label for="edit-allow-counter" class="ml-2 text-sm text-gray-700">Mfanyakazi ataweza kufikia Counter</label>
+                    </div>
+                </div>
+                @endif
             </div>
             <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
                 <button type="button" id="close-edit-modal"
@@ -565,14 +610,116 @@
         </div>
     </div>
 </div>
+
+<!-- Add Salary Modal -->
+<div id="add-salary-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-50">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">Ongeza Mshahara</h3>
+        </div>
+        <form id="add-salary-form" class="p-4">
+            @csrf
+            <input type="hidden" id="salary-employee-id">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Mfanyakazi</label>
+                    <input type="text" id="salary-employee-name-display" class="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50" readonly>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Kiasi (TZS) *</label>
+                    <input type="number" name="salary" id="salary-amount" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           placeholder="0" required min="0" step="1000">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Muda wa Malipo</label>
+                    <select name="frequency" id="salary-frequency" class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <option value="monthly">Kila Mwezi</option>
+                        <option value="weekly">Kila Wiki</option>
+                        <option value="daily">Kila Siku</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Maelezo</label>
+                    <textarea name="remarks" id="salary-remarks" rows="2"
+                              class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                              placeholder="Maelezo ya ziada..."></textarea>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
+                <button type="button" onclick="closeAddSalaryModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
+                    Ghairi
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+                    Hifadhi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Deduction Modal -->
+<div id="add-deduction-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-50">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">Ongeza Kato</h3>
+        </div>
+        <form id="add-deduction-form" class="p-4">
+            @csrf
+            <input type="hidden" id="deduction-employee-id">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Mfanyakazi</label>
+                    <input type="text" id="deduction-employee-name" class="w-full px-3 py-2 border border-gray-300 rounded text-sm bg-gray-50" readonly>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Sababu ya Kato *</label>
+                    <input type="text" name="reason" id="deduction-reason" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           placeholder="Mfano: Order iliyofutwa, Hasara..." required>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Kiasi (TZS) *</label>
+                    <input type="number" name="amount" id="deduction-amount" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                           placeholder="0" required min="0" step="100">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Maelezo</label>
+                    <textarea name="remarks" id="deduction-remarks" rows="2"
+                              class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                              placeholder="Maelezo ya ziada..."></textarea>
+                </div>
+            </div>
+            <div class="flex gap-2 pt-4 border-t border-gray-200 mt-4">
+                <button type="button" onclick="closeAddDeductionModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
+                    Ghairi
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+                    Ongeza Kato
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
+// ============================================
+// MAIN MANAGER CLASS
+// ============================================
 class SmartWafanyakaziManager {
     constructor() {
         this.currentTab = this.getSavedTab() || 'taarifa';
         this.searchTimeout = null;
+        this.selectedEmployeeId = null;
         this.init();
     }
 
@@ -580,6 +727,7 @@ class SmartWafanyakaziManager {
         this.bindEvents();
         this.showTab(this.currentTab);
         this.setupAjaxForms();
+        this.bindSalaryEvents();
     }
 
     getSavedTab() {
@@ -618,6 +766,43 @@ class SmartWafanyakaziManager {
         this.bindModalEvents();
     }
 
+    bindSalaryEvents() {
+        // Employee Select Change - FIXED
+        const select = document.getElementById('salary-employee-select');
+        if (select) {
+            select.addEventListener('change', function() {
+                const employeeId = this.value;
+                if (employeeId) {
+                    // Store the selected ID globally
+                    window.selectedEmployeeId = employeeId;
+                    loadEmployeeSalaryDetails(employeeId);
+                    document.getElementById('salary-employee-details').classList.remove('hidden');
+                } else {
+                    document.getElementById('salary-employee-details').classList.add('hidden');
+                    window.selectedEmployeeId = null;
+                }
+            });
+        }
+
+        // Add Salary Form
+        const addSalaryForm = document.getElementById('add-salary-form');
+        if (addSalaryForm) {
+            addSalaryForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAddSalary(this);
+            });
+        }
+
+        // Add Deduction Form
+        const addDeductionForm = document.getElementById('add-deduction-form');
+        if (addDeductionForm) {
+            addDeductionForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitAddDeduction(this);
+            });
+        }
+    }
+
     showTab(tabName) {
         // Update tabs
         document.querySelectorAll('.tab-button').forEach(button => {
@@ -635,7 +820,10 @@ class SmartWafanyakaziManager {
             content.classList.add('hidden');
         });
         
-        document.getElementById(`${tabName}-tab-content`).classList.remove('hidden');
+        const target = document.getElementById(`${tabName}-tab-content`);
+        if (target) {
+            target.classList.remove('hidden');
+        }
         this.currentTab = tabName;
     }
 
@@ -717,12 +905,33 @@ class SmartWafanyakaziManager {
             });
         }
 
+        // Salary modals
+        const addSalaryModal = document.getElementById('add-salary-modal');
+        if (addSalaryModal) {
+            addSalaryModal.addEventListener('click', (e) => {
+                if (e.target === addSalaryModal || e.target.classList.contains('modal-overlay')) {
+                    addSalaryModal.classList.add('hidden');
+                }
+            });
+        }
+
+        const addDeductionModal = document.getElementById('add-deduction-modal');
+        if (addDeductionModal) {
+            addDeductionModal.addEventListener('click', (e) => {
+                if (e.target === addDeductionModal || e.target.classList.contains('modal-overlay')) {
+                    addDeductionModal.classList.add('hidden');
+                }
+            });
+        }
+
         // Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (viewModal) viewModal.classList.add('hidden');
                 if (editModal) editModal.classList.add('hidden');
                 if (deleteModal) deleteModal.classList.add('hidden');
+                if (addSalaryModal) addSalaryModal.classList.add('hidden');
+                if (addDeductionModal) addDeductionModal.classList.add('hidden');
             }
         });
     }
@@ -832,6 +1041,16 @@ class SmartWafanyakaziManager {
         document.getElementById('edit-getini').value = employee.getini || 'simama';
         document.getElementById('edit-uwezo').value = employee.uwezo || 'mdogo';
         
+        // Salary fields (Boss only)
+        const salaryField = document.getElementById('edit-salary');
+        if (salaryField) {
+            salaryField.value = employee.salary || 0;
+        }
+        const counterField = document.getElementById('edit-allow-counter');
+        if (counterField) {
+            counterField.checked = employee.allow_counter_access || false;
+        }
+        
         editForm.action = `/wafanyakazi/${employee.id}`;
         
         const editModal = document.getElementById('edit-modal');
@@ -888,7 +1107,6 @@ class SmartWafanyakaziManager {
         const originalText = submitButton.innerHTML;
         
         try {
-            // Disable submit button
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Inatumwa...';
             
@@ -906,8 +1124,6 @@ class SmartWafanyakaziManager {
             if (response.ok) {
                 const message = data.message || successMessage;
                 this.showNotification(message, 'success');
-                
-                // Reload after successful operation
                 setTimeout(() => window.location.reload(), 1000);
             } else {
                 const error = data.errors ? Object.values(data.errors)[0][0] : data.message;
@@ -916,7 +1132,6 @@ class SmartWafanyakaziManager {
         } catch (error) {
             this.showNotification('Hitilafu ya mtandao', 'error');
         } finally {
-            // Re-enable submit button
             submitButton.disabled = false;
             submitButton.innerHTML = originalText;
         }
@@ -934,17 +1149,432 @@ class SmartWafanyakaziManager {
         };
 
         const notification = document.createElement('div');
-        notification.className = `rounded border px-4 py-3 text-sm font-medium mb-2 ${colors[type]} shadow-sm animate-fade-in`;
+        notification.className = `rounded border px-4 py-3 text-sm font-medium mb-2 ${colors[type]} shadow-sm`;
         notification.textContent = message;
-
         container.appendChild(notification);
 
         setTimeout(() => {
             notification.style.opacity = '0';
-            notification.style.transform = 'translateY(-10px) translateX(-50%)';
+            notification.style.transform = 'translateY(-10px)';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
     }
+}
+
+// ============================================
+// SALARY MANAGEMENT FUNCTIONS - FIXED
+// ============================================
+
+// Global variable to store selected employee ID
+window.selectedEmployeeId = null;
+
+function getWafanyakaziUrl(path) {
+    if (path.startsWith('/')) {
+        path = path.substring(1);
+    }
+    if (path.includes('wafanyakazi')) {
+        return '/' + path;
+    }
+    return '/wafanyakazi/' + path;
+}
+
+// Toggle Counter Access
+function toggleCounterAccess() {
+    const employeeId = window.selectedEmployeeId;
+    if (!employeeId) {
+        showNotification('Tafadhali chagua mfanyakazi kwanza', 'warning');
+        return;
+    }
+    
+    if (!confirm('Una uhakika unataka kubadilisha ruhusa ya Counter?')) return;
+    
+    const url = getWafanyakaziUrl(employeeId + '/toggle-counter');
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            loadEmployeeSalaryDetails(employeeId);
+        } else {
+            showNotification(data.message || 'Hitilafu imetokea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Toggle counter error:', error);
+        showNotification('Hitilafu: ' + error.message, 'error');
+    });
+}
+
+// Load Employee Salary Details
+function loadEmployeeSalaryDetails(employeeId) {
+    if (!employeeId) {
+        showNotification('Tafadhali chagua mfanyakazi', 'warning');
+        return;
+    }
+    
+    const detailsDiv = document.getElementById('salary-employee-details');
+    detailsDiv.classList.remove('hidden');
+    document.getElementById('salary-employee-name').textContent = 'Inapakia...';
+    
+    const url = getWafanyakaziUrl(employeeId + '/salary-details');
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            displayEmployeeSalaryDetails(data.data);
+            window.selectedEmployeeId = employeeId;
+        } else {
+            showNotification(data.message || 'Hitilafu katika kupata taarifa', 'error');
+            detailsDiv.classList.add('hidden');
+        }
+    })
+    .catch(error => {
+        console.error('Load salary details error:', error);
+        showNotification('Hitilafu: ' + error.message, 'error');
+        detailsDiv.classList.add('hidden');
+    });
+}
+
+function displayEmployeeSalaryDetails(data) {
+    const detailsDiv = document.getElementById('salary-employee-details');
+    detailsDiv.classList.remove('hidden');
+    
+    const employee = data.employee;
+    
+    document.getElementById('salary-employee-name').textContent = employee.jina || '--';
+    document.getElementById('salary-employee-info').textContent = 
+        `${employee.jinsia || '--'} • ${employee.uwezo === 'mkubwa' ? 'Mkubwa' : 'Mdogo'} • Counter: ${employee.allow_counter_access ? '✅ Inaruhusiwa' : '❌ Hairuhusiwi'}`;
+    
+    // Update counter toggle button
+    const toggleBtn = document.getElementById('counter-toggle-btn');
+    if (employee.allow_counter_access) {
+        toggleBtn.className = 'px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-medium transition';
+        toggleBtn.innerHTML = '<i class="fas fa-times mr-1"></i> Ondoa Counter';
+    } else {
+        toggleBtn.className = 'px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium transition';
+        toggleBtn.innerHTML = '<i class="fas fa-check mr-1"></i> Ruhusu Counter';
+    }
+    
+    // Update stats
+    const currentSalary = data.current_salary || 0;
+    const totalDeductions = data.total_deductions || 0;
+    const netSalary = data.net_salary || 0;
+    
+    document.getElementById('total-salary-display').textContent = 
+        currentSalary.toLocaleString() + ' TZS';
+    document.getElementById('total-deductions-display').textContent = 
+        totalDeductions.toLocaleString() + ' TZS';
+    document.getElementById('net-salary-display').textContent = 
+        netSalary.toLocaleString() + ' TZS';
+    
+    // Render salary history
+    renderSalaryHistory(data.salaries || []);
+    
+    // Render deductions
+    renderDeductions(data.deductions || [], data.pending_deductions || []);
+}
+
+function renderSalaryHistory(salaries) {
+    const tbody = document.getElementById('salary-history-body');
+    if (!salaries || salaries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-3 py-4 text-center text-gray-500 text-sm">Hakuna historia</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = salaries.map(s => `
+        <tr>
+            <td class="px-3 py-2 text-xs">${s.created_at ? new Date(s.created_at).toLocaleDateString('sw-TZ') : '--'}</td>
+            <td class="px-3 py-2 text-xs font-medium text-green-700">${(s.salary_amount || 0).toLocaleString()} ${s.currency || 'TZS'}</td>
+            <td class="px-3 py-2 text-xs">${s.frequency || 'monthly'}</td>
+            <td class="px-3 py-2 text-xs text-gray-500">${s.remarks || '--'}</td>
+        </tr>
+    `).join('');
+}
+
+function renderDeductions(deductions, pendingDeductions) {
+    const tbody = document.getElementById('deductions-body');
+    const allDeductions = [...(deductions || []), ...(pendingDeductions || [])];
+    
+    if (allDeductions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-3 py-4 text-center text-gray-500 text-sm">Hakuna makato</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = allDeductions.map(d => {
+        let statusClass = '';
+        let statusText = '';
+        let actionButtons = '';
+        
+        if (d.status === 'approved') {
+            statusClass = 'bg-green-100 text-green-800';
+            statusText = 'Imeidhinishwa';
+        } else if (d.status === 'pending') {
+            statusClass = 'bg-yellow-100 text-yellow-800';
+            statusText = 'Inasubiri';
+            actionButtons = `
+                <button onclick="approveDeduction(${d.id})" class="text-green-600 hover:text-green-800 text-xs" title="Idhinisha">
+                    <i class="fas fa-check-circle"></i>
+                </button>
+                <button onclick="rejectDeduction(${d.id})" class="text-red-600 hover:text-red-800 text-xs" title="Kataa">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            `;
+        } else {
+            statusClass = 'bg-red-100 text-red-800';
+            statusText = 'Imekataliwa';
+        }
+        
+        return `
+            <tr>
+                <td class="px-3 py-2 text-xs">${d.reason || '--'}</td>
+                <td class="px-3 py-2 text-xs font-medium text-red-700">${(d.amount || 0).toLocaleString()} TZS</td>
+                <td class="px-3 py-2 text-xs"><span class="px-2 py-0.5 rounded text-xs font-medium ${statusClass}">${statusText}</span></td>
+                <td class="px-3 py-2 text-xs">${d.created_at ? new Date(d.created_at).toLocaleDateString('sw-TZ') : '--'}</td>
+                <td class="px-3 py-2 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        ${actionButtons}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Approve Deduction
+function approveDeduction(deductionId) {
+    if (!confirm('Una uhakika unataka kuidhinisha kato hii?')) return;
+    
+    const url = getWafanyakaziUrl('deduction/' + deductionId + '/approve');
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            loadEmployeeSalaryDetails(window.selectedEmployeeId);
+        } else {
+            showNotification(data.message || 'Hitilafu imetokea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Approve deduction error:', error);
+        showNotification('Hitilafu: ' + error.message, 'error');
+    });
+}
+
+// Reject Deduction
+function rejectDeduction(deductionId) {
+    if (!confirm('Una uhakika unataka kukataa kato hii?')) return;
+    
+    const url = getWafanyakaziUrl('deduction/' + deductionId + '/reject');
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            loadEmployeeSalaryDetails(window.selectedEmployeeId);
+        } else {
+            showNotification(data.message || 'Hitilafu imetokea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Reject deduction error:', error);
+        showNotification('Hitilafu: ' + error.message, 'error');
+    });
+}
+
+// Show Add Salary Modal
+function showAddSalaryModal() {
+    const employeeId = window.selectedEmployeeId;
+    if (!employeeId) {
+        showNotification('Tafadhali chagua mfanyakazi kwanza', 'warning');
+        return;
+    }
+    
+    document.getElementById('salary-employee-id').value = employeeId;
+    document.getElementById('salary-employee-name-display').value = 
+        document.getElementById('salary-employee-name').textContent;
+    document.getElementById('salary-amount').value = '';
+    document.getElementById('salary-frequency').value = 'monthly';
+    document.getElementById('salary-remarks').value = '';
+    document.getElementById('add-salary-modal').classList.remove('hidden');
+}
+
+function closeAddSalaryModal() {
+    document.getElementById('add-salary-modal').classList.add('hidden');
+}
+
+// Show Add Deduction Modal
+function showAddDeductionModal() {
+    const employeeId = window.selectedEmployeeId;
+    if (!employeeId) {
+        showNotification('Tafadhali chagua mfanyakazi kwanza', 'warning');
+        return;
+    }
+    
+    document.getElementById('deduction-employee-id').value = employeeId;
+    document.getElementById('deduction-employee-name').value = 
+        document.getElementById('salary-employee-name').textContent;
+    document.getElementById('deduction-reason').value = '';
+    document.getElementById('deduction-amount').value = '';
+    document.getElementById('deduction-remarks').value = '';
+    document.getElementById('add-deduction-modal').classList.remove('hidden');
+}
+
+function closeAddDeductionModal() {
+    document.getElementById('add-deduction-modal').classList.add('hidden');
+}
+
+// Submit Add Salary
+function submitAddSalary(form) {
+    const employeeId = document.getElementById('salary-employee-id').value;
+    const formData = new FormData(form);
+    
+    const url = getWafanyakaziUrl(employeeId + '/update-salary');
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closeAddSalaryModal();
+            loadEmployeeSalaryDetails(employeeId);
+        } else {
+            showNotification(data.message || 'Hitilafu imetokea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Add salary error:', error);
+        showNotification('Hitilafu: ' + error.message, 'error');
+    });
+}
+
+// Submit Add Deduction
+function submitAddDeduction(form) {
+    const employeeId = document.getElementById('deduction-employee-id').value;
+    const formData = new FormData(form);
+    
+    const url = getWafanyakaziUrl(employeeId + '/add-deduction');
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            closeAddDeductionModal();
+            loadEmployeeSalaryDetails(employeeId);
+        } else {
+            showNotification(data.message || 'Hitilafu imetokea', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Add deduction error:', error);
+        showNotification('Hitilafu: ' + error.message, 'error');
+    });
+}
+
+// Global showNotification function
+function showNotification(message, type = 'info') {
+    const container = document.getElementById('notification-container');
+    if (!container) return;
+    
+    const colors = {
+        success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+        error: 'bg-red-50 border-red-200 text-red-800',
+        warning: 'bg-amber-50 border-amber-200 text-amber-800',
+        info: 'bg-blue-50 border-blue-200 text-blue-800'
+    };
+
+    const notification = document.createElement('div');
+    notification.className = `rounded border px-4 py-3 text-sm font-medium mb-2 ${colors[type]} shadow-sm`;
+    notification.textContent = message;
+    container.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-10px)';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // Print function
@@ -1029,7 +1659,6 @@ function exportPDF() {
 document.addEventListener('DOMContentLoaded', () => {
     window.wafanyakaziManager = new SmartWafanyakaziManager();
     
-    // Save tab state
     window.addEventListener('beforeunload', () => {
         if (window.wafanyakaziManager) {
             window.wafanyakaziManager.saveTab(window.wafanyakaziManager.currentTab);

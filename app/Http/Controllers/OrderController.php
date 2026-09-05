@@ -9,6 +9,7 @@ use App\Models\Bidhaa;
 use App\Models\Mteja;
 use App\Models\Company;
 use App\Models\Mauzo;
+use App\Models\User;
 use App\Helpers\ActivityHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -237,8 +238,9 @@ class OrderController extends Controller
         $wateja = Mteja::where('company_id', $companyId)->orderBy('jina')->get();
 
         $orders = Order::where('company_id', $companyId)
+            ->with('creator') // Load creator relationship
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(15); // Paginate with 15 per page
 
         $orderStats = [
             'total' => Order::where('company_id', $companyId)->count(),
@@ -254,13 +256,16 @@ class OrderController extends Controller
     }
 
     /**
-     * Get all placed orders
+     * Get all placed orders with pagination (15 per page)
      */
     public function getPlacedOrders(Request $request)
     {
         $companyId = $this->getCompanyId();
+        $page = $request->get('page', 1);
+        $perPage = 15;
         
-        $query = Order::where('company_id', $companyId);
+        $query = Order::where('company_id', $companyId)
+            ->with('creator'); // Load creator relationship
         
         if ($request->has('status') && !empty($request->status)) {
             $query->where('status', $request->status);
@@ -275,11 +280,30 @@ class OrderController extends Controller
             });
         }
         
-        $orders = $query->orderBy('created_at', 'desc')->get();
+        $orders = $query->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+        
+        // Add creator name to each order
+        $orders->getCollection()->transform(function($order) {
+            if ($order->creator) {
+                $order->created_by_name = $order->creator->name ?? $order->creator->username ?? 'System';
+            } else {
+                $order->created_by_name = 'System';
+            }
+            return $order;
+        });
         
         return response()->json([
             'success' => true,
-            'data' => $orders
+            'data' => $orders->items(),
+            'pagination' => [
+                'total' => $orders->total(),
+                'per_page' => $orders->perPage(),
+                'current_page' => $orders->currentPage(),
+                'last_page' => $orders->lastPage(),
+                'from' => $orders->firstItem(),
+                'to' => $orders->lastItem()
+            ]
         ]);
     }
 
@@ -295,6 +319,7 @@ class OrderController extends Controller
         $companyId = $user->company_id;
         $processorName = $this->getProcessorName();
         $processorType = $this->getProcessorType();
+        $userId = $this->getUserId();
 
         $validator = Validator::make($request->all(), [
             'items' => 'required|array|min:1',
@@ -367,7 +392,7 @@ class OrderController extends Controller
                 'total' => floatval($request->total),
                 'status' => $request->status,
                 'notes' => null,
-                'created_by' => $this->getUserId()
+                'created_by' => $userId
             ]);
 
             // LOG: Order created
@@ -398,7 +423,7 @@ class OrderController extends Controller
                             'lipa_kwa' => 'cash',
                             'receipt_no' => $orderNumber,
                             'mauzo_ya' => 'order',
-                            'imeundwa_na' => $this->getUserId()
+                            'imeundwa_na' => $userId
                         ]);
 
                         // LOG: Sale from order
@@ -449,7 +474,16 @@ class OrderController extends Controller
     public function show($id)
     {
         $companyId = $this->getCompanyId();
-        $order = Order::where('company_id', $companyId)->findOrFail($id);
+        $order = Order::where('company_id', $companyId)
+            ->with('creator')
+            ->findOrFail($id);
+        
+        // Add creator name
+        if ($order->creator) {
+            $order->created_by_name = $order->creator->name ?? $order->creator->username ?? 'System';
+        } else {
+            $order->created_by_name = 'System';
+        }
         
         return response()->json([
             'success' => true,
@@ -715,6 +749,31 @@ class OrderController extends Controller
             'success' => false,
             'message' => 'Hakuna namba ya simu ya mteja'
         ]);
+    }
+
+    /**
+     * Print thermal receipt for order
+     */
+    public function printThermal($id)
+    {
+        $user = $this->getAuthUser();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access'], 401);
+        }
+        $companyId = $user->company_id;
+        $order = Order::where('company_id', $companyId)->findOrFail($id);
+        
+        $company = Company::find($companyId);
+        if (!$company) {
+            $company = (object) ['company_name' => $user->company_name ?? 'BIASHARA YANGU', 'location' => $user->location ?? '', 'region' => $user->region ?? '', 'phone' => $user->phone ?? '', 'email' => $user->email ?? '', 'owner_name' => $user->name ?? ''];
+        }
+        
+        $receiptNo = $order->order_number;
+        $date = $order->created_at->format('d/m/Y H:i');
+        $total = $order->total;
+        $items = $order->items;
+        
+        return view('orders.thermal-receipt', compact('receiptNo', 'items', 'date', 'total', 'company', 'order'));
     }
 
     /**

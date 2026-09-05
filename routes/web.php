@@ -373,13 +373,28 @@ Route::middleware(['auth.any'])->group(function () {
     Route::delete('/manunuzi/{manunuzi}', [ManunuziController::class, 'destroy'])->name('manunuzi.destroy');
     
     // Wafanyakazi routes
-    Route::get('/wafanyakazi', [WafanyakaziController::class, 'index'])->name('wafanyakazi.index');
-    Route::post('/wafanyakazi', [WafanyakaziController::class, 'store'])->name('wafanyakazi.store');
-    Route::get('/wafanyakazi/{id}/edit', [WafanyakaziController::class, 'edit'])->name('wafanyakazi.edit');
-    Route::put('/wafanyakazi/{id}', [WafanyakaziController::class, 'update'])->name('wafanyakazi.update');
-    Route::delete('/wafanyakazi/{id}', [WafanyakaziController::class, 'destroy'])->name('wafanyakazi.destroy');
-    Route::get('/wafanyakazi/export-pdf', [WafanyakaziController::class, 'exportPdf'])->name('wafanyakazi.export.pdf');
+  // In your routes/web.php, inside the auth.any group, replace the salary routes with:
 
+// Wafanyakazi routes - FIXED with proper prefixes
+Route::get('/wafanyakazi', [WafanyakaziController::class, 'index'])->name('wafanyakazi.index');
+Route::post('/wafanyakazi', [WafanyakaziController::class, 'store'])->name('wafanyakazi.store');
+Route::get('/wafanyakazi/{id}/edit', [WafanyakaziController::class, 'edit'])->name('wafanyakazi.edit');
+Route::put('/wafanyakazi/{id}', [WafanyakaziController::class, 'update'])->name('wafanyakazi.update');
+Route::delete('/wafanyakazi/{id}', [WafanyakaziController::class, 'destroy'])->name('wafanyakazi.destroy');
+Route::get('/wafanyakazi/export-pdf', [WafanyakaziController::class, 'exportPdf'])->name('wafanyakazi.export.pdf');
+
+// Salary Management Routes - FIXED with /wafanyakazi prefix
+Route::get('/wafanyakazi/{id}/salary-details', [WafanyakaziController::class, 'getSalaryDetails'])->name('wafanyakazi.salary.details');
+Route::post('/wafanyakazi/{id}/update-salary', [WafanyakaziController::class, 'updateSalary'])->name('wafanyakazi.salary.update');
+Route::post('/wafanyakazi/{id}/add-deduction', [WafanyakaziController::class, 'addDeduction'])->name('wafanyakazi.deduction.add');
+Route::post('/wafanyakazi/deduction/{id}/approve', [WafanyakaziController::class, 'approveDeduction'])->name('wafanyakazi.deduction.approve');
+Route::post('/wafanyakazi/deduction/{id}/reject', [WafanyakaziController::class, 'rejectDeduction'])->name('wafanyakazi.deduction.reject');
+Route::post('/wafanyakazi/{id}/toggle-counter', [WafanyakaziController::class, 'toggleCounterAccess'])->name('wafanyakazi.toggle.counter');
+Route::get('/wafanyakazi/{id}/performance', [WafanyakaziController::class, 'getPerformanceSummary'])->name('wafanyakazi.performance');
+
+// Wafanyakazi routes
+Route::get('/wafanyakazi/{id}/order-summary', [WafanyakaziController::class, 'getEmployeeOrderSummary'])->name('wafanyakazi.order.summary');
+Route::post('/wafanyakazi/deduction-from-order', [WafanyakaziController::class, 'addDeductionFromOrder'])->name('wafanyakazi.deduction.from.order');
     // Masaplaya routes
     Route::get('/masaplaya', [MasaplayaController::class, 'index'])->name('masaplaya.index');
     Route::post('/masaplaya', [MasaplayaController::class, 'store'])->name('masaplaya.store');
@@ -579,6 +594,7 @@ Route::get('/debug-payment-flow', function() {
         'session' => session()->all()
     ]);
 })->name('debug.payment.flow');
+
 
 // =========================
 // PesaPal callbacks (public - no auth)

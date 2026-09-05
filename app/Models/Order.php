@@ -78,6 +78,9 @@ class Order extends Model
         return $this->belongsTo(Mteja::class, 'customer_id');
     }
 
+    /**
+     * Get the user who created this order
+     */
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
