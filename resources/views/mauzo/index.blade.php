@@ -3627,6 +3627,7 @@ class MauzoManager {
     initCustomerSelection() {
         const kopeshaSelect = document.getElementById('kopesha-mteja-select');
         const barcodeSelect = document.getElementById('barcode-mteja-select');
+        const kikapuSelect = document.getElementById('kikapu-mteja-select');
         
         if (kopeshaSelect) {
             kopeshaSelect.addEventListener('change', (e) => {
@@ -3637,6 +3638,12 @@ class MauzoManager {
         if (barcodeSelect) {
             barcodeSelect.addEventListener('change', (e) => {
                 this.handleCustomerSelection(e.target, 'barcode-mteja-select');
+            });
+        }
+
+        if (kikapuSelect) {
+            kikapuSelect.addEventListener('change', (e) => {
+                this.handleCustomerSelection(e.target, 'kikapu-mteja-select');
             });
         }
     }
@@ -3652,6 +3659,9 @@ class MauzoManager {
         } else if (modalType === 'barcode-mteja-select') {
             prefix = 'barcode-kopesha-';
             hiddenFieldId = 'barcode-kopesha-mteja-id';
+        } else if (modalType === 'kikapu-mteja-select') {
+            prefix = 'kikapu-kopesha-';
+            hiddenFieldId = 'kikapu-kopesha-mteja-id';
         }
         
         const hiddenField = document.getElementById(hiddenFieldId);
@@ -3674,6 +3684,7 @@ class MauzoManager {
         let prefix = '';
         if (modalType === 'kopesha-mteja-select') prefix = 'kopesha-';
         else if (modalType === 'barcode-mteja-select') prefix = 'barcode-kopesha-';
+        else if (modalType === 'kikapu-mteja-select') prefix = 'kikapu-kopesha-';
         
         ['jina', 'simu', 'barua-pepe', 'anapoishi'].forEach(field => {
             const element = document.getElementById(`${prefix}${field}`);
@@ -3688,6 +3699,7 @@ class MauzoManager {
         let prefix = '';
         if (modalType === 'kopesha-mteja-select') prefix = 'kopesha-';
         else if (modalType === 'barcode-mteja-select') prefix = 'barcode-kopesha-';
+        else if (modalType === 'kikapu-mteja-select') prefix = 'kikapu-kopesha-';
         
         const jinaField = document.getElementById(`${prefix}jina`);
         const simuField = document.getElementById(`${prefix}simu`);
