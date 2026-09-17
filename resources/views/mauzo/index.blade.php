@@ -414,12 +414,13 @@
                                             Mapato ya leo
                                         </div>
                                         @php
-                                            $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
-                                            $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
-                                            $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
+                                            $finTmp = $financial ?? [];
+                                            $mapatoMauzoTmp = $finTmp['mauzo_leo_sum'] ?? $todaysMauzos->sum(fn($m) => $m->jumla);
+                                            $mapatoMadeniTmp = $finTmp['marejesho_leo_sum'] ?? $todaysMarejeshos->sum('kiasi');
+                                            $jumlaMapatoTmp = $finTmp['mapato_leo'] ?? $mapatoMauzoTmp + $mapatoMadeniTmp;
                                         @endphp
-                                        <div class="text-green text-lg font-bold">
-                                            {{ number_format($jumlaMapato, 2) }} Tsh
+                                        <div class="text-green text-lg font-bold" id="fin-mapato-simple">
+                                            {{ number_format($jumlaMapatoTmp, 2) }} Tsh
                                         </div>
                                     </div>
                                 </div>
@@ -442,22 +443,23 @@
                                 Mapato ya leo
                             </div>
                             @php
-                                $mapatoMauzo = $todaysMauzos->sum(fn($m) => $m->jumla);
-                                $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
-                                $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
+                                $finTmp = $financial ?? [];
+                                $mapatoMauzo = $finTmp['mauzo_leo_sum'] ?? $todaysMauzos->sum(fn($m) => $m->jumla);
+                                $mapatoMadeni = $finTmp['marejesho_leo_sum'] ?? $todaysMarejeshos->sum('kiasi');
+                                $jumlaMapato = $finTmp['mapato_leo'] ?? $mapatoMauzo + $mapatoMadeni;
                             @endphp
                             <div class="space-y-1 text-white text-xs">
                                 <div class="flex justify-between items-center">
                                     <span class="text-blue-100">Mauzo:</span>
-                                    <span class="font-semibold">{{ number_format($mapatoMauzo, 2) }}</span>
+                                    <span class="font-semibold" id="fin-mauzo-leo">{{ number_format($mapatoMauzo, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-blue-100">Madeni:</span>
-                                    <span class="font-semibold">{{ number_format($mapatoMadeni, 2) }}</span>
+                                    <span class="font-semibold" id="fin-marejesho-leo">{{ number_format($mapatoMadeni, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
                                     <span class="font-semibold">Jumla:</span>
-                                    <span class="font-bold">{{ number_format($jumlaMapato, 2) }}</span>
+                                    <span class="font-bold" id="fin-mapato-leo">{{ number_format($jumlaMapato, 2) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -473,92 +475,65 @@
                                 Faida ya leo
                             </div>
                             @php
-                                $faidaMauzo = 0;
-                                foreach($todaysMauzos as $mauzo) {
-                                    if ($mauzo->bidhaa) {
-                                        $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-                                        $sellingPrice = $mauzo->bei;
-                                        $quantity = $mauzo->idadi;
-                                        
-                                        $totalDiscount = 0;
-                                        if ($mauzo->punguzo_aina === 'bidhaa') {
-                                            $totalDiscount = $mauzo->punguzo * $quantity;
-                                        } else {
-                                            $totalDiscount = $mauzo->punguzo;
+                                $finTmp2 = $financial ?? [];
+                                if(isset($finTmp2['faida_leo'])){
+                                    $faidaMauzo = $finTmp2['faida_mauzo'] ?? 0;
+                                    $faidaMarejesho = $finTmp2['faida_marejesho'] ?? 0;
+                                    $jumlaFaida = $finTmp2['faida_leo'];
+                                } else {
+                                    $faidaMauzo = 0;
+                                    foreach($todaysMauzos as $mauzo) {
+                                        if ($mauzo->bidhaa) {
+                                            $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                                            $sellingPrice = $mauzo->bei;
+                                            $quantity = $mauzo->idadi;
+                                            $totalDiscount = $mauzo->punguzo_aina === 'bidhaa' ? $mauzo->punguzo * $quantity : $mauzo->punguzo;
+                                            $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
+                                            $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
+                                            $totalBuyingCost = $buyingPrice * $quantity;
+                                            $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
+                                            $faidaMauzo += $profit;
                                         }
-                                        
-                                        $totalRevenueBeforeDiscount = $sellingPrice * $quantity;
-                                        $totalRevenueAfterDiscount = $totalRevenueBeforeDiscount - $totalDiscount;
-                                        $totalBuyingCost = $buyingPrice * $quantity;
-                                        $profit = $totalRevenueAfterDiscount - $totalBuyingCost;
-                                        $faidaMauzo += $profit;
                                     }
-                                }
-                                
-                                $faidaMarejesho = 0;
-                                $debtProgress = [];
-                                $sortedMarejeshos = $todaysMarejeshos->sortBy('tarehe');
-                                
-                                foreach($sortedMarejeshos as $marejesho) {
-                                    if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
-                                        $debt = $marejesho->madeni;
-                                        $debtId = $debt->id;
-                                        $repaymentAmount = $marejesho->kiasi;
-                                        
-                                        if (!isset($debtProgress[$debtId])) {
-                                            $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
-                                            $quantity = $debt->idadi;
-                                            $totalCost = $buyingPrice * $quantity;
-                                            $totalSellingPrice = $debt->jumla;
-                                            
-                                            $debtProgress[$debtId] = [
-                                                'total_cost' => $totalCost,
-                                                'total_selling' => $totalSellingPrice,
-                                                'recovered_so_far' => 0,
-                                                'is_cost_recovered' => false
-                                            ];
-                                        }
-                                        
-                                        $progress = &$debtProgress[$debtId];
-                                        $remainingAmount = $repaymentAmount;
-                                        
-                                        if (!$progress['is_cost_recovered']) {
-                                            $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
-                                            
-                                            if ($remainingAmount <= $remainingToRecover) {
-                                                $progress['recovered_so_far'] += $remainingAmount;
-                                                $remainingAmount = 0;
-                                            } else {
-                                                $costPortion = $remainingToRecover;
-                                                $progress['recovered_so_far'] += $costPortion;
-                                                $progress['is_cost_recovered'] = true;
-                                                
-                                                $profitPortion = $remainingAmount - $costPortion;
-                                                $faidaMarejesho += $profitPortion;
-                                                $remainingAmount = 0;
+                                    $faidaMarejesho = 0;
+                                    $debtProgress = [];
+                                    $sortedMarejeshos = $todaysMarejeshos->sortBy('tarehe');
+                                    foreach($sortedMarejeshos as $marejesho) {
+                                        if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
+                                            $debt = $marejesho->madeni;
+                                            $debtId = $debt->id;
+                                            $repaymentAmount = $marejesho->kiasi;
+                                            if (!isset($debtProgress[$debtId])) {
+                                                $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                                                $quantity = $debt->idadi;
+                                                $totalCost = $buyingPrice * $quantity;
+                                                $totalSellingPrice = $debt->jumla;
+                                                $debtProgress[$debtId] = ['total_cost' => $totalCost,'total_selling' => $totalSellingPrice,'recovered_so_far' => 0,'is_cost_recovered' => false];
                                             }
-                                        }
-                                        
-                                        if ($progress['is_cost_recovered'] && $remainingAmount > 0) {
-                                            $faidaMarejesho += $remainingAmount;
+                                            $progress = &$debtProgress[$debtId];
+                                            $remainingAmount = $repaymentAmount;
+                                            if (!$progress['is_cost_recovered']) {
+                                                $remainingToRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+                                                if ($remainingAmount <= $remainingToRecover) { $progress['recovered_so_far'] += $remainingAmount; $remainingAmount = 0; } else { $costPortion = $remainingToRecover; $progress['recovered_so_far'] += $costPortion; $progress['is_cost_recovered'] = true; $profitPortion = $remainingAmount - $costPortion; $faidaMarejesho += $profitPortion; $remainingAmount = 0; }
+                                            }
+                                            if ($progress['is_cost_recovered'] && $remainingAmount > 0) { $faidaMarejesho += $remainingAmount; }
                                         }
                                     }
+                                    $jumlaFaida = $faidaMauzo + $faidaMarejesho;
                                 }
-                                
-                                $jumlaFaida = $faidaMauzo + $faidaMarejesho;
                             @endphp
                             <div class="space-y-1 text-white text-xs">
                                 <div class="flex justify-between items-center">
                                     <span class="text-green-100">Mauzo:</span>
-                                    <span class="font-semibold">{{ number_format($faidaMauzo, 2) }}</span>
+                                    <span class="font-semibold" id="fin-faida-mauzo">{{ number_format($faidaMauzo, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span class="text-green-100">Marejesho:</span>
-                                    <span class="font-semibold">{{ number_format($faidaMarejesho, 2) }}</span>
+                                    <span class="font-semibold" id="fin-faida-marejesho">{{ number_format($faidaMarejesho, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
                                     <span class="font-semibold">Jumla:</span>
-                                    <span class="font-bold">{{ number_format($jumlaFaida, 2) }}</span>
+                                    <span class="font-bold" id="fin-faida-jumla">{{ number_format($jumlaFaida, 2) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -572,17 +547,18 @@
                             </div>
                             <div class="text-xs font-semibold text-white uppercase tracking-wide mb-2">Matumizi</div>
                             @php
-                                $matumiziLeo = $todaysMatumizi->sum('gharama');
-                                $matumiziJumla = $todaysMatumizi->sum('gharama');
+                                $finTmp = $financial ?? [];
+                                $matumiziLeo = $finTmp['matumizi_leo_sum'] ?? $todaysMatumizi->sum('gharama');
+                                $matumiziJumla = $finTmp['matumizi_total'] ?? $todaysMatumizi->sum('gharama');
                             @endphp
                             <div class="text-white text-xs">
                                 <div class="flex justify-between items-center mb-3">
                                     <span>Leo:</span>
-                                    <span class="font-semibold">{{ number_format($matumiziLeo, 2) }}</span>
+                                    <span class="font-semibold" id="fin-matumizi-leo">{{ number_format($matumiziLeo, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center border-t border-white/20 pt-3">
                                     <span class="font-semibold">Jumla:</span>
-                                    <span class="font-bold text-sm">{{ number_format($matumiziJumla, 2) }}</span>
+                                    <span class="font-bold text-sm" id="fin-matumizi-jumla">{{ number_format($matumiziJumla, 2) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -596,23 +572,24 @@
                             </div>
                             <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Fedha Leo</div>
                             @php
-                                $mauzoLeo = $todaysMauzos->sum('jumla');
-                                $mapatoMadeni = $todaysMarejeshos->sum('kiasi');
-                                $matumiziLeo = $todaysMatumizi->sum('gharama');
-                                $fedhaLeo = ($mauzoLeo + $mapatoMadeni) - $matumiziLeo;
+                                $finTmp = $financial ?? [];
+                                $mauzoLeo = $finTmp['mauzo_leo_sum'] ?? $todaysMauzos->sum('jumla');
+                                $mapatoMadeni = $finTmp['marejesho_leo_sum'] ?? $todaysMarejeshos->sum('kiasi');
+                                $matumiziLeo = $finTmp['matumizi_leo_sum'] ?? $todaysMatumizi->sum('gharama');
+                                $fedhaLeo = $finTmp['fedha_leo'] ?? ($mauzoLeo + $mapatoMadeni) - $matumiziLeo;
                             @endphp
                             <div class="space-y-1 text-white text-xs">
                                 <div class="flex justify-between items-center">
                                     <span>Mapato:</span>
-                                    <span class="font-semibold">{{ number_format($mauzoLeo + $mapatoMadeni, 2) }}</span>
+                                    <span class="font-semibold" id="fin-fedha-mapato">{{ number_format($mauzoLeo + $mapatoMadeni, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span>Matumizi:</span>
-                                    <span class="font-semibold">{{ number_format($matumiziLeo, 2) }}</span>
+                                    <span class="font-semibold" id="fin-fedha-matumizi">{{ number_format($matumiziLeo, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
                                     <span class="font-semibold">Jumla:</span>
-                                    <span class="font-bold">{{ number_format($fedhaLeo, 2) }}</span>
+                                    <span class="font-bold" id="fin-fedha-leo">{{ number_format($fedhaLeo, 2) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -626,21 +603,22 @@
                             </div>
                             <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Faida Halisi</div>
                             @php
-                                $matumiziLeo = $todaysMatumizi->sum('gharama');
-                                $faidaHalisi = $jumlaFaida - $matumiziLeo;
+                                $finTmp = $financial ?? [];
+                                $matumiziLeo = $finTmp['matumizi_leo_sum'] ?? $todaysMatumizi->sum('gharama');
+                                $faidaHalisi = $finTmp['faida_halisi'] ?? $jumlaFaida - $matumiziLeo;
                             @endphp
                             <div class="space-y-1 text-white text-xs">
                                 <div class="flex justify-between items-center">
                                     <span>Faida:</span>
-                                    <span class="font-semibold">{{ number_format($jumlaFaida, 2) }}</span>
+                                    <span class="font-semibold" id="fin-faida-halisi-faida">{{ number_format($jumlaFaida, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span>Matumizi:</span>
-                                    <span class="font-semibold">{{ number_format($matumiziLeo, 2) }}</span>
+                                    <span class="font-semibold" id="fin-faida-halisi-matumizi">{{ number_format($matumiziLeo, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
                                     <span class="font-semibold">Halisi:</span>
-                                    <span class="font-bold">{{ number_format($faidaHalisi, 2) }}</span>
+                                    <span class="font-bold" id="fin-faida-halisi">{{ number_format($faidaHalisi, 2) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -654,22 +632,23 @@
                             </div>
                             <div class="text-xs font-semibold text-white uppercase tracking-wide mb-1">Jumla Kuu</div>
                             @php
-                                $totalMapato = $allTimeMauzos->sum('jumla') + $allTimeMarejeshos->sum('kiasi');
-                                $totalMatumizi = $allMatumizi->sum('gharama');
-                                $jumlaKuu = $totalMapato - $totalMatumizi;
+                                $finTmp = $financial ?? [];
+                                $totalMapato = isset($finTmp['mauzo_total_sum']) ? $finTmp['mauzo_total_sum'] + ($finTmp['marejesho_total'] ?? 0) : $allTimeMauzos->sum('jumla') + $allTimeMarejeshos->sum('kiasi');
+                                $totalMatumizi = $finTmp['matumizi_total'] ?? $allMatumizi->sum('gharama');
+                                $jumlaKuu = $finTmp['jumla_kuu'] ?? $totalMapato - $totalMatumizi;
                             @endphp
                             <div class="space-y-1 text-white text-xs">
                                 <div class="flex justify-between items-center">
                                     <span>Mapato:</span>
-                                    <span class="font-semibold">{{ number_format($totalMapato, 2) }}</span>
+                                    <span class="font-semibold" id="fin-jumla-mapato">{{ number_format($totalMapato, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center">
                                     <span>Matumizi:</span>
-                                    <span class="font-semibold">{{ number_format($totalMatumizi, 2) }}</span>
+                                    <span class="font-semibold" id="fin-jumla-matumizi">{{ number_format($totalMatumizi, 2) }}</span>
                                 </div>
                                 <div class="flex justify-between items-center border-t border-white/20 pt-1.5 mt-1.5">
                                     <span class="font-semibold">Jumla:</span>
-                                    <span class="font-bold">{{ number_format($jumlaKuu, 2) }}</span>
+                                    <span class="font-bold" id="fin-jumla-kuu">{{ number_format($jumlaKuu, 2) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1730,6 +1709,15 @@
         </div>
     </div>
 </div>
+
+<!-- In-page print (no new window) - invisible speed improvement -->
+<div id="mauzo-print-modal" class="fixed inset-0 bg-black/50 z-[70] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-lg w-full max-w-[420px] max-h-[90vh] flex flex-col overflow-hidden">
+        <div class="px-4 py-3 border-b flex items-center justify-between"><h3 class="font-bold text-sm">Chapisha</h3><button onclick="document.getElementById('mauzo-print-modal').classList.add('hidden');document.getElementById('mauzo-print-modal').classList.remove('flex');document.getElementById('mauzo-print-iframe').src='about:blank';document.body.style.overflow=''" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded"><i class="fas fa-times"></i></button></div>
+        <div class="flex-1 bg-gray-50 p-2"><iframe id="mauzo-print-iframe" class="w-full h-[58vh] bg-white rounded border" title="Print"></iframe></div>
+        <div class="p-3 border-t flex gap-2"><button onclick="document.getElementById('mauzo-print-modal').classList.add('hidden');document.getElementById('mauzo-print-modal').classList.remove('flex');document.getElementById('mauzo-print-iframe').src='about:blank';document.body.style.overflow=''" class="flex-1 py-2 border rounded text-sm">Funga</button><button onclick="try{var f=document.getElementById('mauzo-print-iframe');f.contentWindow.focus();f.contentWindow.print();}catch(e){}" class="flex-1 py-2 bg-green-600 text-white rounded text-sm">Print</button></div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -2679,6 +2667,7 @@ class MauzoManager {
             
             if (data.success) {
                 this.showNotification('Mauzo yamehifadhiwa kikamilifu! Namba ya risiti: ' + data.receipt_no, 'success');
+                this.syncStocksForItems(items);
                 this.carts.splice(this.activeCartIndex, 1);
                 if (this.carts.length === 0) {
                     this.activeCartIndex = -1;
@@ -2689,13 +2678,12 @@ class MauzoManager {
                 this.updateCartBadges();
                 this.renderCartTabs();
                 this.renderActiveCart();
-                this.updateFinancialData();
                 
                 if (this.carts.length === 0 && this.isKikapuViewOpen) {
                     this.closeKikapuView();
                 }
                 
-                setTimeout(() => window.location.reload(), 1500);
+                setTimeout(() => { refreshFinancialSoft(); refreshSalesTableSoft(); }, 400);
             } else {
                 this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
             }
@@ -2785,7 +2773,7 @@ class MauzoManager {
                     }
                 }
                 this.pendingCartKopesha = null;
-                setTimeout(() => window.location.reload(), 1500);
+                setTimeout(() => { refreshFinancialSoft(); refreshSalesTableSoft(); }, 600);
             } else {
                 this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
             }
@@ -3844,7 +3832,7 @@ class MauzoManager {
                 }
                 
                 this.updateFinancialData();
-                setTimeout(() => window.location.reload(), 1500);
+                setTimeout(() => { refreshFinancialSoft(); refreshSalesTableSoft(); }, 600);
             } else {
                 this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
             }
@@ -3964,10 +3952,9 @@ class MauzoManager {
 
             if (response.ok) {
                 this.showNotification('Mauzo yamehifadhiwa kikamilifu! Namba ya risiti: ' + (data.receipt_no || 'N/A'), 'success');
+                this.syncStock(formData.get('bidhaa_id'), formData.get('idadi'));
                 this.resetForm();
-                this.updateStockDisplay(formData.get('bidhaa_id'));
-                this.updateFinancialData();
-                setTimeout(() => window.location.reload(), 1500);
+                setTimeout(() => { refreshFinancialSoft(); refreshSalesTableSoft(); }, 400);
             } else {
                 this.showNotification(data.message || 'Kuna tatizo kwenye kuhifadhi!', 'error');
             }
@@ -4007,6 +3994,31 @@ class MauzoManager {
         const stockInput = document.getElementById('stock-input');
         const currentStock = parseFloat(stockInput.value) || 0;
         stockInput.value = (currentStock - quantity).toFixed(2);
+    }
+
+    // Smooth stock sync — update bidhaaList and dropdown without reload
+    syncStock(bidhaaId, qtySold){
+        const prod = this.bidhaaList.find(p=> String(p.id)===String(bidhaaId));
+        if(prod){
+            prod.idadi = Math.max(0, (parseFloat(prod.idadi)||0) - (parseFloat(qtySold)||0));
+            // update dropdown item data-stock
+            const item = document.querySelector(`#product-list .product-item[data-id="${bidhaaId}"]`);
+            if(item) item.dataset.stock = prod.idadi;
+        }
+        // if currently selected product is the sold one, update stock input
+        const selId = document.getElementById('bidhaaSelect')?.value;
+        if(String(selId)===String(bidhaaId)){
+            const stockInput=document.getElementById('stock-input');
+            if(stockInput && prod) stockInput.value = (parseFloat(prod.idadi)||0).toFixed(2);
+        }
+    }
+    syncStocksForItems(items){
+        // items: array of {bidhaa_id, idadi}
+        (items||[]).forEach(it=>{
+            const id = it.bidhaa_id || it.id || it.bidhaaId;
+            const qty = it.idadi || it.qty || it.quantity || 0;
+            if(id) this.syncStock(id, qty);
+        });
     }
 
     updateFinancialData() {
@@ -4410,9 +4422,9 @@ class MauzoManager {
             
             if (data.success) {
                 this.showNotification('Mauzo yamehifadhiwa! Namba ya risiti: ' + data.receipt_no, 'success');
+                this.syncStocksForItems(items);
                 this.clearBarcodeRows();
-                this.updateFinancialData();
-                setTimeout(() => window.location.reload(), 1500);
+                setTimeout(() => { refreshFinancialSoft(); refreshSalesTableSoft(); }, 400);
             } else {
                 this.showNotification(data.message || 'Hitilafu katika kuhifadhi mauzo!', 'error');
             }
@@ -4716,7 +4728,7 @@ class MauzoManager {
             
             if (data.success) {
                 this.showNotification('Mauzo yamefutwa kikamilifu! Stock imerudishwa.', 'success');
-                setTimeout(() => window.location.reload(), 1000);
+                setTimeout(() => { refreshFinancialSoft(); refreshSalesTableSoft(); }, 600);
             } else {
                 this.showNotification(data.message || 'Kuna tatizo kufuta mauzo!', 'error');
             }
@@ -5085,9 +5097,100 @@ class MauzoManager {
     }
 }
 
+// --- Invisible speed helpers (no visual change) ---
+MauzoManager.prototype._openPrintIframe = function(url){
+    const modal=document.getElementById('mauzo-print-modal'), iframe=document.getElementById('mauzo-print-iframe');
+    if(!modal||!iframe){ window.open(url,'_blank'); return; }
+    iframe.src=url; modal.classList.remove('hidden'); modal.classList.add('flex'); document.body.style.overflow='hidden';
+    iframe.onload=()=>{ try{ iframe.contentWindow.focus(); }catch(e){} };
+    modal.onclick=(e)=>{ if(e.target===modal){ modal.classList.add('hidden'); modal.classList.remove('flex'); iframe.src='about:blank'; document.body.style.overflow=''; } };
+};
+const _origPrintSingle = MauzoManager.prototype.printSingleReceipt;
+MauzoManager.prototype.printSingleReceipt = function(receiptNo){
+    if(!receiptNo){ this.showNotification('Hakuna namba ya risiti','error'); return; }
+    this.showNotification('Inaandaa risiti...','warning');
+    this._openPrintIframe(`/mauzo/thermal-receipt/${encodeURIComponent(receiptNo)}`);
+    setTimeout(()=> this.showNotification('Risiti inachapishwa...','success'),400);
+};
+const _origPrintThermal = MauzoManager.prototype.printThermalReceipt;
+MauzoManager.prototype.printThermalReceipt = function(){
+    if(!this.currentReceiptNo){ this.showNotification('Hakuna risiti iliyochaguliwa','error'); return; }
+    this._openPrintIframe(`/mauzo/thermal-receipt/${encodeURIComponent(this.currentReceiptNo)}`);
+};
+function refreshFinancialSoft(){
+    fetch('/mauzo/financial-data',{headers:{'Accept':'application/json'}})
+    .then(r=>r.json()).then(j=>{
+        if(!j.success||!j.data) return;
+        const d=j.data.raw||j.data;
+        const fmt=v=>Number(v||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+        const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=fmt(v);};
+        set('fin-mauzo-leo', d.mauzo_leo_sum);
+        set('fin-marejesho-leo', d.marejesho_leo_sum);
+        set('fin-mapato-leo', d.mapato_leo);
+        set('fin-mapato-simple', d.mapato_leo);
+        set('fin-faida-mauzo', d.faida_mauzo);
+        set('fin-faida-marejesho', d.faida_marejesho);
+        set('fin-faida-jumla', d.faida_leo);
+        set('fin-matumizi-leo', d.matumizi_leo_sum);
+        set('fin-matumizi-jumla', d.matumizi_total);
+        set('fin-fedha-mapato', d.mapato_leo);
+        set('fin-fedha-matumizi', d.matumizi_leo_sum);
+        set('fin-fedha-leo', d.fedha_leo);
+        set('fin-faida-halisi-faida', d.faida_leo);
+        set('fin-faida-halisi-matumizi', d.matumizi_leo_sum);
+        set('fin-faida-halisi', d.faida_halisi);
+        set('fin-jumla-mapato', (d.mauzo_total_sum||0)+(d.marejesho_total||0));
+        set('fin-jumla-matumizi', d.matumizi_total);
+        set('fin-jumla-kuu', d.jumla_kuu);
+    }).catch(()=>{});
+}
+function refreshSalesTableSoft(){
+    const tbody=document.getElementById('sales-tbody'); if(!tbody) return;
+    fetch('/mauzo/filtered-sales',{method:'POST', headers:{'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content,'Accept':'application/json'}, body:JSON.stringify({})})
+    .then(r=>r.json()).then(j=>{ if(j.success&&j.html) tbody.innerHTML=j.html; }).catch(()=>{});
+}
+const _origFilterProd = MauzoManager.prototype.filterProductOptions;
+MauzoManager.prototype.filterProductOptions = function(searchText){
+    const productList=document.getElementById('product-list');
+    const noResults=document.getElementById('no-products-found');
+    const items=productList.querySelectorAll('.product-item');
+    const filter=searchText.toLowerCase().trim();
+    let hasResults=false, shown=0; const LIMIT=50;
+    items.forEach(item=>{
+        const jina=(item.dataset.jina||'').toLowerCase();
+        const aina=(item.dataset.aina||'').toLowerCase();
+        const kipimo=(item.dataset.kipimo||'').toLowerCase();
+        const barcode=(item.dataset.barcode||'').toLowerCase();
+        const matches=filter===''||jina.includes(filter)||aina.includes(filter)||kipimo.includes(filter)||barcode.includes(filter);
+        const show=matches && shown < LIMIT; if(show) shown++;
+        item.style.display=show?'':'none';
+        if(show) hasResults=true;
+    });
+    if(noResults) noResults.classList.toggle('hidden', hasResults);
+    items.forEach(el=>el.classList.remove('selected'));
+};
+// Keep original product search (selection shows in search like previous) — filter already limited to 50 for smoothness
+// Smooth data refresh on EVERY successful transaction (sale, kopesha, order, debt)
+function refreshAllMauzoData(){
+    refreshFinancialSoft();
+    refreshSalesTableSoft();
+    // also refresh product stock display if needed
+    if(window.mauzoManager && typeof window.mauzoManager.updateFinancialData==='function'){
+        try{ window.mauzoManager.updateFinancialData(); }catch(e){}
+    }
+}
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     window.mauzoManager = new MauzoManager();
+    setInterval(refreshFinancialSoft, 60000);
+    const origShow = MauzoManager.prototype.showNotification;
+    MauzoManager.prototype.showNotification = function(msg,type){
+        origShow.call(this,msg,type);
+        if(type==='success'){
+            setTimeout(()=>{ refreshFinancialSoft(); refreshSalesTableSoft(); }, 600);
+        }
+    };
+    // Ensure product search shows selected value like previous — no clone, keep original listeners
 });
 </script>
 @endpush

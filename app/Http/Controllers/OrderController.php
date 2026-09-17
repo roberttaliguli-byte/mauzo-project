@@ -217,6 +217,7 @@ class OrderController extends Controller
         }
         $companyId = $user->company_id;
 
+        // Product list — use direct storage URL like bidhaa/index (lightweight, cacheable) with base64 fallback for BLOB legacy
         $bidhaa = Bidhaa::where('company_id', $companyId)
             ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo', 'image', 'image_path', 'image_mime_type', 'image_size')
             ->orderBy('jina')
@@ -224,18 +225,22 @@ class OrderController extends Controller
 
         $imageCount = 0;
         foreach ($bidhaa as $product) {
-            $product->image_data_url = $this->getProductImageUrl($product);
+            // Prefer direct URL like bidhaa page (asset('storage/...')) if file exists — lightweight & cacheable.
+            // Falls back to base64 for BLOB legacy or missing file.
+            $useUrl = null;
+            if ($product->image_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($product->image_path)) {
+                $useUrl = $product->image_url; // asset storage URL
+            }
+            $product->image_data_url = $useUrl ?? $this->getProductImageUrl($product);
             $product->has_image = $product->has_image;
-            
-            if ($product->has_image) {
+            if ($product->image_data_url) {
                 $imageCount++;
-                Log::info("Order: Product {$product->id} - {$product->jina} has image");
             }
         }
 
         Log::info("Order page loaded: Total products: {$bidhaa->count()}, Products with images: {$imageCount}");
 
-        $wateja = Mteja::where('company_id', $companyId)->orderBy('jina')->get();
+        $wateja = Mteja::where('company_id', $companyId)->select('id','jina','simu','customer_code')->orderBy('jina')->limit(1000)->get();
 
         $orders = Order::where('company_id', $companyId)
             ->with('creator') // Load creator relationship

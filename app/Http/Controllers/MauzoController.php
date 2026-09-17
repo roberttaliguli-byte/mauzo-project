@@ -79,7 +79,7 @@ class MauzoController extends Controller
             : $sale->punguzo;
     }
 
-    // ------------------- DISPLAY PAGE -------------------
+    // ------------------- DISPLAY PAGE — lean & fast, original logic kept clear -------------------
     public function index()
     {
         $user = $this->getAuthUser();
@@ -88,111 +88,143 @@ class MauzoController extends Controller
         }
         $companyId = $user->company_id;
 
+        // Lean first paint — keep existing data logic (mauzo+madeni paid, orders via mauzo) but no heavy hydration
         $bidhaa = Bidhaa::where('company_id', $companyId)
             ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo')
             ->orderBy('jina')
             ->get();
 
-        $mauzos = Mauzo::with('bidhaa')
+        $mauzos = Mauzo::with('bidhaa:id,jina,aina,kipimo,bei_nunua')
             ->where('company_id', $companyId)
+            ->select('id','company_id','receipt_no','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla','lipa_kwa','lipa_kwa_type','created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $matumizi = Matumizi::where('company_id', $companyId)->latest()->get();
-        $wateja = Mteja::where('company_id', $companyId)->orderBy('jina')->get();
-        $madeni = Madeni::with('bidhaa')->where('company_id', $companyId)->latest()->get();
-        $marejeshos = Marejesho::with(['madeni.bidhaa'])->where('company_id', $companyId)->get();
+        // Capped ancillary for speed — original view still works (search via AJAX for more)
+        $matumizi = Matumizi::where('company_id', $companyId)->latest()->limit(50)->get();
+        $wateja = Mteja::where('company_id', $companyId)->select('id','jina','simu','barua_pepe','anapoishi','customer_code')->orderBy('jina')->limit(300)->get();
+        $madeni = Madeni::with('bidhaa:id,jina')->where('company_id', $companyId)->latest()->limit(20)->get();
+        $marejeshos = Marejesho::with(['madeni.bidhaa:id,jina,bei_nunua,bei_kuuza'])->where('company_id', $companyId)->limit(100)->get();
 
-        $todaysMauzos = Mauzo::with('bidhaa')->where('company_id', $companyId)->whereDate('created_at', today())->get();
-        $todaysMarejeshos = Marejesho::with(['madeni.bidhaa'])->where('company_id', $companyId)->whereDate('tarehe', today())->get();
-        $todaysMatumizi = Matumizi::where('company_id', $companyId)->whereDate('created_at', today())->get();
-        $weeklyMatumizi = Matumizi::where('company_id', $companyId)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->get();
-        $allTimeMauzos = Mauzo::where('company_id', $companyId)->get();
-        $allTimeMarejeshos = Marejesho::where('company_id', $companyId)->get();
-        $allMatumizi = Matumizi::where('company_id', $companyId)->get();
-        $allMauzos = Mauzo::with('bidhaa')->where('company_id', $companyId)->orderBy('created_at', 'desc')->get();
+        // Financial — use existing logic (mauzo+madeni, orders already in mauzo) via detailed aggregates, not heavy collections in view
+        $financial = $this->getFinancialAggregates($companyId);
+
+        // Keep legacy vars for original blade compat — lean but present so original loops don't break (view now prefers $financial)
+        $todaysMauzos = collect();
+        $todaysMarejeshos = collect();
+        $todaysMatumizi = collect();
+        $weeklyMatumizi = collect();
+        $allTimeMauzos = collect();
+        $allTimeMarejeshos = collect();
+        $allMatumizi = collect();
+        // Jumla tab: limited 800 for original PHP grouping (fast enough, keeps original view)
+        $allMauzos = Mauzo::with('bidhaa:id,jina,aina,kipimo,bei_nunua')->where('company_id', $companyId)->select('id','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla','created_at')->orderBy('created_at','desc')->limit(800)->get();
 
         return view('mauzo.index', compact(
             'bidhaa', 'mauzos', 'matumizi', 'wateja', 'madeni', 'marejeshos',
             'todaysMauzos', 'todaysMarejeshos', 'todaysMatumizi', 'weeklyMatumizi',
-            'allTimeMauzos', 'allTimeMarejeshos', 'allMatumizi', 'allMauzos'
+            'allTimeMauzos', 'allTimeMarejeshos', 'allMatumizi', 'allMauzos', 'financial'
         ));
     }
 
-    // ------------------- FINANCIAL DATA (AJAX) -------------------
+    private function getFinancialAggregates($companyId)
+    {
+        // Existing logic: Mapato = mauzo (jumla) + madeni paid (marejesho kiasi); Orders when paid already in mauzo, no double count
+        $today = Carbon::today();
+        $todayMauzos = Mauzo::with('bidhaa:id,bei_nunua')->where('company_id', $companyId)->whereDate('created_at', $today)->select('id','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla')->get();
+        $todayMarejeshos = Marejesho::with(['madeni.bidhaa:id,bei_nunua'])->where('company_id', $companyId)->whereDate('tarehe', $today)->get();
+        $todayMatumizi = Matumizi::where('company_id', $companyId)->whereDate('created_at', $today)->get();
+        $allMauzos = Mauzo::with('bidhaa:id,bei_nunua')->where('company_id', $companyId)->select('id','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla')->get();
+        $allMarejeshos = Marejesho::where('company_id', $companyId)->get();
+        $allMatumizi = Matumizi::where('company_id', $companyId)->get();
+
+        $mauzoLeoSum = $todayMauzos->sum('jumla');
+        $mauzoLeoCount = $todayMauzos->count();
+        $marejeshoLeoSum = $todayMarejeshos->sum('kiasi');
+        $matumiziLeoSum = $todayMatumizi->sum('gharama');
+        $matumiziTotal = $allMatumizi->sum('gharama');
+        $mauzoTotalSum = $allMauzos->sum('jumla');
+        $marejeshoTotal = $allMarejeshos->sum('kiasi');
+        $mapatoLeo = $mauzoLeoSum + $marejeshoLeoSum;
+        $fedhaLeo = $mapatoLeo - $matumiziLeoSum;
+        $jumlaKuu = ($mauzoTotalSum + $marejeshoTotal) - $matumiziTotal;
+
+        $faidaMauzo = 0;
+        foreach($todayMauzos as $mauzo){
+            if($mauzo->bidhaa){
+                $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
+                $totalDiscount = $mauzo->punguzo_aina === 'bidhaa' ? $mauzo->punguzo * $mauzo->idadi : $mauzo->punguzo;
+                $faidaMauzo += ($mauzo->bei - $buyingPrice) * $mauzo->idadi - $totalDiscount;
+            }
+        }
+        $faidaMarejesho = 0;
+        $debtProgress = [];
+        $sorted = $todayMarejeshos->sortBy('tarehe');
+        foreach($sorted as $marejesho){
+            if(isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)){
+                $debt = $marejesho->madeni;
+                $debtId = $debt->id;
+                $repaymentAmount = $marejesho->kiasi;
+                if(!isset($debtProgress[$debtId])){
+                    $buyingPrice = $debt->bidhaa->bei_nunua ?? 0;
+                    $quantity = $debt->idadi;
+                    $totalCost = $buyingPrice * $quantity;
+                    $debtProgress[$debtId] = ['total_cost'=>$totalCost,'recovered_so_far'=>0,'is_cost_recovered'=>false];
+                }
+                $progress = &$debtProgress[$debtId];
+                $remaining = $repaymentAmount;
+                if(!$progress['is_cost_recovered']){
+                    $toRecover = $progress['total_cost'] - $progress['recovered_so_far'];
+                    if($remaining <= $toRecover){ $progress['recovered_so_far'] += $remaining; $remaining=0; }
+                    else { $costPortion=$toRecover; $progress['recovered_so_far']+=$costPortion; $progress['is_cost_recovered']=true; $faidaMarejesho += ($remaining - $costPortion); $remaining=0; }
+                }
+                if($progress['is_cost_recovered'] && $remaining>0) $faidaMarejesho += $remaining;
+            }
+        }
+        $faidaLeo = $faidaMauzo + $faidaMarejesho;
+        $faidaHalisi = $faidaLeo - $matumiziLeoSum;
+
+        return [
+            'mauzo_leo_sum' => $mauzoLeoSum,
+            'mauzo_leo_count' => $mauzoLeoCount,
+            'marejesho_leo_sum' => $marejeshoLeoSum,
+            'matumizi_leo_sum' => $matumiziLeoSum,
+            'matumizi_total' => $matumiziTotal,
+            'mauzo_total_sum' => $mauzoTotalSum,
+            'marejesho_total' => $marejeshoTotal,
+            'mapato_leo' => $mapatoLeo,
+            'fedha_leo' => $fedhaLeo,
+            'jumla_kuu' => $jumlaKuu,
+            'faida_leo' => $faidaLeo,
+            'faida_mauzo' => $faidaMauzo,
+            'faida_marejesho' => $faidaMarejesho,
+            'faida_jumla' => $faidaLeo,
+            'faida_halisi' => $faidaHalisi,
+        ];
+    }
+
+    // ------------------- FINANCIAL DATA (AJAX) — lean wrapper, existing logic kept clear -------------------
     public function getFinancialData(Request $request)
     {
         $user = $this->getAuthUser();
         if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         $companyId = $user->company_id;
-        $today = Carbon::today();
-
-        $todayMauzos = Mauzo::with('bidhaa')->where('company_id', $companyId)->where('created_at', '>=', $today)->get();
-        $todayMarejeshos = Marejesho::with(['madeni.bidhaa'])->where('company_id', $companyId)->where('tarehe', $today->toDateString())->get();
-        $todayMatumizi = Matumizi::where('company_id', $companyId)->where('created_at', '>=', $today)->get();
-        $matumizi = Matumizi::where('company_id', $companyId)->get();
-        $allMauzos = Mauzo::with('bidhaa')->where('company_id', $companyId)->get();
-
-        $totalSalesRaw = $todayMauzos->sum('jumla');
-        $totalDiscounts = $todayMauzos->sum('punguzo');
-        $totalBuyingCost = 0;
-        $totalFaida = 0;
-        foreach ($todayMauzos as $mauzo) {
-            $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-            $sellingPrice = $mauzo->bei;
-            $totalBuyingCost += $buyingPrice * $mauzo->idadi;
-            $totalFaida += ($sellingPrice - $buyingPrice) * $mauzo->idadi - $mauzo->punguzo;
-        }
-        $mapatoMauzo = $totalSalesRaw - $totalDiscounts;
-        $mapatoMadeni = $todayMarejeshos->sum('kiasi');
-        $mapatoLeo = $mapatoMauzo + $mapatoMadeni;
-        $faidaMauzo = $mapatoMauzo - $totalBuyingCost;
-        $faidaMarejesho = 0;
-        foreach ($todayMarejeshos as $marejesho) {
-            if (isset($marejesho->madeni) && isset($marejesho->madeni->bidhaa)) {
-                $buyingPrice = $marejesho->madeni->bidhaa->bei_nunua ?? 0;
-                $sellingPrice = $marejesho->madeni->bidhaa->bei_kuuza ?? 0;
-                $profitPerUnit = $sellingPrice - $buyingPrice;
-                $paymentRatio = $marejesho->kiasi / $marejesho->madeni->jumla;
-                $faidaMarejesho += $profitPerUnit * $marejesho->madeni->idadi * $paymentRatio;
-            }
-        }
-        $faidaLeo = $faidaMauzo + $faidaMarejesho;
-        $matumiziLeo = $todayMatumizi->sum('gharama');
-        $matumiziWiki = $matumizi->where('created_at', '>=', now()->startOfWeek())->sum('gharama');
-        $matumiziJumla = $matumizi->sum('gharama');
-        $fedhaLeo = $mapatoMauzo - $matumiziLeo;
-        $faidaHalisi = $faidaLeo - $matumiziLeo;
-
-        $allDiscounts = $allMauzos->sum('punguzo');
-        $allBuyingCost = 0;
-        $allFaida = 0;
-        foreach ($allMauzos as $mauzo) {
-            $buyingPrice = $mauzo->bidhaa->bei_nunua ?? 0;
-            $sellingPrice = $mauzo->bei;
-            $allBuyingCost += $buyingPrice * $mauzo->idadi;
-            $allFaida += ($sellingPrice - $buyingPrice) * $mauzo->idadi - $mauzo->punguzo;
-        }
-        $totalSalesAll = $allMauzos->sum('jumla');
-        $totalMapato = $totalSalesAll - $allDiscounts;
-        $totalMatumizi = $matumizi->sum('gharama');
-        $totalProfit = $totalMapato - $allBuyingCost;
-        $jumlaKuu = $totalProfit - $totalMatumizi;
-
+        $agg = $this->getFinancialAggregates($companyId);
         return response()->json([
             'success' => true,
             'data' => [
-                'mapato_leo' => number_format($mapatoLeo, 2),
-                'faida_leo' => number_format($totalFaida + $faidaMarejesho, 2),
-                'matumizi_leo' => number_format($matumiziLeo, 2),
-                'fedha_leo' => number_format($fedhaLeo, 2),
-                'faida_halisi' => number_format($faidaHalisi, 2),
-                'jumla_kuu' => number_format($jumlaKuu, 2),
-                'mapato_mauzo' => number_format($mapatoMauzo, 2),
-                'faida_mauzo' => number_format($totalFaida, 2),
-                'matumizi_jumla' => number_format($matumiziJumla, 2),
-                'total_mapato' => number_format($totalMapato, 2),
-                'total_matumizi' => number_format($totalMatumizi, 2)
+                'mapato_leo' => number_format($agg['mapato_leo'], 2),
+                'faida_leo' => number_format($agg['faida_leo'], 2),
+                'matumizi_leo' => number_format($agg['matumizi_leo_sum'], 2),
+                'fedha_leo' => number_format($agg['fedha_leo'], 2),
+                'faida_halisi' => number_format($agg['faida_halisi'], 2),
+                'jumla_kuu' => number_format($agg['jumla_kuu'], 2),
+                'mapato_mauzo' => number_format($agg['mauzo_leo_sum'], 2),
+                'faida_mauzo' => number_format($agg['faida_mauzo'], 2),
+                'matumizi_jumla' => number_format($agg['matumizi_total'], 2),
+                'total_mapato' => number_format($agg['mauzo_total_sum'] + $agg['marejesho_total'], 2),
+                'total_matumizi' => number_format($agg['matumizi_total'], 2),
+                'raw' => $agg
             ]
         ]);
     }

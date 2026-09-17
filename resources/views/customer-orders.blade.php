@@ -951,6 +951,20 @@
         </div>
     </div>
 
+    <!-- ===== PRINT MODAL — in-page, no new window ===== -->
+    <div id="cust-print-modal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.6); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:white; border-radius:16px; width:100%; max-width:420px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.25);">
+            <div style="padding:12px 16px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between;">
+                <strong style="font-size:14px;"><i class="fas fa-print" style="color:#059669;"></i> Chapisha</strong>
+                <button onclick="closeCustPrint()" style="width:32px; height:32px; border:none; background:#f1f5f9; border-radius:10px; cursor:pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="flex:1; background:#f8fafc; padding:8px; overflow:hidden;"><iframe id="cust-print-iframe" style="width:100%; height:58vh; background:white; border:1px solid #e2e8f0; border-radius:12px;" title="Print"></iframe></div>
+            <div style="padding:12px; border-top:1px solid #e2e8f0; display:flex; gap:8px;">
+                <button onclick="closeCustPrint()" style="flex:1; padding:10px; border:1px solid #e2e8f0; background:white; border-radius:12px; font-weight:600; cursor:pointer;">Funga</button>
+                <button onclick="triggerCustPrint()" style="flex:1; padding:10px; background:#0f172a; color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer;"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+    </div>
     <!-- ===== TOAST CONTAINER ===== -->
     <div id="toastContainer" class="toast-container"></div>
 
@@ -1254,103 +1268,30 @@
                 });
         }
 
+        function closeCustPrint(){ var m=document.getElementById('cust-print-modal'), f=document.getElementById('cust-print-iframe'); if(m) m.style.display='none'; if(f) f.src='about:blank'; document.body.style.overflow=''; }
+        function triggerCustPrint(){ var f=document.getElementById('cust-print-iframe'); if(!f||!f.contentWindow) return; try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){ showToast('Tafadhali ruhusu print','error'); } }
+        // backdrop close
+        document.addEventListener('click', function(e){ var m=document.getElementById('cust-print-modal'); if(m && e.target===m) closeCustPrint(); });
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeCustPrint(); });
+
         function printOrderReceipt(order) {
             const items = order.items || [];
             let itemsHtml = '';
-            let subtotal = 0;
-            
             items.forEach(item => {
                 const itemName = item.jina || item.name || 'Bidhaa';
                 const itemQty = item.idadi || item.qty || 0;
                 const itemPrice = item.bei || item.price || 0;
                 const itemTotal = item.total || (itemQty * itemPrice);
-                subtotal += itemTotal;
-                itemsHtml += `
-                    <tr>
-                        <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;">${itemName}</td>
-                        <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:12px;">${itemQty}</td>
-                        <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-size:12px;">${formatCurrency(itemPrice)}</td>
-                        <td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-size:12px;font-weight:bold;">${formatCurrency(itemTotal)}</td>
-                    </tr>
-                `;
+                itemsHtml += `<tr><td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;">${itemName}</td><td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:center;font-size:12px;">${itemQty}</td><td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-size:12px;">${formatCurrency(itemPrice)}</td><td style="padding:4px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-size:12px;font-weight:bold;">${formatCurrency(itemTotal)}</td></tr>`;
             });
-            
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Oda #${order.order_number}</title>
-                    <style>
-                        body { font-family: 'Courier New', monospace; padding: 20px; max-width: 400px; margin: 0 auto; }
-                        .header { text-align: center; margin-bottom: 20px; }
-                        .header h1 { font-size: 18px; margin: 0; color: #1f2937; }
-                        .header p { font-size: 12px; color: #6b7280; margin: 2px 0; }
-                        .divider { border-top: 1px dashed #d1d5db; margin: 8px 0; }
-                        .info { font-size: 12px; margin: 4px 0; }
-                        .info strong { display: inline-block; width: 80px; }
-                        table { width: 100%; font-size: 12px; border-collapse: collapse; margin: 8px 0; }
-                        th { text-align: left; padding: 4px 8px; background: #f3f4f6; font-size: 11px; }
-                        td { padding: 4px 8px; }
-                        .total { font-size: 16px; font-weight: bold; text-align: right; padding-top: 8px; border-top: 1px solid #d1d5db; margin-top: 8px; }
-                        .footer { text-align: center; font-size: 11px; color: #6b7280; margin-top: 16px; border-top: 1px dashed #d1d5db; padding-top: 8px; }
-                        .status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-                        .status-saved { background: #fef3c7; color: #92400e; }
-                        .status-confirmed { background: #dbeafe; color: #1e40af; }
-                        .status-processing { background: #ede9fe; color: #5b21b6; }
-                        .status-ready { background: #e0e7ff; color: #3730a3; }
-                        .status-shipped { background: #ffedd5; color: #9a3412; }
-                        .status-delivered { background: #d1fae5; color: #065f46; }
-                        .status-cancelled { background: #fee2e2; color: #991b1b; }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>${COMPANY_NAME}</h1>
-                        <p>Stakabadhi ya Oda</p>
-                        <p>${order.order_number}</p>
-                    </div>
-                    
-                    <div class="divider"></div>
-                    
-                    <div class="info"><strong>Tarehe:</strong> ${order.created_at_formatted}</div>
-                    <div class="info"><strong>Mteja:</strong> ${order.customer_name || 'Mteja wa Kutembea'}</div>
-                    <div class="info"><strong>Simu:</strong> ${order.customer_phone || '-'}</div>
-                    <div class="info"><strong>Hali:</strong> <span class="status status-${order.status}">${order.status_label}</span></div>
-                    ${order.delivery_address ? `<div class="info"><strong>Anuani:</strong> ${order.delivery_address}</div>` : ''}
-                    
-                    <div class="divider"></div>
-                    
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Bidhaa</th>
-                                <th style="text-align:center;">Qty</th>
-                                <th style="text-align:right;">Bei</th>
-                                <th style="text-align:right;">Jumla</th>
-                            </tr>
-                        </thead>
-                        <tbody>${itemsHtml}</tbody>
-                    </table>
-                    
-                    <div class="total">
-                        <div style="display:flex;justify-content:space-between;font-size:14px;">
-                            <span>JUMLA:</span>
-                            <span>${formatCurrency(order.total)}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="divider"></div>
-                    
-                    <div class="footer">
-                        Asante kwa kununua! 🛍️<br>
-                        Powered by MauzoSheetAI
-                    </div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
+            var html=`<!DOCTYPE html><html><head><title>Oda #${order.order_number}</title><style>body{font-family:'Courier New',monospace;padding:20px;max-width:400px;margin:0 auto} .header{text-align:center;margin-bottom:20px}.header h1{font-size:18px;margin:0;color:#1f2937}.header p{font-size:12px;color:#6b7280;margin:2px 0}.divider{border-top:1px dashed #d1d5db;margin:8px 0}.info{font-size:12px;margin:4px 0}.info strong{display:inline-block;width:80px}table{width:100%;font-size:12px;border-collapse:collapse;margin:8px 0}th{text-align:left;padding:4px 8px;background:#f3f4f6;font-size:11px}td{padding:4px 8px}.total{font-size:16px;font-weight:bold;text-align:right;padding-top:8px;border-top:1px solid #d1d5db;margin-top:8px}.footer{text-align:center;font-size:11px;color:#6b7280;margin-top:16px;border-top:1px dashed #d1d5db;padding-top:8px}.status{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold}.status-saved{background:#fef3c7;color:#92400e}.status-confirmed{background:#dbeafe;color:#1e40af}.status-processing{background:#ede9fe;color:#5b21b6}.status-ready{background:#e0e7ff;color:#3730a3}.status-shipped{background:#ffedd5;color:#9a3412}.status-delivered{background:#d1fae5;color:#065f46}.status-cancelled{background:#fee2e2;color:#991b1b}</style></head><body><div class="header"><h1>${COMPANY_NAME}</h1><p>Stakabadhi ya Oda</p><p>${order.order_number}</p></div><div class="divider"></div><div class="info"><strong>Tarehe:</strong> ${order.created_at_formatted}</div><div class="info"><strong>Mteja:</strong> ${order.customer_name||'Mteja wa Kutembea'}</div><div class="info"><strong>Simu:</strong> ${order.customer_phone||'-'}</div><div class="info"><strong>Hali:</strong> <span class="status status-${order.status}">${order.status_label}</span></div>${order.delivery_address?`<div class="info"><strong>Anuani:</strong> ${order.delivery_address}</div>`:''}<div class="divider"></div><table><thead><tr><th>Bidhaa</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Bei</th><th style="text-align:right;">Jumla</th></tr></thead><tbody>${itemsHtml}</tbody></table><div class="total"><div style="display:flex;justify-content:space-between;font-size:14px;"><span>JUMLA:</span><span>${formatCurrency(order.total)}</span></div></div><div class="divider"></div><div class="footer">Asante kwa kununua! 🛍️<br>Powered by MauzoSheetAI</div><script>window.onload=function(){ setTimeout(function(){ try{window.print();}catch(e){}}, 250); }<\/script></body></html>`;
+            var modal=document.getElementById('cust-print-modal'), iframe=document.getElementById('cust-print-iframe');
+            if(!modal||!iframe) return;
+            modal.style.display='flex'; document.body.style.overflow='hidden';
+            // use srcdoc for instant, no new window
+            iframe.srcdoc = html;
+            // fallback for browsers without srcdoc: use blob url
+            iframe.onload=function(){ try{ iframe.contentWindow.focus(); }catch(e){} };
         }
 
         // ===== SHARE ORDER VIA WHATSAPP =====
