@@ -232,37 +232,38 @@
         .item-price { flex: 1.5 !important; text-align: right !important; }
         .item-total { flex: 1.5 !important; text-align: right !important; font-weight: 600 !important; }
         
-        .no-print {
-            display: block !important;
-            text-align: center !important;
-            margin-top: 10px !important;
-            padding: 8px !important;
-            background: #f3f4f6 !important;
-            border-radius: 8px !important;
+        @media screen {
+            .no-print {
+                display: block !important;
+                text-align: center !important;
+                margin-top: 10px !important;
+                padding: 8px !important;
+                background: #f3f4f6 !important;
+                border-radius: 8px !important;
+            }
+            .no-print button {
+                padding: 8px 20px !important;
+                background: #10b981 !important;
+                color: #fff !important;
+                border: none !important;
+                border-radius: 6px !important;
+                font-size: 14px !important;
+                font-weight: 600 !important;
+                cursor: pointer !important;
+                margin: 0 5px !important;
+            }
+            .no-print button:hover {
+                background: #059669 !important;
+            }
+            .no-print .btn-close {
+                background: #6b7280 !important;
+            }
+            .no-print .btn-close:hover {
+                background: #4b5563 !important;
+            }
         }
-        
-        .no-print button {
-            padding: 8px 20px !important;
-            background: #10b981 !important;
-            color: #fff !important;
-            border: none !important;
-            border-radius: 6px !important;
-            font-size: 14px !important;
-            font-weight: 600 !important;
-            cursor: pointer !important;
-            margin: 0 5px !important;
-        }
-        
-        .no-print button:hover {
-            background: #059669 !important;
-        }
-        
-        .no-print .btn-close {
-            background: #6b7280 !important;
-        }
-        
-        .no-print .btn-close:hover {
-            background: #4b5563 !important;
+        @media print {
+            .no-print, .no-print * { display: none !important; visibility: hidden !important; height: 0 !important; overflow: hidden !important; }
         }
     </style>
 </head>
@@ -476,6 +477,8 @@
     </div>
     
     <script>
+        window.onbeforeprint = function(){ document.querySelectorAll('.no-print').forEach(function(el){ el.style.display='none'; }); };
+        window.onafterprint = function(){ document.querySelectorAll('.no-print').forEach(function(el){ el.style.display=''; }); };
         window.onload = function() {
             if (window.opener) {
                 setTimeout(function() {

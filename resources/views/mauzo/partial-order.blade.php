@@ -33,6 +33,7 @@
     .orders-table-wrap td[data-label=""]::before{ display:none; }
     .orders-table-wrap td[data-label="Vitendo"]{ flex-wrap:wrap; }
   }
+  @media print{ .no-print{display:none!important;} }
 </style>
 
 <!-- Tab Navigation — pill segmented, sticky -->
@@ -431,14 +432,14 @@
 <!-- ============================================ -->
 <div id="print-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[420px] max-h-[90vh] flex flex-col overflow-hidden">
-        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
+        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 no-print">
             <h3 class="font-bold text-slate-900 flex items-center gap-2"><i class="fas fa-print text-emerald-600"></i> Chapisha Risiti</h3>
             <button onclick="closePrintModal()" class="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-500"><i class="fas fa-times"></i></button>
         </div>
         <div class="flex-1 bg-slate-50 p-2 overflow-hidden">
             <iframe id="print-iframe" class="w-full h-[58vh] bg-white rounded-xl border border-slate-200" title="Print preview"></iframe>
         </div>
-        <div class="p-3 border-t border-slate-100 flex gap-2 shrink-0">
+        <div class="p-3 border-t border-slate-100 flex gap-2 shrink-0 no-print">
             <button onclick="closePrintModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold hover:bg-slate-50">Funga</button>
             <button onclick="triggerIframePrint()" class="flex-1 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-sm font-bold flex items-center justify-center gap-2"><i class="fas fa-print text-xs"></i> Print</button>
         </div>
@@ -504,6 +505,9 @@ function oUpdateHeaderCounters(){
     var mini=document.getElementById('orders-count-mini');
     var unpaid=(oOrders||[]).filter(function(o){ return o.status==='saved'||o.status==='confirmed'; }).length;
     if(mini){ if(unpaid>0){ mini.textContent=unpaid; mini.classList.remove('hidden'); } else mini.classList.add('hidden'); }
+    // Sync outer Weka Order tab red badge (mauzo index) automatically
+    var outerBadge=document.getElementById('new-order-badge-tab');
+    if(outerBadge){ if(unpaid>0){ outerBadge.textContent=unpaid; outerBadge.classList.remove('hidden'); } else outerBadge.classList.add('hidden'); }
     var tabBadge=document.getElementById('cart-badge-tab'); if(tabBadge){
         var c=oCart.reduce(function(s,i){ return s+i.qty;},0);
         if(c>0){ tabBadge.textContent=c; tabBadge.classList.remove('hidden'); } else tabBadge.classList.add('hidden');
@@ -824,12 +828,23 @@ function oOrdersSearch(val){ oSearch=(val||'').trim(); oCurrentPage=1; oOrdersLo
 var oOrdersSearchDebounced = debounce(oOrdersSearch, 280);
 
 /* ── view ── */
-function oView(id){
+async function oView(id){
     var o=oOrders.find(function(x){return String(x.id)===String(id);});
+    // Try to fetch fresh details for location/notes if available (ensures showcase delivery_address shows)
+    if(o && (!o.delivery_address && !o.customer_address)){
+        try{
+            var r=await fetch('/orders/'+id,{headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}});
+            var j=await r.json();
+            if(j.success && j.data){ o = Object.assign({}, o, j.data); }
+        }catch(e){}
+    }
     if(!o){ oToast('Order haipatikani','error'); return; }
     var bClass={saved:'bg-amber-100 text-amber-800 border border-amber-200',confirmed:'bg-blue-100 text-blue-800 border border-blue-200',paid:'bg-emerald-100 text-emerald-800 border border-emerald-200',cancelled:'bg-red-100 text-red-800 border border-red-200'};
     var bLabel={saved:'Saved',confirmed:'Confirmed',paid:'Paid',cancelled:'Cancelled'};
     var bDot={saved:'#f59e0b',confirmed:'#3b82f6',paid:'#10b981',cancelled:'#ef4444'};
+    var locationVal = o.delivery_address || o.customer_address || o.anapoishi || o.customer_location || '';
+    var emailVal = o.customer_email || '';
+    var notesVal = o.special_instructions || o.notes || '';
     var itemsHtml=(o.items||[]).map(function(it){ var qty=it.idadi||it.qty||0, tot=it.total||(qty*(it.bei||it.price||0))||0; return '<div class="flex justify-between py-2.5 border-b border-slate-100 text-sm last:border-0"><span class="text-slate-700 font-medium">'+oEsc(it.jina||it.name)+' <span class="text-slate-400 font-normal">×'+qty+'</span></span><span class="font-extrabold text-emerald-700">'+tot.toLocaleString()+' TZS</span></div>';}).join('') || '<p class="text-sm text-slate-500 py-2">Hakuna bidhaa</p>';
     var body=document.getElementById('view-order-body');
     if(body){
@@ -838,6 +853,10 @@ function oView(id){
             +'<div class="flex justify-between"><span class="text-slate-500">Order #</span><span class="font-mono font-extrabold bg-slate-900 text-white px-2.5 py-1 rounded-full text-xs">'+oEsc(o.order_number||'#'+o.id)+'</span></div>'
             +'<div class="flex justify-between"><span class="text-slate-500">Mteja</span><span class="font-bold text-slate-900">'+oEsc(o.customer_name||'Walk-in')+'</span></div>'
             +(o.customer_phone?'<div class="flex justify-between"><span class="text-slate-500">Simu</span><span class="font-medium">'+oEsc(o.customer_phone)+'</span></div>':'')
+            +(emailVal?'<div class="flex justify-between"><span class="text-slate-500">Email</span><span class="font-medium text-xs">'+oEsc(emailVal)+'</span></div>':'')
+            +(locationVal?'<div class="flex justify-between items-start gap-2"><span class="text-slate-500 shrink-0"><i class="fas fa-map-marker-alt mr-1"></i>Mahali</span><span class="font-medium text-right max-w-[60%] break-words">'+oEsc(locationVal)+'</span></div>':'')
+            +(o.order_type?'<div class="flex justify-between"><span class="text-slate-500">Aina</span><span class="font-medium capitalize">'+oEsc(o.order_type)+'</span></div>':'')
+            +(notesVal?'<div class="bg-amber-50 border border-amber-200 rounded-lg p-2"><span class="text-amber-800 text-xs font-bold block mb-1">Maelezo</span><span class="text-slate-700 text-xs">'+oEsc(notesVal)+'</span></div>':'')
             +'<div class="flex justify-between items-center"><span class="text-slate-500">Hali</span><span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold '+ (bClass[o.status]||'bg-slate-100') +'"><span class="w-1.5 h-1.5 rounded-full" style="background:'+(bDot[o.status]||'#64748b')+'"></span>'+(bLabel[o.status]||o.status)+'</span></div>'
             +'<div class="flex justify-between"><span class="text-slate-500">Tarehe</span><span class="text-slate-700 text-xs">'+new Date(o.created_at).toLocaleString('sw-TZ')+'</span></div>'
             +(o.created_by_name?'<div class="flex justify-between"><span class="text-slate-500">Imeundwa na</span><span class="text-slate-700 font-medium">'+oEsc(o.created_by_name)+'</span></div>':'')
@@ -862,7 +881,16 @@ async function oUpdateStatus(status){
     try{
         var res=await fetch('/orders/'+id+'/status',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':oCsrf,'Accept':'application/json'},body:JSON.stringify({status:status})});
         var data=await res.json();
-        if(data.success){ oToast('Hali imebadilishwa: '+status,'success'); oOrdersLoad(); /* synced — no reload, stock & mauzo updated via API */ }
+        if(data.success){
+            oToast('Hali imebadilishwa: '+status,'success');
+            oOrdersLoad();
+            // Auto-reflect sales/taarifa/financial when paid
+            if(status==='paid'){
+                try{ if(typeof refreshFinancialSoft==='function') refreshFinancialSoft(); if(typeof refreshSalesTableSoft==='function') refreshSalesTableSoft(); }catch(e){}
+                // Also trigger mauzo manager refresh if available
+                try{ if(window.mauzoManager && typeof window.mauzoManager.updateFinancialData==='function') window.mauzoManager.updateFinancialData(); }catch(e){}
+            }
+        }
         else oToast(data.message||'Hitilafu katika kubadilisha hali','error');
     }catch(e){ oToast('Hitilafu ya mtandao: '+e.message,'error'); }
     finally{ if(grp) grp.querySelectorAll('button').forEach(function(b){b.disabled=false;}); }
@@ -947,6 +975,8 @@ document.addEventListener('DOMContentLoaded', function(){
     }catch(e){}
     oOrdersLoad(true);
     collectProdFiltered(); applyProdPagination();
+    // Auto-poll for new showcase orders - updates red badge + order list silently every 15s
+    setInterval(function(){ oOrdersLoad(true); }, 15000);
     // Esc closes modals
     document.addEventListener('keydown', function(ev){
         if(ev.key==='Escape'){

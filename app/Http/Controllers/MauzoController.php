@@ -142,6 +142,7 @@ class MauzoController extends Controller
         $mauzoLeoCount = $todayMauzos->count();
         $marejeshoLeoSum = $todayMarejeshos->sum('kiasi');
         $matumiziLeoSum = $todayMatumizi->sum('gharama');
+        $matumiziLeoCount = $todayMatumizi->count();
         $matumiziTotal = $allMatumizi->sum('gharama');
         $mauzoTotalSum = $allMauzos->sum('jumla');
         $marejeshoTotal = $allMarejeshos->sum('kiasi');
@@ -189,6 +190,7 @@ class MauzoController extends Controller
             'mauzo_leo_count' => $mauzoLeoCount,
             'marejesho_leo_sum' => $marejeshoLeoSum,
             'matumizi_leo_sum' => $matumiziLeoSum,
+            'matumizi_leo_count' => $matumiziLeoCount,
             'matumizi_total' => $matumiziTotal,
             'mauzo_total_sum' => $mauzoTotalSum,
             'marejesho_total' => $marejeshoTotal,

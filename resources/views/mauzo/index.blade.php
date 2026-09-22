@@ -549,7 +549,6 @@
                             @php
                                 $finTmp = $financial ?? [];
                                 $matumiziLeo = $finTmp['matumizi_leo_sum'] ?? $todaysMatumizi->sum('gharama');
-                                $matumiziJumla = $finTmp['matumizi_total'] ?? $todaysMatumizi->sum('gharama');
                             @endphp
                             <div class="text-white text-xs">
                                 <div class="flex justify-between items-center mb-3">
@@ -558,7 +557,7 @@
                                 </div>
                                 <div class="flex justify-between items-center border-t border-white/20 pt-3">
                                     <span class="font-semibold">Jumla:</span>
-                                    <span class="font-bold text-sm" id="fin-matumizi-jumla">{{ number_format($matumiziJumla, 2) }}</span>
+                                    <span class="font-bold text-sm" id="fin-matumizi-jumla">{{ number_format($matumiziLeo, 2) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1713,9 +1712,9 @@
 <!-- In-page print (no new window) - invisible speed improvement -->
 <div id="mauzo-print-modal" class="fixed inset-0 bg-black/50 z-[70] hidden items-center justify-center p-4">
     <div class="bg-white rounded-lg w-full max-w-[420px] max-h-[90vh] flex flex-col overflow-hidden">
-        <div class="px-4 py-3 border-b flex items-center justify-between"><h3 class="font-bold text-sm">Chapisha</h3><button onclick="document.getElementById('mauzo-print-modal').classList.add('hidden');document.getElementById('mauzo-print-modal').classList.remove('flex');document.getElementById('mauzo-print-iframe').src='about:blank';document.body.style.overflow=''" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded"><i class="fas fa-times"></i></button></div>
+        <div class="px-4 py-3 border-b flex items-center justify-between no-print"><h3 class="font-bold text-sm">Chapisha</h3><button onclick="document.getElementById('mauzo-print-modal').classList.add('hidden');document.getElementById('mauzo-print-modal').classList.remove('flex');document.getElementById('mauzo-print-iframe').src='about:blank';document.body.style.overflow=''" class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded"><i class="fas fa-times"></i></button></div>
         <div class="flex-1 bg-gray-50 p-2"><iframe id="mauzo-print-iframe" class="w-full h-[58vh] bg-white rounded border" title="Print"></iframe></div>
-        <div class="p-3 border-t flex gap-2"><button onclick="document.getElementById('mauzo-print-modal').classList.add('hidden');document.getElementById('mauzo-print-modal').classList.remove('flex');document.getElementById('mauzo-print-iframe').src='about:blank';document.body.style.overflow=''" class="flex-1 py-2 border rounded text-sm">Funga</button><button onclick="try{var f=document.getElementById('mauzo-print-iframe');f.contentWindow.focus();f.contentWindow.print();}catch(e){}" class="flex-1 py-2 bg-green-600 text-white rounded text-sm">Print</button></div>
+        <div class="p-3 border-t flex gap-2 no-print"><button onclick="document.getElementById('mauzo-print-modal').classList.add('hidden');document.getElementById('mauzo-print-modal').classList.remove('flex');document.getElementById('mauzo-print-iframe').src='about:blank';document.body.style.overflow=''" class="flex-1 py-2 border rounded text-sm">Funga</button><button onclick="try{var f=document.getElementById('mauzo-print-iframe');f.contentWindow.focus();f.contentWindow.print();}catch(e){}" class="flex-1 py-2 bg-green-600 text-white rounded text-sm">Print</button></div>
     </div>
 </div>
 @endsection
@@ -1833,6 +1832,9 @@
     .product-item {
         padding: 12px 16px;
     }
+}
+@media print {
+    .no-print { display: none !important; }
 }
 </style>
 @endpush
@@ -5144,7 +5146,8 @@ function refreshFinancialSoft(){
         set('fin-faida-marejesho', d.faida_marejesho);
         set('fin-faida-jumla', d.faida_leo);
         set('fin-matumizi-leo', d.matumizi_leo_sum);
-        set('fin-matumizi-jumla', d.matumizi_total);
+        // Matumizi box simple - both lines show today only (cumulative only in Jumla Kuu)
+        set('fin-matumizi-jumla', d.matumizi_leo_sum);
         set('fin-fedha-mapato', d.mapato_leo);
         set('fin-fedha-matumizi', d.matumizi_leo_sum);
         set('fin-fedha-leo', d.fedha_leo);
@@ -5195,11 +5198,34 @@ function refreshAllMauzoData(){
 document.addEventListener('DOMContentLoaded', function() {
     window.mauzoManager = new MauzoManager();
     setInterval(refreshFinancialSoft, 60000);
+    // Poll orders badge (showcase outside orders) every 15s - updates red badge on Weka Order tab automatically
+    function refreshOrderBadge(){
+        fetch('/orders/stats',{headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}})
+        .then(r=>r.json()).then(j=>{
+            if(j.success && j.data){
+                var saved = j.data.saved || 0;
+                var confirmed = j.data.confirmed || 0;
+                var pending = saved + confirmed;
+                var outerBadge = document.getElementById('new-order-badge-tab');
+                if(outerBadge){
+                    if(pending>0){ outerBadge.textContent=pending; outerBadge.classList.remove('hidden');}
+                    else { outerBadge.classList.add('hidden'); }
+                }
+                // Also sync mini badge inside partial-order if present
+                var mini=document.getElementById('orders-count-mini');
+                if(mini){ if(pending>0){ mini.textContent=pending; mini.classList.remove('hidden');} else mini.classList.add('hidden'); }
+                // If we are on order tab, silently refresh list if pending changed
+                try{ if(typeof oOrdersLoad==='function' && document.getElementById('order-list-tab-content') && !document.getElementById('order-list-tab-content').classList.contains('hidden')){ /* already handled by partial-order interval */ } }catch(e){}
+            }
+        }).catch(()=>{});
+    }
+    setInterval(refreshOrderBadge, 15000);
+    setTimeout(refreshOrderBadge, 2000);
     const origShow = MauzoManager.prototype.showNotification;
     MauzoManager.prototype.showNotification = function(msg,type){
         origShow.call(this,msg,type);
         if(type==='success'){
-            setTimeout(()=>{ refreshFinancialSoft(); refreshSalesTableSoft(); }, 600);
+            setTimeout(()=>{ refreshFinancialSoft(); refreshSalesTableSoft(); refreshOrderBadge(); }, 600);
         }
     };
     // Ensure product search shows selected value like previous — no clone, keep original listeners

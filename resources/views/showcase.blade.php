@@ -380,6 +380,10 @@
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes slideUpMobile {
+            from { opacity: 0; transform: translateY(100%); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         
         /* Company Profile */
         .company-profile {
@@ -717,12 +721,15 @@
             width: 100%;
             max-width: 400px;
             height: 100vh;
+            height: 100dvh;
             background: var(--white);
             box-shadow: -4px 0 40px rgba(0,0,0,0.1);
             z-index: 1001;
             transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
+            max-height: 100dvh;
+            overflow: hidden;
         }
         
         .cart-panel.open { right: 0; }
@@ -833,10 +840,13 @@
         }
         
         .cart-panel .footer {
-            padding: 12px 16px;
+            padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
             border-top: 1px solid #e5e7eb;
             flex-shrink: 0;
             background: #fafafa;
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
         }
         
         .cart-panel .footer .summary {
@@ -871,6 +881,7 @@
             left: 0;
             width: 100%;
             height: 100%;
+            height: 100dvh;
             z-index: 2000;
             display: none;
             align-items: center;
@@ -878,6 +889,7 @@
             padding: 16px;
             background: rgba(0,0,0,0.5);
             backdrop-filter: blur(4px);
+            overflow-y: auto;
         }
         
         .checkout-modal.active { display: flex; }
@@ -887,11 +899,37 @@
             border-radius: var(--radius);
             max-width: 480px;
             width: 100%;
+            max-height: 90dvh;
             max-height: 90vh;
-            overflow-y: auto;
-            padding: 24px;
+            overflow: hidden;
+            padding: 0;
             box-shadow: 0 20px 60px rgba(0,0,0,0.2);
             animation: slideUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            margin: auto;
+        }
+        .checkout-modal .modal-content .modal-header {
+            padding: 20px 24px 0 24px;
+            flex-shrink: 0;
+        }
+        .checkout-modal #checkoutForm {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 24px 0 24px;
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+        .checkout-modal #checkoutForm .submit-btn {
+            position: sticky;
+            bottom: 0;
+            z-index: 5;
+            margin: 16px -24px 0 -24px;
+            border-radius: 0 0 var(--radius) var(--radius);
+            padding: 16px;
+            width: calc(100% + 48px);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+            background: var(--secondary);
         }
         
         .checkout-modal .modal-content .modal-header {
@@ -1129,7 +1167,12 @@
             .section-header h2 { font-size: 18px; }
             .category-filter { font-size: 12px; padding: 5px 12px; }
             
-            .checkout-modal .modal-content { padding: 16px; margin: 8px; }
+            .checkout-modal { padding: 0; align-items: flex-end; }
+            .checkout-modal .modal-content { max-width: 100%; width: 100%; max-height: 92dvh; margin: 0; border-radius: 20px 20px 0 0; animation: slideUpMobile 0.3s ease; }
+            .checkout-modal .modal-content .modal-header { padding: 16px 16px 0 16px; }
+            .checkout-modal #checkoutForm { padding: 0 16px; }
+            .checkout-modal #checkoutForm .submit-btn,
+            .checkout-modal .submit-btn { padding: 16px; font-size: 17px; min-height: 56px; border-radius: 0; width: calc(100% + 32px); margin: 12px -16px 0 -16px; }
             
             .customer-login-card { flex-direction: column; text-align: center; }
             .customer-login-card .code-input { width: 100%; flex-direction: column; }
@@ -1223,43 +1266,43 @@
         <div class="hero-container">
             <div class="hero-badge">
                 <i class="fas fa-store"></i>
-                <span>Open for Orders</span>
+                <span>Tuko Wazi Kupokea Oda</span>
             </div>
             
             <h1 class="hero-title">
-                Welcome to <span>{{ $company->company_name }}</span>
+                Karibu <span>{{ $company->company_name }}</span>
             </h1>
             
             <p class="hero-subtitle">
-                Browse our products and place your order online. Fast delivery and quality service guaranteed.
+                Chagua bidhaa zetu na uweke oda yako mtandaoni. Huduma ya haraka na bora inahakikishwa.
             </p>
             
             <div class="hero-actions">
                 <a href="#products" class="btn-hero btn-hero-primary">
-                    <i class="fas fa-shopping-bag"></i> Start Shopping
+                    <i class="fas fa-shopping-bag"></i> Anza Kununua
                 </a>
                 <a href="#contact" class="btn-hero btn-hero-secondary">
-                    <i class="fas fa-phone"></i> Contact Us
+                    <i class="fas fa-phone"></i> Wasiliana Nasi
                 </a>
             </div>
             
             <div class="hero-search">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchProducts" placeholder="Search products, categories, or barcode...">
+                <input type="text" id="searchProducts" placeholder="Tafuta bidhaa, aina au barcode...">
             </div>
             
             <div class="hero-stats">
                 <div class="hero-stats-item">
                     <span class="number">{{ $stats['total_products'] }}</span>
-                    <span class="label">Products</span>
+                    <span class="label">Bidhaa</span>
                 </div>
                 <div class="hero-stats-item">
                     <span class="number">{{ $stats['total_categories'] }}</span>
-                    <span class="label">Categories</span>
+                    <span class="label">Aina</span>
                 </div>
                 <div class="hero-stats-item">
                     <span class="number">{{ $stats['in_stock'] }}</span>
-                    <span class="label">In Stock</span>
+                    <span class="label">Zipo Dukani</span>
                 </div>
             </div>
         </div>
@@ -1274,17 +1317,17 @@
             <div class="info">
                 @if($customer)
                     <div class="greeting">
-                        <i class="fas fa-check-circle text-emerald-600"></i> Welcome back, <span id="customerGreeting">{{ $customer->jina }}</span>!
+                        <i class="fas fa-check-circle text-emerald-600"></i> Karibu tena, <span id="customerGreeting">{{ $customer->jina }}</span>!
                     </div>
                     <div class="sub">
-                        <i class="fas fa-id-card"></i> Code: <strong id="customerCodeDisplay">{{ $customer->customer_code }}</strong>
+                        <i class="fas fa-id-card"></i> Msimbo: <strong id="customerCodeDisplay">{{ $customer->customer_code }}</strong>
                         <button onclick="copyCodeToClipboard('{{ $customer->customer_code }}')" class="text-primary hover:text-primary-dark" style="background:none;border:none;cursor:pointer;font-size:11px;">
-                            <i class="fas fa-copy"></i> Copy
+                            <i class="fas fa-copy"></i> Nakili
                         </button>
                     </div>
                 @else
-                    <div class="greeting">Welcome! Have a customer code?</div>
-                    <div class="sub">Enter your code for faster checkout or find your code below</div>
+                    <div class="greeting">Karibu! Una msimbo wa mteja?</div>
+                    <div class="sub">Weka msimbo wako kwa kulipia haraka au tafuta msimbo hapa chini</div>
                 @endif
             </div>
             <div class="code-input" id="customerCodeSection">
@@ -1292,26 +1335,26 @@
                     <a href="{{ route('customer.orders', ['identifier' => $company->id]) }}" 
                        class="btn-login" 
                        style="background:#3b82f6;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 20px;border-radius:8px;color:white;font-weight:600;font-size:13px;transition:all 0.3s ease;cursor:pointer;border:none;">
-                        <i class="fas fa-history"></i> My Orders
+                        <i class="fas fa-history"></i> Oda Zangu
                     </a>
                     <button class="btn-logout" onclick="logoutCustomer()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                        <i class="fas fa-sign-out-alt"></i> Toka
                     </button>
                 @else
                     <div style="display:flex;flex-direction:column;gap:8px;width:100%;">
                         <!-- Login with Code -->
                         <div class="login-code-section">
-                            <input type="text" id="customerCodeInput" placeholder="Enter your code (e.g., CUST-202601-0001)" class="uppercase">
+                            <input type="text" id="customerCodeInput" placeholder="Weka msimbo wako (mf. CUST-202601-0001)" class="uppercase">
                             <button class="btn-login" onclick="loginCustomer()">
-                                <i class="fas fa-sign-in-alt"></i> Login
+                                <i class="fas fa-sign-in-alt"></i> Ingia
                             </button>
                         </div>
                         
                         <!-- Find My Code by Phone -->
                         <div class="find-code-section">
-                            <input type="tel" id="findPhoneInput" placeholder="Enter your phone number to find code">
+                            <input type="tel" id="findPhoneInput" placeholder="Weka namba yako ya simu kutafuta msimbo">
                             <button class="btn-find" onclick="findCustomerCode()">
-                                <i class="fas fa-search"></i> Find Code
+                                <i class="fas fa-search"></i> Tafuta Msimbo
                             </button>
                         </div>
                     </div>
@@ -1395,14 +1438,14 @@
     <section class="products-section" id="products">
         <div class="section-header">
             <h2>
-                <i class="fas fa-box"></i> Our Products
+                <i class="fas fa-box"></i> Bidhaa Zetu
             </h2>
-            <span class="count" id="productCount">{{ $products->count() }} items</span>
+            <span class="count" id="productCount">{{ $products->count() }} bidhaa</span>
         </div>
         
         <!-- Category Filters -->
         <div class="category-filters" id="categoryFilters">
-            <button class="category-filter active" data-category="all">All Products</button>
+            <button class="category-filter active" data-category="all">Bidhaa Zote</button>
             @foreach($categories as $category)
                 <button class="category-filter" data-category="{{ $category }}">{{ $category }}</button>
             @endforeach
@@ -1430,11 +1473,11 @@
                             @elseif($product->idadi > 0) stock-low
                             @else stock-out @endif">
                             @if($product->idadi > 10)
-                                <i class="fas fa-check"></i> In Stock
+                                <i class="fas fa-check"></i> Ipo
                             @elseif($product->idadi > 0)
-                                <i class="fas fa-exclamation"></i> {{ number_format($product->idadi, 0) }} left
+                                <i class="fas fa-exclamation"></i> {{ number_format($product->idadi, 0) }} zimebaki
                             @else
-                                <i class="fas fa-times"></i> Out
+                                <i class="fas fa-times"></i> Imeisha
                             @endif
                         </span>
                     </div>
@@ -1455,9 +1498,9 @@
                                 @if($product->idadi <= 0) disabled @endif>
                             <i class="fas fa-cart-plus"></i> 
                             @if($product->idadi > 0)
-                                Add
+                                Ongeza
                             @else
-                                Out
+                                Imeisha
                             @endif
                         </button>
                     </div>
@@ -1465,8 +1508,8 @@
             @empty
                 <div class="empty-state" style="grid-column:1/-1;">
                     <i class="fas fa-box-open"></i>
-                    <p>No products available</p>
-                    <p class="sub">Please check back later</p>
+                    <p>Hakuna bidhaa zilizopo</p>
+                    <p class="sub">Tafadhali rudi tena baadaye</p>
                 </div>
             @endforelse
         </div>
@@ -1486,7 +1529,7 @@
     <!-- ===== CART PANEL ===== -->
     <div class="cart-panel" id="cartPanel">
         <div class="header">
-            <h3><i class="fas fa-shopping-cart" style="color:var(--primary);"></i> Your Cart</h3>
+            <h3><i class="fas fa-shopping-cart" style="color:var(--primary);"></i> Kikapu Chako</h3>
             <button class="close-cart" onclick="toggleCart()">
                 <i class="fas fa-times"></i>
             </button>
@@ -1495,18 +1538,18 @@
         <div class="items" id="cartItems">
             <div style="text-align:center;padding:40px 0;color:var(--gray);">
                 <i class="fas fa-shopping-basket" style="font-size:40px;color:#e5e7eb;margin-bottom:8px;"></i>
-                <p style="font-size:15px;font-weight:500;">Your cart is empty</p>
-                <p style="font-size:13px;">Start shopping to add items</p>
+                <p style="font-size:15px;font-weight:500;">Kikapu chako ni tupu</p>
+                <p style="font-size:13px;">Anza kununua kuongeza bidhaa</p>
             </div>
         </div>
         
         <div class="footer" id="cartFooter" style="display:none;">
             <div class="summary">
-                <span>Subtotal</span>
+                <span>Jumla Ndogo</span>
                 <span class="total" id="cartTotal">0 TZS</span>
             </div>
             <button class="checkout-btn" onclick="openCheckout()">
-                <i class="fas fa-arrow-right"></i> Proceed to Checkout
+                <i class="fas fa-arrow-right"></i> Nenda Kulipia
             </button>
         </div>
     </div>
@@ -1515,7 +1558,7 @@
     <div class="checkout-modal" id="checkoutModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-clipboard-check" style="color:var(--primary);"></i> Checkout</h3>
+                <h3><i class="fas fa-clipboard-check" style="color:var(--primary);"></i> Malizia Oda</h3>
                 <button class="close-modal" onclick="closeCheckout()">
                     <i class="fas fa-times"></i>
                 </button>
@@ -1523,84 +1566,84 @@
             
             <div class="order-success" id="orderSuccess" style="display:none;">
                 <div class="icon"><i class="fas fa-check-circle"></i></div>
-                <h3>Order Placed!</h3>
+                <h3>Oda Imepokelewa!</h3>
                 <div class="order-number" id="orderNumberDisplay">#ORD-20250101-0001</div>
-                <p class="message">Thank you for your order. We'll confirm it shortly.</p>
+                <p class="message">Asante kwa oda yako. Tutathibitisha hivi karibuni.</p>
                 <button class="btn-hero btn-hero-primary" onclick="closeCheckout()" style="margin-top:8px;width:100%;justify-content:center;">
-                    <i class="fas fa-shopping-bag"></i> Continue Shopping
+                    <i class="fas fa-shopping-bag"></i> Endelea Kununua
                 </button>
             </div>
             
             <div id="checkoutForm">
                 <p style="color:var(--gray);margin-bottom:16px;font-size:13px;">
                     <i class="fas fa-info-circle" style="color:var(--primary);"></i> 
-                    Fill in your details to complete the order
+                    Jaza taarifa zako kukamilisha oda
                 </p>
                 
                 <div id="customerInfoDisplay" class="customer-info-display hidden">
                     <div class="flex items-center gap-2">
                         <i class="fas fa-user-check text-emerald-600"></i>
-                        <span class="label">Customer:</span>
+                        <span class="label">Mteja:</span>
                         <span class="value" id="checkoutCustomerName">-</span>
                     </div>
                     <div class="flex items-center gap-2 mt-1">
                         <i class="fas fa-id-card text-emerald-600"></i>
-                        <span class="label">Code:</span>
+                        <span class="label">Msimbo:</span>
                         <span class="value font-mono" id="checkoutCustomerCode">-</span>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label for="customerName">Full Name *</label>
-                    <input type="text" id="customerName" placeholder="Enter your full name" required>
+                    <label for="customerName">Jina Kamili *</label>
+                    <input type="text" id="customerName" placeholder="Weka jina lako kamili" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="customerPhone">Phone Number *</label>
-                    <input type="tel" id="customerPhone" placeholder="Enter phone number" required>
+                    <label for="customerPhone">Namba ya Simu *</label>
+                    <input type="tel" id="customerPhone" placeholder="Weka namba ya simu" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="customerEmail">Email Address</label>
-                    <input type="email" id="customerEmail" placeholder="Enter email (optional)">
+                    <label for="customerEmail">Barua Pepe</label>
+                    <input type="email" id="customerEmail" placeholder="Weka barua pepe (hiari)">
                 </div>
                 
                 <div class="form-group">
-                    <label for="deliveryAddress">Delivery Address</label>
-                    <textarea id="deliveryAddress" placeholder="Enter delivery address (optional)"></textarea>
+                    <label for="deliveryAddress">Anuani ya Uwasilishaji</label>
+                    <textarea id="deliveryAddress" placeholder="Weka anuani ya uwasilishaji (hiari)"></textarea>
                 </div>
                 
                 <div class="form-group">
-                    <label for="orderType">Order Type *</label>
+                    <label for="orderType">Aina ya Oda *</label>
                     <select id="orderType" required>
-                        <option value="delivery">Delivery</option>
-                        <option value="pickup">Pickup</option>
-                        <option value="dine_in">Dine In</option>
+                        <option value="delivery">Uwasilishaji</option>
+                        <option value="pickup">Kuchukua Dukani</option>
+                        <option value="dine_in">Kula Hapa</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="specialInstructions">Special Instructions</label>
-                    <textarea id="specialInstructions" placeholder="Any special instructions?"></textarea>
+                    <label for="specialInstructions">Maelekezo Maalum</label>
+                    <textarea id="specialInstructions" placeholder="Maelekezo yoyote maalum?"></textarea>
                 </div>
                 
                 <div class="order-summary">
                     <div class="summary-row">
-                        <span>Items</span>
-                        <span id="checkoutItemCount">0 items</span>
+                        <span>Idadi ya Bidhaa</span>
+                        <span id="checkoutItemCount">0 bidhaa</span>
                     </div>
                     <div class="summary-row">
-                        <span>Subtotal</span>
+                        <span>Jumla Ndogo</span>
                         <span id="checkoutSubtotal">0 TZS</span>
                     </div>
                     <div class="summary-row total">
-                        <span>Total</span>
+                        <span>Jumla Kuu</span>
                         <span class="amount" id="checkoutTotal">0 TZS</span>
                     </div>
                 </div>
                 
                 <button class="submit-btn" onclick="placeOrder()">
-                    <i class="fas fa-check-circle"></i> Place Order
+                    <i class="fas fa-check-circle"></i> Weka Oda
                 </button>
             </div>
         </div>
@@ -1942,10 +1985,7 @@
                 btn.style.transform = 'scale(0.9)';
                 setTimeout(() => { btn.style.transform = ''; }, 200);
             }
-            
-            if (window.innerWidth < 768) {
-                toggleCart();
-            }
+            // Do NOT auto-open cart - user must click cart icon to view (silent add)
         }
         
         function removeFromCart(index) {
@@ -1986,6 +2026,7 @@
                         <p style="font-size:13px;">Anza kununua kuongeza bidhaa</p>
                     </div>
                 `;
+                // Keep footer hidden when empty but ensure good view - no extra text
                 cartFooterEl.style.display = 'none';
             } else {
                 let html = '';
@@ -2037,7 +2078,7 @@
             const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
             const count = cart.reduce((sum, item) => sum + item.qty, 0);
             
-            document.getElementById('checkoutItemCount').textContent = count + ' items';
+            document.getElementById('checkoutItemCount').textContent = count + ' bidhaa';
             document.getElementById('checkoutSubtotal').textContent = formatCurrency(total);
             document.getElementById('checkoutTotal').textContent = formatCurrency(total);
             
@@ -2202,7 +2243,7 @@
                 }
             });
             
-            productCountEl.textContent = visible + ' items';
+            productCountEl.textContent = visible + ' bidhaa';
         }
         
         function searchProducts(query) {
@@ -2227,7 +2268,7 @@
                 }
             });
             
-            productCountEl.textContent = visible + ' items';
+            productCountEl.textContent = visible + ' bidhaa';
         }
         
         // ===== STORAGE =====
