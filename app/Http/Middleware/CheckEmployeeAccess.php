@@ -19,12 +19,9 @@ class CheckEmployeeAccess
                 $currentRoute = $request->route()->getName();
                 
                 // Boss-only routes that mdogo employees cannot access
+                // Note: manunuzi.index/store allowed for mdogo (can view and create), only update/destroy restricted
                 $bossOnlyRoutes = [
                     'dashboard',
-                    'manunuzi.index',
-                    'manunuzi.store',
-                    'manunuzi.update',
-                    'manunuzi.destroy',
                     'uchambuzi.index',
                     'uchambuzi.mwenendo.range',
                     'wafanyakazi.index',
@@ -41,11 +38,25 @@ class CheckEmployeeAccess
                     'user.reports.generate',
                     'user.reports.download',
                 ];
+
+                // Manunuzi: mdogo can view and create, but not edit/delete
+                $manunuziRestrictedRoutes = [
+                    'manunuzi.update',
+                    'manunuzi.destroy',
+                ];
                 
                 if (in_array($currentRoute, $bossOnlyRoutes)) {
                     Auth::guard('mfanyakazi')->logout();
                     return redirect()->route('login')
                         ->with('error', 'Huna ruhusa ya kufikia ukurasa huu. Wasiliana na msimamizi.');
+                }
+
+                if (in_array($currentRoute, $manunuziRestrictedRoutes)) {
+                    // Allow page access, but block edit/delete — return 403 JSON or redirect back
+                    if ($request->expectsJson() || $request->ajax()) {
+                        return response()->json(['success' => false, 'message' => 'Huna ruhusa ya kuhariri/kufuta manunuzi. Ruhusa ya kuingiza tu.'], 403);
+                    }
+                    return redirect()->back()->with('error', 'Huna ruhusa ya kuhariri/kufuta manunuzi. Ruhusa ya kuingiza tu.');
                 }
             }
         }

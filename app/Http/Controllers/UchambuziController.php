@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use App\Models\Manunuzi;
 use App\Models\LoginHistory;
 use App\Models\ActivityLog;
+use Illuminate\Support\Facades\DB;
 use App\Models\Wafanyakazi;
 use App\Models\User;
 
@@ -57,71 +58,65 @@ $employeeUsers = Wafanyakazi::where('company_id', $company->id)
     ->select('id', 'jina', 'role')
     ->get();
 
-        // ---------- 1. Faida kwa Bidhaa (profit per product) ----------
-        $faidaBidhaa = $company->bidhaa()
-            ->with('mauzos')
+        // ---------- 1. Faida kwa Bidhaa — modernized: single DB GROUP BY, identical logic, no full hydrate
+        $faidaBidhaa = DB::table('mauzos')
+            ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
+            ->where('mauzos.company_id', $company->id)
+            ->groupBy('bidhaas.id', 'bidhaas.jina', 'bidhaas.bei_nunua')
+            ->selectRaw('bidhaas.jina as jina, SUM(mauzos.idadi) as items_sold, SUM(mauzos.jumla) as revenue, bidhaas.bei_nunua as bei_nunua')
             ->get()
-            ->map(function ($bidhaa) {
-                $totalSold = $bidhaa->mauzos->sum('idadi');
-                $totalRevenue = $bidhaa->mauzos->sum('jumla');
-                $totalCost = $totalSold * $bidhaa->bei_nunua;
-                return [
-                    'jina' => $bidhaa->jina,
-                    'faida' => $totalRevenue - $totalCost,
-                    'items_sold' => $totalSold,
-                    'revenue' => $totalRevenue,
-                    'cost' => $totalCost,
-                ];
-            })
+            ->map(fn($r) => [
+                'jina' => $r->jina,
+                'faida' => (float)$r->revenue - ((float)$r->items_sold * (float)$r->bei_nunua),
+                'items_sold' => (float)$r->items_sold,
+                'revenue' => (float)$r->revenue,
+                'cost' => (float)$r->items_sold * (float)$r->bei_nunua,
+            ])
             ->filter(fn($item) => $item['items_sold'] > 0)
             ->values()
             ->toArray();
 
-        // ---------- 2. Faida kwa Siku (last 30 days) ----------
-        $faidaSiku = $company->mauzo()
-            ->with('bidhaa')
-            ->whereDate('created_at', '>=', Carbon::now()->subDays(30))
-            ->get()
-            ->groupBy(fn($m) => $m->created_at->format('Y-m-d'))
-            ->map(function ($mauzos, $date) {
-                $totalRevenue = $mauzos->sum('jumla');
-                $totalCost = $mauzos->sum(fn($m) => $m->idadi * $m->bidhaa->bei_nunua);
-                return [
-                    'day' => Carbon::parse($date)->format('d/m'),
-                    'faida' => $totalRevenue - $totalCost,
-                    'revenue' => $totalRevenue,
-                    'cost' => $totalCost,
-                ];
-            })
-            ->sortBy('day')
-            ->values()
-            ->toArray();
+        // ---------- 2. Faida kwa Siku (last 30 days) — modernized: DB GROUP BY DATE, indexed whereBetween
+        $from30 = Carbon::now()->subDays(30)->startOfDay();
+        $faidaSikuRows = DB::table('mauzos')
+            ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
+            ->where('mauzos.company_id', $company->id)
+            ->where('mauzos.created_at', '>=', $from30)
+            ->groupBy(DB::raw('DATE(mauzos.created_at)'))
+            ->selectRaw('DATE(mauzos.created_at) as d, SUM(mauzos.jumla) as revenue, SUM(mauzos.idadi * COALESCE(bidhaas.bei_nunua,0)) as cost')
+            ->orderBy('d')
+            ->get();
+        $faidaSiku = $faidaSikuRows->map(fn($r) => [
+            'day' => Carbon::parse($r->d)->format('d/m'),
+            'faida' => (float)$r->revenue - (float)$r->cost,
+            'revenue' => (float)$r->revenue,
+            'cost' => (float)$r->cost,
+        ])->toArray();
 
-        // ---------- 3. Mauzo kwa Siku (last 30 days) ----------
-        $mauzoSiku = $company->mauzo()
-            ->whereDate('created_at', '>=', Carbon::now()->subDays(30))
-            ->get()
-            ->groupBy(fn($m) => $m->created_at->format('Y-m-d'))
-            ->map(fn($mauzos, $date) => [
-                'day' => Carbon::parse($date)->format('d/m'),
-                'total' => $mauzos->sum('jumla')
-            ])
-            ->sortBy('day')
-            ->values()
-            ->toArray();
+        // ---------- 3. Mauzo kwa Siku (last 30 days) — modernized: single GROUP BY
+        $mauzoSikuRows = DB::table('mauzos')
+            ->where('company_id', $company->id)
+            ->where('created_at', '>=', $from30)
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->selectRaw('DATE(created_at) as d, SUM(jumla) as total')
+            ->orderBy('d')
+            ->get();
+        $mauzoSiku = $mauzoSikuRows->map(fn($r) => [
+            'day' => Carbon::parse($r->d)->format('d/m'),
+            'total' => (float)$r->total
+        ])->toArray();
 
         // ---------- 4. Faida ya Marejesho (using FIFO method) ----------
         $marejesho = $this->calculateFifoProfit($company, Carbon::now()->subDays(30), Carbon::now());
 
-        // ---------- 5. Mauzo Jumla kwa Bidhaa ----------
-        $mauzo = $company->bidhaa()
-            ->with('mauzos')
+        // ---------- 5. Mauzo Jumla kwa Bidhaa — modernized: DB GROUP BY
+        $mauzo = DB::table('mauzos')
+            ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
+            ->where('mauzos.company_id', $company->id)
+            ->groupBy('bidhaas.id', 'bidhaas.jina')
+            ->selectRaw('bidhaas.jina as jina, SUM(mauzos.jumla) as total, SUM(mauzos.idadi) as items_sold')
             ->get()
-            ->map(fn($b) => [
-                'jina' => $b->jina,
-                'total' => $b->mauzos->sum('jumla'),
-                'items_sold' => $b->mauzos->sum('idadi'),
-            ])
+            ->map(fn($r) => ['jina' => $r->jina, 'total' => (float)$r->total, 'items_sold' => (float)$r->items_sold])
             ->filter(fn($item) => $item['items_sold'] > 0)
             ->values()
             ->toArray();
@@ -136,11 +131,11 @@ $employeeUsers = Wafanyakazi::where('company_id', $company->id)
             $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
             $jumlaMatumizi = $company->matumizi()->whereBetween('created_at', [$fromDt, $toDt])->sum('gharama');
 
-            $costOfGoodsSold = $company->mauzo()
-                ->with('bidhaa')
-                ->whereBetween('created_at', [$fromDt, $toDt])
-                ->get()
-                ->sum(fn($m) => $m->idadi * $m->bidhaa->bei_nunua);
+            $costOfGoodsSold = (float) DB::table('mauzos')
+                ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
+                ->where('mauzos.company_id', $company->id)
+                ->whereBetween('mauzos.created_at', [$fromDt, $toDt])
+                ->sum(DB::raw('mauzos.idadi * COALESCE(bidhaas.bei_nunua,0)'));
 
             $faidaMarejesho = $this->calculateFifoProfitTotal($company, $fromDt, $toDt);
             $faidaMauzo = $mapatoMauzo - $costOfGoodsSold;
@@ -376,11 +371,11 @@ $loginHistories = LoginHistory::where('company_id', $company->id)
         $jumlaMapato = $mapatoMauzo + $mapatoMadeni;
         $jumlaMatumizi = $company->matumizi()->whereBetween('created_at', [$from, $to])->sum('gharama');
 
-        $costOfGoodsSold = $company->mauzo()
-            ->with('bidhaa')
-            ->whereBetween('created_at', [$from, $to])
-            ->get()
-            ->sum(fn($m) => $m->idadi * $m->bidhaa->bei_nunua);
+        $costOfGoodsSold = (float) DB::table('mauzos')
+            ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
+            ->where('mauzos.company_id', $company->id)
+            ->whereBetween('mauzos.created_at', [$from, $to])
+            ->sum(DB::raw('mauzos.idadi * COALESCE(bidhaas.bei_nunua,0)'));
 
         $faidaMarejesho = $this->calculateFifoProfitTotal($company, $from, $to);
         $faidaMauzo = $mapatoMauzo - $costOfGoodsSold;

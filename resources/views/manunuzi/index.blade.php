@@ -6,7 +6,11 @@
 @section('page-subtitle', now()->format('d/m/Y'))
 
 @section('content')
-<div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}">
+@php
+    // Permission: mdogo can view + create, but not edit/delete (handled in controller + middleware)
+    $canEditDelete = $canEditDelete ?? false;
+@endphp
+<div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}" data-can-edit="{{ $canEditDelete ? '1' : '0' }}">
     <!-- Hidden data - bidhaa without images -->
     <div id="bidhaa-data" style="display:none;">{{ json_encode($bidhaa->map(function($b) {
         return [
@@ -191,7 +195,9 @@
                             <th class="px-4 py-2 text-right font-medium text-emerald-800">Bei Nunua</th>
                             <th class="px-4 py-2 text-right font-medium text-emerald-800">Bei Uza</th>
                             <th class="px-4 py-2 text-left font-medium text-emerald-800 hidden lg:table-cell">Saplaya</th>
+                            @if($canEditDelete)
                             <th class="px-4 py-2 text-center font-medium text-emerald-800 print:hidden">Vitendo</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody id="manunuzi-tbody" class="divide-y divide-gray-100">
@@ -249,6 +255,7 @@
                                     <div class="text-xs text-gray-400">{{ $item->simu }}</div>
                                     @endif
                                 </td>
+                                @if($canEditDelete)
                                 <td class="px-4 py-2 text-center print:hidden">
                                     <div class="flex justify-center space-x-2">
                                         <button class="edit-manunuzi-btn text-emerald-600 hover:text-emerald-800"
@@ -261,10 +268,11 @@
                                         </button>
                                     </div>
                                 </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="{{ $canEditDelete ? 7 : 6 }}" class="px-4 py-8 text-center text-gray-500">
                                     <i class="fas fa-shopping-cart text-3xl mb-2 text-gray-300"></i>
                                     <p>Hakuna manunuzi bado</p>
                                 </td>
@@ -945,6 +953,7 @@
         renderTable() {
             const tbody = document.getElementById('manunuzi-tbody');
             if (!tbody) return;
+            const canEdit = document.getElementById('app-container')?.dataset.canEdit === '1';
             
             // Calculate pagination
             const start = (this.currentPage - 1) * this.perPage;
@@ -952,9 +961,10 @@
             const pageData = this.filteredData.slice(start, end);
             
             if (pageData.length === 0) {
+                const colSpan = canEdit ? 7 : 6;
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                        <td colspan="${colSpan}" class="px-4 py-8 text-center text-gray-500">
                             <i class="fas fa-shopping-cart text-3xl mb-2 text-gray-300"></i>
                             <p>Hakuna manunuzi yanayolingana</p>
                         </td>
@@ -995,7 +1005,7 @@
                             <div class="text-xs text-gray-700">${this.highlightText(item.saplaya || '--', this.currentSearchTerm)}</div>
                             ${item.simu ? `<div class="text-xs text-gray-400">${this.highlightText(item.simu, this.currentSearchTerm)}</div>` : ''}
                         </td>
-                        <td class="px-4 py-2 text-center print:hidden">
+                        ${canEdit ? `<td class="px-4 py-2 text-center print:hidden">
                             <div class="flex justify-center space-x-2">
                                 <button class="edit-manunuzi-btn text-emerald-600 hover:text-emerald-800"
                                         data-id="${item.id}" title="Badili">
@@ -1006,7 +1016,7 @@
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
-                        </td>
+                        </td>` : ''}
                     </tr>
                 `;
             });

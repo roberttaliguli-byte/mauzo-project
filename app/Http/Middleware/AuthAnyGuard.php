@@ -29,13 +29,12 @@ class AuthAnyGuard
             
             // List of routes that are RESTRICTED for mdogo employees only
             // Mkubwa employees can access these
+            // Note: manunuzi.index/store allowed for mdogo (view + create only), block update/destroy only
             $restrictedRoutes = [
                 // Dashboard
                 'dashboard',
                 
-                // Manunuzi (Purchases)
-                'manunuzi.index',
-                'manunuzi.store',
+                // Manunuzi (Purchases) - only edit/delete restricted, mdogo can view/create
                 'manunuzi.update',
                 'manunuzi.destroy',
                 

@@ -8,6 +8,7 @@ use App\Models\AinaZaMatumizi;
 use App\Models\Mauzo;
 use App\Models\Bidhaa;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -63,23 +64,20 @@ class MatumiziController extends Controller
     }
 
     /**
-     * Calculate Faida ya Mauzo (Sales Profit)
+     * Calculate Faida ya Mauzo (Sales Profit) — modernized: DB aggregate for identical logic, no full hydrate count
      */
     private function getSalesProfit($companyId, $fromDate = null, $toDate = null)
     {
         $query = Mauzo::where('company_id', $companyId);
-        
         if ($fromDate && $toDate) {
             $query->whereBetween('created_at', [$fromDate, $toDate]);
         }
-        
-        $sales = $query->with('bidhaa')->get();
-        
-        $totalRevenue = $sales->sum('jumla');
-        $totalCost = $sales->sum(function($sale) {
-            return $sale->idadi * ($sale->bidhaa->bei_nunua ?? 0);
-        });
-        
+        // Modernized: compute via SQL join to avoid hydrating all models (same result: SUM(jumla) - SUM(idadi * bei_nunua))
+        $totalRevenue = (float) (clone $query)->sum('jumla');
+        $totalCost = (float) Mauzo::where('company_id', $companyId)
+            ->when($fromDate && $toDate, fn($q) => $q->whereBetween('mauzos.created_at', [$fromDate, $toDate]))
+            ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
+            ->sum(DB::raw('mauzos.idadi * COALESCE(bidhaas.bei_nunua,0)'));
         return $totalRevenue - $totalCost;
     }
 

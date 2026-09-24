@@ -28,6 +28,7 @@
         ['route' => 'madeni.index', 'icon' => '💳', 'label' => 'Madeni', 'short' => 'DN'],
         ['route' => 'matumizi.index', 'icon' => '💰', 'label' => 'Matumizi', 'short' => 'MT'],
         ['route' => 'bidhaa.index', 'icon' => '📦', 'label' => 'Bidhaa', 'short' => 'BD'],
+        ['route' => 'manunuzi.index', 'icon' => '🚚', 'label' => 'Manunuzi', 'short' => 'MN'],
         ['route' => 'wateja.index', 'icon' => '👥', 'label' => 'Wateja', 'short' => 'WT'],
          ['route' => 'mengineyo.index', 'icon' => '💰', 'label' => 'Mengineyo', 'short' => 'ME'], 
     ];

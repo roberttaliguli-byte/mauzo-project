@@ -129,27 +129,28 @@ class MauzoController extends Controller
 
     private function getFinancialAggregates($companyId)
     {
-        // Existing logic: Mapato = mauzo (jumla) + madeni paid (marejesho kiasi); Orders when paid already in mauzo, no double count
-        $today = Carbon::today();
-        $todayMauzos = Mauzo::with('bidhaa:id,bei_nunua')->where('company_id', $companyId)->whereDate('created_at', $today)->select('id','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla')->get();
-        $todayMarejeshos = Marejesho::with(['madeni.bidhaa:id,bei_nunua'])->where('company_id', $companyId)->whereDate('tarehe', $today)->get();
-        $todayMatumizi = Matumizi::where('company_id', $companyId)->whereDate('created_at', $today)->get();
-        $allMauzos = Mauzo::with('bidhaa:id,bei_nunua')->where('company_id', $companyId)->select('id','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla')->get();
-        $allMarejeshos = Marejesho::where('company_id', $companyId)->get();
-        $allMatumizi = Matumizi::where('company_id', $companyId)->get();
+        // Modernized: DB sums for aggregates, whereBetween for indexes — logic identical
+        $todayStart = Carbon::today()->startOfDay();
+        $todayEnd = Carbon::today()->endOfDay();
 
-        $mauzoLeoSum = $todayMauzos->sum('jumla');
-        $mauzoLeoCount = $todayMauzos->count();
-        $marejeshoLeoSum = $todayMarejeshos->sum('kiasi');
-        $matumiziLeoSum = $todayMatumizi->sum('gharama');
-        $matumiziLeoCount = $todayMatumizi->count();
-        $matumiziTotal = $allMatumizi->sum('gharama');
-        $mauzoTotalSum = $allMauzos->sum('jumla');
-        $marejeshoTotal = $allMarejeshos->sum('kiasi');
+        // Only today's slice needs row-level FIFO — keep SELECT minimal, indexed via company_id+created_at / tarehe
+        $todayMauzos = Mauzo::with('bidhaa:id,bei_nunua')->where('company_id', $companyId)->whereBetween('created_at', [$todayStart, $todayEnd])->select('id','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla')->get();
+        $todayMarejeshos = Marejesho::with(['madeni.bidhaa:id,bei_nunua'])->where('company_id', $companyId)->whereBetween('tarehe', [$todayStart, $todayEnd])->get();
+        $todayMatumiziCount = Matumizi::where('company_id', $companyId)->whereBetween('created_at', [$todayStart, $todayEnd])->count();
+
+        // DB aggregates — no full table hydration (critical for high-volume companies)
+        $mauzoLeoSum = (float) Mauzo::where('company_id', $companyId)->whereBetween('created_at', [$todayStart, $todayEnd])->sum('jumla');
+        $mauzoLeoCount = Mauzo::where('company_id', $companyId)->whereBetween('created_at', [$todayStart, $todayEnd])->count();
+        $marejeshoLeoSum = (float) Marejesho::where('company_id', $companyId)->whereBetween('tarehe', [$todayStart, $todayEnd])->sum('kiasi');
+        $matumiziLeoSum = (float) Matumizi::where('company_id', $companyId)->whereBetween('created_at', [$todayStart, $todayEnd])->sum('gharama');
+        $matumiziTotal = (float) Matumizi::where('company_id', $companyId)->sum('gharama');
+        $mauzoTotalSum = (float) Mauzo::where('company_id', $companyId)->sum('jumla');
+        $marejeshoTotal = (float) Marejesho::where('company_id', $companyId)->sum('kiasi');
         $mapatoLeo = $mauzoLeoSum + $marejeshoLeoSum;
         $fedhaLeo = $mapatoLeo - $matumiziLeoSum;
         $jumlaKuu = ($mauzoTotalSum + $marejeshoTotal) - $matumiziTotal;
 
+        // FIFO profit — identical logic, only today's slice (small)
         $faidaMauzo = 0;
         foreach($todayMauzos as $mauzo){
             if($mauzo->bidhaa){
@@ -190,7 +191,7 @@ class MauzoController extends Controller
             'mauzo_leo_count' => $mauzoLeoCount,
             'marejesho_leo_sum' => $marejeshoLeoSum,
             'matumizi_leo_sum' => $matumiziLeoSum,
-            'matumizi_leo_count' => $matumiziLeoCount,
+            'matumizi_leo_count' => $todayMatumiziCount,
             'matumizi_total' => $matumiziTotal,
             'mauzo_total_sum' => $mauzoTotalSum,
             'marejesho_total' => $marejeshoTotal,

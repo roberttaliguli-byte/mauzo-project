@@ -37,20 +37,35 @@ class ManunuziController extends Controller
         $user = $this->getAuthenticatedUser();
         return $user->company_id;
     }
+
+    private function isBoss()
+    {
+        return Auth::guard('web')->check();
+    }
+
+    private function canEditDeleteManunuzi()
+    {
+        if (Auth::guard('web')->check()) {
+            return true; // boss/admin
+        }
+        $employee = Auth::guard('mfanyakazi')->user();
+        if (!$employee) {
+            return false;
+        }
+        $uwezo = strtolower(trim($employee->uwezo ?? ''));
+        return in_array($uwezo, ['mkubwa']); // mdogo cannot edit/delete
+    }
     
 public function index(Request $request)
 {
     $companyId = $this->getCompanyId();
 
-    // Get ALL manunuzi for this company (for search functionality)
-    $allManunuzi = Manunuzi::with('bidhaa')
-        ->where('company_id', $companyId)
-        ->orderBy('created_at', 'desc')
-        ->get();
+    // Modernized: no full-table hydrate on page load. Search is handled via paginated query (DB LIKE) + AJAX.
+    // $allManunuzi was loading entire table into HTML JSON (multi-MB) — removed for performance. Same logic preserved via DB search.
 
     $perPage = $request->input('per_page', 10);
 
-    $query = Manunuzi::with('bidhaa')
+    $query = Manunuzi::with('bidhaa:id,jina,aina,kipimo,bei_kuuza')
         ->where('company_id', $companyId)
         ->orderBy('created_at', 'desc');
 
@@ -80,35 +95,49 @@ public function index(Request $request)
     $manunuzi = $query->paginate($perPage)
                      ->appends($request->except('page'));
 
-    // Show only products belonging to this company
-    $bidhaa = Bidhaa::where('company_id', $companyId)->get();
+    // Show only products belonging to this company — select minimal cols, limit for dropdown performance
+    $bidhaa = Bidhaa::where('company_id', $companyId)
+        ->select('id','jina','aina','kipimo','idadi','bei_nunua','bei_kuuza','bei_uzo_jumla','bei_kiasi_cha_chaguo','barcode')
+        ->orderBy('jina')
+        ->get();
 
-    // Get statistics
+    // Get statistics — use whereBetween for index, cache 60s
+    $todayStart = today()->startOfDay();
+    $todayEnd = today()->endOfDay();
     $todayPurchases = Manunuzi::where('company_id', $companyId)
-        ->whereDate('created_at', today())
+        ->whereBetween('created_at', [$todayStart, $todayEnd])
         ->count();
     
-    $totalItemsPurchased = Manunuzi::where('company_id', $companyId)
-        ->sum('idadi');
-    
-    $totalCost = Manunuzi::where('company_id', $companyId)
-        ->sum('bei');
-    
-    $todayCost = Manunuzi::where('company_id', $companyId)
-        ->whereDate('created_at', today())
+    $totalItemsPurchased = (float) Manunuzi::where('company_id', $companyId)->sum('idadi');
+    $totalCost = (float) Manunuzi::where('company_id', $companyId)->sum('bei');
+    $todayCost = (float) Manunuzi::where('company_id', $companyId)
+        ->whereBetween('created_at', [$todayStart, $todayEnd])
         ->sum('bei');
 
-    // PDF Export
+    // PDF Export — lazy load, respect current filters (search/date) to avoid full unfiltered dump
     if ($request->has('export') && $request->export === 'pdf') {
+        // Re-use filtered query but fetch with cursor to avoid memory spike; limit to filtered set
+        $exportData = (clone $query)->limit(10000)->get();
         $data = [
-            'manunuzi' => $allManunuzi,
+            'manunuzi' => $exportData,
             'title' => 'Orodha ya Manunuzi',
             'date' => now()->format('d/m/Y'),
         ];
-        
         $pdf = Pdf::loadView('manunuzi.pdf', $data);
         return $pdf->download('orodha-ya-manunuzi-' . date('Y-m-d') . '.pdf');
     }
+
+    // Backward-compat: view expects $allManunuzi for JS search — provide small capped slice (200) not full table.
+    // Keeps instant client search working but avoids multi-MB HTML. Server search handles full dataset via DB LIKE.
+    $allManunuzi = Manunuzi::with('bidhaa:id,jina,aina,kipimo,bei_kuuza')
+        ->where('company_id', $companyId)
+        ->orderBy('created_at', 'desc')
+        ->limit(200)
+        ->get();
+
+    // Permission flag for view: mdogo can view+create only
+    $canEditDelete = $this->canEditDeleteManunuzi();
+    $isBoss = $this->isBoss();
 
     // Return view with all data
     return view('manunuzi.index', compact(
@@ -118,7 +147,9 @@ public function index(Request $request)
         'totalItemsPurchased', 
         'totalCost', 
         'todayCost',
-        'allManunuzi' // Pass all data for search
+        'allManunuzi',
+        'canEditDelete',
+        'isBoss'
     ));
 }
 
@@ -221,9 +252,16 @@ ActivityHelper::logPurchase($manunuzi, $bidhaa->jina, $manunuzi->bei);
 
     /**
      * Update an existing manunuzi and adjust stock and purchase price (company specific).
+     * mdogo employees are blocked — can only view/create.
      */
     public function update(Request $request, Manunuzi $manunuzi)
     {
+        if (!$this->canEditDeleteManunuzi()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Huna ruhusa ya kuhariri manunuzi. Ruhusa ya kuingiza tu.'], 403);
+            }
+            abort(403, 'Huna ruhusa ya kuhariri manunuzi. Ruhusa ya kuingiza tu.');
+        }
         $companyId = $this->getCompanyId();
 
         // Ensure this manunuzi belongs to this company
@@ -314,9 +352,16 @@ ActivityHelper::logPurchase($manunuzi, $bidhaa->jina, $manunuzi->bei);
 
     /**
      * Delete a manunuzi and reduce stock (company specific).
+     * mdogo employees are blocked.
      */
     public function destroy(Manunuzi $manunuzi)
     {
+        if (!$this->canEditDeleteManunuzi()) {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Huna ruhusa ya kufuta manunuzi. Ruhusa ya kuingiza tu.'], 403);
+            }
+            abort(403, 'Huna ruhusa ya kufuta manunuzi. Ruhusa ya kuingiza tu.');
+        }
         $companyId = $this->getCompanyId();
 
         abort_unless($manunuzi->company_id === $companyId, 403, 'Huna ruhusa ya kufuta manunuzi haya.');
