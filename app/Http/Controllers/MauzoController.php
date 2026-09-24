@@ -88,11 +88,14 @@ class MauzoController extends Controller
         }
         $companyId = $user->company_id;
 
-        // Lean first paint — keep existing data logic (mauzo+madeni paid, orders via mauzo) but no heavy hydration
-        $bidhaa = Bidhaa::where('company_id', $companyId)
-            ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo')
-            ->orderBy('jina')
-            ->get();
+        // Lean first paint — optimized for heavy companies: cache bidhaa list 60s, defer heavy relations
+        // Use Cache for bidhaa (same for all users in company) — reduces DB hit on every mauzo page load
+        $bidhaa = \Illuminate\Support\Facades\Cache::remember("mauzo_bidhaa_{$companyId}", 60, function () use ($companyId) {
+            return Bidhaa::where('company_id', $companyId)
+                ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo')
+                ->orderBy('jina')
+                ->get();
+        });
 
         $mauzos = Mauzo::with('bidhaa:id,jina,aina,kipimo,bei_nunua')
             ->where('company_id', $companyId)
@@ -100,13 +103,13 @@ class MauzoController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        // Capped ancillary for speed — original view still works (search via AJAX for more)
-        $matumizi = Matumizi::where('company_id', $companyId)->latest()->limit(50)->get();
-        $wateja = Mteja::where('company_id', $companyId)->select('id','jina','simu','barua_pepe','anapoishi','customer_code')->orderBy('jina')->limit(300)->get();
-        $madeni = Madeni::with('bidhaa:id,jina')->where('company_id', $companyId)->latest()->limit(20)->get();
-        $marejeshos = Marejesho::with(['madeni.bidhaa:id,jina,bei_nunua,bei_kuuza'])->where('company_id', $companyId)->limit(100)->get();
+        // Capped ancillary for speed — reduced limits for fast paint, full search via AJAX
+        $matumizi = Matumizi::where('company_id', $companyId)->latest()->limit(20)->get();
+        $wateja = Mteja::where('company_id', $companyId)->select('id','jina','simu','barua_pepe','anapoishi','customer_code')->orderBy('jina')->limit(100)->get();
+        $madeni = Madeni::with('bidhaa:id,jina')->where('company_id', $companyId)->latest()->limit(10)->get();
+        $marejeshos = Marejesho::with(['madeni.bidhaa:id,jina,bei_nunua,bei_kuuza'])->where('company_id', $companyId)->limit(20)->get();
 
-        // Financial — use existing logic (mauzo+madeni, orders already in mauzo) via detailed aggregates, not heavy collections in view
+        // Financial — use DB aggregates (fast)
         $financial = $this->getFinancialAggregates($companyId);
 
         // Keep legacy vars for original blade compat — lean but present so original loops don't break (view now prefers $financial)
@@ -117,13 +120,30 @@ class MauzoController extends Controller
         $allTimeMauzos = collect();
         $allTimeMarejeshos = collect();
         $allMatumizi = collect();
-        // Jumla tab: limited 800 for original PHP grouping (fast enough, keeps original view)
-        $allMauzos = Mauzo::with('bidhaa:id,jina,aina,kipimo,bei_nunua')->where('company_id', $companyId)->select('id','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla','created_at')->orderBy('created_at','desc')->limit(800)->get();
+        // Jumla tab: DB grouped + paginated (20 per page) like Taarifa tab — fixes heavy 800 hydrates + adds pagination
+        $jumlaPage = request()->input('jumla_page', 1);
+        $jumlaSearch = request()->input('jumla_search');
+        $jumlaQuery = DB::table('mauzos')
+            ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
+            ->where('mauzos.company_id', $companyId)
+            ->when($jumlaSearch, function($q) use ($jumlaSearch) {
+                $q->where(function($sub) use ($jumlaSearch) {
+                    $sub->where('bidhaas.jina', 'like', "%{$jumlaSearch}%")
+                        ->orWhere('bidhaas.aina', 'like', "%{$jumlaSearch}%");
+                });
+            })
+            ->groupBy(DB::raw('DATE(mauzos.created_at)'), 'bidhaas.id', 'bidhaas.jina', 'bidhaas.aina', 'bidhaas.kipimo')
+            ->selectRaw("DATE(mauzos.created_at) as tarehe, bidhaas.jina as jina, bidhaas.aina as aina, bidhaas.kipimo as kipimo, SUM(mauzos.idadi) as idadi, SUM(CASE WHEN mauzos.punguzo_aina='bidhaa' THEN mauzos.punguzo * mauzos.idadi ELSE mauzos.punguzo END) as punguzo, SUM(mauzos.jumla) as jumla, SUM((mauzos.bei - COALESCE(bidhaas.bei_nunua,0)) * mauzos.idadi - CASE WHEN mauzos.punguzo_aina='bidhaa' THEN mauzos.punguzo * mauzos.idadi ELSE mauzos.punguzo END) as faida")
+            ->orderByDesc('tarehe');
+        $groupedMauzos = $jumlaQuery->paginate(20, ['*'], 'jumla_page', $jumlaPage);
+        $groupedMauzos->appends(request()->except('jumla_page'));
+        // Keep old var for backward compat (now paginated, not 800)
+        $allMauzos = $groupedMauzos;
 
         return view('mauzo.index', compact(
             'bidhaa', 'mauzos', 'matumizi', 'wateja', 'madeni', 'marejeshos',
             'todaysMauzos', 'todaysMarejeshos', 'todaysMatumizi', 'weeklyMatumizi',
-            'allTimeMauzos', 'allTimeMarejeshos', 'allMatumizi', 'allMauzos', 'financial'
+            'allTimeMauzos', 'allTimeMarejeshos', 'allMatumizi', 'allMauzos', 'financial', 'groupedMauzos'
         ));
     }
 

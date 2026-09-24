@@ -1102,7 +1102,7 @@
     </div>
 </div>
 
-    <!-- TAB 4: Mauzo ya Jumla -->
+    <!-- TAB 4: Mauzo ya Jumla — paginated DB-grouped (like Taarifa) -->
     <div id="jumla-tab-content" class="tab-content hidden">
         <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
             <h2 class="text-lg font-bold mb-3 flex items-center text-gray-800">
@@ -1110,9 +1110,19 @@
                 Mauzo ya Jumla
             </h2>
 
-            <div class="mb-3">
-                <input type="text" id="search-product" placeholder="Tafuta bidhaa..." class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-            </div>
+            <form method="GET" action="{{ route('mauzo.index') }}" id="jumla-search-form" class="mb-3">
+                <input type="hidden" name="tab" value="jumla">
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
+                        <input type="text" name="jumla_search" id="search-product" value="{{ request('jumla_search') }}" placeholder="Tafuta bidhaa, aina..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
+                    </div>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Tafuta</button>
+                    @if(request('jumla_search'))
+                    <a href="{{ route('mauzo.index', ['tab'=>'jumla']) }}" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center">Safisha</a>
+                    @endif
+                </div>
+            </form>
 
             <div class="overflow-x-auto rounded-lg border border-gray-200">
                 <table class="w-full border-collapse text-sm" id="grouped-sales-table">
@@ -1129,75 +1139,76 @@
                         </tr>
                     </thead>
                     <tbody id="grouped-sales-tbody">
-                        @php
-                            $groupedSales = [];
-                            foreach($allMauzos as $sale) {
-                                $date = $sale->created_at->format('Y-m-d');
-                                $product = $sale->bidhaa->jina;
-                                $aina = $sale->bidhaa->aina ?? '';
-                                $kipimo = $sale->bidhaa->kipimo ?? '';
-                                $key = $date . '|' . $product . '|' . $aina . '|' . $kipimo;
-                                
-                                if (!isset($groupedSales[$key])) {
-                                    $groupedSales[$key] = [
-                                        'tarehe' => $date,
-                                        'jina' => $product,
-                                        'aina' => $aina,
-                                        'kipimo' => $kipimo,
-                                        'idadi' => 0,
-                                        'punguzo' => 0,
-                                        'jumla' => 0,
-                                        'faida' => 0
-                                    ];
-                                }
-                                
-                                $groupedSales[$key]['idadi'] += $sale->idadi;
-                                $saleActualDiscount = $sale->punguzo_aina === 'bidhaa'
-                                    ? $sale->punguzo * $sale->idadi
-                                    : $sale->punguzo;
-                                $groupedSales[$key]['punguzo'] += $saleActualDiscount;
-                                $groupedSales[$key]['jumla'] += $sale->jumla;
-                                $buyingPrice = $sale->bidhaa->bei_nunua ?? 0;
-                                $saleProfit = (($sale->bei - $buyingPrice) * $sale->idadi) - $saleActualDiscount;
-                                $groupedSales[$key]['faida'] += $saleProfit;
-                            }
-                            
-                            krsort($groupedSales);
-                        @endphp
-                        
-                        @foreach($groupedSales as $sale)
-                        <tr class="grouped-sales-row" data-product="{{ strtolower($sale['jina']) }}">
-                            <td class="border px-3 py-2 text-sm">{{ $sale['tarehe'] }}</td>
+                        @php $jumlaData = $groupedMauzos ?? $allMauzos ?? collect(); @endphp
+                        @forelse($jumlaData as $sale)
+                        <tr class="grouped-sales-row" data-product="{{ strtolower($sale->jina) }}">
+                            <td class="border px-3 py-2 text-sm">{{ \Carbon\Carbon::parse($sale->tarehe)->format('d/m/Y') }}</td>
                             <td class="border px-3 py-2 text-sm">
                                 <div class="flex flex-col">
-                                    <span class="font-medium">{{ $sale['jina'] }}</span>
+                                    <span class="font-medium">{{ $sale->jina }}</span>
                                     <div class="flex flex-wrap gap-1 mt-1">
-                                        @if($sale['aina'])
+                                        @if($sale->aina)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
-                                            <i class="fas fa-tag mr-1"></i>{{ $sale['aina'] }}
+                                            <i class="fas fa-tag mr-1"></i>{{ $sale->aina }}
                                         </span>
                                         @endif
-                                        @if($sale['kipimo'])
+                                        @if($sale->kipimo)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
-                                            <i class="fas fa-ruler mr-1"></i>{{ $sale['kipimo'] }}
+                                            <i class="fas fa-ruler mr-1"></i>{{ $sale->kipimo }}
                                         </span>
                                         @endif
                                     </div>
                                 </div>
                             </td>
-                            <td class="border px-3 py-2 text-center text-sm">{{ number_format($sale['idadi'], 2) }}</td>
-                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['punguzo'], 2) }}</td>
-                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['jumla'], 2) }}</td>
+                            <td class="border px-3 py-2 text-center text-sm">{{ number_format($sale->idadi, 2) }}</td>
+                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale->punguzo, 2) }}</td>
+                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale->jumla, 2) }}</td>
                             @unless($isMfanyakazi)
-                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale['faida'], 2) }}</td>
+                            <td class="border px-3 py-2 text-right text-sm">{{ number_format($sale->faida ?? 0, 2) }}</td>
                             @endunless
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr><td colspan="{{ $isMfanyakazi ? 5 : 6 }}" class="text-center py-6 text-gray-500 text-sm">Hakuna mauzo ya jumla.</td></tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
+            @if(isset($groupedMauzos) && $groupedMauzos->hasPages())
+            <div class="mt-4">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="text-sm text-gray-600">
+                        @php $start = ($groupedMauzos->currentPage() - 1) * $groupedMauzos->perPage() + 1; $end = min($groupedMauzos->currentPage() * $groupedMauzos->perPage(), $groupedMauzos->total()); @endphp
+                        Onyesha {{ $start }} - {{ $end }} ya {{ $groupedMauzos->total() }} makundi
+                    </div>
+                    <nav class="flex items-center space-x-1">
+                        @if($groupedMauzos->onFirstPage())
+                            <span class="px-3 py-1 rounded-lg border text-gray-400 text-sm cursor-not-allowed"><i class="fas fa-chevron-left mr-1"></i> Nyuma</span>
+                        @else
+                            <a href="{{ $groupedMauzos->previousPageUrl() }}&tab=jumla" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm transition flex items-center"><i class="fas fa-chevron-left mr-1"></i> Nyuma</a>
+                        @endif
+                        <div class="flex items-center space-x-1">
+                            @foreach($groupedMauzos->getUrlRange(1, $groupedMauzos->lastPage()) as $page => $url)
+                                @if($page == $groupedMauzos->currentPage())
+                                    <span class="px-3 py-1 rounded-lg bg-green-600 text-white font-semibold text-sm">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $url }}&tab=jumla" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm transition">{{ $page }}</a>
+                                @endif
+                            @endforeach
+                        </div>
+                        @if($groupedMauzos->hasMorePages())
+                            <a href="{{ $groupedMauzos->nextPageUrl() }}&tab=jumla" class="px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm transition flex items-center">Mbele <i class="fas fa-chevron-right ml-1"></i></a>
+                        @else
+                            <span class="px-3 py-1 rounded-lg border text-gray-400 text-sm cursor-not-allowed">Mbele <i class="fas fa-chevron-right ml-1"></i></span>
+                        @endif
+                    </nav>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
+    @if(request('tab')==='jumla' || request('jumla_page') || request('jumla_search'))
+    <script>document.addEventListener('DOMContentLoaded',()=>{document.getElementById('jumla-tab')?.click();});</script>
+    @endif
 
     <!-- TAB 5: Risiti -->
     <div id="risiti-tab-content" class="tab-content hidden">

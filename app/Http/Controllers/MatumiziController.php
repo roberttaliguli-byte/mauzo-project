@@ -74,7 +74,7 @@ class MatumiziController extends Controller
         }
         // Modernized: compute via SQL join to avoid hydrating all models (same result: SUM(jumla) - SUM(idadi * bei_nunua))
         $totalRevenue = (float) (clone $query)->sum('jumla');
-        $totalCost = (float) Mauzo::where('company_id', $companyId)
+        $totalCost = (float) Mauzo::where('mauzos.company_id', $companyId)
             ->when($fromDate && $toDate, fn($q) => $q->whereBetween('mauzos.created_at', [$fromDate, $toDate]))
             ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
             ->sum(DB::raw('mauzos.idadi * COALESCE(bidhaas.bei_nunua,0)'));
