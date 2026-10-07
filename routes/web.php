@@ -275,6 +275,8 @@ Route::get('/mauzo/receipt-print/{receiptNo}', [MauzoController::class, 'getRece
 Route::get('/mauzo/thermal-receipt/{receiptNo}', [MauzoController::class, 'printThermalReceipt'])->name('mauzo.thermal.receipt');
 Route::get('/mauzo/financial-data', [MauzoController::class, 'getFinancialData'])->name('mauzo.financial.data');
 Route::get('/mauzo/product-by-barcode/{barcode}', [MauzoController::class, 'getProductByBarcode'])->name('mauzo.product.by.barcode');
+Route::get('/mauzo/bidhaa-search', [MauzoController::class, 'searchBidhaa'])->name('mauzo.bidhaa.search');
+Route::get('/mauzo/customers-search', [MauzoController::class, 'searchCustomers'])->name('mauzo.customers.search');
 Route::post('/mauzo/update-stock', [MauzoController::class, 'updateStock'])->name('mauzo.update.stock');
 Route::post('/send-receipt-sms-simple', [MauzoController::class, 'sendReceiptSmsSimple'])->name('send.receipt.sms.simple');
 // ADD THIS ROUTE - Send receipt via SMS

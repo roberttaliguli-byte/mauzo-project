@@ -731,5 +731,6 @@
             console.log('✅ MauzoSheetAI Login · responsive width tuned');
         })();
     </script>
+@include('partials.whatsapp-float')
 </body>
 </html>

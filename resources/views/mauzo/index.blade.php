@@ -1112,16 +1112,21 @@
 
             <form method="GET" action="{{ route('mauzo.index') }}" id="jumla-search-form" class="mb-3">
                 <input type="hidden" name="tab" value="jumla">
-                <div class="flex gap-2">
-                    <div class="relative flex-1">
+                <div class="flex gap-2 flex-wrap">
+                    <div class="relative flex-1 min-w-[180px]">
                         <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
                         <input type="text" name="jumla_search" id="search-product" value="{{ request('jumla_search') }}" placeholder="Tafuta bidhaa, aina..." class="pl-10 w-full border border-gray-300 rounded-lg p-2 text-sm">
                     </div>
+                    <div class="relative">
+                        <i class="fas fa-calendar absolute left-3 top-3 text-gray-400 text-sm"></i>
+                        <input type="date" name="jumla_date" value="{{ request('jumla_date', \Carbon\Carbon::today()->format('Y-m-d')) }}" title="Chagua tarehe (leo kwa chaguo-msingi)" class="pl-10 border border-gray-300 rounded-lg p-2 text-sm">
+                    </div>
                     <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Tafuta</button>
-                    @if(request('jumla_search'))
+                    @if(request('jumla_search') || request('jumla_date'))
                     <a href="{{ route('mauzo.index', ['tab'=>'jumla']) }}" class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center">Safisha</a>
                     @endif
                 </div>
+                <p class="text-xs text-gray-500 mt-1"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Inaonyesha mauzo ya tarehe iliyochaguliwa (leo kwa chaguo-msingi). Tarehe nyingine inaonekana hapa unapoichagua.</p>
             </form>
 
             <div class="overflow-x-auto rounded-lg border border-gray-200">
@@ -1206,7 +1211,7 @@
             @endif
         </div>
     </div>
-    @if(request('tab')==='jumla' || request('jumla_page') || request('jumla_search'))
+    @if(request('tab')==='jumla' || request('jumla_page') || request('jumla_search') || request('jumla_date'))
     <script>document.addEventListener('DOMContentLoaded',()=>{document.getElementById('jumla-tab')?.click();});</script>
     @endif
 
@@ -1862,7 +1867,7 @@ class MauzoManager {
         this.cartKey = `mauzo_cart_${this.companyId}`;
         this.carts = JSON.parse(localStorage.getItem(this.cartKey)) || [];
         this.activeCartIndex = this.carts.length > 0 ? 0 : -1;
-        this.bidhaaList = @json($bidhaa);
+        this.bidhaaList = @json($bidhaaData ?? $bidhaa);
         this.barcodeScanTimeout = null;
         this.currentReceiptNo = null;
         this.pendingSaleData = null;
@@ -3088,109 +3093,80 @@ class MauzoManager {
         const dropdown = document.getElementById('product-dropdown');
         const productList = document.getElementById('product-list');
         const noResults = document.getElementById('no-products-found');
-
         if (!searchInput || !dropdown || !productList) return;
-
-        searchInput.addEventListener('focus', () => {
-            this.filterProductOptions(searchInput.value);
-            dropdown.classList.remove('hidden');
-        });
-
+        let fetchTimeout = null;
+        let lastQuery = '';
+        const renderProducts = (products) => {
+            productList.innerHTML = '';
+            if (!products || products.length === 0) { if(noResults) noResults.classList.remove('hidden'); return; }
+            if(noResults) noResults.classList.add('hidden');
+            products.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'product-item px-4 py-3 hover:bg-green-50 cursor-pointer transition duration-150';
+                div.dataset.id = item.id;
+                div.dataset.beiRejareja = item.bei_kuuza;
+                div.dataset.beiJumla = item.bei_uzo_jumla ?? 0;
+                div.dataset.stock = item.idadi;
+                div.dataset.jina = item.jina;
+                div.dataset.aina = item.aina || '';
+                div.dataset.kipimo = item.kipimo || '';
+                div.dataset.beiNunua = item.bei_nunua;
+                div.dataset.barcode = item.barcode || '';
+                const retail = Number(item.bei_kuuza||0).toLocaleString();
+                const wholesale = item.bei_uzo_jumla ? Number(item.bei_uzo_jumla).toLocaleString() : '';
+                const stock = Number(item.idadi||0).toLocaleString();
+                div.innerHTML = `<div class="flex items-start"><div class="flex-1 min-w-0"><div class="font-semibold text-gray-800 text-base">${item.jina}</div><div class="flex flex-wrap items-center gap-2 mt-1">${item.aina?`<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700"><i class="fas fa-tag mr-1"></i>${item.aina}</span>`:''}${item.kipimo?`<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700"><i class="fas fa-ruler mr-1"></i>${item.kipimo}</span>`:''}${item.barcode?`<span class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600"><i class="fas fa-barcode mr-1"></i>${item.barcode}</span>`:''}</div><div class="flex flex-wrap items-center gap-3 mt-2 text-sm"><span class="font-medium text-green-700">Rejareja: Tsh ${retail}</span>${wholesale?`<span class="font-medium text-blue-700">Jumla: Tsh ${wholesale}</span>`:''}<span class="text-gray-600"><i class="fas fa-boxes mr-1"></i>Stock: ${stock}</span></div></div><div class="ml-2 flex-shrink-0"><i class="fas fa-chevron-right text-gray-300"></i></div></div>`;
+                productList.appendChild(div);
+            });
+        };
+        const fetchProducts = async (q) => {
+            lastQuery = q;
+            try {
+                const res = await fetch(`{{ route('mauzo.bidhaa.search') }}?q=${encodeURIComponent(q)}`, {headers: {'X-Requested-With':'XMLHttpRequest','Accept':'application/json'}});
+                const json = await res.json();
+                if (q !== lastQuery) return;
+                if (json.success) renderProducts(json.data);
+                else { productList.innerHTML=''; if(noResults) noResults.classList.remove('hidden'); }
+            } catch(e) { console.error(e); }
+        };
+        searchInput.addEventListener('focus', () => { fetchProducts(searchInput.value.trim()); dropdown.classList.remove('hidden'); });
         searchInput.addEventListener('input', (e) => {
-            this.filterProductOptions(e.target.value);
-            dropdown.classList.remove('hidden');
+            const v = e.target.value;
+            clearTimeout(fetchTimeout);
+            fetchTimeout = setTimeout(()=>{ fetchProducts(v.trim()); dropdown.classList.remove('hidden'); }, 250);
         });
-
         productList.addEventListener('click', (e) => {
             const item = e.target.closest('.product-item');
             if (!item) return;
-            
             const id = item.dataset.id;
             const jina = item.dataset.jina;
             const aina = item.dataset.aina || '';
             const kipimo = item.dataset.kipimo || '';
-            
             searchInput.value = `${jina}${aina ? ` - ${aina}` : ''}${kipimo ? ` - ${kipimo}` : ''}`;
             document.getElementById('bidhaaSelect').value = id;
             dropdown.classList.add('hidden');
             this.updateProductDetailsFromData(item.dataset);
-            
             productList.querySelectorAll('.product-item').forEach(el => el.classList.remove('selected'));
             item.classList.add('selected');
         });
-
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#product-search-container')) {
-                dropdown.classList.add('hidden');
-            }
-        });
-
+        document.addEventListener('click', (e) => { if (!e.target.closest('#product-search-container')) dropdown.classList.add('hidden'); });
         searchInput.addEventListener('keydown', (e) => {
-            const visibleItems = productList.querySelectorAll('.product-item:not([style*="display: none"])');
+            const visibleItems = productList.querySelectorAll('.product-item');
             const selected = productList.querySelector('.product-item.selected');
-            
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                 e.preventDefault();
-                let currentIndex = -1;
-                if (selected) {
-                    currentIndex = Array.from(visibleItems).indexOf(selected);
-                }
-                let newIndex = e.key === 'ArrowDown' ? currentIndex + 1 : currentIndex - 1;
-                if (newIndex < 0) newIndex = visibleItems.length - 1;
-                if (newIndex >= visibleItems.length) newIndex = 0;
-                
-                visibleItems.forEach(el => el.classList.remove('selected'));
-                if (visibleItems[newIndex]) {
-                    visibleItems[newIndex].classList.add('selected');
-                    visibleItems[newIndex].scrollIntoView({ block: 'nearest' });
-                }
+                let idx = -1; if(selected) idx = Array.from(visibleItems).indexOf(selected);
+                let n = e.key==='ArrowDown'? idx+1 : idx-1; if(n<0) n=visibleItems.length-1; if(n>=visibleItems.length) n=0;
+                visibleItems.forEach(el=>el.classList.remove('selected')); if(visibleItems[n]){visibleItems[n].classList.add('selected'); visibleItems[n].scrollIntoView({block:'nearest'});}
             }
-            
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (selected) {
-                    selected.click();
-                } else if (visibleItems.length > 0) {
-                    visibleItems[0].click();
-                }
-            }
-            
-            if (e.key === 'Escape') {
-                dropdown.classList.add('hidden');
-            }
+            if (e.key === 'Enter') { e.preventDefault(); if(selected) selected.click(); else if(visibleItems.length>0) visibleItems[0].click(); }
+            if (e.key === 'Escape') dropdown.classList.add('hidden');
         });
+        // initial preload top products
+        fetchProducts('');
     }
 
-    filterProductOptions(searchText) {
-        const productList = document.getElementById('product-list');
-        const noResults = document.getElementById('no-products-found');
-        const items = productList.querySelectorAll('.product-item');
-        
-        const filter = searchText.toLowerCase().trim();
-        let hasResults = false;
-        
-        items.forEach(item => {
-            const jina = (item.dataset.jina || '').toLowerCase();
-            const aina = (item.dataset.aina || '').toLowerCase();
-            const kipimo = (item.dataset.kipimo || '').toLowerCase();
-            const barcode = (item.dataset.barcode || '').toLowerCase();
-            
-            const matches = filter === '' || 
-                           jina.includes(filter) || 
-                           aina.includes(filter) || 
-                           kipimo.includes(filter) || 
-                           barcode.includes(filter);
-            
-            item.style.display = matches ? '' : 'none';
-            if (matches) hasResults = true;
-        });
-        
-        if (noResults) {
-            noResults.classList.toggle('hidden', hasResults);
-        }
-        
-        items.forEach(el => el.classList.remove('selected'));
-    }
+    filterProductOptions(searchText) { /* deprecated: now server search via fetchProducts */ }
 
     updateProductDetailsFromData(data) {
         const retailPrice = parseFloat(data.beiRejareja) || 0;

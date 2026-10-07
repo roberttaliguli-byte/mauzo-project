@@ -284,5 +284,6 @@
     else nav.classList.remove('shadow-md', 'bg-white/90');
   });
 </script>
+@include('partials.whatsapp-float')
 </body>
 </html>

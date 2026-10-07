@@ -8,6 +8,15 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script>
+    // Apply saved theme before first paint (default | dark | colored) — shared with app layout
+    try {
+      var _mt = localStorage.getItem('mauzo_theme');
+      if (_mt === 'dark' || _mt === 'colored') {
+        document.documentElement.setAttribute('data-theme', _mt);
+      }
+    } catch (e) {}
+  </script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -403,6 +412,111 @@
     .main-content {
       width: 100%;
     }
+
+    /* ============ THEMES: default | dark | colored (shared key with app layout) ============
+       Whole-page coverage: sidebar + header + main content follow the active mode.
+       dark = dark surfaces. colored = dark surfaces + orange on touch/click. */
+    html[data-theme="dark"], html[data-theme="colored"] { color-scheme: dark; }
+    html[data-theme="dark"], html[data-theme="colored"] {
+      --white: #131e35;
+      --bg-light: #0b1220;
+      --text-dark: #e2e8f0;
+      --text-light: #94a3b8;
+      --border-color: #243049;
+      --primary-light: #16223d;
+    }
+    html[data-theme="dark"] .sidebar, html[data-theme="colored"] .sidebar {
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    }
+    html[data-theme="dark"] .header, html[data-theme="colored"] .header {
+      background-color: #111c33;
+      border-color: #243049;
+    }
+    html[data-theme="dark"] .header h1, html[data-theme="colored"] .header h1 { color: #f1f5f9 !important; }
+    html[data-theme="dark"] .header p, html[data-theme="colored"] .header p { color: #94a3b8 !important; }
+    html[data-theme="dark"] .hamburger-menu span, html[data-theme="colored"] .hamburger-menu span { background-color: #e2e8f0; }
+    html[data-theme="dark"] .bg-white, html[data-theme="colored"] .bg-white { background-color: #131e35 !important; }
+    html[data-theme="dark"] .bg-gray-50, html[data-theme="colored"] .bg-gray-50 { background-color: #0f1930 !important; }
+    html[data-theme="dark"] .bg-gray-100, html[data-theme="colored"] .bg-gray-100 { background-color: #16223d !important; }
+    html[data-theme="dark"] .hover\:bg-gray-100:hover, html[data-theme="colored"] .hover\:bg-gray-100:hover { background-color: #1a2540 !important; }
+    html[data-theme="dark"] .text-gray-900, html[data-theme="colored"] .text-gray-900 { color: #f1f5f9 !important; }
+    html[data-theme="dark"] .text-gray-800, html[data-theme="colored"] .text-gray-800 { color: #e2e8f0 !important; }
+    html[data-theme="dark"] .text-gray-700, html[data-theme="colored"] .text-gray-700 { color: #cbd5e1 !important; }
+    html[data-theme="dark"] .text-gray-600, html[data-theme="colored"] .text-gray-600,
+    html[data-theme="dark"] .text-gray-500, html[data-theme="colored"] .text-gray-500 { color: #94a3b8 !important; }
+    /* Readability: darken light tinted badge backgrounds so brightened text stays legible */
+    html[data-theme="dark"] .bg-emerald-100, html[data-theme="colored"] .bg-emerald-100,
+    html[data-theme="dark"] .bg-green-100, html[data-theme="colored"] .bg-green-100,
+    html[data-theme="dark"] .bg-teal-100, html[data-theme="colored"] .bg-teal-100 { background-color: #064e3b !important; }
+    html[data-theme="dark"] .bg-blue-100, html[data-theme="colored"] .bg-blue-100,
+    html[data-theme="dark"] .bg-indigo-100, html[data-theme="colored"] .bg-indigo-100,
+    html[data-theme="dark"] .bg-sky-100, html[data-theme="colored"] .bg-sky-100 { background-color: #1e3a8a !important; }
+    html[data-theme="dark"] .bg-red-100, html[data-theme="colored"] .bg-red-100 { background-color: #7f1d1d !important; }
+    html[data-theme="dark"] .bg-amber-100, html[data-theme="colored"] .bg-amber-100,
+    html[data-theme="dark"] .bg-yellow-100, html[data-theme="colored"] .bg-yellow-100,
+    html[data-theme="dark"] .bg-orange-100, html[data-theme="colored"] .bg-orange-100 { background-color: #78350d !important; }
+    html[data-theme="dark"] .bg-purple-100, html[data-theme="colored"] .bg-purple-100 { background-color: #4c1d95 !important; }
+    html[data-theme="dark"] .bg-pink-100, html[data-theme="colored"] .bg-pink-100 { background-color: #831843 !important; }
+    /* Readability: brighten dark saturated text (same hue family, lighter shade) */
+    html[data-theme="dark"] .text-emerald-600, html[data-theme="colored"] .text-emerald-600,
+    html[data-theme="dark"] .text-emerald-700, html[data-theme="colored"] .text-emerald-700,
+    html[data-theme="dark"] .text-emerald-800, html[data-theme="colored"] .text-emerald-800,
+    html[data-theme="dark"] .text-green-600, html[data-theme="colored"] .text-green-600,
+    html[data-theme="dark"] .text-green-700, html[data-theme="colored"] .text-green-700,
+    html[data-theme="dark"] .text-green-800, html[data-theme="colored"] .text-green-800,
+    html[data-theme="dark"] .text-teal-600, html[data-theme="colored"] .text-teal-600,
+    html[data-theme="dark"] .text-teal-700, html[data-theme="colored"] .text-teal-700,
+    html[data-theme="dark"] .text-teal-800, html[data-theme="colored"] .text-teal-800 { color: #6ee7b7 !important; }
+    html[data-theme="dark"] .text-blue-600, html[data-theme="colored"] .text-blue-600,
+    html[data-theme="dark"] .text-blue-700, html[data-theme="colored"] .text-blue-700,
+    html[data-theme="dark"] .text-blue-800, html[data-theme="colored"] .text-blue-800,
+    html[data-theme="dark"] .text-indigo-600, html[data-theme="colored"] .text-indigo-600,
+    html[data-theme="dark"] .text-indigo-700, html[data-theme="colored"] .text-indigo-700,
+    html[data-theme="dark"] .text-indigo-800, html[data-theme="colored"] .text-indigo-800,
+    html[data-theme="dark"] .text-sky-700, html[data-theme="colored"] .text-sky-700,
+    html[data-theme="dark"] .text-sky-800, html[data-theme="colored"] .text-sky-800 { color: #93c5fd !important; }
+    html[data-theme="dark"] .text-red-600, html[data-theme="colored"] .text-red-600,
+    html[data-theme="dark"] .text-red-700, html[data-theme="colored"] .text-red-700,
+    html[data-theme="dark"] .text-red-800, html[data-theme="colored"] .text-red-800 { color: #fca5a5 !important; }
+    html[data-theme="dark"] .text-amber-600, html[data-theme="colored"] .text-amber-600,
+    html[data-theme="dark"] .text-amber-700, html[data-theme="colored"] .text-amber-700,
+    html[data-theme="dark"] .text-amber-800, html[data-theme="colored"] .text-amber-800,
+    html[data-theme="dark"] .text-yellow-700, html[data-theme="colored"] .text-yellow-700,
+    html[data-theme="dark"] .text-yellow-800, html[data-theme="colored"] .text-yellow-800,
+    html[data-theme="dark"] .text-orange-600, html[data-theme="colored"] .text-orange-600,
+    html[data-theme="dark"] .text-orange-700, html[data-theme="colored"] .text-orange-700,
+    html[data-theme="dark"] .text-orange-800, html[data-theme="colored"] .text-orange-800 { color: #fcd34d !important; }
+    html[data-theme="dark"] .text-purple-700, html[data-theme="colored"] .text-purple-700,
+    html[data-theme="dark"] .text-purple-800, html[data-theme="colored"] .text-purple-800 { color: #c4b5fd !important; }
+    html[data-theme="dark"] .text-pink-600, html[data-theme="colored"] .text-pink-600,
+    html[data-theme="dark"] .text-pink-700, html[data-theme="colored"] .text-pink-700 { color: #f9a8d4 !important; }
+    html[data-theme="dark"] .text-black, html[data-theme="colored"] .text-black { color: #f1f5f9 !important; }
+    html[data-theme="dark"] .border-gray-200, html[data-theme="colored"] .border-gray-200,
+    html[data-theme="dark"] .border-gray-300, html[data-theme="colored"] .border-gray-300 { border-color: #243049 !important; }
+    html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea,
+    html[data-theme="colored"] input, html[data-theme="colored"] select, html[data-theme="colored"] textarea {
+      background-color: #0f1930;
+      color: #e2e8f0;
+      border-color: #243049;
+    }
+    html[data-theme="dark"] ::-webkit-scrollbar-track, html[data-theme="colored"] ::-webkit-scrollbar-track { background: #0f1930; }
+    html[data-theme="dark"] ::-webkit-scrollbar-thumb, html[data-theme="colored"] ::-webkit-scrollbar-thumb { background: #334155; }
+    /* colored: dark + orange on touch/click */
+    html[data-theme="colored"] button:hover,
+    html[data-theme="colored"] a[class*="bg-"]:hover {
+      background-color: #ea580c !important;
+      border-color: #ea580c !important;
+      color: #ffffff !important;
+    }
+    html[data-theme="colored"] button:active,
+    html[data-theme="colored"] a[class*="bg-"]:active,
+    html[data-theme="colored"] button:focus-visible {
+      background-color: #c2410c !important;
+      border-color: #c2410c !important;
+      color: #ffffff !important;
+    }
+    html[data-theme="colored"] .active-nav-item::after { background-color: #f97316; }
+    html[data-theme="colored"] #mauzo-theme-toggle { color: #fb923c; }
   </style>
 </head>
 
@@ -415,14 +529,16 @@
     <!-- Logo Section -->
     <div class="p-4 border-b border-emerald-700">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <img 
-            src="https://test.mauzosheet.com/assets/images/apple-icon.gif" 
-            alt="Mauzo Logo" 
+        <div class="flex items-center gap-3 min-w-0">
+          <img
+            src="{{ asset('logo11.png') }}"
+            alt="Mauzo Logo"
             class="logo"
+            style="box-shadow:none;"
+            onerror="this.style.display='none'"
           >
-          <div>
-            <div class="text-lg font-bold tracking-wide">MAUZO</div>
+          <div class="min-w-0">
+            <div class="text-lg font-bold tracking-wide truncate">MAUZO</div>
             <div class="text-xs text-emerald-100">Admin Panel</div>
           </div>
         </div>
@@ -581,6 +697,17 @@
       </div>
 
       <div class="flex items-center space-x-3 sm:space-x-4">
+        <!-- Theme Switcher: one icon cycling Default -> Dark -> Colored (synced with app) -->
+        <button
+          type="button"
+          id="mauzo-theme-toggle"
+          onclick="mauzoCycleTheme()"
+          title="Badilisha muonekano"
+          aria-label="Badilisha muonekano"
+          class="relative p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <i id="mauzo-theme-icon" class="fas fa-moon text-lg"></i>
+        </button>
         <!-- Notification Bell with New Companies Alert -->
         <div class="relative" x-data="notificationDropdown()" x-init="init()">
           <button 
@@ -932,6 +1059,40 @@ toggleNotifications() {
         }
       }
     }
+  </script>
+
+  <script>
+    // Theme switcher: one icon cycling default -> dark -> colored (same key as app layout)
+    var MAUZO_THEME_ORDER = ['default', 'dark', 'colored'];
+    var MAUZO_THEME_ICON = { default: 'fa-sun', dark: 'fa-moon', colored: 'fa-palette' };
+    var MAUZO_THEME_LABEL = { default: 'Default', dark: 'Dark', colored: 'Colored' };
+    function mauzoGetTheme() {
+      try {
+        const t = localStorage.getItem('mauzo_theme');
+        return MAUZO_THEME_ORDER.includes(t) ? t : 'default';
+      } catch (e) { return 'default'; }
+    }
+    function mauzoApplyTheme(t) {
+      if (t === 'default') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        document.documentElement.setAttribute('data-theme', t);
+      }
+      const icon = document.getElementById('mauzo-theme-icon');
+      if (icon) icon.className = 'fas text-lg ' + (MAUZO_THEME_ICON[t] || 'fa-sun');
+      const toggle = document.getElementById('mauzo-theme-toggle');
+      if (toggle) {
+        toggle.title = 'Muonekano: ' + (MAUZO_THEME_LABEL[t] || t) + ' — bonyeza kubadilisha';
+        toggle.setAttribute('aria-label', toggle.title);
+      }
+    }
+    function mauzoCycleTheme() {
+      const cur = mauzoGetTheme();
+      const next = MAUZO_THEME_ORDER[(MAUZO_THEME_ORDER.indexOf(cur) + 1) % MAUZO_THEME_ORDER.length];
+      try { localStorage.setItem('mauzo_theme', next); } catch (e) {}
+      mauzoApplyTheme(next);
+    }
+    document.addEventListener('DOMContentLoaded', function () { mauzoApplyTheme(mauzoGetTheme()); });
   </script>
 
   @stack('scripts')

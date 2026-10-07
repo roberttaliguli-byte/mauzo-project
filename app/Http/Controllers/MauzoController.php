@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Services\SMSService;
@@ -79,6 +80,50 @@ class MauzoController extends Controller
             : $sale->punguzo;
     }
 
+    /**
+     * Resolve a product's display image (same logic as Order/Showcase pages).
+     * Returns storage URL/base64 data URL, or null when the product has no image
+     * (blade then shows a clear placeholder). No business logic affected.
+     */
+    private function getProductImageUrl($product)
+    {
+        if (!$product->has_image) {
+            return null;
+        }
+        if ($product->image_path) {
+            $path = storage_path('app/public/' . $product->image_path);
+            if (file_exists($path)) {
+                try {
+                    $content = file_get_contents($path);
+                    $mimeType = $product->image_mime_type ?: mime_content_type($path);
+                    return 'data:' . $mimeType . ';base64,' . base64_encode($content);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to read product image from filesystem: ' . $e->getMessage());
+                }
+            }
+            if (Storage::disk('public')->exists($product->image_path)) {
+                try {
+                    $content = Storage::disk('public')->get($product->image_path);
+                    $mimeType = $product->image_mime_type ?: Storage::disk('public')->mimeType($product->image_path);
+                    return 'data:' . $mimeType . ';base64,' . base64_encode($content);
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to read product image from storage: ' . $e->getMessage());
+                }
+            }
+        }
+        if (!empty($product->image)) {
+            try {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mimeType = finfo_buffer($finfo, $product->image);
+                finfo_close($finfo);
+                return 'data:' . $mimeType . ';base64,' . base64_encode($product->image);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to read product image from BLOB: ' . $e->getMessage());
+            }
+        }
+        return null;
+    }
+
     // ------------------- DISPLAY PAGE — lean & fast, original logic kept clear -------------------
     public function index()
     {
@@ -88,26 +133,67 @@ class MauzoController extends Controller
         }
         $companyId = $user->company_id;
 
-        // Lean first paint — optimized for heavy companies: cache bidhaa list 60s, defer heavy relations
-        // Use Cache for bidhaa (same for all users in company) — reduces DB hit on every mauzo page load
-        $bidhaa = \Illuminate\Support\Facades\Cache::remember("mauzo_bidhaa_{$companyId}", 60, function () use ($companyId) {
+        // Ultra-lean first paint — defer heavy lists to AJAX (makes refresh as fast as other pages).
+        // Only 2 paginated queries + financial aggregates on initial load; bidhaa/wateja via AJAX search.
+        // MAUZO = TODAY'S SALES BY DEFAULT: initial page loads today's slice only (company-scoped,
+        // indexed via company_id+created_at). Historical data stays in DB and remains available
+        // through existing Reports + explicit filters (getFilteredSales / searchReceipts).
+        // Calculations, workflow and business rules are unchanged — only the retrieved slice changes.
+        $mauzosQuery = Mauzo::with('bidhaa:id,jina,aina,kipimo,bei_nunua')
+            ->where('company_id', $companyId)
+            ->select('id','company_id','receipt_no','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla','lipa_kwa','lipa_kwa_type','created_at');
+        $showHistory = request()->boolean('history')
+            || request()->input('show') === 'all'
+            || request()->filled('search')
+            || request()->filled('start_date')
+            || request()->filled('end_date');
+        if ($showHistory) {
+            // Explicit history request (e.g. user searched/filtered): honor it, company-scoped.
+            if (request()->filled('search')) {
+                $search = request()->input('search');
+                $mauzosQuery->where(function ($q) use ($search) {
+                    $q->whereHas('bidhaa', fn($b) => $b->where('jina', 'like', "%{$search}%"))
+                      ->orWhere('receipt_no', 'like', "%{$search}%")
+                      ->orWhere('lipa_kwa', 'like', "%{$search}%");
+                });
+            }
+            if (request()->filled('start_date')) {
+                $mauzosQuery->whereDate('created_at', '>=', request()->input('start_date'));
+            }
+            if (request()->filled('end_date')) {
+                $mauzosQuery->whereDate('created_at', '<=', request()->input('end_date'));
+            }
+        } else {
+            $mauzosQuery->whereDate('created_at', Carbon::today());
+        }
+        $mauzos = $mauzosQuery
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+        $mauzos->appends(request()->except('page'));
+
+        // Products for sale dropdown + Weka Order grid (user must see/choose bidhaa).
+        // Same product set/logic as Order page: lightweight cacheable storage URL first,
+        // base64 fallback for legacy BLOB; products without images get null and the
+        // blade shows a clear placeholder icon. Company-scoped, ordered by jina.
+        $bidhaa = Bidhaa::where('company_id', $companyId)
+            ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo', 'image', 'image_path', 'image_mime_type', 'image_size')
+            ->orderBy('jina')->get();
+        foreach ($bidhaa as $product) {
+            $useUrl = ($product->image_path && Storage::disk('public')->exists($product->image_path))
+                ? $product->image_url
+                : null;
+            $product->image_data_url = $useUrl ?? $this->getProductImageUrl($product);
+        }
+        // Lightweight JSON for JS price/stock lookups (no images — keeps page small).
+        $bidhaaData = \Illuminate\Support\Facades\Cache::remember("mauzo_bidhaa_json_{$companyId}", 60, function () use ($companyId) {
             return Bidhaa::where('company_id', $companyId)
                 ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo')
-                ->orderBy('jina')
-                ->get();
+                ->orderBy('jina')->get();
         });
-
-        $mauzos = Mauzo::with('bidhaa:id,jina,aina,kipimo,bei_nunua')
-            ->where('company_id', $companyId)
-            ->select('id','company_id','receipt_no','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla','lipa_kwa','lipa_kwa_type','created_at')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        // Capped ancillary for speed — reduced limits for fast paint, full search via AJAX
-        $matumizi = Matumizi::where('company_id', $companyId)->latest()->limit(20)->get();
-        $wateja = Mteja::where('company_id', $companyId)->select('id','jina','simu','barua_pepe','anapoishi','customer_code')->orderBy('jina')->limit(100)->get();
-        $madeni = Madeni::with('bidhaa:id,jina')->where('company_id', $companyId)->latest()->limit(10)->get();
-        $marejeshos = Marejesho::with(['madeni.bidhaa:id,jina,bei_nunua,bei_kuuza'])->where('company_id', $companyId)->limit(20)->get();
+        $matumizi = collect();
+        $wateja = Mteja::where('company_id', $companyId)->select('id','jina','simu','barua_pepe','anapoishi','customer_code')->orderBy('jina')->limit(30)->get();
+        $madeni = collect();
+        $marejeshos = collect();
 
         // Financial — use DB aggregates (fast)
         $financial = $this->getFinancialAggregates($companyId);
@@ -120,12 +206,18 @@ class MauzoController extends Controller
         $allTimeMauzos = collect();
         $allTimeMarejeshos = collect();
         $allMatumizi = collect();
-        // Jumla tab: DB grouped + paginated (20 per page) like Taarifa tab — fixes heavy 800 hydrates + adds pagination
+        // Jumla tab: TODAY ONLY by default; explicit date request shows that date's groups.
+        // Same DB-side grouping/math as before — only the date slice changes. Company-scoped.
         $jumlaPage = request()->input('jumla_page', 1);
         $jumlaSearch = request()->input('jumla_search');
+        $jumlaDate = request()->input('jumla_date');
+        if (!$jumlaDate || !strtotime($jumlaDate)) {
+            $jumlaDate = Carbon::today()->format('Y-m-d');
+        }
         $jumlaQuery = DB::table('mauzos')
             ->join('bidhaas', 'mauzos.bidhaa_id', '=', 'bidhaas.id')
             ->where('mauzos.company_id', $companyId)
+            ->whereDate('mauzos.created_at', $jumlaDate)
             ->when($jumlaSearch, function($q) use ($jumlaSearch) {
                 $q->where(function($sub) use ($jumlaSearch) {
                     $sub->where('bidhaas.jina', 'like', "%{$jumlaSearch}%")
@@ -141,7 +233,7 @@ class MauzoController extends Controller
         $allMauzos = $groupedMauzos;
 
         return view('mauzo.index', compact(
-            'bidhaa', 'mauzos', 'matumizi', 'wateja', 'madeni', 'marejeshos',
+            'bidhaa', 'bidhaaData', 'mauzos', 'matumizi', 'wateja', 'madeni', 'marejeshos',
             'todaysMauzos', 'todaysMarejeshos', 'todaysMatumizi', 'weeklyMatumizi',
             'allTimeMauzos', 'allTimeMarejeshos', 'allMatumizi', 'allMauzos', 'financial', 'groupedMauzos'
         ));
@@ -250,6 +342,48 @@ class MauzoController extends Controller
                 'raw' => $agg
             ]
         ]);
+    }
+
+    // ------------------- AJAX SEARCH: Bidhaa for fast dropdown (deferred) -------------------
+    public function searchBidhaa(Request $request)
+    {
+        $user = $this->getAuthUser();
+        if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        $companyId = $user->company_id;
+        $q = trim($request->input('q', ''));
+        $query = Bidhaa::where('company_id', $companyId)
+            ->select('id','jina','bei_kuuza','bei_uzo_jumla','bei_nunua','idadi','barcode','aina','kipimo')
+            ->orderBy('jina');
+        if ($q !== '') {
+            $query->where(function($sub) use ($q) {
+                $sub->where('jina', 'LIKE', "%{$q}%")
+                    ->orWhere('aina', 'LIKE', "%{$q}%")
+                    ->orWhere('barcode', 'LIKE', "%{$q}%")
+                    ->orWhere('kipimo', 'LIKE', "%{$q}%");
+            });
+        }
+        $data = $query->limit(30)->get();
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    public function searchCustomers(Request $request)
+    {
+        $user = $this->getAuthUser();
+        if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        $companyId = $user->company_id;
+        $q = trim($request->input('q', ''));
+        $query = Mteja::where('company_id', $companyId)
+            ->select('id','jina','simu','barua_pepe','anapoishi','customer_code')
+            ->orderBy('jina');
+        if ($q !== '') {
+            $query->where(function($sub) use ($q) {
+                $sub->where('jina', 'LIKE', "%{$q}%")
+                    ->orWhere('simu', 'LIKE', "%{$q}%")
+                    ->orWhere('customer_code', 'LIKE', "%{$q}%");
+            });
+        }
+        $data = $query->limit(20)->get();
+        return response()->json(['success' => true, 'data' => $data]);
     }
 
     // ------------------- CHECK DOUBLE SALE -------------------
@@ -1266,18 +1400,34 @@ class MauzoController extends Controller
             $hasFullAccess = ($mfanyakaziUser->uwezo ?? 'mdogo') === 'mkubwa';
         }
         
-        $query = Mauzo::with('bidhaa')->where('company_id', $companyId);
-        
-        if ($request->search) {
-            $search = $request->search;
-            $query->whereHas('bidhaa', fn($q) => $q->where('jina', 'like', "%{$search}%"))
-                  ->orWhere('receipt_no', 'like', "%{$search}%")
-                  ->orWhere('lipa_kwa', 'like', "%{$search}%");
+        // Performance: explicit filters query history on demand (Reports owns reporting);
+        // with no filters this returns today's slice only so the post-sale table refresh
+        // (which POSTs an empty body) never hydrates the full sales history into PHP.
+        // Calculations and rendered HTML below are unchanged — only the retrieved slice is scoped.
+        $query = Mauzo::with('bidhaa:id,jina,aina,kipimo,bei_nunua')
+            ->where('company_id', $companyId)
+            ->select('id','company_id','receipt_no','bidhaa_id','idadi','bei','punguzo','punguzo_aina','jumla','lipa_kwa','lipa_kwa_type','created_at');
+
+        $hasSearch = $request->filled('search');
+        $hasStart = $request->filled('start_date');
+        $hasEnd = $request->filled('end_date');
+        if (!$hasSearch && !$hasStart && !$hasEnd) {
+            $query->whereDate('created_at', Carbon::today());
+        } else {
+            if ($hasSearch) {
+                $search = $request->search;
+                // Grouped so company_id scope is never bypassed by orWhere (data isolation).
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('bidhaa', fn($b) => $b->where('jina', 'like', "%{$search}%"))
+                      ->orWhere('receipt_no', 'like', "%{$search}%")
+                      ->orWhere('lipa_kwa', 'like', "%{$search}%");
+                });
+            }
+            if ($hasStart) $query->whereDate('created_at', '>=', $request->start_date);
+            if ($hasEnd) $query->whereDate('created_at', '<=', $request->end_date);
         }
-        if ($request->start_date) $query->whereDate('created_at', '>=', $request->start_date);
-        if ($request->end_date) $query->whereDate('created_at', '<=', $request->end_date);
-        
-        $sales = $query->orderBy('created_at', 'desc')->get();
+
+        $sales = $query->orderBy('created_at', 'desc')->limit(500)->get();
         $html = '';
         $today = Carbon::today()->format('Y-m-d');
         
