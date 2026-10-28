@@ -25,6 +25,7 @@
 
     $mfanyakaziNavItems = [
         ['route' => 'mauzo.index', 'icon' => '🛒', 'label' => 'Mauzo', 'short' => 'MZ'],
+        ['route' => 'shift.mine', 'icon' => '🕒', 'label' => 'Shift Yangu', 'short' => 'SY'],
         ['route' => 'madeni.index', 'icon' => '💳', 'label' => 'Madeni', 'short' => 'DN'],
         ['route' => 'matumizi.index', 'icon' => '💰', 'label' => 'Matumizi', 'short' => 'MT'],
         ['route' => 'bidhaa.index', 'icon' => '📦', 'label' => 'Bidhaa', 'short' => 'BD'],

@@ -227,7 +227,8 @@ $loginHistories = LoginHistory::where('company_id', $company->id)
             'ip_address' => $login->ip_address
         ];
     });
-    
+
+        // ---------- 11. Shift sessions are loaded via /shift/sessions from the UI ----------
 
         return view('uchambuzi.index', compact(
             'faidaBidhaa', 'faidaSiku', 'mauzoSiku', 'marejesho', 'mauzo',

@@ -95,6 +95,10 @@
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
                                             <i class="fas fa-sign-in-alt mr-1"></i> Kuingia
                                         </span>
+                                    @elseif(in_array($activity->activity_type, ['shift_started','shift_closed']))
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-700">
+                                            <i class="fas fa-user-clock mr-1"></i> Shift
+                                        </span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
                                             <i class="fas fa-info-circle mr-1"></i> Nyingine
@@ -384,6 +388,12 @@ function filterModalActivities(type) {
                 badgeClass = 'bg-amber-100 text-amber-700';
                 icon = 'fa-sign-in-alt';
                 badgeText = 'Kuingia';
+                break;
+            case 'shift_started':
+            case 'shift_closed':
+                badgeClass = 'bg-sky-100 text-sky-700';
+                icon = 'fa-user-clock';
+                badgeText = 'Shift';
                 break;
             default:
                 badgeClass = 'bg-gray-100 text-gray-700';

@@ -78,6 +78,10 @@
     <i class="fas fa-users mr-1"></i> Wauzaji
 </button>
 
+            <button @click="setTab('vikao')" :class="tab === 'vikao' ? 'bg-amber-600 text-white shadow-md' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 text-sm">
+    <i class="fas fa-user-clock mr-1"></i> Vikao vya Shift
+</button>
+
             <a href="{{ route('user.reports.select') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-gray-100 text-gray-800 hover:bg-gray-200 text-sm"><i class="fas fa-file-alt mr-1"></i> Ripoti</a>
             
             <a href="{{ route('daily_reports.index') }}" class="px-4 py-2 rounded-lg font-semibold transition-all duration-200 bg-white-100 text-emerald-800 hover:bg-emerald-200 text-sm"><i class="fas fa-calendar-week mr-1"></i> Ripoti kwa Siku</a>
@@ -204,6 +208,10 @@
 <!-- WAUZAJI TAB -->
 <div x-show="tab === 'wauzaji'" x-cloak x-transition:enter.duration.300ms>
     @include('uchambuzi.partials.wauzaji')
+</div>
+<!-- VIKAO VYA SHIFT TAB -->
+<div x-show="tab === 'vikao'" x-cloak x-transition:enter.duration.300ms>
+    @include('uchambuzi.partials.vikao')
 </div>
 
     </div>

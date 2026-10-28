@@ -108,6 +108,11 @@ class Company extends Model
         return $this->hasMany(LoginHistory::class);
     }
 
+    public function shiftSessions()
+    {
+        return $this->hasMany(ShiftSession::class);
+    }
+
     public function payments()
     {
         return $this->hasMany(Payment::class);

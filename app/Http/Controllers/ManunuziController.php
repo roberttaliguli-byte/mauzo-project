@@ -10,32 +10,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\ActivityHelper;
+use Illuminate\Support\Str;
 
 class ManunuziController extends Controller
 {
-    /**
-     * Get the authenticated user from either guard
-     */
     private function getAuthenticatedUser()
     {
-        if (Auth::guard('mfanyakazi')->check()) {
-            return Auth::guard('mfanyakazi')->user();
-        }
-        
-        if (Auth::guard('web')->check()) {
-            return Auth::guard('web')->user();
-        }
-        
-        abort(403, 'Unauthorized - Please login first');
+        if (Auth::guard('mfanyakazi')->check()) return Auth::guard('mfanyakazi')->user();
+        if (Auth::guard('web')->check()) return Auth::guard('web')->user();
+        abort(403, 'Unauthorized');
     }
-    
-    /**
-     * Get company ID for current user
-     */
+
     private function getCompanyId()
     {
-        $user = $this->getAuthenticatedUser();
-        return $user->company_id;
+        return $this->getAuthenticatedUser()->company_id;
     }
 
     private function isBoss()
@@ -45,125 +33,72 @@ class ManunuziController extends Controller
 
     private function canEditDeleteManunuzi()
     {
-        if (Auth::guard('web')->check()) {
-            return true; // boss/admin
-        }
+        if (Auth::guard('web')->check()) return true;
         $employee = Auth::guard('mfanyakazi')->user();
-        if (!$employee) {
-            return false;
+        if (!$employee) return false;
+        return in_array(strtolower(trim($employee->uwezo ?? '')), ['mkubwa']);
+    }
+
+    public function index(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        $perPage = $request->input('per_page', 10);
+
+        $query = Manunuzi::with(['bidhaa:id,jina,aina,kipimo,bei_kuuza', 'creator:id,name'])
+            ->where('company_id', $companyId)
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('risiti_number', 'LIKE', "%{$search}%")
+                  ->orWhere('batch_id', 'LIKE', "%{$search}%")
+                  ->orWhereHas('bidhaa', function($subQ) use ($search) {
+                      $subQ->where('jina', 'LIKE', "%{$search}%")
+                           ->orWhere('aina', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhere('saplaya', 'LIKE', "%{$search}%")
+                  ->orWhere('simu', 'LIKE', "%{$search}%");
+            });
         }
-        $uwezo = strtolower(trim($employee->uwezo ?? ''));
-        return in_array($uwezo, ['mkubwa']); // mdogo cannot edit/delete
-    }
-    
-public function index(Request $request)
-{
-    $companyId = $this->getCompanyId();
 
-    // Modernized: no full-table hydrate on page load. Search is handled via paginated query (DB LIKE) + AJAX.
-    // $allManunuzi was loading entire table into HTML JSON (multi-MB) — removed for performance. Same logic preserved via DB search.
+        if ($request->has('start_date') && $request->has('end_date') && !empty($request->start_date) && !empty($request->end_date)) {
+            $query->whereBetween('created_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+        }
 
-    $perPage = $request->input('per_page', 10);
+        $manunuzi = $query->paginate($perPage)->appends($request->except('page'));
+        $bidhaa = Bidhaa::where('company_id', $companyId)->orderBy('jina')->get();
 
-    $query = Manunuzi::with('bidhaa:id,jina,aina,kipimo,bei_kuuza')
-        ->where('company_id', $companyId)
-        ->orderBy('created_at', 'desc');
+        $todayStart = today()->startOfDay();
+        $todayEnd = today()->endOfDay();
+        $todayPurchases = Manunuzi::where('company_id', $companyId)->whereBetween('created_at', [$todayStart, $todayEnd])->count();
+        $totalItemsPurchased = (float) Manunuzi::where('company_id', $companyId)->sum('idadi');
+        $totalCost = (float) Manunuzi::where('company_id', $companyId)->sum('bei');
+        $todayCost = (float) Manunuzi::where('company_id', $companyId)->whereBetween('created_at', [$todayStart, $todayEnd])->sum('bei');
 
-    // Search functionality
-    if ($request->has('search') && !empty($request->search)) {
-        $search = $request->search;
-        $query->where(function($q) use ($search) {
-            $q->whereHas('bidhaa', function($subQ) use ($search) {
-                $subQ->where('jina', 'LIKE', "%{$search}%")
-                     ->orWhere('aina', 'LIKE', "%{$search}%");
-            })
-            ->orWhere('saplaya', 'LIKE', "%{$search}%")
-            ->orWhere('simu', 'LIKE', "%{$search}%")
-            ->orWhere('mengineyo', 'LIKE', "%{$search}%");
-        });
+        $allManunuzi = Manunuzi::with(['bidhaa:id,jina,aina,kipimo,bei_kuuza', 'creator:id,name'])->where('company_id', $companyId)->orderBy('created_at', 'desc')->limit(200)->get();
+        $canEditDelete = $this->canEditDeleteManunuzi();
+        $isBoss = $this->isBoss();
+
+        return view('manunuzi.index', compact(
+            'manunuzi', 'bidhaa', 'todayPurchases', 'totalItemsPurchased', 'totalCost', 'todayCost',
+            'allManunuzi', 'canEditDelete', 'isBoss'
+        ));
     }
 
-    // Date range filter
-    if ($request->has('start_date') && $request->has('end_date') && 
-        !empty($request->start_date) && !empty($request->end_date)) {
-        $query->whereBetween('created_at', [
-            $request->start_date . ' 00:00:00',
-            $request->end_date . ' 23:59:59'
-        ]);
-    }
-
-    $manunuzi = $query->paginate($perPage)
-                     ->appends($request->except('page'));
-
-    // Show only products belonging to this company — select minimal cols, limit for dropdown performance
-    $bidhaa = Bidhaa::where('company_id', $companyId)
-        ->select('id','jina','aina','kipimo','idadi','bei_nunua','bei_kuuza','bei_uzo_jumla','bei_kiasi_cha_chaguo','barcode')
-        ->orderBy('jina')
-        ->get();
-
-    // Get statistics — use whereBetween for index, cache 60s
-    $todayStart = today()->startOfDay();
-    $todayEnd = today()->endOfDay();
-    $todayPurchases = Manunuzi::where('company_id', $companyId)
-        ->whereBetween('created_at', [$todayStart, $todayEnd])
-        ->count();
-    
-    $totalItemsPurchased = (float) Manunuzi::where('company_id', $companyId)->sum('idadi');
-    $totalCost = (float) Manunuzi::where('company_id', $companyId)->sum('bei');
-    $todayCost = (float) Manunuzi::where('company_id', $companyId)
-        ->whereBetween('created_at', [$todayStart, $todayEnd])
-        ->sum('bei');
-
-    // PDF Export — lazy load, respect current filters (search/date) to avoid full unfiltered dump
-    if ($request->has('export') && $request->export === 'pdf') {
-        // Re-use filtered query but fetch with cursor to avoid memory spike; limit to filtered set
-        $exportData = (clone $query)->limit(10000)->get();
-        $data = [
-            'manunuzi' => $exportData,
-            'title' => 'Orodha ya Manunuzi',
-            'date' => now()->format('d/m/Y'),
-        ];
-        $pdf = Pdf::loadView('manunuzi.pdf', $data);
-        return $pdf->download('orodha-ya-manunuzi-' . date('Y-m-d') . '.pdf');
-    }
-
-    // Backward-compat: view expects $allManunuzi for JS search — provide small capped slice (200) not full table.
-    // Keeps instant client search working but avoids multi-MB HTML. Server search handles full dataset via DB LIKE.
-    $allManunuzi = Manunuzi::with('bidhaa:id,jina,aina,kipimo,bei_kuuza')
-        ->where('company_id', $companyId)
-        ->orderBy('created_at', 'desc')
-        ->limit(200)
-        ->get();
-
-    // Permission flag for view: mdogo can view+create only
-    $canEditDelete = $this->canEditDeleteManunuzi();
-    $isBoss = $this->isBoss();
-
-    // Return view with all data
-    return view('manunuzi.index', compact(
-        'manunuzi', 
-        'bidhaa', 
-        'todayPurchases', 
-        'totalItemsPurchased', 
-        'totalCost', 
-        'todayCost',
-        'allManunuzi',
-        'canEditDelete',
-        'isBoss'
-    ));
-}
-
-    /**
-     * Store a new manunuzi and update stock and purchase price (company specific).
-     */
     public function store(Request $request)
     {
         $companyId = $this->getCompanyId();
 
-        // First validate basic fields
+        // BATCH (RISITI) LOGIC
+        if ($request->has('batch_items') && is_array($request->batch_items)) {
+            return $this->storeBatch($request, $companyId);
+        }
+
+        // SINGLE ITEM LOGIC
         $validator = Validator::make($request->all(), [
             'bidhaa_id' => 'required|exists:bidhaas,id',
-            'idadi' => 'required|numeric|min:0.01|regex:/^\d+(\.\d{1,2})?$/',
+            'idadi' => 'required|numeric|min:0.01',
             'bei_nunua' => 'required|numeric|min:0',
             'bei_kuuza' => 'required|numeric|min:0',
             'bei_type' => 'required|in:kwa_zote,rejareja',
@@ -171,158 +106,108 @@ public function index(Request $request)
             'saplaya' => 'nullable|string|max:255',
             'simu' => 'nullable|string|max:20',
             'mengineyo' => 'nullable|string|max:500',
-        ], [
-            'idadi.required' => 'Idadi inahitajika',
-            'idadi.numeric' => 'Idadi lazima iwe namba',
-            'idadi.min' => 'Idadi lazima iwe zaidi ya 0',
-            'idadi.regex' => 'Idadi inaweza kuwa na sehemu ya desimali hadi nafasi 2 (mfano: 1.5, 2.75)',
         ]);
 
-        // Calculate unit cost based on price type
-        $unitCost = 0;
-        if ($request->bei_type === 'kwa_zote') {
-            // User entered total price for all items
-            $unitCost = $request->idadi > 0 ? $request->bei_nunua / $request->idadi : 0;
-        } else {
-            // User entered price per single item
-            $unitCost = $request->bei_nunua;
-        }
+        $unitCost = $request->bei_type === 'kwa_zote' ? ($request->idadi > 0 ? $request->bei_nunua / $request->idadi : 0) : $request->bei_nunua;
 
-        // Custom validation: Compare selling price with calculated unit cost
         $validator->after(function ($validator) use ($request, $unitCost) {
-            if ($request->bei_kuuza < $unitCost) {
-                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja');
-            }
+            if ($request->bei_kuuza < $unitCost) $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua');
         });
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hitilafu katika uthibitishaji',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        if ($validator->fails()) return response()->json(['success' => false, 'message' => 'Hitilafu katika uthibitishaji', 'errors' => $validator->errors()], 422);
 
         return DB::transaction(function () use ($request, $companyId, $unitCost) {
-            $bidhaa = Bidhaa::where('id', $request->bidhaa_id)
-                            ->where('company_id', $companyId)
-                            ->firstOrFail();
+            $bidhaa = Bidhaa::where('id', $request->bidhaa_id)->where('company_id', $companyId)->firstOrFail();
+            $totalCost = $request->bei_type === 'kwa_zote' ? $request->bei_nunua : ($unitCost * $request->idadi);
 
-            // Calculate total cost
-            $totalCost = ($request->bei_type === 'kwa_zote') 
-                ? $request->bei_nunua 
-                : ($unitCost * $request->idadi);
-
-            // Store purchase
             $manunuzi = Manunuzi::create([
                 'company_id' => $companyId,
                 'bidhaa_id' => $bidhaa->id,
                 'idadi' => $request->idadi,
-                'bei' => $totalCost, // Total amount paid
-                'unit_cost' => $unitCost, // Cost per single item
+                'bei' => $totalCost,
+                'unit_cost' => $unitCost,
                 'expiry' => $request->expiry,
                 'saplaya' => $request->saplaya,
                 'simu' => $request->simu,
                 'mengineyo' => $request->mengineyo,
+                'hali_ya_malipo' => 'imekamilika',
+                'kiasi_kilicholipwa' => $totalCost,
+                'deni_lililobaki' => 0,
+                'created_by' => $this->getAuthenticatedUser()->id,
             ]);
-            // After saving purchase
-ActivityHelper::logPurchase($manunuzi, $bidhaa->jina, $manunuzi->bei);
 
-            // Update stock and prices
+            ActivityHelper::logPurchase($manunuzi, $bidhaa->jina, $manunuzi->bei);
+
             $bidhaa->increment('idadi', $request->idadi);
-            
-            // Update purchase price (cost price) to the calculated unit cost
             $bidhaa->bei_nunua = $unitCost;
-            
-            // Update selling price to what user entered
             $bidhaa->bei_kuuza = $request->bei_kuuza;
             $bidhaa->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Manunuzi yamehifadhiwa! Bei ya kununua: ' . number_format($unitCost, 2) . ' kwa 1',
-                'data' => [
-                    'unit_cost' => $unitCost,
-                    'total_cost' => $totalCost
-                ]
-            ]);
+            return response()->json(['success' => true, 'message' => 'Manunuzi yamehifadhiwa!', 'redirect' => route('manunuzi.risiti', $manunuzi)]);
         });
-  
     }
 
-    /**
-     * Update an existing manunuzi and adjust stock and purchase price (company specific).
-     * mdogo employees are blocked — can only view/create.
-     */
+    private function storeBatch(Request $request, $companyId)
+    {
+        $items = $request->input('batch_items');
+        if (empty($items)) return response()->json(['success' => false, 'message' => 'Hakuna bidhaa'], 422);
+
+        return DB::transaction(function () use ($request, $items, $companyId) {
+            // 1. GENERATE A SINGLE BATCH ID FOR ALL ITEMS
+            $batchId = 'RIS-' . date('Ymd') . '-' . strtoupper(Str::random(4));
+            $userId = $this->getAuthenticatedUser()->id;
+            $firstId = null;
+
+            foreach ($items as $item) {
+                $bidhaa = Bidhaa::where('id', $item['bidhaa_id'])->where('company_id', $companyId)->firstOrFail();
+                $idadi = (float) $item['idadi'];
+                $totalCost = (float) $item['bei_nunua'];
+                $unitCost = $idadi > 0 ? $totalCost / $idadi : 0;
+
+                $manunuzi = Manunuzi::create([
+                    'company_id' => $companyId,
+                    'batch_id' => $batchId, // 2. ASSIGN THE SAME BATCH ID TO EVERY ITEM
+                    'bidhaa_id' => $bidhaa->id,
+                    'idadi' => $idadi,
+                    'bei' => $totalCost,
+                    'unit_cost' => $unitCost,
+                    'saplaya' => $request->saplaya,
+                    'simu' => $request->simu,
+                    'mengineyo' => $request->mengineyo,
+                    'hali_ya_malipo' => 'imekamilika',
+                    'kiasi_kilicholipwa' => $totalCost,
+                    'deni_lililobaki' => 0,
+                    'created_by' => $userId,
+                ]);
+
+                if (!$firstId) $firstId = $manunuzi->id;
+
+                $bidhaa->increment('idadi', $idadi);
+                $bidhaa->bei_nunua = $unitCost;
+                $bidhaa->bei_kuuza = $item['bei_kuuza'];
+                $bidhaa->save();
+            }
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Risiti imehifadhiwa!',
+                'redirect' => route('manunuzi.risiti', $firstId) // 3. REDIRECT TO ONE RECEIPT PAGE
+            ]);
+        });
+    }
+
     public function update(Request $request, Manunuzi $manunuzi)
     {
-        if (!$this->canEditDeleteManunuzi()) {
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Huna ruhusa ya kuhariri manunuzi. Ruhusa ya kuingiza tu.'], 403);
-            }
-            abort(403, 'Huna ruhusa ya kuhariri manunuzi. Ruhusa ya kuingiza tu.');
-        }
+        if (!$this->canEditDeleteManunuzi()) return response()->json(['success' => false, 'message' => 'Huna ruhusa'], 403);
         $companyId = $this->getCompanyId();
+        abort_unless($manunuzi->company_id === $companyId, 403);
 
-        // Ensure this manunuzi belongs to this company
-        abort_unless($manunuzi->company_id === $companyId, 403, 'Huna ruhusa ya kubadilisha manunuzi haya.');
-
-        // First validate basic fields
-        $validator = Validator::make($request->all(), [
-            'bidhaa_id' => 'required|exists:bidhaas,id',
-            'idadi' => 'required|numeric|min:0.01|regex:/^\d+(\.\d{1,2})?$/',
-            'bei_nunua' => 'required|numeric|min:0',
-            'bei_kuuza' => 'required|numeric|min:0',
-            'bei_type' => 'required|in:kwa_zote,rejareja',
-            'expiry' => 'nullable|date',
-            'saplaya' => 'nullable|string|max:255',
-            'simu' => 'nullable|string|max:20',
-            'mengineyo' => 'nullable|string|max:500',
-        ], [
-            'idadi.required' => 'Idadi inahitajika',
-            'idadi.numeric' => 'Idadi lazima iwe namba',
-            'idadi.min' => 'Idadi lazima iwe zaidi ya 0',
-            'idadi.regex' => 'Idadi inaweza kuwa na sehemu ya desimali hadi nafasi 2 (mfano: 1.5, 2.75)',
-        ]);
-
-        // Calculate unit cost based on price type
-        $unitCost = 0;
-        if ($request->bei_type === 'kwa_zote') {
-            // User entered total price for all items
-            $unitCost = $request->idadi > 0 ? $request->bei_nunua / $request->idadi : 0;
-        } else {
-            // User entered price per single item
-            $unitCost = $request->bei_nunua;
-        }
-
-        // Custom validation: Compare selling price with calculated unit cost
-        $validator->after(function ($validator) use ($request, $unitCost) {
-            if ($request->bei_kuuza < $unitCost) {
-                $validator->errors()->add('bei_kuuza', 'Bei ya kuuza haiwezi kuwa chini ya bei ya kununua kwa kimoja');
-            }
-        });
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hitilafu katika uthibitishaji',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        return DB::transaction(function () use ($request, $manunuzi, $companyId, $unitCost) {
+        return DB::transaction(function () use ($request, $manunuzi, $companyId) {
             $oldIdadi = $manunuzi->idadi;
+            $bidhaa = Bidhaa::where('id', $request->bidhaa_id)->where('company_id', $companyId)->firstOrFail();
+            $unitCost = $request->bei_type === 'kwa_zote' ? ($request->idadi > 0 ? $request->bei_nunua / $request->idadi : 0) : $request->bei_nunua;
+            $totalCost = $request->bei_type === 'kwa_zote' ? $request->bei_nunua : ($unitCost * $request->idadi);
 
-            $bidhaa = Bidhaa::where('id', $request->bidhaa_id)
-                            ->where('company_id', $companyId)
-                            ->firstOrFail();
-
-            // Calculate total cost
-            $totalCost = ($request->bei_type === 'kwa_zote') 
-                ? $request->bei_nunua 
-                : ($unitCost * $request->idadi);
-
-            // Update manunuzi
             $manunuzi->update([
                 'bidhaa_id' => $bidhaa->id,
                 'idadi' => $request->idadi,
@@ -334,74 +219,72 @@ ActivityHelper::logPurchase($manunuzi, $bidhaa->jina, $manunuzi->bei);
                 'mengineyo' => $request->mengineyo,
             ]);
 
-            // Adjust stock difference
             $difference = $request->idadi - $oldIdadi;
             $bidhaa->increment('idadi', $difference);
-
-            // Update prices
             $bidhaa->bei_nunua = $unitCost;
             $bidhaa->bei_kuuza = $request->bei_kuuza;
             $bidhaa->save();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Manunuzi yamebadilishwa kikamilifu!'
-            ]);
+            return response()->json(['success' => true, 'message' => 'Manunuzi yamebadilishwa!']);
         });
     }
 
-    /**
-     * Delete a manunuzi and reduce stock (company specific).
-     * mdogo employees are blocked.
-     */
     public function destroy(Manunuzi $manunuzi)
     {
-        if (!$this->canEditDeleteManunuzi()) {
-            if (request()->expectsJson() || request()->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Huna ruhusa ya kufuta manunuzi. Ruhusa ya kuingiza tu.'], 403);
-            }
-            abort(403, 'Huna ruhusa ya kufuta manunuzi. Ruhusa ya kuingiza tu.');
-        }
+        if (!$this->canEditDeleteManunuzi()) return response()->json(['success' => false, 'message' => 'Huna ruhusa'], 403);
         $companyId = $this->getCompanyId();
-
-        abort_unless($manunuzi->company_id === $companyId, 403, 'Huna ruhusa ya kufuta manunuzi haya.');
+        abort_unless($manunuzi->company_id === $companyId, 403);
 
         return DB::transaction(function () use ($manunuzi) {
             $bidhaa = $manunuzi->bidhaa;
-            if ($bidhaa) {
-                $bidhaa->decrement('idadi', $manunuzi->idadi);
-            }
-
+            if ($bidhaa) $bidhaa->decrement('idadi', $manunuzi->idadi);
             $manunuzi->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Manunuzi yamefutwa kikamilifu na stock imepunguzwa.'
-            ]);
+            return response()->json(['success' => true, 'message' => 'Manunuzi yamefutwa!']);
         });
     }
 
-    /**
-     * Get product details for AJAX request
-     */
-    public function getProductDetails($id)
+    public function showRisiti(Manunuzi $manunuzi)
     {
         $companyId = $this->getCompanyId();
+        abort_unless($manunuzi->company_id === $companyId, 403);
         
-        $bidhaa = Bidhaa::where('id', $id)
-                        ->where('company_id', $companyId)
-                        ->firstOrFail();
-        
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'jina' => $bidhaa->jina,
-                'aina' => $bidhaa->aina,
-                'kipimo' => $bidhaa->kipimo,
-                'idadi' => $bidhaa->idadi,
-                'bei_nunua' => $bidhaa->bei_nunua,
-                'bei_kuuza' => $bidhaa->bei_kuuza,
-            ]
+        // If it has a batch_id, load ALL items in that batch
+        if ($manunuzi->batch_id) {
+            $items = Manunuzi::with(['bidhaa', 'creator', 'company'])
+                ->where('company_id', $companyId)
+                ->where('batch_id', $manunuzi->batch_id)
+                ->get();
+        } else {
+            // Single item
+            $manunuzi->load(['bidhaa', 'creator', 'company']);
+            $items = collect([$manunuzi]);
+        }
+
+        $total = $items->sum('bei');
+        $firstItem = $items->first();
+
+        return view('manunuzi.risiti', [
+            'items' => $items,
+            'total' => $total,
+            'supplier' => $firstItem->saplaya,
+            'simu' => $firstItem->simu,
+            'date' => $firstItem->created_at,
+            'creator' => $firstItem->creator,
+            'company' => $firstItem->company,
+            'risiti_number' => $firstItem->batch_id ?? $firstItem->risiti_number,
+            'manunuzi' => $manunuzi,
         ]);
+    }
+
+    public function risitiRegister(Request $request)
+    {
+        $companyId = $this->getCompanyId();
+        $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+        $manunuzi = Manunuzi::with(['bidhaa', 'creator'])->where('company_id', $companyId)->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])->orderBy('created_at', 'asc')->get();
+        $totalItems = $manunuzi->sum('idadi');
+        $totalCost = $manunuzi->sum('bei');
+        $groupedManunuzi = $manunuzi->groupBy(fn($item) => $item->created_at->format('Y-m-d'));
+        return view('manunuzi.risiti-register', compact('groupedManunuzi', 'startDate', 'endDate', 'totalItems', 'totalCost'));
     }
 }

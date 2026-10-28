@@ -79,6 +79,9 @@
         </div>
     </div>
 
+    {{-- Shift / session widget --}}
+    @include('shift.partials.widget')
+
     <!-- Tab Navigation -->
     <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-2 mb-4">
         <div class="flex flex-wrap gap-1" id="tab-nav">

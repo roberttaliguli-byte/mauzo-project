@@ -11,6 +11,7 @@ use App\Http\Controllers\BidhaaController;
 use App\Http\Controllers\ManunuziController;
 use App\Http\Controllers\MadeniController;
 use App\Http\Controllers\UchambuziController;
+use App\Http\Controllers\ShiftSessionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\PasswordController;
@@ -341,8 +342,12 @@ Route::prefix('bidhaa')->group(function () {
     Route::get('/bidhaa/search-products', [BidhaaController::class, 'searchProducts'])->name('bidhaa.search-products');
     Route::delete('/bidhaa/{id}/delete-image', [BidhaaController::class, 'deleteImage'])->name('bidhaa.deleteImage');
     // Add this route with your other bidhaa routes
-   // ================================
+
+    // ================================
     // Madeni Routes (accessible by both)
+    // ⚠️ FIX: previously these were accidentally nested inside a
+    // `Route::prefix('bidhaa')` wrapper, which broke route('madeni.index').
+    // Now they are top-level inside the auth.any group.
     // ================================
     Route::prefix('madeni')->group(function () {
         Route::get('/', [MadeniController::class, 'index'])->name('madeni.index');
@@ -367,13 +372,42 @@ Route::middleware(['auth.any'])->group(function () {
     Route::get('/uchambuzi', [UchambuziController::class, 'index'])->name('uchambuzi.index');
     Route::get('/uchambuzi/mwenendo', [UchambuziController::class, 'mwenendoRange'])->name('uchambuzi.mwenendo.range');
     Route::get('/uchambuzi/all-activities', [App\Http\Controllers\UchambuziController::class, 'getAllActivities'])->name('uchambuzi.all-activities');
+
+    // ================================
+    // Shift sessions (start / close / reports)
+    // ================================
+    Route::prefix('shift')->name('shift.')->group(function () {
+        Route::get('/current', [ShiftSessionController::class, 'current'])->name('current');
+        Route::post('/start', [ShiftSessionController::class, 'start'])->name('start');
+        Route::post('/close', [ShiftSessionController::class, 'close'])->name('close');
+        Route::get('/sessions', [ShiftSessionController::class, 'index'])->name('sessions');
+        Route::get('/yangu', [ShiftSessionController::class, 'mine'])->name('mine');
+        Route::get('/{shiftSession}/report', [ShiftSessionController::class, 'report'])->name('report');
+        Route::post('/{shiftSession}/send-report', [ShiftSessionController::class, 'sendReport'])->name('send.report');
+    });
     
     // Manunuzi routes
     Route::get('/manunuzi', [ManunuziController::class, 'index'])->name('manunuzi.index');
     Route::post('/manunuzi', [ManunuziController::class, 'store'])->name('manunuzi.store');
     Route::put('/manunuzi/{manunuzi}', [ManunuziController::class, 'update'])->name('manunuzi.update');
     Route::delete('/manunuzi/{manunuzi}', [ManunuziController::class, 'destroy'])->name('manunuzi.destroy');
-    
+
+    // ================================
+    // RISITI ROUTES (new)
+    // ⚠️ FIX: replaced the duplicate Route::resource('manunuzi') block
+    // at the bottom of the file that conflicted with the routes above.
+    // ================================
+    Route::get('/manunuzi/{manunuzi}/risiti', [ManunuziController::class, 'showRisiti'])
+        ->name('manunuzi.risiti');
+    Route::get('/manunuzi/{manunuzi}/risiti/pdf', [ManunuziController::class, 'printRisiti'])
+        ->name('manunuzi.risiti.pdf');
+    Route::post('/manunuzi/{manunuzi}/payment', [ManunuziController::class, 'recordPayment'])
+        ->name('manunuzi.payment');
+    // ⚠️ FIX: renamed from /madeni to /manunuzi-madeni to avoid URL clash with MadeniController@index
+    Route::get('/manunuzi-madeni', [ManunuziController::class, 'madeni'])
+        ->name('manunuzi.madeni');
+        // Add this inside the auth.any group, near your other manunuzi routes:
+    Route::get('/manunuzi-risiti-register', [ManunuziController::class, 'risitiRegister'])->name('manunuzi.risiti.register');
     // Wafanyakazi routes
   // In your routes/web.php, inside the auth.any group, replace the salary routes with:
 

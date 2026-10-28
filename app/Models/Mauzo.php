@@ -28,6 +28,7 @@ class Mauzo extends Model
         'mteja_id',
         'user_id',
         'mfanyakazi_id', // Add this field
+        'shift_session_id',
         'sale_date',
         'order_id',
         'order_number'
@@ -87,6 +88,11 @@ class Mauzo extends Model
     public function mfanyakazi()
     {
         return $this->belongsTo(\App\Models\Wafanyakazi::class, 'mfanyakazi_id');
+    }
+
+    public function shiftSession()
+    {
+        return $this->belongsTo(\App\Models\ShiftSession::class, 'shift_session_id');
     }
 
     public function order()
@@ -191,6 +197,27 @@ class Mauzo extends Model
             }
             if (empty($model->bei_type_used)) {
                 $model->bei_type_used = 'rejareja';
+            }
+
+            // Attribute the sale to whoever is logged in when no explicit owner was set.
+            try {
+                if (empty($model->user_id) && empty($model->mfanyakazi_id)) {
+                    if (\Illuminate\Support\Facades\Auth::guard('mfanyakazi')->check()) {
+                        $model->mfanyakazi_id = \Illuminate\Support\Facades\Auth::guard('mfanyakazi')->id();
+                    } elseif (\Illuminate\Support\Facades\Auth::guard('web')->check()) {
+                        $model->user_id = \Illuminate\Support\Facades\Auth::guard('web')->id();
+                    }
+                }
+
+                // Automatically attach the sale to the user's open shift.
+                if (empty($model->shift_session_id) && $model->company_id) {
+                    $session = \App\Models\ShiftSession::activeForCurrentUser();
+                    if ($session && (int) $session->company_id === (int) $model->company_id) {
+                        $model->shift_session_id = $session->id;
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Shift attribution failed for sale: ' . $e->getMessage());
             }
         });
     }
