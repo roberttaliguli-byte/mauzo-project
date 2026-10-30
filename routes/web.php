@@ -385,7 +385,14 @@ Route::middleware(['auth.any'])->group(function () {
         Route::get('/{shiftSession}/report', [ShiftSessionController::class, 'report'])->name('report');
         Route::post('/{shiftSession}/send-report', [ShiftSessionController::class, 'sendReport'])->name('send.report');
     });
-    
+    // ================================
+Route::get('/manunuzi/drafts', [ManunuziController::class, 'listDrafts'])->name('manunuzi.draft.list');
+Route::post('/manunuzi/draft/save', [ManunuziController::class, 'saveDraft'])->name('manunuzi.draft.save');
+Route::put('/manunuzi/draft/{draftToken}/update', [ManunuziController::class, 'updateDraft'])->name('manunuzi.draft.update');
+Route::get('/manunuzi/draft/{draftToken}/load', [ManunuziController::class, 'loadDraft'])->name('manunuzi.draft.load');
+Route::delete('/manunuzi/draft/{draftToken}/delete', [ManunuziController::class, 'deleteDraft'])->name('manunuzi.draft.delete');
+Route::post('/manunuzi/draft/{draftToken}/finalize', [ManunuziController::class, 'finalizeDraft'])->name('manunuzi.draft.finalize');
+
     // Manunuzi routes
     Route::get('/manunuzi', [ManunuziController::class, 'index'])->name('manunuzi.index');
     Route::post('/manunuzi', [ManunuziController::class, 'store'])->name('manunuzi.store');

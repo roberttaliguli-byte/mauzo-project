@@ -12,13 +12,15 @@ class Manunuzi extends Model
 
     protected $fillable = [
         'company_id',
-        'batch_id', // 👈 ADDED THIS LINE
+        'batch_id',
         'risiti_number',
         'bidhaa_id',
+        'new_bidhaa',              // NEW — snapshot of a product that doesn't exist yet
         'idadi',
         'bei',
         'bei_ya_awali',
         'unit_cost',
+        'bei_kuuza_draft',         // NEW — selling price captured while drafting
         'expiry',
         'saplaya',
         'simu',
@@ -28,6 +30,11 @@ class Manunuzi extends Model
         'kiasi_kilicholipwa',
         'deni_lililobaki',
         'created_by',
+        // Draft fields
+        'status',
+        'draft_token',
+        'draft_owner_id',
+        'draft_updated_at',
     ];
 
     protected $casts = [
@@ -35,16 +42,16 @@ class Manunuzi extends Model
         'bei' => 'decimal:2',
         'bei_ya_awali' => 'decimal:2',
         'unit_cost' => 'decimal:2',
+        'bei_kuuza_draft' => 'decimal:2',   // NEW
+        'new_bidhaa' => 'array',            // NEW — JSON <-> PHP array
         'kiasi_kilicholipwa' => 'decimal:2',
         'deni_lililobaki' => 'decimal:2',
         'expiry' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'draft_updated_at' => 'datetime',
     ];
 
-    /**
-     * Boot method - auto-generate risiti number
-     */
     protected static function boot()
     {
         parent::boot();
@@ -55,12 +62,10 @@ class Manunuzi extends Model
                 $manunuzi->risiti_number = self::generateRisitiNumber($manunuzi->company_id);
             }
 
-            // Set created_by if authenticated
             if (empty($manunuzi->created_by) && auth()->check()) {
                 $manunuzi->created_by = auth()->id();
             }
 
-            // Set initial balance based on payment status
             if ($manunuzi->hali_ya_malipo === 'imekamilika') {
                 $manunuzi->kiasi_kilicholipwa = $manunuzi->bei;
                 $manunuzi->deni_lililobaki = 0;
@@ -70,102 +75,132 @@ class Manunuzi extends Model
             } elseif ($manunuzi->hali_ya_malipo === 'nusu') {
                 $manunuzi->deni_lililobaki = $manunuzi->bei - $manunuzi->kiasi_kilicholipwa;
             }
+
+            // Draft defaults
+            if (empty($manunuzi->status)) {
+                $manunuzi->status = 'final';
+            }
         });
     }
 
-    /**
-     * Generate unique risiti number per company
-     * Format: MN-YYYYMMDD-XXXX (e.g., MN-20241215-0001)
-     */
     public static function generateRisitiNumber($companyId): string
     {
         $date = now()->format('Ymd');
         $prefix = "MN-{$date}-";
 
-        // Get the last risiti number for this company today
         $lastRisiti = self::where('company_id', $companyId)
             ->where('risiti_number', 'LIKE', "{$prefix}%")
             ->orderBy('risiti_number', 'desc')
             ->first();
 
-        if ($lastRisiti) {
-            // Extract the sequence number and increment
-            $lastSequence = (int) substr($lastRisiti->risiti_number, -4);
-            $newSequence = $lastSequence + 1;
-        } else {
-            $newSequence = 1;
-        }
+        $newSequence = $lastRisiti ? ((int) substr($lastRisiti->risiti_number, -4)) + 1 : 1;
 
         return $prefix . str_pad($newSequence, 4, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Relationship: Manunuzi belongs to one Bidhaa
-     */
+    // ============ RELATIONSHIPS ============
+
     public function bidhaa()
     {
         return $this->belongsTo(Bidhaa::class);
     }
 
-    /**
-     * Relationship: Manunuzi belongs to a specific company
-     */
     public function company()
     {
         return $this->belongsTo(Company::class);
     }
 
-    /**
-     * Relationship: Who created this entry
-     */
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    /**
-     * Get formatted idadi with decimal places
-     */
+    // ============ SCOPES ============
+
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
+
+    public function scopeDateRange($query, $startDate, $endDate)
+    {
+        return $query->whereBetween('created_at', [
+            $startDate . ' 00:00:00',
+            $endDate . ' 23:59:59',
+        ]);
+    }
+
+    public function scopePaymentStatus($query, $status)
+    {
+        return $query->where('hali_ya_malipo', $status);
+    }
+
+    public function scopeWithDeni($query)
+    {
+        return $query->where('deni_lililobaki', '>', 0);
+    }
+
+    public function scopeSearch($query, $term)
+    {
+        return $query->where(function ($q) use ($term) {
+            $q->where('risiti_number', 'LIKE', "%{$term}%")
+              ->orWhere('batch_id', 'LIKE', "%{$term}%")
+              ->orWhere('saplaya', 'LIKE', "%{$term}%")
+              ->orWhere('simu', 'LIKE', "%{$term}%")
+              ->orWhereHas('bidhaa', function ($subQ) use ($term) {
+                  $subQ->where('jina', 'LIKE', "%{$term}%")
+                       ->orWhere('aina', 'LIKE', "%{$term}%");
+              });
+        });
+    }
+
+    /** Only finalized purchases (exclude drafts) */
+    public function scopeFinal($query)
+    {
+        return $query->where('status', 'final');
+    }
+
+    /** Only drafts */
+    public function scopeDrafts($query)
+    {
+        return $query->where('status', 'draft');
+    }
+
+    /** Drafts for a specific company + owner */
+    public function scopeDraftsFor($query, $companyId, $ownerId)
+    {
+        return $query->where('company_id', $companyId)
+                     ->where('status', 'draft')
+                     ->where('draft_owner_id', $ownerId);
+    }
+
+    // ============ ACCESSORS ============
+
     public function getFormattedIdadiAttribute(): string
     {
         return number_format($this->idadi, 2);
     }
 
-    /**
-     * Get formatted total cost
-     */
     public function getFormattedBeiAttribute(): string
     {
         return number_format($this->bei, 2);
     }
 
-    /**
-     * Get formatted unit cost
-     */
     public function getFormattedUnitCostAttribute(): string
     {
         return number_format($this->unit_cost, 2);
     }
 
-    /**
-     * Get formatted amount paid
-     */
     public function getFormattedKiasiKilicholipwaAttribute(): string
     {
         return number_format($this->kiasi_kilicholipwa, 2);
     }
 
-    /**
-     * Get formatted remaining debt
-     */
     public function getFormattedDeniLililobakiAttribute(): string
     {
         return number_format($this->deni_lililobaki, 2);
     }
 
-    /**
-     * Get payment status label in Swahili
-     */
     public function getHaliYaMalipoLabelAttribute(): string
     {
         return match($this->hali_ya_malipo) {
@@ -176,9 +211,6 @@ class Manunuzi extends Model
         };
     }
 
-    /**
-     * Get payment status color class
-     */
     public function getHaliYaMalipoColorAttribute(): string
     {
         return match($this->hali_ya_malipo) {
@@ -189,9 +221,6 @@ class Manunuzi extends Model
         };
     }
 
-    /**
-     * Get source label in Swahili
-     */
     public function getChanzoLabelAttribute(): string
     {
         return match($this->chanzo) {
@@ -203,25 +232,26 @@ class Manunuzi extends Model
         };
     }
 
-    /**
-     * Check if this purchase has unpaid balance
-     */
     public function getHasDeniAttribute(): bool
     {
         return $this->deni_lililobaki > 0;
     }
 
-    /**
-     * Check if this purchase is fully paid
-     */
     public function getIsPaidAttribute(): bool
     {
         return $this->hali_ya_malipo === 'imekamilika' && $this->deni_lililobaki <= 0;
     }
 
-    /**
-     * Record a payment against this purchase
-     */
+    public function getIsDraftAttribute(): bool
+    {
+        return $this->status === 'draft';
+    }
+
+    public function getIsFinalAttribute(): bool
+    {
+        return $this->status === 'final';
+    }
+
     public function recordPayment(float $amount): bool
     {
         if ($amount <= 0 || $amount > $this->deni_lililobaki) {
@@ -238,57 +268,5 @@ class Manunuzi extends Model
         ]);
 
         return true;
-    }
-
-    /**
-     * Scope: Filter by company
-     */
-    public function scopeForCompany($query, $companyId)
-    {
-        return $query->where('company_id', $companyId);
-    }
-
-    /**
-     * Scope: Filter by date range
-     */
-    public function scopeDateRange($query, $startDate, $endDate)
-    {
-        return $query->whereBetween('created_at', [
-            $startDate . ' 00:00:00',
-            $endDate . ' 23:59:59'
-        ]);
-    }
-
-    /**
-     * Scope: Filter by payment status
-     */
-    public function scopePaymentStatus($query, $status)
-    {
-        return $query->where('hali_ya_malipo', $status);
-    }
-
-    /**
-     * Scope: Only unpaid purchases
-     */
-    public function scopeWithDeni($query)
-    {
-        return $query->where('deni_lililobaki', '>', 0);
-    }
-
-    /**
-     * Scope: Search by risiti number or supplier
-     */
-    public function scopeSearch($query, $term)
-    {
-        return $query->where(function ($q) use ($term) {
-            $q->where('risiti_number', 'LIKE', "%{$term}%")
-              ->orWhere('batch_id', 'LIKE', "%{$term}%") // 👈 ADDED THIS LINE FOR SEARCHING
-              ->orWhere('saplaya', 'LIKE', "%{$term}%")
-              ->orWhere('simu', 'LIKE', "%{$term}%")
-              ->orWhereHas('bidhaa', function ($subQ) use ($term) {
-                  $subQ->where('jina', 'LIKE', "%{$term}%")
-                       ->orWhere('aina', 'LIKE', "%{$term}%");
-              });
-        });
     }
 }

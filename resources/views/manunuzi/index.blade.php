@@ -6,14 +6,27 @@
 @section('page-subtitle', now()->format('d/m/Y'))
 
 @section('content')
-@php $canEditDelete = $canEditDelete ?? false; @endphp
+@php
+    $canEditDelete = $canEditDelete ?? false;
+    $draftList = collect($drafts ?? [])->map(function ($items, $token) {
+        $first = $items->first();
+        return [
+            'draft_token' => $token,
+            'saplaya'     => $first->saplaya,
+            'simu'        => $first->simu,
+            'mengineyo'   => $first->mengineyo,
+            'item_count'  => $items->count(),
+            'updated_at'  => optional($first->draft_updated_at)->format('d/m/Y H:i') ?? '-',
+        ];
+    })->values();
+@endphp
 <div class="space-y-4" id="app-container" data-current-page="{{ request()->get('page', 1) }}" data-can-edit="{{ $canEditDelete ? '1' : '0' }}">
-    
+
     <!-- Hidden data -->
     <div id="bidhaa-data" style="display:none;">{{ json_encode($bidhaa->map(function($b) { return ['id' => $b->id, 'jina' => $b->jina, 'aina' => $b->aina, 'kipimo' => $b->kipimo, 'idadi' => $b->idadi, 'bei_nunua' => $b->bei_nunua, 'bei_kuuza' => $b->bei_kuuza, 'bei_uzo_jumla' => $b->bei_uzo_jumla, 'has_image' => $b->hasImage()]; })) }}</div>
     <div id="all-manunuzi-data" style="display:none;">{{ json_encode($allManunuzi->map(function($m) { return ['id' => $m->id, 'risiti_number' => $m->risiti_number, 'bidhaa_id' => $m->bidhaa_id, 'idadi' => $m->idadi, 'bei' => $m->bei, 'unit_cost' => $m->unit_cost, 'expiry' => $m->expiry, 'saplaya' => $m->saplaya, 'simu' => $m->simu, 'mengineyo' => $m->mengineyo, 'created_at' => $m->created_at, 'created_at_formatted' => $m->created_at ? $m->created_at->format('d/m/Y') : '', 'created_time' => $m->created_at ? $m->created_at->format('H:i') : '', 'bidhaa' => $m->bidhaa ? ['id' => $m->bidhaa->id, 'jina' => $m->bidhaa->jina, 'aina' => $m->bidhaa->aina, 'kipimo' => $m->bidhaa->kipimo, 'bei_kuuza' => $m->bidhaa->bei_kuuza] : null]; })) }}</div>
 
-    <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm px-4 pointer-events-none"></div>
+    <div id="notification-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-[2000] w-full max-w-sm px-4 pointer-events-none"></div>
 
     <!-- STATS -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -28,7 +41,7 @@
         <div class="flex flex-wrap">
             <button data-tab="taarifa" class="tab-button flex-1 py-3 px-2 md:px-4 text-sm font-medium border-r border-b md:border-b-0 border-gray-200 bg-emerald-50 text-emerald-700 whitespace-nowrap"><i class="fas fa-table mr-2"></i> Orodha</button>
             <button data-tab="ingiza" class="tab-button flex-1 py-3 px-2 md:px-4 text-sm font-medium border-r border-b md:border-b-0 border-gray-200 text-gray-600 hover:bg-gray-50 whitespace-nowrap"><i class="fas fa-plus mr-2"></i> Ingiza</button>
-            <button data-tab="batch" class="tab-button flex-1 py-3 px-2 md:px-4 text-sm font-medium border-r border-b md:border-b-0 border-gray-200 text-gray-600 hover:bg-gray-50 whitespace-nowrap"><i class="fas fa-file-invoice mr-2"></i> Risiti (Batch)</button>
+            <button data-tab="batch" class="tab-button flex-1 py-3 px-2 md:px-4 text-sm font-medium border-r border-b md:border-b-0 border-gray-200 text-gray-600 hover:bg-gray-50 whitespace-nowrap"><i class="fas fa-file-invoice mr-2"></i> Risiti (Batch) <span id="draft-count-badge" class="ml-1 hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-xs"></span></button>
             <button data-tab="ripoti" class="tab-button flex-1 py-3 px-2 md:px-4 text-sm font-medium text-gray-600 hover:bg-gray-50 whitespace-nowrap"><i class="fas fa-chart-bar mr-2"></i> Ripoti</button>
         </div>
     </div>
@@ -57,7 +70,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -109,15 +122,30 @@
     <!-- TAB 3: Risiti (Batch) -->
     <div id="batch-tab-content" class="tab-content hidden">
         <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-            <h3 class="font-bold text-gray-800 mb-4 border-b pb-2"><i class="fas fa-file-invoice text-emerald-600 mr-2"></i> Ingiza Risiti ya Msaplaya (Batch)</h3>
-            
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-4 border-b pb-2">
+                <h3 class="font-bold text-gray-800"><i class="fas fa-file-invoice text-emerald-600 mr-2"></i> Ingiza Risiti ya Msaplaya (Batch)</h3>
+                <button type="button" onclick="newBatchReceipt()" class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 text-xs font-medium"><i class="fas fa-file mr-1"></i> Risiti Mpya</button>
+            </div>
+
+            <!-- DRAFTS PANEL -->
+            <div id="drafts-panel" class="hidden mb-4 p-3 bg-amber-50 border border-amber-200 rounded">
+                <div class="flex items-center mb-2 text-sm font-bold text-amber-800"><i class="fas fa-clock mr-2"></i> Drafts Zako (Endelea baadaye)</div>
+                <div id="drafts-list" class="space-y-2"></div>
+            </div>
+
+            <!-- Current draft indicator -->
+            <div id="current-draft-banner" class="hidden mb-3 p-2 bg-amber-100 border border-amber-300 rounded text-xs text-amber-900 flex justify-between items-center">
+                <span><i class="fas fa-pen mr-1"></i> Unahariri draft: <strong id="current-draft-token"></strong></span>
+                <button type="button" onclick="newBatchReceipt()" class="underline">Acha</button>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 bg-gray-50 p-3 rounded">
                 <div><label class="block text-xs font-medium text-gray-700 mb-1">Jina la Msaplaya</label><input type="text" id="batch-saplaya" class="w-full px-3 py-2 border rounded text-sm" placeholder="Mfano: Azam Ltd"></div>
                 <div><label class="block text-xs font-medium text-gray-700 mb-1">Simu ya Msaplaya</label><input type="text" id="batch-simu" class="w-full px-3 py-2 border rounded text-sm" placeholder="07XXXXXXXX"></div>
                 <div><label class="block text-xs font-medium text-gray-700 mb-1">Maelezo</label><input type="text" id="batch-mengineyo" class="w-full px-3 py-2 border rounded text-sm" placeholder="Maelezo..."></div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-4 items-end bg-blue-50 p-3 rounded border border-blue-100">
+            <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 items-end bg-blue-50 p-3 rounded border border-blue-100">
                 <div class="md:col-span-2 relative">
                     <label class="block text-xs font-medium text-gray-700 mb-1">Tafuta Bidhaa</label>
                     <div class="relative">
@@ -127,14 +155,20 @@
                     </div>
                     <input type="hidden" id="batch-bidhaa_id">
                 </div>
-                
+
                 <div><label class="block text-xs font-medium text-gray-700 mb-1">Idadi</label><input type="number" id="batch-idadi" step="0.01" min="0.01" class="w-full px-3 py-2 border rounded text-sm" placeholder="0"></div>
                 <div><label class="block text-xs font-medium text-gray-700 mb-1">Bei Nunua (Jumla)</label><input type="number" id="batch-bei_nunua" step="0.01" min="0" class="w-full px-3 py-2 border rounded text-sm" placeholder="TZS"></div>
                 <div><label class="block text-xs font-medium text-gray-700 mb-1">Bei Uza (Kimoja)</label><input type="number" id="batch-bei_kuuza" step="0.01" min="0" class="w-full px-3 py-2 border rounded text-sm" placeholder="TZS"></div>
-                
+
                 <div class="flex justify-end">
                     <button type="button" onclick="addBatchItem()" class="w-full bg-gray-800 text-white py-2 rounded font-bold text-sm hover:bg-gray-900"><i class="fas fa-plus-circle mr-1"></i> Ongeza</button>
                 </div>
+            </div>
+
+            <!-- Selected / NEW product indicator + add-new button -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div id="batch-selected-info" class="hidden text-xs px-2 py-1 rounded bg-emerald-50 border border-emerald-200 text-emerald-800"></div>
+                <button type="button" onclick="openNewProductModal()" class="ml-auto px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-medium"><i class="fas fa-box-open mr-1"></i> Bidhaa haipo? Ongeza Mpya</button>
             </div>
 
             <div id="batch-calc-display" class="hidden mb-3 p-2 bg-emerald-50 rounded border border-emerald-200 text-sm flex justify-between items-center">
@@ -151,7 +185,10 @@
                 </table>
             </div>
 
-            <button type="button" onclick="submitBatch()" id="batch-submit-btn" class="w-full bg-emerald-600 text-white py-3 rounded font-bold text-lg hover:bg-emerald-700"><i class="fas fa-save mr-2"></i> Hifadhi Risiti & Ongeza Stock</button>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button type="button" onclick="saveBatchDraft()" id="batch-draft-btn" class="sm:w-1/3 bg-amber-500 text-white py-3 rounded font-bold hover:bg-amber-600"><i class="fas fa-bookmark mr-2"></i> Hifadhi Draft</button>
+                <button type="button" onclick="submitBatch()" id="batch-submit-btn" class="flex-1 bg-emerald-600 text-white py-3 rounded font-bold text-lg hover:bg-emerald-700"><i class="fas fa-save mr-2"></i> Hifadhi Risiti & Ongeza Stock</button>
+            </div>
         </div>
     </div>
 
@@ -231,11 +268,34 @@
         </div>
     </div>
 </div>
+
+<!-- NEW PRODUCT MODAL (for batch receipt) -->
+<div id="new-product-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
+    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-50 max-h-[90vh] overflow-y-auto">
+        <div class="p-4 border-b border-gray-200"><h3 class="text-sm font-semibold text-gray-800"><i class="fas fa-box-open text-blue-600 mr-2"></i> Bidhaa Mpya</h3><p class="text-xs text-gray-500 mt-1">Itaundwa kwenye stock pale tu risiti itakapohifadhiwa.</p></div>
+        <div class="p-4 space-y-3">
+            <div><label class="block text-xs font-medium text-gray-700 mb-1">Jina la Bidhaa *</label><input type="text" id="np-jina" class="w-full px-3 py-2 border border-gray-300 rounded text-sm"></div>
+            <div><label class="block text-xs font-medium text-gray-700 mb-1">Aina *</label><input type="text" id="np-aina" class="w-full px-3 py-2 border border-gray-300 rounded text-sm" placeholder="Mfano: Vinywaji"></div>
+            <div class="grid grid-cols-2 gap-3">
+                <div><label class="block text-xs font-medium text-gray-700 mb-1">Kipimo</label><input type="text" id="np-kipimo" class="w-full px-3 py-2 border border-gray-300 rounded text-sm" placeholder="500ml, 2kg"></div>
+                <div><label class="block text-xs font-medium text-gray-700 mb-1">Barcode</label><input type="text" id="np-barcode" class="w-full px-3 py-2 border border-gray-300 rounded text-sm"></div>
+            </div>
+            <div><label class="block text-xs font-medium text-gray-700 mb-1">Tarehe ya Mwisho (Expiry)</label><input type="date" id="np-expiry" class="w-full px-3 py-2 border border-gray-300 rounded text-sm"></div>
+            <div id="np-error" class="text-red-600 text-xs font-medium hidden"></div>
+        </div>
+        <div class="flex gap-2 p-4 border-t border-gray-200">
+            <button type="button" onclick="closeNewProductModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">Ghairi</button>
+            <button type="button" onclick="confirmNewProduct()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">Tumia Bidhaa Hii</button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
 <style>
 .modal { display: flex; align-items: center; justify-content: center; }
+.modal.hidden { display: none; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 #bidhaa-search-results, #batch-search-results { z-index: 1000; }
@@ -368,19 +428,19 @@
             const start = (this.currentPage - 1) * this.perPage;
             const end = start + this.perPage;
             const pageData = this.filteredData.slice(start, end);
-            
+
             if (pageData.length === 0) {
                 const colSpan = canEdit ? 8 : 7;
                 tbody.innerHTML = `<tr><td colspan="${colSpan}" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-shopping-cart text-3xl mb-2 text-gray-300"></i><p>Hakuna manunuzi yanayolingana</p></td></tr>`;
                 return;
             }
-            
+
             let html = '';
             pageData.forEach(item => {
                 const formattedIdadi = parseFloat(item.idadi || 0);
                 const displayIdadi = formattedIdadi % 1 === 0 ? Math.floor(formattedIdadi) : formattedIdadi.toFixed(2);
                 const risitiUrl = '/manunuzi/' + item.id + '/risiti';
-                
+
                 html += `
                     <tr class="manunuzi-row hover:bg-gray-50" data-manunuzi='${JSON.stringify(item).replace(/'/g, "&#39;")}'>
                         <td class="px-4 py-2"><a href="${risitiUrl}" class="text-xs font-mono font-bold text-emerald-600 hover:underline">${this.highlightText(item.risiti_number || '--', this.currentSearchTerm)}</a></td>
@@ -522,12 +582,12 @@
             try {
                 const response = await fetch(form.action, { method: form.method || 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' } });
                 const data = await response.json();
-                if (response.ok && data.success) { 
-                    this.showNotification(data.message || successMessage, 'success'); 
+                if (response.ok && data.success) {
+                    this.showNotification(data.message || successMessage, 'success');
                     if(data.redirect) {
                         setTimeout(() => window.location.href = data.redirect, 1000);
                     } else {
-                        setTimeout(() => window.location.reload(), 1500); 
+                        setTimeout(() => window.location.reload(), 1500);
                     }
                 }
                 else { const error = data.errors ? Object.values(data.errors)[0][0] : data.message; this.showNotification(error || 'Hitilafu imetokea', 'error'); }
@@ -575,7 +635,7 @@
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', (e) => { if (e.target === modal || e.target.classList.contains('modal-overlay')) modal.classList.add('hidden'); });
             });
-            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.getElementById('edit-modal')?.classList.add('hidden'); document.getElementById('delete-modal')?.classList.add('hidden'); } });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.getElementById('edit-modal')?.classList.add('hidden'); document.getElementById('delete-modal')?.classList.add('hidden'); document.getElementById('new-product-modal')?.classList.add('hidden'); } });
         }
 
         setupDateFilters() { this.setDefaultDates(); }
@@ -659,36 +719,63 @@
 })();
 </script>
 
-<!-- BATCH SCRIPT WITH NO ALERTS -->
+<!-- ============================================================
+     BATCH RECEIPT SCRIPT: drafts + new products
+     ============================================================ -->
 <script>
+    // ---------- STATE ----------
     let batchCart = [];
     let batchBidhaaData = [];
+    let batchLastResults = [];
+    let pendingNewProduct = null;          // product typed in the modal but not yet in cart
+    let currentDraftToken = null;          // set when editing a saved draft
+    let draftsData = @json($draftList);
+
+    const CSRF = '{{ csrf_token() }}';
+    const URL_DRAFT_SAVE   = '{{ route('manunuzi.draft.save') }}';
+    const URL_DRAFT_LIST   = '{{ route('manunuzi.draft.list') }}';
+    const URL_DRAFT_BASE   = '{{ url('/manunuzi/draft') }}';
+    const URL_STORE        = '{{ route('manunuzi.store') }}';
+
+    function toast(msg, type = 'info') {
+        if (window.manunuziManager) window.manunuziManager.showNotification(msg, type);
+    }
+    function esc(t) {
+        if (t === null || t === undefined) return '';
+        return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function jsonHeaders() {
+        return { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' };
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const bidhaaElement = document.getElementById('bidhaa-data');
-        if (bidhaaElement) {
-            batchBidhaaData = JSON.parse(bidhaaElement.textContent);
-        }
+        const el = document.getElementById('bidhaa-data');
+        if (el) batchBidhaaData = JSON.parse(el.textContent);
+        renderDrafts();
     });
 
+    // ---------- PRODUCT SEARCH (with "add new" option) ----------
     let batchSearchTimeout = null;
     document.getElementById('batch-search-input').addEventListener('input', function(e) {
         clearTimeout(batchSearchTimeout);
-        const query = e.target.value.toLowerCase().trim();
+        const raw = e.target.value.trim();
+        const query = raw.toLowerCase();
         const resultsDiv = document.getElementById('batch-search-results');
-        
-        if (query.length < 2) {
-            resultsDiv.classList.add('hidden');
-            return;
-        }
+
+        // Typing again invalidates a previous selection
+        document.getElementById('batch-bidhaa_id').value = '';
+        pendingNewProduct = null;
+        updateSelectedInfo();
+
+        if (query.length < 2) { resultsDiv.classList.add('hidden'); return; }
 
         batchSearchTimeout = setTimeout(() => {
-            const filtered = batchBidhaaData.filter(b => 
-                (b.jina && b.jina.toLowerCase().includes(query)) || 
+            batchLastResults = batchBidhaaData.filter(b =>
+                (b.jina && b.jina.toLowerCase().includes(query)) ||
                 (b.aina && b.aina.toLowerCase().includes(query))
             );
-            renderBatchSearchResults(filtered);
-        }, 300);
+            renderBatchSearchResults(batchLastResults, raw);
+        }, 250);
     });
 
     document.addEventListener('click', (e) => {
@@ -697,38 +784,116 @@
         }
     });
 
-    function renderBatchSearchResults(results) {
+    function renderBatchSearchResults(results, typed) {
         const resultsDiv = document.getElementById('batch-search-results');
+        let html = '';
+
         if (results.length === 0) {
-            resultsDiv.innerHTML = '<div class="p-3 text-sm text-gray-500">Hakuna bidhaa zinazolingana</div>';
-            resultsDiv.classList.remove('hidden');
-            return;
+            html += '<div class="p-3 text-sm text-gray-500">Hakuna bidhaa inayolingana na "' + esc(typed) + '"</div>';
+        } else {
+            results.forEach((item, i) => {
+                html += `<div class="p-3 border-b border-gray-100 hover:bg-blue-50 cursor-pointer" onclick="selectBatchBidhaa(${i})">
+                    <div class="font-medium text-sm text-gray-900">${esc(item.jina)}</div>
+                    <div class="text-xs text-gray-600">${esc(item.aina)} - ${esc(item.kipimo)}</div>
+                    <div class="text-xs text-blue-600 mt-1">Bei ya Kuuza: ${parseFloat(item.bei_kuuza || 0).toLocaleString()}</div>
+                </div>`;
+            });
         }
 
-        let html = '';
-        results.forEach(item => {
-            html += `<div class="p-3 border-b border-gray-100 hover:bg-blue-50 cursor-pointer" onclick="selectBatchBidhaa(${JSON.stringify(item).replace(/"/g, '&quot;')})">
-                <div class="font-medium text-sm text-gray-900">${item.jina}</div>
-                <div class="text-xs text-gray-600">${item.aina || ''} - ${item.kipimo || ''}</div>
-                <div class="text-xs text-blue-600 mt-1">Bei ya Kuuza: ${parseFloat(item.bei_kuuza || 0).toLocaleString()}</div>
-            </div>`;
-        });
+        html += `<div class="p-3 bg-blue-50 hover:bg-blue-100 cursor-pointer text-sm font-semibold text-blue-700" onclick="openNewProductModal(${JSON.stringify(typed).replace(/"/g, '&quot;')})">
+            <i class="fas fa-plus-circle mr-1"></i> Ongeza bidhaa mpya: "${esc(typed)}"
+        </div>`;
+
         resultsDiv.innerHTML = html;
         resultsDiv.classList.remove('hidden');
     }
 
-    function selectBatchBidhaa(item) {
+    function selectBatchBidhaa(index) {
+        const item = batchLastResults[index];
+        if (!item) return;
+        pendingNewProduct = null;
         document.getElementById('batch-bidhaa_id').value = item.id;
         document.getElementById('batch-search-input').value = item.jina;
         document.getElementById('batch-search-results').classList.add('hidden');
-        
-        if (item.bei_kuuza) {
-            document.getElementById('batch-bei_kuuza').value = item.bei_kuuza;
-        }
-        
+        if (item.bei_kuuza) document.getElementById('batch-bei_kuuza').value = item.bei_kuuza;
+        updateSelectedInfo();
         document.getElementById('batch-idadi').focus();
     }
 
+    function updateSelectedInfo() {
+        const box = document.getElementById('batch-selected-info');
+        if (pendingNewProduct) {
+            box.className = 'text-xs px-2 py-1 rounded bg-blue-50 border border-blue-200 text-blue-800';
+            box.innerHTML = '<i class="fas fa-star mr-1"></i> <strong>BIDHAA MPYA:</strong> ' + esc(pendingNewProduct.jina) + ' (' + esc(pendingNewProduct.aina) + (pendingNewProduct.kipimo ? ' - ' + esc(pendingNewProduct.kipimo) : '') + ')';
+        } else if (document.getElementById('batch-bidhaa_id').value) {
+            box.className = 'text-xs px-2 py-1 rounded bg-emerald-50 border border-emerald-200 text-emerald-800';
+            box.innerHTML = '<i class="fas fa-check mr-1"></i> Bidhaa iliyopo imechaguliwa';
+        } else {
+            box.className = 'hidden';
+            box.innerHTML = '';
+        }
+    }
+
+    // ---------- NEW PRODUCT MODAL ----------
+    function openNewProductModal(prefillName) {
+        document.getElementById('np-jina').value = (typeof prefillName === 'string' && prefillName) ? prefillName : document.getElementById('batch-search-input').value.trim();
+        document.getElementById('np-aina').value = '';
+        document.getElementById('np-kipimo').value = '';
+        document.getElementById('np-barcode').value = '';
+        document.getElementById('np-expiry').value = '';
+        document.getElementById('np-error').classList.add('hidden');
+        document.getElementById('batch-search-results').classList.add('hidden');
+        document.getElementById('new-product-modal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('np-jina').focus(), 50);
+    }
+
+    function closeNewProductModal() {
+        document.getElementById('new-product-modal').classList.add('hidden');
+    }
+
+    function confirmNewProduct() {
+        const jina = document.getElementById('np-jina').value.trim();
+        const aina = document.getElementById('np-aina').value.trim();
+        const err = document.getElementById('np-error');
+
+        if (!jina || !aina) {
+            err.textContent = 'Jina na Aina vinahitajika';
+            err.classList.remove('hidden');
+            return;
+        }
+
+        // If same product already exists, just select it instead of duplicating
+        const kipimo = document.getElementById('np-kipimo').value.trim();
+        const dup = batchBidhaaData.find(b =>
+            (b.jina || '').toLowerCase() === jina.toLowerCase() &&
+            (b.aina || '').toLowerCase() === aina.toLowerCase() &&
+            (b.kipimo || '').toLowerCase() === kipimo.toLowerCase()
+        );
+        if (dup) {
+            closeNewProductModal();
+            pendingNewProduct = null;
+            document.getElementById('batch-bidhaa_id').value = dup.id;
+            document.getElementById('batch-search-input').value = dup.jina;
+            if (dup.bei_kuuza) document.getElementById('batch-bei_kuuza').value = dup.bei_kuuza;
+            updateSelectedInfo();
+            toast('Bidhaa hii tayari ipo, imechaguliwa', 'info');
+            document.getElementById('batch-idadi').focus();
+            return;
+        }
+
+        pendingNewProduct = {
+            jina, aina, kipimo,
+            barcode: document.getElementById('np-barcode').value.trim(),
+            expiry: document.getElementById('np-expiry').value || null
+        };
+        document.getElementById('batch-bidhaa_id').value = '';
+        document.getElementById('batch-search-input').value = jina;
+        closeNewProductModal();
+        updateSelectedInfo();
+        document.getElementById('batch-idadi').focus();
+    }
+
+    // ---------- LIVE CALC ----------
     const inputIdadi = document.getElementById('batch-idadi');
     const inputBeiNunua = document.getElementById('batch-bei_nunua');
     const inputBeiKuuza = document.getElementById('batch-bei_kuuza');
@@ -741,13 +906,10 @@
 
         if (idadi > 0 && totalNunua > 0) {
             calcDisplay.classList.remove('hidden');
-            
             const unitCost = totalNunua / idadi;
             const faida = beiKuuza - unitCost;
-
             document.getElementById('calc-unit-cost').innerText = unitCost.toFixed(2);
             document.getElementById('calc-faida').innerText = faida.toFixed(2);
-
             const warning = document.getElementById('calc-warning');
             if (faida < 0) {
                 warning.classList.remove('hidden');
@@ -763,47 +925,54 @@
             inputBeiKuuza.classList.remove('border-red-500', 'bg-red-50');
         }
     }
-
     inputIdadi.addEventListener('input', calculateLive);
     inputBeiNunua.addEventListener('input', calculateLive);
     inputBeiKuuza.addEventListener('input', calculateLive);
 
-
+    // ---------- CART ----------
     function addBatchItem() {
         const bidhaaId = document.getElementById('batch-bidhaa_id').value;
-        const jina = document.getElementById('batch-search-input').value;
-        
-        const idadi = parseFloat(document.getElementById('batch-idadi').value) || 0;
-        const bei_nunua = parseFloat(document.getElementById('batch-bei_nunua').value) || 0;
-        const bei_kuuza = parseFloat(document.getElementById('batch-bei_kuuza').value) || 0;
+        const typedName = document.getElementById('batch-search-input').value.trim();
+        const idadi = parseFloat(inputIdadi.value) || 0;
+        const bei_nunua = parseFloat(inputBeiNunua.value) || 0;
+        const bei_kuuza = parseFloat(inputBeiKuuza.value) || 0;
 
-        if (!bidhaaId) {
+        if (!bidhaaId && !pendingNewProduct) {
+            toast('Chagua bidhaa, au bonyeza "Ongeza Mpya" kama haipo', 'warning');
             document.getElementById('batch-search-input').focus();
             return;
         }
-        if (idadi <= 0 || bei_nunua <= 0 || bei_kuuza <= 0) {
-            return;
+        if (idadi <= 0) { toast('Weka idadi', 'warning'); inputIdadi.focus(); return; }
+        if (bei_nunua <= 0) { toast('Weka bei ya kununua', 'warning'); inputBeiNunua.focus(); return; }
+        if (bei_kuuza <= 0) { toast('Weka bei ya kuuza', 'warning'); inputBeiKuuza.focus(); return; }
+        if (bei_kuuza < bei_nunua / idadi) { toast('Bei ya kuuza ni chini ya bei ya kununua', 'error'); return; }
+
+        let entry;
+        if (pendingNewProduct) {
+            entry = {
+                bidhaa_id: null, is_new: true, new_bidhaa: { ...pendingNewProduct },
+                jina: pendingNewProduct.jina, aina: pendingNewProduct.aina, kipimo: pendingNewProduct.kipimo || '',
+                idadi, bei_nunua, bei_kuuza
+            };
+        } else {
+            const itemData = batchBidhaaData.find(b => b.id == bidhaaId) || {};
+            entry = {
+                bidhaa_id: bidhaaId, is_new: false, new_bidhaa: null,
+                jina: itemData.jina || typedName, aina: itemData.aina || '', kipimo: itemData.kipimo || '',
+                idadi, bei_nunua, bei_kuuza
+            };
         }
+        batchCart.push(entry);
 
-        const unitCost = bei_nunua / idadi;
-        if (bei_kuuza < unitCost) {
-            return; // The warning is already visible
-        }
-
-        const itemData = batchBidhaaData.find(b => b.id == bidhaaId);
-        const kipimo = itemData ? itemData.kipimo : '';
-
-        batchCart.push({ bidhaa_id: bidhaaId, jina, kipimo, idadi, bei_nunua, bei_kuuza });
-        
         document.getElementById('batch-bidhaa_id').value = '';
         document.getElementById('batch-search-input').value = '';
-        document.getElementById('batch-idadi').value = '';
-        document.getElementById('batch-bei_nunua').value = '';
-        document.getElementById('batch-bei_kuuza').value = '';
+        inputIdadi.value = ''; inputBeiNunua.value = ''; inputBeiKuuza.value = '';
+        pendingNewProduct = null;
         calcDisplay.classList.add('hidden');
         inputBeiKuuza.classList.remove('border-red-500', 'bg-red-50');
-
+        updateSelectedInfo();
         renderBatchCart();
+        document.getElementById('batch-search-input').focus();
     }
 
     function renderBatchCart() {
@@ -822,20 +991,19 @@
             html += `
                 <tr>
                     <td class="px-3 py-2">
-                        <div class="font-medium text-gray-900">${item.jina}</div>
-                        <div class="text-xs text-gray-500">${item.kipimo}</div>
+                        <div class="font-medium text-gray-900">${esc(item.jina)} ${item.is_new ? '<span class="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded bg-blue-600 text-white">MPYA</span>' : ''}</div>
+                        <div class="text-xs text-gray-500">${esc(item.aina)}${item.kipimo ? ' - ' + esc(item.kipimo) : ''}</div>
                     </td>
                     <td class="px-3 py-2 text-center">${item.idadi}</td>
                     <td class="px-3 py-2 text-right">
                         <div class="font-bold">${item.bei_nunua.toFixed(2)}</div>
-                        <div class="text-xs text-gray-500">@ ${(item.bei_nunua/item.idadi).toFixed(2)}</div>
+                        <div class="text-xs text-gray-500">@ ${(item.bei_nunua / item.idadi).toFixed(2)}</div>
                     </td>
                     <td class="px-3 py-2 text-right">${item.bei_kuuza.toFixed(2)}</td>
                     <td class="px-3 py-2 text-center">
                         <button type="button" onclick="removeBatchItem(${index})" class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         });
 
         tbody.innerHTML = html;
@@ -847,44 +1015,179 @@
         renderBatchCart();
     }
 
-    async function submitBatch() {
-        if (batchCart.length === 0) {
-            return;
-        }
-
-        const btn = document.getElementById('batch-submit-btn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Inahifadhi...';
-
-        const payload = {
-            _token: document.querySelector('input[name="_token"]').value,
+    function batchPayload() {
+        return {
+            _token: CSRF,
+            draft_token: currentDraftToken,
             saplaya: document.getElementById('batch-saplaya').value,
             simu: document.getElementById('batch-simu').value,
             mengineyo: document.getElementById('batch-mengineyo').value,
             batch_items: batchCart
         };
+    }
+
+    // ---------- SUBMIT FINAL RECEIPT ----------
+    async function submitBatch() {
+        if (batchCart.length === 0) { toast('Ongeza angalau bidhaa moja kwenye risiti', 'warning'); return; }
+
+        const btn = document.getElementById('batch-submit-btn');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Inahifadhi...';
 
         try {
-            const res = await fetch('{{ route('manunuzi.store') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': payload._token
-                },
-                body: JSON.stringify(payload)
-            });
-
+            const res = await fetch(URL_STORE, { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(batchPayload()) });
             const data = await res.json();
             if (data.success) {
+                toast(data.message || 'Risiti imehifadhiwa!', 'success');
                 window.location.href = data.redirect;
             } else {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save mr-2"></i> Hifadhi Risiti & Ongeza Stock';
+                toast(data.message || 'Imeshindwa kuhifadhi risiti', 'error');
+                btn.disabled = false; btn.innerHTML = original;
             }
         } catch (error) {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save mr-2"></i> Hifadhi Risiti & Ongeza Stock';
+            toast('Hitilafu ya mtandao. Jaribu tena.', 'error');
+            btn.disabled = false; btn.innerHTML = original;
         }
+    }
+
+    // ---------- DRAFTS ----------
+    async function saveBatchDraft() {
+        if (batchCart.length === 0) { toast('Ongeza angalau bidhaa moja kabla ya kuhifadhi draft', 'warning'); return; }
+
+        const btn = document.getElementById('batch-draft-btn');
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Inahifadhi...';
+
+        try {
+            const res = await fetch(URL_DRAFT_SAVE, { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(batchPayload()) });
+            const data = await res.json();
+            if (data.success) {
+                currentDraftToken = data.draft_token;
+                updateDraftBanner();
+                toast(data.message || 'Draft imehifadhiwa!', 'success');
+                await refreshDrafts();
+            } else {
+                toast(data.message || 'Imeshindwa kuhifadhi draft', 'error');
+            }
+        } catch (e) {
+            toast('Hitilafu ya mtandao. Jaribu tena.', 'error');
+        } finally {
+            btn.disabled = false; btn.innerHTML = original;
+        }
+    }
+
+    async function refreshDrafts() {
+        try {
+            const res = await fetch(URL_DRAFT_LIST, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+            if (data.success) { draftsData = data.drafts; renderDrafts(); }
+        } catch (e) { /* ignore */ }
+    }
+
+    function renderDrafts() {
+        const panel = document.getElementById('drafts-panel');
+        const list = document.getElementById('drafts-list');
+        const badge = document.getElementById('draft-count-badge');
+
+        if (!draftsData || draftsData.length === 0) {
+            panel.classList.add('hidden');
+            badge.classList.add('hidden');
+            return;
+        }
+
+        badge.textContent = draftsData.length;
+        badge.classList.remove('hidden');
+        panel.classList.remove('hidden');
+
+        list.innerHTML = draftsData.map(d => `
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-white border ${d.draft_token === currentDraftToken ? 'border-amber-500' : 'border-amber-200'} rounded p-2">
+                <div class="text-sm">
+                    <div class="font-semibold text-gray-800">${esc(d.saplaya || 'Msaplaya hajawekwa')} ${d.simu ? '<span class="text-xs text-gray-500">(' + esc(d.simu) + ')</span>' : ''}</div>
+                    <div class="text-xs text-gray-500">Bidhaa ${d.item_count} • ${esc(d.updated_at)}</div>
+                </div>
+                <div class="flex gap-1">
+                    <button type="button" onclick="loadBatchDraft('${esc(d.draft_token)}')" class="px-3 py-1 bg-amber-500 text-white rounded text-xs font-medium hover:bg-amber-600"><i class="fas fa-play mr-1"></i> Endelea</button>
+                    <button type="button" onclick="deleteBatchDraft('${esc(d.draft_token)}')" class="px-2 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`).join('');
+    }
+
+    function updateDraftBanner() {
+        const banner = document.getElementById('current-draft-banner');
+        if (currentDraftToken) {
+            document.getElementById('current-draft-token').textContent = currentDraftToken;
+            banner.classList.remove('hidden');
+        } else {
+            banner.classList.add('hidden');
+        }
+        renderDrafts();
+    }
+
+    async function loadBatchDraft(token) {
+        if (batchCart.length > 0 && token !== currentDraftToken) {
+            if (!confirm('Risiti uliyonayo sasa haijahifadhiwa. Unataka kuibadilisha na draft hii?')) return;
+        }
+        try {
+            const res = await fetch(`${URL_DRAFT_BASE}/${encodeURIComponent(token)}/load`, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+            if (!data.success) { toast(data.message || 'Draft haipatikani', 'error'); refreshDrafts(); return; }
+
+            currentDraftToken = data.draft_token;
+            document.getElementById('batch-saplaya').value = data.saplaya || '';
+            document.getElementById('batch-simu').value = data.simu || '';
+            document.getElementById('batch-mengineyo').value = data.mengineyo || '';
+
+            batchCart = data.items.map(i => ({
+                bidhaa_id: i.bidhaa_id,
+                is_new: !!i.is_new,
+                new_bidhaa: i.new_bidhaa || null,
+                jina: i.jina, aina: i.aina, kipimo: i.kipimo || '',
+                idadi: parseFloat(i.idadi) || 0,
+                bei_nunua: parseFloat(i.bei_nunua) || 0,
+                bei_kuuza: parseFloat(i.bei_kuuza) || 0
+            }));
+
+            renderBatchCart();
+            updateDraftBanner();
+            window.manunuziManager?.showTab('batch');
+            window.manunuziManager?.saveTab('batch');
+            toast('Draft imepakiwa. Endelea na risiti yako.', 'success');
+        } catch (e) {
+            toast('Hitilafu katika kupakia draft', 'error');
+        }
+    }
+
+    async function deleteBatchDraft(token) {
+        if (!confirm('Futa draft hii? Hatua hii haiwezi kutenduliwa.')) return;
+        try {
+            const res = await fetch(`${URL_DRAFT_BASE}/${encodeURIComponent(token)}/delete`, { method: 'DELETE', headers: jsonHeaders() });
+            const data = await res.json();
+            if (data.success) {
+                if (token === currentDraftToken) newBatchReceipt(true);
+                toast(data.message || 'Draft imefutwa', 'success');
+                await refreshDrafts();
+            } else {
+                toast(data.message || 'Imeshindwa kufuta draft', 'error');
+            }
+        } catch (e) {
+            toast('Hitilafu ya mtandao', 'error');
+        }
+    }
+
+    // Reset the form to a blank receipt
+    function newBatchReceipt(silent) {
+        if (!silent && batchCart.length > 0 && !confirm('Futa risiti hii ya sasa na uanze mpya? (Draft iliyohifadhiwa haitafutwa)')) return;
+        batchCart = [];
+        currentDraftToken = null;
+        pendingNewProduct = null;
+        ['batch-saplaya', 'batch-simu', 'batch-mengineyo', 'batch-search-input', 'batch-bidhaa_id', 'batch-idadi', 'batch-bei_nunua', 'batch-bei_kuuza']
+            .forEach(id => { document.getElementById(id).value = ''; });
+        calcDisplay.classList.add('hidden');
+        updateSelectedInfo();
+        renderBatchCart();
+        updateDraftBanner();
     }
 </script>
 @endpush
