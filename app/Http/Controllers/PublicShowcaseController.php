@@ -39,7 +39,7 @@ class PublicShowcaseController extends Controller
         }
 
         // Get all products with stock > 0
-        $products = Bidhaa::where('company_id', $company->id)
+        $products = Bidhaa::active()->where('company_id', $company->id)
             ->where('idadi', '>', 0)
             ->orderBy('jina')
             ->get();
@@ -54,7 +54,7 @@ class PublicShowcaseController extends Controller
         $featuredProducts = $products->sortByDesc('idadi')->take(8);
 
         // Get categories for filtering
-        $categories = Bidhaa::where('company_id', $company->id)
+        $categories = Bidhaa::active()->where('company_id', $company->id)
             ->where('idadi', '>', 0)
             ->select('aina')
             ->distinct()
@@ -217,7 +217,7 @@ class PublicShowcaseController extends Controller
         $maxPrice = $request->get('max_price', null);
         $sort = $request->get('sort', 'name');
 
-        $query = Bidhaa::where('company_id', $company->id)
+        $query = Bidhaa::active()->where('company_id', $company->id)
             ->where('idadi', '>', 0);
 
         if (!empty($search)) {

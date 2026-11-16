@@ -219,7 +219,8 @@
         </div>
     </div>
 
-@elseif($reportType === 'sales')
+{{-- ================= SINGLE IF BLOCK STARTS HERE ================= --}}
+@if($reportType === 'sales')
     <!-- SALES REPORT - summary table -->
     <table class="summary-table page-break-avoid">
         <tr>
@@ -263,7 +264,7 @@
                 @php
                     $mobileTypes = [
                         'mpesa' => 'M-Pesa',
-                        'mixx_by_yas' => 'Mixx by Yas', 
+                        'mixx_by_yas' => 'Mixx by Yas',
                         'airtel_money' => 'Airtel Money',
                         'halopesa' => 'HaloPesa',
                         'other_lipa_namba' => 'Nyingine'
@@ -279,21 +280,17 @@
                     @endphp
                     @if($total > 0 || $count > 0)
                         @if($mobileCount == 0)
-                            <tr>
-                                <td>{{ $label }}</td>
-                                <td class="text-center">{{ $count }}</td>
-                                <td class="text-right">{{ number_format($total, 2) }}</td>
+                            <td>{{ $label }}</td>
+                            <td class="text-center">{{ $count }}</td>
+                            <td class="text-right">{{ number_format($total, 2) }}</td>
                         @elseif($mobileCount == 1)
-                                <td>{{ $label }}</td>
-                                <td class="text-center">{{ $count }}</td>
-                                <td class="text-right">{{ number_format($total, 2) }}</td>
-                            </tr>
+                            <td>{{ $label }}</td>
+                            <td class="text-center">{{ $count }}</td>
+                            <td class="text-right">{{ number_format($total, 2) }}</td>
                         @elseif($mobileCount == 2)
-                            <tr>
-                                <td>{{ $label }}</td>
-                                <td class="text-center">{{ $count }}</td>
-                                <td class="text-right">{{ number_format($total, 2) }}</td>
-                            </tr>
+                            <td>{{ $label }}</td>
+                            <td class="text-center">{{ $count }}</td>
+                            <td class="text-right">{{ number_format($total, 2) }}</td>
                         @endif
                         @php $mobileCount++; @endphp
                     @endif
@@ -303,14 +300,12 @@
                         <td>-</td><td class="text-center">0</td><td class="text-right">0.00</td>
                     @elseif($mobileCount == 1)
                         <td>-</td><td class="text-center">0</td><td class="text-right">0.00</td>
-                    </td>
                     @elseif($mobileCount == 2)
                         <td>-</td><td class="text-center">0</td><td class="text-right">0.00</td>
-                    </tr>
                     @endif
                     @php $mobileCount++; @endphp
                 @endwhile
-                
+
                 @php
                     $bankTypes = [
                         'crdb' => 'CRDB',
@@ -387,251 +382,251 @@
         JUMLA YA MAPATO YOTE: {{ number_format($grandTotal ?? 0, 2) }} TZS
     </div>
 
-    @elseif($reportType === 'manunuzi')
-        <!-- PURCHASES REPORT - summary table -->
-        <table class="summary-table page-break-avoid">
-            <tr>
-                <th>Jumla ya Gharama</th>
-                <th>Jumla ya Bidhaa</th>
-                <th>Wastani wa Bei</th>
-                <th>Idadi ya Manunuzi</th>
-            </tr>
-            <tr>
-                <td>{{ number_format($totalCost ?? 0, 2) }} TZS</td>
-                <td>
-                    @php
-                        $totalItems = $totalItems ?? 0;
-                        $formattedItems = is_numeric($totalItems) ? 
-                            ($totalItems % 1 == 0 ? (string)(int)$totalItems : number_format($totalItems, 2)) : 
-                            $totalItems;
-                    @endphp
-                    {{ $formattedItems }}
-                </td>
-                <td>{{ number_format($averageCost ?? 0, 2) }} TZS</td>
-                <td>{{ $manunuzi ? count($manunuzi) : 0 }}</td>
-            </tr>
-        </table>
+@elseif($reportType === 'manunuzi')
+    <!-- PURCHASES REPORT - summary table -->
+    <table class="summary-table page-break-avoid">
+        <tr>
+            <th>Jumla ya Gharama</th>
+            <th>Jumla ya Bidhaa</th>
+            <th>Wastani wa Bei</th>
+            <th>Idadi ya Manunuzi</th>
+        </tr>
+        <tr>
+            <td>{{ number_format($totalCost ?? 0, 2) }} TZS</td>
+            <td>
+                @php
+                    $totalItems = $totalItems ?? 0;
+                    $formattedItems = is_numeric($totalItems) ?
+                        ($totalItems % 1 == 0 ? (string)(int)$totalItems : number_format($totalItems, 2)) :
+                        $totalItems;
+                @endphp
+                {{ $formattedItems }}
+            </td>
+            <td>{{ number_format($averageCost ?? 0, 2) }} TZS</td>
+            <td>{{ $manunuzi ? count($manunuzi) : 0 }}</td>
+        </tr>
+    </table>
 
-        <!-- Purchases table with Aina and Kipimo -->
-        <table class="data-table">
-            <thead>
+    <!-- Purchases table with Aina and Kipimo -->
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Tarehe</th>
+                <th>Bidhaa</th>
+                <th>Aina</th>
+                <th>Kipimo</th>
+                <th class="text-center">Idadi</th>
+                <th class="text-right">Bei (TZS)</th>
+                <th class="text-right">Bei kwa Kimoja</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($manunuzi ?? [] as $index => $purchase)
+                @php
+                    $idadi = $purchase->idadi;
+                    $formattedIdadi = is_numeric($idadi) ?
+                        ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) :
+                        $idadi;
+                    $unitCost = $purchase->unit_cost ?? ($purchase->idadi > 0 ? $purchase->bei / $purchase->idadi : 0);
+                @endphp
                 <tr>
-                    <th>#</th>
-                    <th>Tarehe</th>
-                    <th>Bidhaa</th>
-                    <th>Aina</th>
-                    <th>Kipimo</th>
-                    <th class="text-center">Idadi</th>
-                    <th class="text-right">Bei (TZS)</th>
-                    <th class="text-right">Bei kwa Kimoja</th>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td>{{ $purchase->created_at ? date('d/m/Y', strtotime($purchase->created_at)) : '' }}</td>
+                    <td>{{ $purchase->bidhaa->jina ?? 'N/A' }}</td>
+                    <td>{{ $purchase->bidhaa->aina ?? 'N/A' }}</td>
+                    <td>{{ $purchase->bidhaa->kipimo ?? 'N/A' }}</td>
+                    <td class="text-center">{{ $formattedIdadi }}</td>
+                    <td class="text-right">{{ number_format($purchase->bei, 2) }}</td>
+                    <td class="text-right">{{ number_format($unitCost, 2) }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse($manunuzi ?? [] as $index => $purchase)
-                    @php
-                        $idadi = $purchase->idadi;
-                        $formattedIdadi = is_numeric($idadi) ? 
-                            ($idadi % 1 == 0 ? (string)(int)$idadi : number_format($idadi, 2)) : 
-                            $idadi;
-                        $unitCost = $purchase->unit_cost ?? ($purchase->idadi > 0 ? $purchase->bei / $purchase->idadi : 0);
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $purchase->created_at ? date('d/m/Y', strtotime($purchase->created_at)) : '' }}</td>
-                        <td>{{ $purchase->bidhaa->jina ?? 'N/A' }}</td>
-                        <td>{{ $purchase->bidhaa->aina ?? 'N/A' }}</td>
-                        <td>{{ $purchase->bidhaa->kipimo ?? 'N/A' }}</td>
-                        <td class="text-center">{{ $formattedIdadi }}</td>
-                        <td class="text-right">{{ number_format($purchase->bei, 2) }}</td>
-                        <td class="text-right">{{ number_format($unitCost, 2) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="text-center no-data">Hakuna manunuzi katika kipindi hiki</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-
-        <div class="grand-total page-break-avoid">
-            JUMLA YA GHARAMA ZA MANUNUZI: {{ number_format($totalCost ?? 0, 2) }} TZS
-        </div>
-
-    @elseif($reportType === 'matumizi')
-        <!-- EXPENSES REPORT - summary table (3 columns) -->
-        <table class="summary-table page-break-avoid">
-            <tr>
-                <th>Jumla ya Matumizi</th>
-                <th>Idadi ya Matumizi</th>
-                <th>Aina za Matumizi</th>
-            </tr>
-            <tr>
-                <td>{{ number_format($totalExpenses ?? 0, 2) }} TZS</td>
-                <td>{{ $matumizi ? count($matumizi) : 0 }}</td>
-                <td>{{ $totalsByCategory ? count($totalsByCategory) : 0 }}</td>
-            </tr>
-        </table>
-
-        <!-- Category summary table (if available) -->
-        @if(!empty($totalsByCategory) && count($totalsByCategory) > 0)
-        <table class="summary-table page-break-avoid" style="margin-top:8px;">
-            <tr>
-                @foreach($totalsByCategory as $category => $total)
-                    @if($loop->index < 4)
-                    <th>{{ $category }}</th>
-                    @endif
-                @endforeach
-            </tr>
-            <tr>
-                @foreach($totalsByCategory as $category => $total)
-                    @if($loop->index < 4)
-                    <td>{{ number_format($total, 2) }} TZS</td>
-                    @endif
-                @endforeach
-            </tr>
-        </table>
-        @endif
-
-        <!-- Expenses table -->
-        <table class="data-table">
-            <thead>
+            @empty
                 <tr>
-                    <th>#</th>
-                    <th>Tarehe</th>
-                    <th>Aina</th>
-                    <th>Maelezo</th>
-                    <th class="text-right">Gharama (TZS)</th>
+                    <td colspan="8" class="text-center no-data">Hakuna manunuzi katika kipindi hiki</td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse($matumizi ?? [] as $index => $expense)
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $expense->created_at ? date('d/m/Y', strtotime($expense->created_at)) : '' }}</td>
-                        <td>{{ $expense->aina ?: 'Zingine' }}</td>
-                        <td>{{ $expense->maelezo ?: '--' }}</td>
-                        <td class="text-right">{{ number_format($expense->gharama, 2) }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" class="text-center no-data">Hakuna matumizi katika kipindi hiki</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+            @endforelse
+        </tbody>
+    </table>
 
-        <div class="grand-total page-break-avoid">
-            JUMLA YA MATUMIZI: {{ number_format($totalExpenses ?? 0, 2) }} TZS
-        </div>
+    <div class="grand-total page-break-avoid">
+        JUMLA YA GHARAMA ZA MANUNUZI: {{ number_format($totalCost ?? 0, 2) }} TZS
+    </div>
 
-    @elseif($reportType === 'general')
-        <!-- GENERAL REPORT - all data in black & white tables -->
+@elseif($reportType === 'matumizi')
+    <!-- EXPENSES REPORT - summary table (3 columns) -->
+    <table class="summary-table page-break-avoid">
+        <tr>
+            <th>Jumla ya Matumizi</th>
+            <th>Idadi ya Matumizi</th>
+            <th>Aina za Matumizi</th>
+        </tr>
+        <tr>
+            <td>{{ number_format($totalExpenses ?? 0, 2) }} TZS</td>
+            <td>{{ $matumizi ? count($matumizi) : 0 }}</td>
+            <td>{{ $totalsByCategory ? count($totalsByCategory) : 0 }}</td>
+        </tr>
+    </table>
 
-        <!-- First table: Payment methods -->
-        <table class="summary-table page-break-avoid">
+    <!-- Category summary table (if available) -->
+    @if(!empty($totalsByCategory) && count($totalsByCategory) > 0)
+    <table class="summary-table page-break-avoid" style="margin-top:8px;">
+        <tr>
+            @foreach($totalsByCategory as $category => $total)
+                @if($loop->index < 4)
+                <th>{{ $category }}</th>
+                @endif
+            @endforeach
+        </tr>
+        <tr>
+            @foreach($totalsByCategory as $category => $total)
+                @if($loop->index < 4)
+                <td>{{ number_format($total, 2) }} TZS</td>
+                @endif
+            @endforeach
+        </tr>
+    </table>
+    @endif
+
+    <!-- Expenses table -->
+    <table class="data-table">
+        <thead>
             <tr>
-                <th>Cash</th>
-                <th>Lipa Namba</th>
-                <th>Benki</th>
-                <th>Jumla ya Mapato</th>
+                <th>#</th>
+                <th>Tarehe</th>
+                <th>Aina</th>
+                <th>Maelezo</th>
+                <th class="text-right">Gharama (TZS)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($matumizi ?? [] as $index => $expense)
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td>{{ $expense->created_at ? date('d/m/Y', strtotime($expense->created_at)) : '' }}</td>
+                    <td>{{ $expense->aina ?: 'Zingine' }}</td>
+                    <td>{{ $expense->maelezo ?: '--' }}</td>
+                    <td class="text-right">{{ number_format($expense->gharama, 2) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="5" class="text-center no-data">Hakuna matumizi katika kipindi hiki</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <div class="grand-total page-break-avoid">
+        JUMLA YA MATUMIZI: {{ number_format($totalExpenses ?? 0, 2) }} TZS
+    </div>
+
+@elseif($reportType === 'general')
+    <!-- GENERAL REPORT - all data in black & white tables -->
+
+    <!-- First table: Payment methods -->
+    <table class="summary-table page-break-avoid">
+        <tr>
+            <th>Cash</th>
+            <th>Lipa Namba</th>
+            <th>Benki</th>
+            <th>Jumla ya Mapato</th>
+        </tr>
+        <tr>
+            <td>{{ number_format($jumlaMapatoCash ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($jumlaMapatoMobile ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($jumlaMapatoBank ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($jumlaMapato ?? 0, 2) }} TZS</td>
+        </tr>
+    </table>
+
+    <!-- Second table: Profit & Loss -->
+    <table class="summary-table page-break-avoid" style="margin-top:8px;">
+        <tr>
+            <th>Faida ya Mauzo</th>
+            <th>Faida ya Marejesho</th>
+            <th>Matumizi</th>
+            <th>Fedha Dukani</th>
+        </tr>
+        <tr>
+            <td>{{ number_format($faidaMauzo ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($faidaMarejesho ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($jumlaMatumizi ?? 0, 2) }} TZS</td>
+            <td>{{ number_format($fedhaDukani ?? 0, 2) }} TZS</td>
+        </tr>
+    </table>
+
+    <!-- Third table: Faida Halisi (centered via colspan) -->
+    <table class="summary-table page-break-avoid" style="margin-top:8px; width:60%; margin-left:auto; margin-right:auto;">
+        <tr>
+            <th style="text-align:center;">Faida Halisi</th>
+        </tr>
+        <tr>
+            <td style="text-align:center; font-weight:bold; font-size:14px;">{{ number_format($faidaHalisi ?? 0, 2) }} TZS</td>
+        </tr>
+    </table>
+
+    <!-- Detailed income/expense comparison table -->
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th colspan="2" style="text-align: center; background: #f0f0f0;">Muhtasari wa Mapato</th>
+                <th colspan="2" style="text-align: center; background: #f0f0f0;">Muhtasari wa Matumizi</th>
             </tr>
             <tr>
-                <td>{{ number_format($jumlaMapatoCash ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($jumlaMapatoMobile ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($jumlaMapatoBank ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($jumlaMapato ?? 0, 2) }} TZS</td>
+                <th>Aina</th>
+                <th class="text-right">Kiasi (TZS)</th>
+                <th>Aina</th>
+                <th class="text-right">Kiasi (TZS)</th>
             </tr>
-        </table>
-
-        <!-- Second table: Profit & Loss -->
-        <table class="summary-table page-break-avoid" style="margin-top:8px;">
+        </thead>
+        <tbody>
             <tr>
-                <th>Faida ya Mauzo</th>
-                <th>Faida ya Marejesho</th>
-                <th>Matumizi</th>
-                <th>Fedha Dukani</th>
+                <td>Mauzo ya Cash</td>
+                <td class="text-right">{{ number_format($mapatoCashMauzo ?? 0, 2) }}</td>
+                <td>Matumizi</td>
+                <td class="text-right">{{ number_format($jumlaMatumizi ?? 0, 2) }}</td>
             </tr>
             <tr>
-                <td>{{ number_format($faidaMauzo ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($faidaMarejesho ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($jumlaMatumizi ?? 0, 2) }} TZS</td>
-                <td>{{ number_format($fedhaDukani ?? 0, 2) }} TZS</td>
-            </tr>
-        </table>
-
-        <!-- Third table: Faida Halisi (centered via colspan) -->
-        <table class="summary-table page-break-avoid" style="margin-top:8px; width:60%; margin-left:auto; margin-right:auto;">
-            <tr>
-                <th style="text-align:center;">Faida Halisi</th>
+                <td>Mauzo ya Lipa Namba</td>
+                <td class="text-right">{{ number_format($mapatoMobileMauzo ?? 0, 2) }}</td>
+                <td></td>
+                <td class="text-right"></td>
             </tr>
             <tr>
-                <td style="text-align:center; font-weight:bold; font-size:14px;">{{ number_format($faidaHalisi ?? 0, 2) }} TZS</td>
+                <td>Mauzo ya Benki</td>
+                <td class="text-right">{{ number_format($mapatoBankMauzo ?? 0, 2) }}</td>
+                <td></td>
+                <td class="text-right"></td>
             </tr>
-        </table>
+            <tr>
+                <td>Marejesho ya Madeni (Cash)</td>
+                <td class="text-right">{{ number_format($mapatoCashMadeni ?? 0, 2) }}</td>
+                <td></td>
+                <td class="text-right"></td>
+            </tr>
+            <tr>
+                <td>Marejesho ya Madeni (Lipa Namba)</td>
+                <td class="text-right">{{ number_format($mapatoMobileMadeni ?? 0, 2) }}</td>
+                <td></td>
+                <td class="text-right"></td>
+            </tr>
+            <tr>
+                <td>Marejesho ya Madeni (Benki)</td>
+                <td class="text-right">{{ number_format($mapatoBankMadeni ?? 0, 2) }}</td>
+                <td></td>
+                <td class="text-right"></td>
+            </tr>
+            <tr style="font-weight: bold; background: #f0f0f0;">
+                <td>Jumla ya Mapato</td>
+                <td class="text-right">{{ number_format($jumlaMapato ?? 0, 2) }}</td>
+                <td>Jumla ya Matumizi</td>
+                <td class="text-right">{{ number_format($jumlaMatumizi ?? 0, 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
 
-        <!-- Detailed income/expense comparison table -->
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th colspan="2" style="text-align: center; background: #f0f0f0;">Muhtasari wa Mapato</th>
-                    <th colspan="2" style="text-align: center; background: #f0f0f0;">Muhtasari wa Matumizi</th>
-                </tr>
-                <tr>
-                    <th>Aina</th>
-                    <th class="text-right">Kiasi (TZS)</th>
-                    <th>Aina</th>
-                    <th class="text-right">Kiasi (TZS)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Mauzo ya Cash</td>
-                    <td class="text-right">{{ number_format($mapatoCashMauzo ?? 0, 2) }}</td>
-                    <td>Matumizi</td>
-                    <td class="text-right">{{ number_format($jumlaMatumizi ?? 0, 2) }}</td>
-                </tr>
-                <tr>
-                    <td>Mauzo ya Lipa Namba</td>
-                    <td class="text-right">{{ number_format($mapatoMobileMauzo ?? 0, 2) }}</td>
-                    <td></td>
-                    <td class="text-right"></td>
-                </tr>
-                <tr>
-                    <td>Mauzo ya Benki</td>
-                    <td class="text-right">{{ number_format($mapatoBankMauzo ?? 0, 2) }}</td>
-                    <td></td>
-                    <td class="text-right"></td>
-                </tr>
-                <tr>
-                    <td>Marejesho ya Madeni (Cash)</td>
-                    <td class="text-right">{{ number_format($mapatoCashMadeni ?? 0, 2) }}</td>
-                    <td></td>
-                    <td class="text-right"></td>
-                </tr>
-                <tr>
-                    <td>Marejesho ya Madeni (Lipa Namba)</td>
-                    <td class="text-right">{{ number_format($mapatoMobileMadeni ?? 0, 2) }}</td>
-                    <td></td>
-                    <td class="text-right"></td>
-                </tr>
-                <tr>
-                    <td>Marejesho ya Madeni (Benki)</td>
-                    <td class="text-right">{{ number_format($mapatoBankMadeni ?? 0, 2) }}</td>
-                    <td></td>
-                    <td class="text-right"></td>
-                </tr>
-                <tr style="font-weight: bold; background: #f0f0f0;">
-                    <td>Jumla ya Mapato</td>
-                    <td class="text-right">{{ number_format($jumlaMapato ?? 0, 2) }}</td>
-                    <td>Jumla ya Matumizi</td>
-                    <td class="text-right">{{ number_format($jumlaMatumizi ?? 0, 2) }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="grand-total page-break-avoid">
-            FEDHA DUKANI: {{ number_format($fedhaDukani ?? 0, 2) }} TZS
-        </div>
+    <div class="grand-total page-break-avoid">
+        FEDHA DUKANI: {{ number_format($fedhaDukani ?? 0, 2) }} TZS
+    </div>
 
 @elseif($reportType === 'mapato_by_method')
     <!-- INCOME BY PAYMENT METHOD - summary table -->
@@ -663,7 +658,7 @@
         </thead>
         <tbody>
             @php $index = 1; @endphp
-            
+
             <!-- Cash -->
             @php
                 $cashSalesCount = $salesByMethod->where('lipa_kwa', 'cash')->first()->count ?? 0;
@@ -690,12 +685,12 @@
                 <td class="text-right">{{ number_format($cashDebtsTotal, 2) }}</td>
             </tr>
             @endif
-            
+
             <!-- Lipa Namba Types -->
             <tr style="background:#f0f0f0; font-weight:bold;">
                 <td colspan="5">📱 LIPA NAMBA</td>
             </tr>
-            
+
             @php
                 $mobileTypes = [
                     'mpesa' => ['label' => 'M-Pesa', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
@@ -704,7 +699,7 @@
                     'halopesa' => ['label' => 'HaloPesa', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
                     'other_lipa_namba' => ['label' => 'Nyingine', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
                 ];
-                
+
                 foreach($salesByMethod as $item) {
                     if ($item->lipa_kwa === 'lipa_namba') {
                         $type = $item->lipa_kwa_type ?? 'other_lipa_namba';
@@ -713,7 +708,7 @@
                         $mobileTypes[$type]['sales_count'] = $item->count;
                     }
                 }
-                
+
                 foreach($debtsByMethod as $item) {
                     if ($item->lipa_kwa === 'lipa_namba') {
                         $type = $item->lipa_kwa_type ?? 'other_lipa_namba';
@@ -723,11 +718,11 @@
                     }
                 }
             @endphp
-            
-            @foreach($mobileTypes as $type)
+
+            @foreach($mobileTypes as $typeKey => $type)
                 @php
-                    $hasSales = $mobileTypes[$type]['sales_count'] > 0;
-                    $hasDebts = $mobileTypes[$type]['debts_count'] > 0;
+                    $hasSales = $mobileTypes[$typeKey]['sales_count'] > 0;
+                    $hasDebts = $mobileTypes[$typeKey]['debts_count'] > 0;
                 @endphp
                 @if($hasSales || $hasDebts)
                     @if($hasSales)
@@ -735,8 +730,8 @@
                         <td class="text-center">{{ $index++ }}</td>
                         <td>{{ $type['label'] }}</td>
                         <td>Mauzo</td>
-                        <td class="text-center">{{ $mobileTypes[$type]['sales_count'] }}</td>
-                        <td class="text-right">{{ number_format($mobileTypes[$type]['sales_total'], 2) }}</td>
+                        <td class="text-center">{{ $mobileTypes[$typeKey]['sales_count'] }}</td>
+                        <td class="text-right">{{ number_format($mobileTypes[$typeKey]['sales_total'], 2) }}</td>
                     </tr>
                     @endif
                     @if($hasDebts)
@@ -744,18 +739,18 @@
                         <td class="text-center">{{ $index++ }}</td>
                         <td>{{ $type['label'] }}</td>
                         <td>Marejesho ya Madeni</td>
-                        <td class="text-center">{{ $mobileTypes[$type]['debts_count'] }}</td>
-                        <d class="text-right">{{ number_format($mobileTypes[$type]['debts_total'], 2) }}</td>
+                        <td class="text-center">{{ $mobileTypes[$typeKey]['debts_count'] }}</td>
+                        <td class="text-right">{{ number_format($mobileTypes[$typeKey]['debts_total'], 2) }}</td>
                     </tr>
                     @endif
                 @endif
             @endforeach
-            
+
             <!-- Bank Types -->
             <tr style="background:#f0f0f0; font-weight:bold;">
                 <td colspan="5">🏦 BANK</td>
             </tr>
-            
+
             @php
                 $bankTypes = [
                     'crdb' => ['label' => 'CRDB', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
@@ -763,7 +758,7 @@
                     'nbc' => ['label' => 'NBC', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
                     'other_bank' => ['label' => 'Nyingine', 'sales_total' => 0, 'sales_count' => 0, 'debts_total' => 0, 'debts_count' => 0],
                 ];
-                
+
                 foreach($salesByMethod as $item) {
                     if ($item->lipa_kwa === 'bank') {
                         $type = $item->lipa_kwa_type ?? 'other_bank';
@@ -772,7 +767,7 @@
                         $bankTypes[$type]['sales_count'] = $item->count;
                     }
                 }
-                
+
                 foreach($debtsByMethod as $item) {
                     if ($item->lipa_kwa === 'bank') {
                         $type = $item->lipa_kwa_type ?? 'other_bank';
@@ -782,11 +777,11 @@
                     }
                 }
             @endphp
-            
-            @foreach($bankTypes as $type)
+
+            @foreach($bankTypes as $typeKey => $type)
                 @php
-                    $hasSales = $bankTypes[$type]['sales_count'] > 0;
-                    $hasDebts = $bankTypes[$type]['debts_count'] > 0;
+                    $hasSales = $bankTypes[$typeKey]['sales_count'] > 0;
+                    $hasDebts = $bankTypes[$typeKey]['debts_count'] > 0;
                 @endphp
                 @if($hasSales || $hasDebts)
                     @if($hasSales)
@@ -794,8 +789,8 @@
                         <td class="text-center">{{ $index++ }}</td>
                         <td>{{ $type['label'] }}</td>
                         <td>Mauzo</td>
-                        <td class="text-center">{{ $bankTypes[$type]['sales_count'] }}</td>
-                        <td class="text-right">{{ number_format($bankTypes[$type]['sales_total'], 2) }}</td>
+                        <td class="text-center">{{ $bankTypes[$typeKey]['sales_count'] }}</td>
+                        <td class="text-right">{{ number_format($bankTypes[$typeKey]['sales_total'], 2) }}</td>
                     </tr>
                     @endif
                     @if($hasDebts)
@@ -803,8 +798,8 @@
                         <td class="text-center">{{ $index++ }}</td>
                         <td>{{ $type['label'] }}</td>
                         <td>Marejesho ya Madeni</td>
-                        <td class="text-center">{{ $bankTypes[$type]['debts_count'] }}</td>
-                        <td class="text-right">{{ number_format($bankTypes[$type]['debts_total'], 2) }}</td>
+                        <td class="text-center">{{ $bankTypes[$typeKey]['debts_count'] }}</td>
+                        <td class="text-right">{{ number_format($bankTypes[$typeKey]['debts_total'], 2) }}</td>
                     </tr>
                     @endif
                 @endif
@@ -815,7 +810,10 @@
     <div class="grand-total page-break-avoid">
         JUMLA YA MAPATO YOTE: {{ number_format($grandTotal ?? 0, 2) }} TZS
     </div>
+@else
+    <div class="no-data">Aina ya ripoti haijulikani: {{ $reportType ?? 'N/A' }}</div>
 @endif
+{{-- ================= SINGLE IF BLOCK ENDS HERE ================= --}}
 
     <!-- Footer -->
     <div class="footer">

@@ -220,7 +220,7 @@ class MadeniController extends Controller
             ->get();
         
         // Get all products for dropdown with aina and kipimo
-        $bidhaa = Bidhaa::where('company_id', $companyId)
+        $bidhaa = Bidhaa::active()->where('company_id', $companyId)
             ->where('idadi', '>', 0)
             ->select('id', 'jina', 'aina', 'kipimo', 'bei_kuuza', 'bei_nunua', 'idadi')
             ->orderBy('jina')

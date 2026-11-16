@@ -29,6 +29,9 @@ class Bidhaa extends Model
         'image_mime_type',
         'image_size',
         'updated_by',
+        'archived_at',
+        'archived_by',
+        'archive_reason',
     ];
 
     protected $casts = [
@@ -39,6 +42,7 @@ class Bidhaa extends Model
         'expiry' => 'date:Y-m-d',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'archived_at' => 'datetime',
         'image_size' => 'integer',
     ];
 
@@ -304,5 +308,10 @@ class Bidhaa extends Model
             'maelezo' => $description,
             'mtumiaji_id' => auth()->id(),
         ]);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('bidhaas.archived_at');
     }
 }

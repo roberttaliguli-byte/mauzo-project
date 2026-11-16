@@ -155,14 +155,14 @@
             </a>
             @endif
             
-<!-- Delete All Button - Only for Boss -->
-@if($isBoss && $totalProducts > 0)
-<button onclick="confirmDeleteAll()" 
-        class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-    <i class="fas fa-trash-alt mr-2"></i> Futa Zote
-    <span class="ml-2 bg-white text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">{{ $totalProducts }}</span>
-</button>
+@if($isBoss)
+<a href="{{ route('cleanup.index') }}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
+    <i class="fas fa-broom mr-2"></i> futa
+</a>
 @endif
+<a href="{{ route('stocktake.index') }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm font-medium">
+    <i class="fas fa-clipboard-check mr-2"></i> Stock Taking
+</a>
         </div>
         
         <div class="flex gap-2">
@@ -957,107 +957,8 @@
     </div>
 </div>
 
-<!-- Image Preview Modal -->
-<div id="image-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-    <div class="modal-overlay absolute inset-0 bg-black opacity-75"></div>
-    <div class="modal-content bg-white rounded-lg shadow-lg max-w-2xl w-full mx-auto z-50">
-        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-sm font-semibold text-gray-800" id="image-modal-title">Picha ya Bidhaa</h3>
-            <button onclick="closeImageModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="p-4 flex justify-center">
-            <img id="image-modal-img" src="" alt="Product Image" class="max-w-full max-h-96 object-contain">
-        </div>
-    </div>
-</div>
-
-<!-- Delete All Modal -->
-<div id="delete-all-modal" class="modal fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-    <div class="modal-overlay absolute inset-0 bg-black opacity-50"></div>
-    <div class="modal-content bg-white rounded-lg shadow-lg w-full max-w-md mx-auto z-50">
-        <div class="p-4 border-b border-gray-200">
-            <h3 class="text-sm font-semibold text-gray-800">Thibitisha Kufuta Bidhaa Zote</h3>
-        </div>
-        <div class="p-4">
-            <div class="text-center mb-4">
-                <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i>
-                <p class="text-gray-700 text-sm mb-2">Una uhakika unataka kufuta <span id="delete-all-count" class="font-bold text-red-600"></span> bidhaa zote?</p>
-                <p class="text-gray-500 text-xs">Hatua hii haiwezi kutenduliwa!</p>
-                <p class="text-amber-600 text-xs mt-2 flex items-center justify-center gap-1">
-                    <i class="fas fa-info-circle"></i> Taarifa zote za bidhaa zitaondolewa kabisa
-                </p>
-            </div>
-            <div class="flex gap-2">
-                <button id="cancel-delete-all"
-                        class="flex-1 px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 text-sm">
-                    Ghairi
-                </button>
-                <button id="confirm-delete-all"
-                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium">
-                    Ndio, Futa Zote
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
-@push('styles')
-<style>
-#search-input {
-    pointer-events: auto !important;
-    opacity: 1 !important;
-    background-color: white !important;
-    color: black !important;
-    border: 1px solid #d1d5db !important;
-    z-index: 10 !important;
-}
-
-#search-input:focus {
-    border-color: #10b981 !important;
-    box-shadow: 0 0 0 1px #10b981 !important;
-    outline: none !important;
-}
-
-.modal {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-}
-
-#search-results-dropdown {
-    max-height: 320px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #10b981 #f3f4f6;
-}
-
-#search-results-dropdown::-webkit-scrollbar {
-    width: 6px;
-}
-
-#search-results-dropdown::-webkit-scrollbar-track {
-    background: #f3f4f6;
-}
-
-#search-results-dropdown::-webkit-scrollbar-thumb {
-    background-color: #10b981;
-    border-radius: 20px;
-}
-</style>
-
-@endpush
 @push('styles')
 <style>
 #search-input {
@@ -1632,65 +1533,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     attachProductEvents();
-    
-    // Handle Delete All modal
-    const cancelDeleteAll = document.getElementById('cancel-delete-all');
-    const confirmDeleteAllBtn = document.getElementById('confirm-delete-all');
-    const deleteAllModal = document.getElementById('delete-all-modal');
-    
-    if (cancelDeleteAll) {
-        cancelDeleteAll.addEventListener('click', function() {
-            deleteAllModal.classList.add('hidden');
-        });
-    }
-    
-    if (confirmDeleteAllBtn) {
-        confirmDeleteAllBtn.addEventListener('click', async function() {
-            const button = this;
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Inafuta...';
-            
-            try {
-                const response = await fetch('{{ route("bidhaa.deleteAll") }}', {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.success) {
-                    showNotification(data.message, 'success');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
-                } else {
-                    showNotification(data.message || 'Hitilafu imetokea', 'error');
-                    button.disabled = false;
-                    button.innerHTML = originalText;
-                }
-            } catch (error) {
-                showNotification('Hitilafu ya mtandao', 'error');
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }
-            
-            deleteAllModal.classList.add('hidden');
-        });
-    }
-    
-    // Close modal when clicking outside
-    if (deleteAllModal) {
-        deleteAllModal.addEventListener('click', function(e) {
-            if (e.target === deleteAllModal || e.target.classList.contains('modal-overlay')) {
-                deleteAllModal.classList.add('hidden');
-            }
-        });
-    }
 });
 
 function storeOriginalRows() {
@@ -2418,19 +2260,6 @@ function displayProductDetails(data) {
     } else {
         document.getElementById('history-tbody').innerHTML = `<tr><td colspan="6" class="px-3 py-4 text-center text-gray-500">Hakuna historia</td></tr>`;
     }
-}
-
-// Delete All Products
-function confirmDeleteAll() {
-    const totalProducts = {{ $totalProducts }} || 0;
-    
-    if (totalProducts === 0) {
-        showNotification('Hakuna bidhaa za kufuta', 'warning');
-        return;
-    }
-    
-    document.getElementById('delete-all-count').textContent = totalProducts;
-    document.getElementById('delete-all-modal').classList.remove('hidden');
 }
 
 function printProductDetails() {

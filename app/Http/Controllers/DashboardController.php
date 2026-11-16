@@ -243,13 +243,13 @@ class DashboardController extends Controller
      */
     private function getInventoryMetrics($companyId)
     {
-        $jumlaBidhaa = Bidhaa::where('company_id', $companyId)->count();
-        $jumlaIdadi = (float) Bidhaa::where('company_id', $companyId)->sum('idadi');
-        $thamani = (float) Bidhaa::where('company_id', $companyId)
+        $jumlaBidhaa = Bidhaa::active()->where('company_id', $companyId)->count();
+        $jumlaIdadi = (float) Bidhaa::active()->where('company_id', $companyId)->sum('idadi');
+        $thamani = (float) Bidhaa::active()->where('company_id', $companyId)
             ->selectRaw('COALESCE(SUM(idadi * COALESCE(bei_nunua,0)),0) as v')->value('v');
-        $bidhaaZilizopo = Bidhaa::where('company_id', $companyId)->where('idadi', '>', 0)->count();
-        $bidhaaZimeisha = Bidhaa::where('company_id', $companyId)->where('idadi', 0)->count();
-        $bidhaaKaribiaKuisha = Bidhaa::where('company_id', $companyId)->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
+        $bidhaaZilizopo = Bidhaa::active()->where('company_id', $companyId)->where('idadi', '>', 0)->count();
+        $bidhaaZimeisha = Bidhaa::active()->where('company_id', $companyId)->where('idadi', 0)->count();
+        $bidhaaKaribiaKuisha = Bidhaa::active()->where('company_id', $companyId)->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
 
         return compact(
             'jumlaBidhaa',

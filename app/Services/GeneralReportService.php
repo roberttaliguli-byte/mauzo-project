@@ -38,11 +38,11 @@ class GeneralReportService
             }
         };
 
-        // --- Inventory ---
-        $jumlaBidhaa = Bidhaa::where('company_id', $companyId)->count();
-        $jumlaIdadi = Bidhaa::where('company_id', $companyId)->sum('idadi');
+        // --- Inventory (current stock only; archived products hidden) ---
+        $jumlaBidhaa = Bidhaa::active()->where('company_id', $companyId)->count();
+        $jumlaIdadi = Bidhaa::active()->where('company_id', $companyId)->sum('idadi');
 
-        $thamani = Bidhaa::where('company_id', $companyId)
+        $thamani = Bidhaa::active()->where('company_id', $companyId)
             ->selectRaw('SUM(idadi * bei_nunua) as jumla')
             ->value('jumla');
 

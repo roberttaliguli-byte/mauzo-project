@@ -160,7 +160,7 @@ private function processAndStoreImage($image)
         $perPage = $request->input('per_page', 10);
         $isBoss = $this->isBoss();
 
-        $query = Bidhaa::where('company_id', $companyId);
+        $query = Bidhaa::active()->where('company_id', $companyId);
 
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
@@ -191,7 +191,7 @@ private function processAndStoreImage($image)
 
         // Handle PDF Export
         if ($request->has('export') && $request->export === 'pdf') {
-            $exportQuery = Bidhaa::where('company_id', $companyId);
+            $exportQuery = Bidhaa::active()->where('company_id', $companyId);
 
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
@@ -267,11 +267,11 @@ private function processAndStoreImage($image)
                        ->paginate($perPage)
                        ->appends($request->except('page'));
 
-        $totalProducts = Bidhaa::where('company_id', $companyId)->count();
-        $availableProducts = Bidhaa::where('company_id', $companyId)->where('idadi', '>', 0)->count();
-        $lowStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
-        $expiredProducts = Bidhaa::where('company_id', $companyId)->where('expiry', '<', now())->count();
-        $outOfStockProducts = Bidhaa::where('company_id', $companyId)->where('idadi', 0)->count();
+        $totalProducts = Bidhaa::active()->where('company_id', $companyId)->count();
+        $availableProducts = Bidhaa::active()->where('company_id', $companyId)->where('idadi', '>', 0)->count();
+        $lowStockProducts = Bidhaa::active()->where('company_id', $companyId)->where('idadi', '<', 10)->where('idadi', '>', 0)->count();
+        $expiredProducts = Bidhaa::active()->where('company_id', $companyId)->where('expiry', '<', now())->count();
+        $outOfStockProducts = Bidhaa::active()->where('company_id', $companyId)->where('idadi', 0)->count();
 
         if ($request->ajax() && !$request->has('export')) {
             return response()->json([
@@ -310,7 +310,8 @@ private function processAndStoreImage($image)
         }
         
         try {
-            $bidhaa = Bidhaa::where('company_id', $companyId)
+            $bidhaa = Bidhaa::active()
+                ->where('company_id', $companyId)
                 ->where(function($query) use ($search) {
                     $query->where('jina', 'LIKE', "%{$search}%")
                           ->orWhere('aina', 'LIKE', "%{$search}%")
@@ -689,6 +690,15 @@ private function processAndStoreImage($image)
                 ->with('error', 'Huna ruhusa ya kufuta bidhaa.');
         }
 
+        $cleanup = app(\App\Services\ProductCleanupService::class);
+        $row = $cleanup->baseQuery($companyId)->where('bidhaas.id', $bidhaa->id)->first();
+        if ($row && $cleanup->protectedReasons($row)) {
+            $msg = 'This product has transaction history (' . implode(', ', $cleanup->protectedReasons($row)) . '). Archive it from Product Cleanup instead.';
+            return ($request->ajax() || $request->wantsJson())
+                ? response()->json(['success' => false, 'message' => $msg], 422)
+                : redirect()->route('bidhaa.index')->with('error', $msg);
+        }
+
         // Delete image file
         if ($bidhaa->image_path) {
             Storage::disk('public')->delete($bidhaa->image_path);
@@ -705,54 +715,6 @@ private function processAndStoreImage($image)
 
         return redirect()->route('bidhaa.index')
             ->with('success', 'Bidhaa imefutwa kikamilifu!');
-    }
-
-    public function deleteAll(Request $request)
-    {
-        $companyId = $this->getCompanyId();
-        
-        if (!$this->isBoss()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Huna ruhusa ya kufuta bidhaa zote.'
-                ], 403);
-            }
-            return redirect()->route('bidhaa.index')->with('error', 'Huna ruhusa ya kufuta bidhaa zote.');
-        }
-        
-        try {
-            $products = Bidhaa::where('company_id', $companyId)->get();
-            $count = $products->count();
-            
-            if ($count === 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hakuna bidhaa za kufuta'
-                ]);
-            }
-            
-            // Delete all image files
-            foreach ($products as $product) {
-                if ($product->image_path) {
-                    Storage::disk('public')->delete($product->image_path);
-                }
-            }
-            
-            // Delete all products
-            Bidhaa::where('company_id', $companyId)->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => "Bidhaa zote ({$count}) zimefutwa kikamilifu!"
-            ]);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Hitilafu: ' . $e->getMessage()
-            ], 500);
-        }
     }
 
     public function deleteImage($id, Request $request)
@@ -801,7 +763,7 @@ private function processAndStoreImage($image)
         $companyId = $this->getCompanyId();
         $company = $this->getCurrentUser()->company->name ?? 'Kampuni';
         
-        $query = Bidhaa::where('company_id', $companyId);
+        $query = Bidhaa::active()->where('company_id', $companyId);
 
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
@@ -1618,7 +1580,7 @@ private function processAndStoreImage($image)
         $search = $request->get('q', '');
         $id = $request->get('id', null);
         
-        $query = Bidhaa::where('company_id', $companyId);
+        $query = Bidhaa::active()->where('company_id', $companyId);
         
         if ($id) {
             $query->where('id', $id);
@@ -1683,13 +1645,13 @@ public function quickUpdate(Request $request)
     }
 
     // Get stats for the page
-    $totalProducts = Bidhaa::where('company_id', $companyId)->count();
-    $lowStockProducts = Bidhaa::where('company_id', $companyId)
+    $totalProducts = Bidhaa::active()->where('company_id', $companyId)->count();
+    $lowStockProducts = Bidhaa::active()->where('company_id', $companyId)
         ->where('idadi', '<', 10)
         ->where('idadi', '>', 0)
         ->count();
-    
-    $updatedToday = Bidhaa::where('company_id', $companyId)
+
+    $updatedToday = Bidhaa::active()->where('company_id', $companyId)
         ->whereDate('updated_at', today())
         ->count();
 
@@ -1714,7 +1676,7 @@ public function searchQuickUpdate(Request $request)
         return response()->json(['success' => false, 'data' => []]);
     }
 
-    $products = Bidhaa::where('company_id', $companyId)
+    $products = Bidhaa::active()->where('company_id', $companyId)
         ->where(function($query) use ($search) {
             $query->where('jina', 'LIKE', "%{$search}%")
                   ->orWhere('barcode', 'LIKE', "%{$search}%")
@@ -1867,7 +1829,7 @@ public function getRecentlyUpdated(Request $request)
     $companyId = $this->getCompanyId();
     $limit = $request->input('limit', 10);
 
-    $products = Bidhaa::where('company_id', $companyId)
+    $products = Bidhaa::active()->where('company_id', $companyId)
         ->whereNotNull('updated_at')
         ->orderBy('updated_at', 'desc')
         ->limit($limit)

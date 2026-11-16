@@ -77,7 +77,7 @@ class OrderController extends Controller
     {
         $companyId = $this->getCompanyId();
         
-        $products = Bidhaa::where('company_id', $companyId)
+        $products = Bidhaa::active()->where('company_id', $companyId)
             ->where('idadi', '>', 0)
             ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'idadi', 'aina', 'kipimo', 'image', 'image_path', 'image_mime_type', 'image_size')
             ->orderBy('jina')
@@ -119,7 +119,7 @@ class OrderController extends Controller
     {
         $companyId = $this->getCompanyId();
         
-        $product = Bidhaa::where('barcode', $barcode)
+        $product = Bidhaa::active()->where('barcode', $barcode)
             ->where('company_id', $companyId)
             ->first();
         
@@ -218,7 +218,7 @@ class OrderController extends Controller
         $companyId = $user->company_id;
 
         // Product list — use direct storage URL like bidhaa/index (lightweight, cacheable) with base64 fallback for BLOB legacy
-        $bidhaa = Bidhaa::where('company_id', $companyId)
+        $bidhaa = Bidhaa::active()->where('company_id', $companyId)
             ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo', 'image', 'image_path', 'image_mime_type', 'image_size')
             ->orderBy('jina')
             ->get();

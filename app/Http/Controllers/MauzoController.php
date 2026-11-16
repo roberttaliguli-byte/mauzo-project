@@ -175,7 +175,7 @@ class MauzoController extends Controller
         // Same product set/logic as Order page: lightweight cacheable storage URL first,
         // base64 fallback for legacy BLOB; products without images get null and the
         // blade shows a clear placeholder icon. Company-scoped, ordered by jina.
-        $bidhaa = Bidhaa::where('company_id', $companyId)
+        $bidhaa = Bidhaa::active()->where('company_id', $companyId)
             ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo', 'image', 'image_path', 'image_mime_type', 'image_size')
             ->orderBy('jina')->get();
         foreach ($bidhaa as $product) {
@@ -186,7 +186,7 @@ class MauzoController extends Controller
         }
         // Lightweight JSON for JS price/stock lookups (no images — keeps page small).
         $bidhaaData = \Illuminate\Support\Facades\Cache::remember("mauzo_bidhaa_json_{$companyId}", 60, function () use ($companyId) {
-            return Bidhaa::where('company_id', $companyId)
+            return Bidhaa::active()->where('company_id', $companyId)
                 ->select('id', 'jina', 'bei_kuuza', 'bei_uzo_jumla', 'bei_nunua', 'idadi', 'barcode', 'aina', 'kipimo')
                 ->orderBy('jina')->get();
         });
@@ -351,7 +351,7 @@ class MauzoController extends Controller
         if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         $companyId = $user->company_id;
         $q = trim($request->input('q', ''));
-        $query = Bidhaa::where('company_id', $companyId)
+        $query = Bidhaa::active()->where('company_id', $companyId)
             ->select('id','jina','bei_kuuza','bei_uzo_jumla','bei_nunua','idadi','barcode','aina','kipimo')
             ->orderBy('jina');
         if ($q !== '') {
@@ -1380,7 +1380,7 @@ class MauzoController extends Controller
         $user = $this->getAuthUser();
         if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         $companyId = $user->company_id;
-        $product = Bidhaa::where('barcode', $barcode)->where('company_id', $companyId)->first();
+        $product = Bidhaa::active()->where('barcode', $barcode)->where('company_id', $companyId)->first();
         if (!$product) return response()->json(['success' => false, 'message' => 'Bidhaa haipatikani kwa barcode hii'], 404);
         return response()->json(['success' => true, 'product' => ['id' => $product->id, 'jina' => $product->jina, 'bei_kuuza' => $product->bei_kuuza, 'bei_nunua' => $product->bei_nunua, 'idadi' => $product->idadi, 'aina' => $product->aina, 'kipimo' => $product->kipimo, 'barcode' => $product->barcode]]);
     }
