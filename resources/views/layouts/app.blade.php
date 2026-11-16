@@ -34,6 +34,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    {{-- ============ FAVICON & BRANDING ============ --}}
+    <link rel="icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <meta name="theme-color" content="#065f46">
+
+    {{-- Google / Social sharing --}}
+    <meta name="description" content="Mfumo wa usimamizi wa mauzo na bidhaa.">
+    <meta property="og:title" content="@yield('title', 'MAUZO SHEET')">
+    <meta property="og:description" content="Mfumo wa usimamizi wa mauzo na bidhaa.">
+    <meta property="og:image" content="{{ asset('android-chrome-512x512.png') }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:type" content="website">
+    {{-- ============ END FAVICON & BRANDING ============ --}}
     
 <style>
     /* Custom Styles */
