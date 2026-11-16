@@ -110,8 +110,16 @@
                 <span class="flex-1"></span>
                 <button id="sel-safe" class="font-semibold text-emerald-700 hover:underline">Chagua zilizo salama kufuta</button>
                 <button id="sel-page" class="font-semibold text-emerald-700 hover:underline">Zote kwenye ukurasa</button>
+                <button id="sel-all"  class="font-semibold text-red-700 hover:underline">Chagua zote (nje ya ukurasa)</button>
                 <button id="sel-none" class="text-gray-500 hover:underline">Ondoa</button>
             </div>
+        </div>
+
+        {{-- Banner for "select all matching" mode --}}
+        <div id="all-banner" class="hidden mx-4 md:mx-5 mb-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-800 flex items-center gap-2">
+            <i class="fas fa-exclamation-circle"></i>
+            <span><b id="all-n">0</b> bidhaa zinazolingana kwenye filter yote (sio ukurasa huu tu).</span>
+            <button id="all-clear" class="ml-auto font-semibold underline">Ondoa</button>
         </div>
 
         {{-- Column heads (desktop) --}}
@@ -248,6 +256,7 @@
     /* ===== UNLOCKED ===== */
     const sel = new Set();
     let picked = ['zero_stock'], view = 'active', page = 1, last = 1, rows = [], timer = null, archivedCount = 0;
+    let selectAll = false; // when true → server deletes every matching record, not only visible ids
 
     const WHY = [['sales', 'mauzo'], ['purchases', 'manunuzi'], ['debts', 'madeni'], ['stock-taking', 'ripoti ya stock'], ['adjustments', 'marekebisho'], ['orders', 'oda'], ['movement', 'mabadiliko ya stock']];
     function why(r) {
@@ -256,13 +265,23 @@
         return out.length ? 'Ina ' + out.join(', ') : 'Ina historia';
     }
 
+    /* Build the current filter as a plain object (used both for data() and for select_all). */
+    function filterPayload() {
+        const multi = picked.indexOf('multiple') !== -1;
+        return {
+            criteria: multi ? ['zero_stock', 'zero_price', 'no_sales'] : picked,
+            match:    multi ? 'multi' : 'any',
+            search:   $('#s').value || '',
+            archived: view === 'archived',
+        };
+    }
     function qs(extra) {
         const p = new URLSearchParams();
-        const multi = picked.indexOf('multiple') !== -1;
-        (multi ? ['zero_stock', 'zero_price', 'no_sales'] : picked).forEach((c) => p.append('criteria[]', c));
-        p.set('match', multi ? 'multi' : 'any');
-        p.set('search', $('#s').value);
-        p.set('archived', view === 'archived' ? 1 : 0);
+        const f = filterPayload();
+        f.criteria.forEach((c) => p.append('criteria[]', c));
+        p.set('match', f.match);
+        p.set('search', f.search);
+        p.set('archived', f.archived ? 1 : 0);
         Object.keys(extra || {}).forEach((k) => p.set(k, extra[k]));
         return p.toString();
     }
@@ -314,7 +333,8 @@
     }
     $('#view-toggle').addEventListener('click', () => { view = view === 'active' ? 'archived' : 'active'; paintView(); reload(); });
 
-    function reload() { sel.clear(); page = 1; load(); }
+    /* Any filter change → drop selectAll automatically. */
+    function reload() { selectAll = false; sel.clear(); page = 1; load(); refreshSel(); }
     $('#s').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(reload, 300); });
 
     /* ----- step 2 rows ----- */
@@ -341,9 +361,14 @@
         '<p class="text-sm font-semibold text-gray-800">Hakuna bidhaa hapa</p><p class="text-xs text-gray-500 mt-1">Hakuna bidhaa zinazolingana na uchaguzi wako.</p></div>';
 
     function refreshSel() {
-        const n = sel.size;
+        const n = selectAll ? Number($('#total').textContent) : sel.size;
         $('#sel-n').textContent = n;
         ['#btn-archive', '#btn-delete', '#btn-restore'].forEach((s) => { $(s).disabled = n === 0; });
+        const b = $('#all-banner');
+        if (b) {
+            b.classList.toggle('hidden', !selectAll);
+            if (selectAll) $('#all-n').textContent = $('#total').textContent;
+        }
     }
 
     async function load() {
@@ -362,20 +387,33 @@
 
     document.addEventListener('change', (e) => {
         if (!e.target.classList.contains('pick')) return;
+        if (selectAll) { selectAll = false; }     // picking a single row cancels bulk mode
         const id = Number(e.target.dataset.id);
         e.target.checked ? sel.add(id) : sel.delete(id);
         refreshSel();
     });
     const mark = () => $$('.pick').forEach((c) => { c.checked = sel.has(Number(c.dataset.id)); });
-    $('#sel-page').addEventListener('click', () => { rows.forEach((r) => sel.add(r.id)); mark(); refreshSel(); });
+    $('#sel-page').addEventListener('click', () => { selectAll = false; rows.forEach((r) => sel.add(r.id)); mark(); refreshSel(); });
     $('#sel-safe').addEventListener('click', () => {
+        selectAll = false;
         rows.filter((r) => !r.protected).forEach((r) => sel.add(r.id)); mark(); refreshSel();
         toast('Zilizo salama kufuta zimechaguliwa');
     });
-    $('#sel-none').addEventListener('click', () => { sel.clear(); mark(); refreshSel(); });
+    $('#sel-none').addEventListener('click', () => { selectAll = false; sel.clear(); mark(); refreshSel(); });
     $('#prev').addEventListener('click', () => { if (page > 1) { page--; load(); } });
     $('#next').addEventListener('click', () => { if (page < last) { page++; load(); } });
     $('#lock').addEventListener('click', async () => { await call(D.urlLock, 'POST'); location.reload(); });
+
+    /* ===== "Chagua zote (nje ya ukurasa)" ===== */
+    $('#sel-all').addEventListener('click', () => {
+        selectAll = true;
+        sel.clear(); mark();
+        refreshSel();
+        toast('Zote zinazolingana zimechaguliwa (' + $('#total').textContent + ')');
+    });
+    $('#all-clear').addEventListener('click', () => {
+        selectAll = false; sel.clear(); mark(); refreshSel();
+    });
 
     /* ----- step 3 confirmation ----- */
     let pending = null;
@@ -392,9 +430,16 @@
     const box = (cls, n, title, text, arr) => '<div class="rounded-xl border p-3.5 ' + cls + '"><p><span class="text-2xl font-bold">' + n + '</span> <span class="text-sm font-semibold">' + title + '</span></p><p class="text-xs mt-1 opacity-80">' + text + '</p>' + (arr && arr.length ? names(arr) : '') + '</div>';
 
     async function openConfirm(action) {
-        if (!sel.size) return;
-        const j = await call(D.urlPreview, 'POST', {ids: Array.from(sel)});
+        if (!selectAll && !sel.size) return;
+
+        // Build request body: either explicit ids, or filter (select_all).
+        const body = selectAll
+            ? Object.assign({select_all: true}, filterPayload())
+            : {ids: Array.from(sel)};
+
+        const j = await call(D.urlPreview, 'POST', body);
         if (!j.success) { toast(j.message || 'Imeshindikana', 'error'); return; }
+
         const go = $('#m-go'), icon = $('#m-icon');
         let html = '', blocked = false;
         if (action === 'delete') {
@@ -416,7 +461,12 @@
             $('#m-reason').classList.remove('hidden');
         }
         $('#m-body').innerHTML = html;
-        pending = {action: action, ids: Array.from(sel), blocked: blocked};
+
+        pending = Object.assign(
+            {action: action, blocked: blocked},
+            selectAll ? Object.assign({select_all: true}, filterPayload()) : {ids: Array.from(sel)}
+        );
+
         validate();
         modal.classList.remove('hidden'); document.body.style.overflow = 'hidden';
         setTimeout(() => $('#m-pw').focus(), 100);
@@ -429,8 +479,23 @@
         if (!pending) return;
         const go = $('#m-go'), label = go.textContent;
         go.disabled = true; go.textContent = 'Inafanya kazi...';
-        const multi = picked.indexOf('multiple') !== -1;
-        const j = await call(D.urlExecute, 'POST', {ids: pending.ids, action: pending.action, password: $('#m-pw').value, reason: $('#m-reason').value, criteria: multi ? ['zero_stock', 'zero_price', 'no_sales'] : picked});
+
+        const body = {
+            action:   pending.action,
+            password: $('#m-pw').value,
+            reason:   $('#m-reason').value || '',
+        };
+        if (pending.select_all) {
+            body.select_all = true;
+            body.criteria   = pending.criteria;
+            body.match      = pending.match;
+            body.search     = pending.search;
+            body.archived   = pending.archived;
+        } else {
+            body.ids = pending.ids;
+        }
+
+        const j = await call(D.urlExecute, 'POST', body);
         go.textContent = label;
         if (!j.success) {
             $('#m-err').textContent = j.message || (j.errors ? Object.values(j.errors)[0][0] : 'Imeshindikana');
@@ -438,16 +503,20 @@
         }
         closeModal();
         toast(j.message + (j.skipped && j.skipped.length ? ' (' + j.skipped.length + ' zimerukwa)' : ''));
-        sel.clear(); load();
-    });
-    $('#btn-restore').addEventListener('click', async () => {
-        if (!sel.size) return;
-        const j = await call(D.urlRestore, 'POST', {ids: Array.from(sel)});
-        toast(j.message || 'Imefanikiwa', j.success ? '' : 'error');
-        sel.clear(); load();
+        selectAll = false; sel.clear(); load(); refreshSel();
     });
 
-    paintOpts(); paintView(); load();
+    $('#btn-restore').addEventListener('click', async () => {
+        if (!selectAll && !sel.size) return;
+        const body = selectAll
+            ? Object.assign({select_all: true}, filterPayload())
+            : {ids: Array.from(sel)};
+        const j = await call(D.urlRestore, 'POST', body);
+        toast(j.message || 'Imefanikiwa', j.success ? '' : 'error');
+        selectAll = false; sel.clear(); load(); refreshSel();
+    });
+
+    paintOpts(); paintView(); load(); refreshSel();
 })();
 </script>
 @endverbatim

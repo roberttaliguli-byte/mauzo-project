@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\RateLimiter;
 class ProductCleanupController extends Controller
 {
     private const UNLOCK_MINUTES = 15;
+    private const MAX_IDS        = 2000;
 
     public function __construct(private ProductCleanupService $svc) {}
 
@@ -51,6 +52,39 @@ class ProductCleanupController extends Controller
     private function locked()
     {
         return response()->json(['success' => false, 'locked' => true, 'message' => 'Session locked. Enter your password again.'], 423);
+    }
+
+    /**
+     * Resolve the IDs the caller intends to act on.
+     *
+     * - Normal case: use `ids[]` from the request.
+     * - "Select all matching" case: `select_all=1` → re-run the SAME query
+     *   the data() endpoint uses (criteria + match + search + archived)
+     *   and return every matching id (capped at MAX_IDS).
+     */
+    private function resolveIds(Request $request, int $companyId): array
+    {
+        if (!$request->boolean('select_all')) {
+            return (array) $request->input('ids', []);
+        }
+
+        $archived = $request->boolean('archived');
+        $q = $this->svc->baseQuery($companyId, $archived);
+
+        if (!$archived) {
+            $q = $this->svc->applyCriteria(
+                $q,
+                (array) $request->input('criteria', []),
+                (string) $request->input('match', 'any')
+            );
+        }
+        if ($s = trim((string) $request->search)) {
+            $q->where(fn ($w) => $w->where('bidhaas.jina', 'like', "%{$s}%")
+                                    ->orWhere('bidhaas.barcode', 'like', "%{$s}%")
+                                    ->orWhere('bidhaas.aina', 'like', "%{$s}%"));
+        }
+
+        return (clone $q)->limit(self::MAX_IDS)->pluck('bidhaas.id')->all();
     }
 
     public function index(Request $request)
@@ -97,7 +131,7 @@ class ProductCleanupController extends Controller
         }
 
         if ($request->boolean('ids_only')) {
-            return response()->json(['success' => true, 'ids' => (clone $q)->limit(2000)->pluck('bidhaas.id')]);
+            return response()->json(['success' => true, 'ids' => (clone $q)->limit(self::MAX_IDS)->pluck('bidhaas.id')]);
         }
 
         $page = $q->orderBy('bidhaas.jina')->paginate(50);
@@ -114,9 +148,25 @@ class ProductCleanupController extends Controller
     public function preview(Request $request)
     {
         if (!$this->unlocked($request)) return $this->locked();
-        $ids = $request->validate(['ids' => 'required|array|min:1|max:2000', 'ids.*' => 'integer'])['ids'];
 
-        return response()->json(['success' => true] + $this->svc->classify($this->actor()['company_id'], $ids));
+        $request->validate([
+            'ids'             => 'required_if:select_all,0|array|min:1|max:' . self::MAX_IDS,
+            'ids.*'           => 'integer',
+            'select_all'      => 'sometimes|boolean',
+            'criteria'        => 'nullable|array',
+            'match'           => 'nullable|in:any,multi',
+            'search'          => 'nullable|string|max:255',
+            'archived'        => 'nullable|boolean',
+        ]);
+
+        $a   = $this->actor();
+        $ids = $this->resolveIds($request, $a['company_id']);
+
+        if (empty($ids)) {
+            return response()->json(['success' => true, 'deletable' => [], 'protected' => [], 'total' => 0]);
+        }
+
+        return response()->json(['success' => true, 'total' => count($ids)] + $this->svc->classify($a['company_id'], $ids));
     }
 
     public function execute(Request $request)
@@ -124,25 +174,65 @@ class ProductCleanupController extends Controller
         if (!$this->unlocked($request)) return $this->locked();
 
         $data = $request->validate([
-            'ids' => 'required|array|min:1|max:2000', 'ids.*' => 'integer',
-            'action' => 'required|in:delete,archive', 'reason' => 'nullable|string|max:200',
-            'criteria' => 'nullable|array', 'password' => 'required|string',
+            'ids'        => 'required_if:select_all,0|array|min:1|max:' . self::MAX_IDS,
+            'ids.*'      => 'integer',
+            'select_all' => 'sometimes|boolean',
+            'criteria'   => 'nullable|array',
+            'match'      => 'nullable|in:any,multi',
+            'search'     => 'nullable|string|max:255',
+            'archived'   => 'nullable|boolean',
+            'action'     => 'required|in:delete,archive',
+            'reason'     => 'nullable|string|max:200',
+            'password'   => 'required|string',
         ]);
 
         $ok = $this->passwordOk($request);          // password is re-checked for EVERY bulk operation
         if ($ok !== true) return response()->json(['success' => false, 'message' => $ok], 422);
 
-        $res = $this->svc->execute($this->actor(), $data['ids'], $data['action'], $data['criteria'] ?? [], $request->ip(), $data['reason'] ?? '');
+        $a   = $this->actor();
+        $ids = $this->resolveIds($request, $a['company_id']);
+
+        if (empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'No matching products.'], 422);
+        }
+
+        $res = $this->svc->execute(
+            $a,
+            $ids,
+            $data['action'],
+            $data['criteria'] ?? [],
+            $request->ip(),
+            $data['reason'] ?? ''
+        );
 
         $verb = $data['action'] === 'delete' ? 'deleted permanently' : 'archived';
-        return response()->json(['success' => true, 'message' => "{$res['done']} product(s) {$verb}.", 'skipped' => $res['skipped']]);
+        return response()->json([
+            'success' => true,
+            'message' => "{$res['done']} product(s) {$verb}.",
+            'skipped' => $res['skipped'],
+        ]);
     }
 
     public function restore(Request $request)
     {
         if (!$this->unlocked($request)) return $this->locked();
-        $ids = $request->validate(['ids' => 'required|array|min:1|max:2000', 'ids.*' => 'integer'])['ids'];
-        $n = $this->svc->restore($this->actor(), $ids, $request->ip());
+
+        $request->validate([
+            'ids'        => 'required_if:select_all,0|array|min:1|max:' . self::MAX_IDS,
+            'ids.*'      => 'integer',
+            'select_all' => 'sometimes|boolean',
+            'search'     => 'nullable|string|max:255',
+            'archived'   => 'nullable|boolean',
+        ]);
+
+        $a   = $this->actor();
+        $ids = $this->resolveIds($request, $a['company_id']);
+
+        if (empty($ids)) {
+            return response()->json(['success' => true, 'message' => 'Nothing to restore.']);
+        }
+
+        $n = $this->svc->restore($a, $ids, $request->ip());
 
         return response()->json(['success' => true, 'message' => "{$n} product(s) restored."]);
     }
