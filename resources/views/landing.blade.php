@@ -6,32 +6,52 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>MauzoSheetAI | Mfumo wa Kisasa wa POS na Biashara</title>
 
-  {{-- ============ FAVICON & BRANDING ============ --}}
-  <link rel="icon" href="{{ asset('favicon.ico') }}">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
-  <link rel="manifest" href="{{ asset('site.webmanifest') }}">
-  <meta name="theme-color" content="#065f46">
+{{-- ============ FAVICON & BRANDING ============ --}}
 
-  {{-- SEO --}}
-  <meta name="description" content="MauzoSheetAI — Mfumo wa kisasa wa POS, usimamizi wa stoku, na ripoti za biashara Tanzania.">
-  <link rel="canonical" href="{{ url()->current() }}">
+{{-- Browser favicon --}}
+<link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+<link rel="icon" type="image/png" sizes="96x96" href="{{ asset('favicon-96x96.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
 
-  {{-- Open Graph (WhatsApp / Facebook / LinkedIn share preview) --}}
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="MauzoSheetAI">
-  <meta property="og:title" content="MauzoSheetAI | Mfumo wa Kisasa wa POS na Biashara">
-  <meta property="og:description" content="Uza, dhibiti stoku, fuatilia faida. Mfumo wa kisasa wa POS kwa biashara Tanzania.">
-  <meta property="og:url" content="{{ url()->current() }}">
-  <meta property="og:image" content="{{ asset('android-chrome-512x512.png') }}">
+{{-- Theme color --}}
+<meta name="theme-color" content="#065f46">
 
-  {{-- Twitter --}}
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="MauzoSheetAI | POS na Biashara">
-  <meta name="twitter:description" content="Mfumo wa kisasa wa POS kwa biashara Tanzania.">
-  <meta name="twitter:image" content="{{ asset('android-chrome-512x512.png') }}">
-  {{-- ============ END FAVICON & BRANDING ============ --}}
+{{-- SEO --}}
+<meta name="description" content="MauzoSheetAI — Mfumo wa kisasa wa POS, usimamizi wa stoku, mauzo, na ripoti za biashara Tanzania.">
+<meta name="application-name" content="MauzoSheetAI">
+<meta name="author" content="MauzoSheetAI">
+
+<link rel="canonical" href="{{ url()->current() }}">
+
+{{-- Open Graph: WhatsApp, Facebook, LinkedIn --}}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MauzoSheetAI">
+<meta property="og:title" content="MauzoSheetAI | Mfumo wa Kisasa wa POS na Biashara">
+<meta property="og:description" content="Uza, dhibiti stoku, fuatilia faida na simamia biashara yako kwa mfumo wa kisasa wa POS Tanzania.">
+<meta property="og:url" content="{{ url()->current() }}">
+<meta property="og:image" content="{{ asset('apple-touch-icon.png') }}">
+<meta property="og:image:width" content="180">
+<meta property="og:image:height" content="180">
+<meta property="og:image:alt" content="MauzoSheetAI official logo">
+
+{{-- Twitter / X --}}
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MauzoSheetAI | POS na Biashara">
+<meta name="twitter:description" content="Mfumo wa kisasa wa POS, mauzo na usimamizi wa stoku kwa biashara Tanzania.">
+<meta name="twitter:image" content="{{ asset('apple-touch-icon.png') }}">
+
+{{-- Google Organization structured data --}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "MauzoSheetAI",
+  "url": "https://www.mauzosheetai.co.tz/",
+  "logo": "{{ asset('apple-touch-icon.png') }}"
+}
+</script>
+
+{{-- ============ END FAVICON & BRANDING ============ --}}
 
   <!-- Google Fonts & Font Awesome -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap" rel="stylesheet">
