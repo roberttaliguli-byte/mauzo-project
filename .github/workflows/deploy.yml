@@ -1,0 +1,59 @@
+
+name: Mauzo Sheet AI CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: mauzo-production-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to DigitalOcean
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.MAUZO_SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MAUZO_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy Mauzo
+        run: |
+          ssh root@${{ secrets.MAUZO_SERVER_HOST }} << 'ENDSSH'
+            set -e
+
+            echo "========== UPDATING MAUZO CODE =========="
+            cd /var/www/mauzosheetai
+
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "========== INSTALLING DEPENDENCIES =========="
+            composer install --no-dev --prefer-dist --optimize-autoloader
+
+            echo "========== RUNNING DATABASE MIGRATIONS =========="
+            php artisan migrate --force
+
+            echo "========== CLEARING LARAVEL CACHE =========="
+            php artisan optimize:clear
+
+            echo "========== OPTIMIZING LARAVEL =========="
+            php artisan optimize
+
+            echo "========== RESTARTING SERVICES =========="
+            systemctl restart php8.3-fpm
+            systemctl restart nginx
+
+            echo "========== MAUZO DEPLOYMENT SUCCESSFUL =========="
+          ENDSSH
