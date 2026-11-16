@@ -5,6 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>MauzoSheetAI | Mfumo wa Kisasa wa POS na Biashara</title>
+
+  {{-- ============ FAVICON & BRANDING ============ --}}
+  <link rel="icon" href="{{ asset('favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+  <meta name="theme-color" content="#065f46">
+
+  {{-- SEO --}}
+  <meta name="description" content="MauzoSheetAI — Mfumo wa kisasa wa POS, usimamizi wa stoku, na ripoti za biashara Tanzania.">
+  <link rel="canonical" href="{{ url()->current() }}">
+
+  {{-- Open Graph (WhatsApp / Facebook / LinkedIn share preview) --}}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MauzoSheetAI">
+  <meta property="og:title" content="MauzoSheetAI | Mfumo wa Kisasa wa POS na Biashara">
+  <meta property="og:description" content="Uza, dhibiti stoku, fuatilia faida. Mfumo wa kisasa wa POS kwa biashara Tanzania.">
+  <meta property="og:url" content="{{ url()->current() }}">
+  <meta property="og:image" content="{{ asset('android-chrome-512x512.png') }}">
+
+  {{-- Twitter --}}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MauzoSheetAI | POS na Biashara">
+  <meta name="twitter:description" content="Mfumo wa kisasa wa POS kwa biashara Tanzania.">
+  <meta name="twitter:image" content="{{ asset('android-chrome-512x512.png') }}">
+  {{-- ============ END FAVICON & BRANDING ============ --}}
+
   <!-- Google Fonts & Font Awesome -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -220,7 +248,7 @@
   <footer class="bg-gray-900 text-gray-400 pt-14 pb-8">
     <div class="max-w-7x2 mx-auto px-6 grid md:grid-cols-4 gap-10">
       <div>
-        <img src="{{ asset('logo11.jpg') }}" alt="MauzoSheetAI Logo" class="h-12 w-auto mb-3 logo-img" onerror="this.onerror=null; this.src='https://placehold.co/200x60/d97706/white?text=MauzoSheetAI';">
+        <img src="{{ asset('logo11.png') }}" alt="MauzoSheetAI Logo" class="h-12 w-auto mb-3 logo-img" onerror="this.onerror=null; this.src='https://placehold.co/200x60/d97706/white?text=MauzoSheetAI';">
         <p class="text-sm mt-3">MauzoSheetAI — Mfumo wa kisasa wa POS na usimamizi wa biashara Tanzania.</p>
         <div class="flex gap-5 mt-4 text-xl">
           <a href="https://www.instagram.com/firefox_designer" target="_blank" class="hover:text-amber-400 transition"><i class="fab fa-instagram"></i></a>
