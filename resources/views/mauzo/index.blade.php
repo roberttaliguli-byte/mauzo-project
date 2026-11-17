@@ -1031,6 +1031,13 @@
                                     <i class="fas fa-print mr-1"></i>
                                     Chapisha
                                 </button>
+                                <button type="button"
+                                        class="share-receipt-image bg-emerald-500 hover:bg-emerald-600 text-white px-2 py-1 rounded-lg flex items-center justify-center transition text-xs"
+                                        data-receipt-no="{{ $item->receipt_no }}"
+                                        title="Shiriki risiti kama picha">
+                                    <i class="fas fa-image mr-1"></i>
+                                    Picha
+                                </button>
                                 @endif
                                 
                                 @if($hasFullAccess)
@@ -1272,13 +1279,21 @@
                     </button>
                     <button id="share-receipt-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2 text-sm">
                         <i class="fas fa-share-alt"></i>
-                        Shiriki Risiti
+                        Shiriki Picha
+                    </button>
+                    <button id="download-receipt-image-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2 text-sm">
+                        <i class="fas fa-download"></i>
+                        Pakua Picha
                     </button>
                     <button id="sms-receipt-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center justify-center gap-2 text-sm">
                         <i class="fas fa-envelope"></i>
                         Tuma kwa SMS
                     </button>
                 </div>
+                <p class="text-center text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                    Unaweza kushiriki au kupakua risiti kama picha (PNG)
+                </p>
             </div>
 
             <div id="no-receipt-found" class="hidden text-center py-6">
@@ -4772,7 +4787,24 @@ class MauzoManager {
     // ================================================================
 
     initReceiptLookup() {
+        // This method is called from a few places. Bind only once so buttons do
+        // not run twice (which would generate/ share two receipt images).
+        if (this._receiptLookupInitialized) return;
+        this._receiptLookupInitialized = true;
+
         const searchInput = document.getElementById('search-receipt-input');
+
+        // Share a row's receipt as an image. Delegated so it also works for
+        // dynamically loaded/reloaded sales tables.
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.share-receipt-image');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const receiptNo = btn.dataset.receiptNo || btn.dataset.receipt;
+            if (receiptNo) this.shareReceipt(receiptNo);
+            else this.showNotification('Namba ya risiti haipatikani', 'error');
+        });
         
         if (searchInput) {
             searchInput.addEventListener('keypress', (e) => {
@@ -4795,6 +4827,11 @@ class MauzoManager {
         
         document.getElementById('share-receipt-btn')?.addEventListener('click', () => {
             if (this.currentReceiptNo) this.shareReceipt(this.currentReceiptNo);
+            else this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
+        });
+
+        document.getElementById('download-receipt-image-btn')?.addEventListener('click', () => {
+            if (this.currentReceiptNo) this.downloadReceiptImage(this.currentReceiptNo);
             else this.showNotification('Hakuna risiti iliyochaguliwa. Tafuta risiti kwanza.', 'error');
         });
         
@@ -4936,31 +4973,363 @@ class MauzoManager {
         }
     }
 
-    async shareReceipt(receiptNo) {
+    // ================================================================
+    // RECEIPT AS IMAGE (Canvas) — share / download / print
+    // ================================================================
+
+    async fetchReceiptData(receiptNo) {
+        const response = await fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+            }
+        });
+
+        let data = {};
         try {
-            const response = await fetch(`/mauzo/receipt-data/${encodeURIComponent(receiptNo)}`);
-            const data = await response.json();
-            
-            if (!data.success) {
-                this.showNotification('Hitilafu: ' + data.message, 'error');
-                return;
-            }
-            
-            let receiptText = `*RISITI YA MALIPO*\n---\nNamba: ${data.receipt_no}\nTarehe: ${data.date}\n---\n`;
-            data.items.forEach(item => {
-                receiptText += `${item.bidhaa}\n  ${item.idadi} x ${item.bei} = ${item.jumla}\n`;
+            data = await response.json();
+        } catch (e) {
+            data = {};
+        }
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Risiti haipatikani');
+        }
+        return data;
+    }
+
+    formatReceiptMoney(value) {
+        return (parseFloat(value) || 0).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    receiptImageFileName(receiptNo) {
+        const safe = String(receiptNo || 'risiti').replace(/[^a-zA-Z0-9._-]+/g, '-');
+        return `risiti-${safe}.png`;
+    }
+
+    /**
+     * Draw a clean 72mm-style receipt on a canvas and return it as a PNG blob.
+     * Everything is drawn locally so it also works without a network connection.
+     */
+    async buildReceiptImageBlob(data) {
+        const WIDTH = 384;
+        const PAD = 18;
+        const CONTENT_W = WIDTH - (PAD * 2);
+
+        const items = Array.isArray(data.items) ? data.items : [];
+        const company = data.company || {};
+        const estimatedHeight = 640 + (items.length * 56);
+
+        // Canvas size limits differ per device. Lower the pixel density for very
+        // long receipts instead of failing to render at all.
+        let SCALE = 3;
+        if (estimatedHeight * SCALE > 16000) SCALE = 2;
+        if (estimatedHeight * SCALE > 16000) SCALE = 1;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = WIDTH * SCALE;
+        canvas.height = estimatedHeight * SCALE;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas haipatikani kwenye kifaa hiki');
+
+        ctx.scale(SCALE, SCALE);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, WIDTH, estimatedHeight);
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#111827';
+
+        let y = PAD;
+
+        const setFont = (weight, size) => {
+            ctx.font = `${weight} ${size}px Arial, Helvetica, sans-serif`;
+        };
+
+        const wrapLines = (text, maxWidth) => {
+            const words = String(text == null ? '' : text).split(/\s+/).filter(w => w.length);
+            const lines = [];
+            let line = '';
+            words.forEach(word => {
+                const test = line ? line + ' ' + word : word;
+                if (ctx.measureText(test).width <= maxWidth || !line) {
+                    line = test;
+                } else {
+                    lines.push(line);
+                    line = word;
+                }
             });
-            receiptText += `---\nJumla Kuu: ${data.total}\n---\nAsante kwa kununua!\n`;
-            
-            if (navigator.share) {
-                await navigator.share({ title: 'Risiti ya Mauzo', text: receiptText });
-            } else {
-                await navigator.clipboard.writeText(receiptText);
-                this.showNotification('Risiti imenakiliwa kwenye clipboard!', 'success');
+            if (line) lines.push(line);
+            return lines.length ? lines : [''];
+        };
+
+        const drawCenter = (text, size, weight, color, maxWidth) => {
+            setFont(weight || '400', size);
+            ctx.fillStyle = color || '#111827';
+            ctx.textAlign = 'center';
+            const lines = maxWidth ? wrapLines(text, maxWidth) : [String(text)];
+            lines.forEach(line => {
+                ctx.fillText(line, WIDTH / 2, y);
+                y += Math.round(size * 1.35);
+            });
+            ctx.textAlign = 'left';
+        };
+
+        const drawRow = (left, right, size, weight, color) => {
+            setFont(weight || '400', size);
+            ctx.fillStyle = color || '#111827';
+            ctx.textAlign = 'left';
+            ctx.fillText(String(left), PAD, y);
+            ctx.textAlign = 'right';
+            ctx.fillText(String(right), WIDTH - PAD, y);
+            ctx.textAlign = 'left';
+            y += Math.round(size * 1.4);
+        };
+
+        const drawDashedLine = () => {
+            y += 5;
+            ctx.save();
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 1;
+            if (ctx.setLineDash) ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(PAD, y);
+            ctx.lineTo(WIDTH - PAD, y);
+            ctx.stroke();
+            ctx.restore();
+            y += 8;
+        };
+
+        const drawSolidLine = (strong) => {
+            y += 5;
+            ctx.fillStyle = strong ? '#111827' : '#6b7280';
+            ctx.fillRect(PAD, y, CONTENT_W, strong ? 2 : 1);
+            y += 10;
+        };
+
+        // ---- Company header ----
+        const companyName = String(company.company_name || company.owner_name || '').trim();
+        if (companyName) {
+            drawCenter(companyName.toUpperCase(), 19, '800', '#111827', CONTENT_W);
+        }
+        const location = [company.location, company.region].filter(Boolean).join(', ');
+        if (location) drawCenter(location, 11, '400', '#4b5563', CONTENT_W);
+        if (company.phone) drawCenter('Simu: ' + company.phone, 11, '400', '#4b5563', CONTENT_W);
+        if (company.email) drawCenter(company.email, 11, '400', '#4b5563', CONTENT_W);
+
+        drawDashedLine();
+
+        drawCenter('RISITI YA MALIPO', 12, '700', '#111827');
+        drawRow('Risiti Na:', data.receipt_no || '-', 12, '700');
+        drawRow('Tarehe:', data.date || '-', 12, '400');
+
+        drawDashedLine();
+
+        // ---- Column titles ----
+        setFont('700', 10);
+        ctx.fillStyle = '#4b5563';
+        ctx.textAlign = 'left';
+        ctx.fillText('BIDHAA', PAD, y);
+        ctx.textAlign = 'right';
+        ctx.fillText('IDADI', PAD + 196, y);
+        ctx.fillText('BEI', PAD + 268, y);
+        ctx.fillText('JUMLA', WIDTH - PAD, y);
+        ctx.textAlign = 'left';
+        y += 16;
+
+        drawDashedLine();
+
+        // ---- Items ----
+        items.forEach(item => {
+            const name = String(item.bidhaa || 'Bidhaa');
+            const qty = parseFloat(item.idadi) || 0;
+            const price = parseFloat(item.bei) || 0;
+            const total = parseFloat(item.jumla) || 0;
+            const discount = parseFloat(item.punguzo) || 0;
+
+            const nameLines = wrapLines(name, 150);
+            const firstLineY = y;
+            setFont('400', 11.5);
+            ctx.fillStyle = '#111827';
+            ctx.textAlign = 'left';
+            nameLines.forEach((line, index) => {
+                ctx.fillText(line, PAD, y);
+                if (index < nameLines.length - 1) y += 15;
+            });
+
+            ctx.textAlign = 'right';
+            ctx.fillText(qty.toFixed(2), PAD + 196, firstLineY);
+            ctx.fillText(this.formatReceiptMoney(price), PAD + 268, firstLineY);
+            setFont('700', 11.5);
+            ctx.fillText(this.formatReceiptMoney(total), WIDTH - PAD, firstLineY);
+            ctx.textAlign = 'left';
+            y = Math.max(y, firstLineY) + 18;
+
+            if (discount > 0) {
+                setFont('400', 10);
+                ctx.fillStyle = '#b91c1c';
+                ctx.textAlign = 'left';
+                const discountText = item.punguzo_aina === 'bidhaa'
+                    ? `Punguzo: -${this.formatReceiptMoney(discount * qty)}`
+                    : `Punguzo: -${this.formatReceiptMoney(discount)}`;
+                ctx.fillText(discountText, PAD + 8, y);
+                y += 14;
             }
+
+            y += 4;
+        });
+
+        drawSolidLine(false);
+
+        drawRow('Jumla Ndogo:', this.formatReceiptMoney(data.subtotal), 12, '400');
+        const totalDiscount = parseFloat(data.punguzo) || 0;
+        if (totalDiscount > 0) {
+            drawRow('Jumla ya Punguzo:', '-' + this.formatReceiptMoney(totalDiscount), 12, '400', '#b91c1c');
+        }
+
+        drawSolidLine(true);
+
+        // ---- Grand total ----
+        setFont('800', 16);
+        ctx.fillStyle = '#111827';
+        ctx.textAlign = 'left';
+        ctx.fillText('JUMLA KUU:', PAD, y);
+        ctx.textAlign = 'right';
+        ctx.fillText(this.formatReceiptMoney(data.total), WIDTH - PAD, y);
+        ctx.textAlign = 'left';
+        y += 24;
+
+        const payment = data.lipa_kwa_name || data.lipa_kwa;
+        if (payment) {
+            drawRow('Njia ya Malipo:', String(payment).toUpperCase(), 11, '700');
+        }
+
+        drawSolidLine(false);
+
+        // ---- Footer ----
+        drawCenter('ASANTE KWA KUNUNUA', 14, '700', '#111827');
+        drawCenter('Risiti hii ni halali', 10, '400', '#4b5563');
+        drawCenter('*** Karibu tena ***', 10, '400', '#4b5563');
+
+        const reprints = parseInt(data.reprint_count, 10) || 0;
+        if (reprints > 0) {
+            drawCenter(`(Chapisho la ${reprints + 1})`, 10, '400', '#6b7280');
+        }
+
+        const now = new Date();
+        const stamp = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB');
+        drawCenter(stamp, 9.5, '400', '#6b7280');
+
+        y += PAD;
+
+        // ---- Crop the canvas to the drawn content ----
+        const finalHeight = Math.max(200, Math.ceil(y));
+        const out = document.createElement('canvas');
+        out.width = canvas.width;
+        out.height = finalHeight * SCALE;
+        const outCtx = out.getContext('2d');
+        if (!outCtx) throw new Error('Canvas haipatikani kwenye kifaa hiki');
+        outCtx.drawImage(
+            canvas,
+            0, 0, canvas.width, finalHeight * SCALE,
+            0, 0, canvas.width, finalHeight * SCALE
+        );
+
+        const blob = await new Promise(resolve => out.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Imeshindwa kutengeneza picha ya risiti');
+        return blob;
+    }
+
+    downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }
+
+    async downloadReceiptImage(receiptNo) {
+        const btn = document.getElementById('download-receipt-image-btn');
+        const original = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inatengeneza...';
+        }
+
+        try {
+            const data = await this.fetchReceiptData(receiptNo);
+            const blob = await this.buildReceiptImageBlob(data);
+            this.downloadBlob(blob, this.receiptImageFileName(data.receipt_no || receiptNo));
+            this.showNotification('Picha ya risiti imepakuliwa!', 'success');
         } catch (error) {
+            console.error('Error downloading receipt image:', error);
+            this.showNotification(error.message || 'Imeshindwa kupakua picha ya risiti', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+    }
+
+    async shareReceipt(receiptNo) {
+        const btn = document.getElementById('share-receipt-btn');
+        const original = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Inatengeneza...';
+        }
+
+        try {
+            const data = await this.fetchReceiptData(receiptNo);
+            const blob = await this.buildReceiptImageBlob(data);
+            const filename = this.receiptImageFileName(data.receipt_no || receiptNo);
+
+            let file = null;
+            if (typeof File !== 'undefined') {
+                file = new File([blob], filename, { type: 'image/png' });
+            }
+
+            let canShareFile = false;
+            try {
+                canShareFile = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+            } catch (e) {
+                canShareFile = false;
+            }
+
+            if (navigator.share && file && canShareFile) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Risiti ya Mauzo',
+                        text: `Risiti ${data.receipt_no || receiptNo}`
+                    });
+                    this.showNotification('Risiti imeshirikiwa!', 'success');
+                    return;
+                } catch (shareError) {
+                    if (shareError && shareError.name === 'AbortError') return;
+                    // Sharing can be blocked (no user gesture / unsupported app).
+                    // Fall through to downloading the image instead of failing.
+                    console.warn('File share failed, falling back to download:', shareError);
+                }
+            }
+
+            this.downloadBlob(blob, filename);
+            this.showNotification('Picha ya risiti imepakuliwa. Unaweza kuishare kutoka kwenye matunzio.', 'success');
+        } catch (error) {
+            if (error && error.name === 'AbortError') return;
             console.error('Error sharing receipt:', error);
-            this.showNotification('Hitilafu wakati wa kushare risiti', 'error');
+            this.showNotification(error.message || 'Hitilafu wakati wa kushare risiti', 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
         }
     }
 

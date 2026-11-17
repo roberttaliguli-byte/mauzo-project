@@ -1356,10 +1356,46 @@ class MauzoController extends Controller
             }
             if ($sales->isEmpty()) return response()->json(['success' => false, 'message' => 'Receipt not found'], 404);
         }
-        $items = $sales->map(fn($sale) => ['bidhaa' => $sale->bidhaa->jina ?? 'Unknown', 'idadi' => $sale->idadi, 'bei' => $sale->bei, 'punguzo' => $sale->punguzo, 'jumla' => $sale->jumla]);
+        $items = $sales->map(fn($sale) => [
+            'bidhaa' => $sale->bidhaa->jina ?? 'Unknown',
+            'idadi' => $sale->idadi,
+            'bei' => $sale->bei,
+            'punguzo' => $sale->punguzo,
+            'punguzo_aina' => $sale->punguzo_aina,
+            'jumla' => $sale->jumla,
+        ]);
         $total = $sales->sum('jumla');
         $totalPunguzo = $sales->sum('punguzo');
-        return response()->json(['success' => true, 'receipt_no' => $sales->first()->receipt_no, 'items' => $items, 'total' => $total, 'punguzo' => $totalPunguzo, 'date' => $sales->first()->created_at->format('d/m/Y H:i'), 'item_count' => $sales->count()]);
+        $subtotal = $total + $totalPunguzo;
+        $first = $sales->first();
+
+        // Company details for the receipt image header.
+        $company = \App\Models\Company::find($companyId);
+        $companyName = $company->company_name ?? ($user->company_name ?? 'BIASHARA YANGU');
+        $ownerName = $company->owner_name ?? ($user->name ?? '');
+
+        return response()->json([
+            'success' => true,
+            'receipt_no' => $first->receipt_no,
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'total' => $total,
+            'punguzo' => $totalPunguzo,
+            'date' => $first->created_at->format('d/m/Y H:i'),
+            'item_count' => $sales->count(),
+            'lipa_kwa' => $first->lipa_kwa,
+            'lipa_kwa_type' => $first->lipa_kwa_type,
+            'lipa_kwa_name' => $first->lipa_kwa ? $first->lipa_kwa_name : null,
+            'reprint_count' => (int) $first->reprint_count,
+            'company' => [
+                'company_name' => $companyName,
+                'owner_name' => $ownerName,
+                'location' => $company->location ?? '',
+                'region' => $company->region ?? '',
+                'phone' => $company->phone ?? '',
+                'email' => $company->email ?? '',
+            ],
+        ]);
     }
 
     public function searchReceipts(Request $request)
