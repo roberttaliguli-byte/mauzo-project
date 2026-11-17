@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UzalishajiController extends Controller
 {
@@ -224,7 +225,14 @@ class UzalishajiController extends Controller
             'bei_nunua' => 'required|numeric|min:0',
             'bei_kuuza' => 'required|numeric|min:0',
             'bei_jumla' => 'nullable|numeric|min:0',
-            'barcode' => 'nullable|string|max:255',
+            'barcode' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('bidhaas', 'barcode')->where(function ($query) use ($companyId) {
+                    return $query->where('company_id', $companyId);
+                }),
+            ],
             'expiry' => 'nullable|date',
         ]);
 

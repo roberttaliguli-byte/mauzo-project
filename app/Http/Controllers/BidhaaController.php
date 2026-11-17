@@ -539,6 +539,8 @@ private function processAndStoreImage($image)
                 })
             ],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
+        ], [
+            'barcode.unique' => 'Barcode hii tayari inatumiwa na bidhaa nyingine kwenye kampuni yako.',
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -657,6 +659,8 @@ private function processAndStoreImage($image)
                     ->ignore($bidhaa->id)
             ],
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+        ], [
+            'barcode.unique' => 'Barcode hii tayari inatumiwa na bidhaa nyingine kwenye kampuni yako.',
         ]);
 
         $validator->after(function ($validator) use ($request) {
