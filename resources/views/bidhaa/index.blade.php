@@ -468,6 +468,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Barcode</label>
                     <input type="text" name="barcode" 
+                           autocomplete="off" spellcheck="false"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500"
                            placeholder="Barcode (hiari)">
                 </div>
@@ -893,6 +894,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Barcode</label>
                     <input type="text" name="barcode" id="edit-barcode"
+                           autocomplete="off" spellcheck="false"
                            class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500">
                 </div>
                 <div>

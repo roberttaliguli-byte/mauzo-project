@@ -118,8 +118,9 @@ class OrderController extends Controller
     public function getProductByBarcode($barcode)
     {
         $companyId = $this->getCompanyId();
-        
-        $product = Bidhaa::active()->where('barcode', $barcode)
+        $barcode = trim((string) $barcode);
+
+        $product = $barcode === '' ? null : Bidhaa::active()->where('barcode', $barcode)
             ->where('company_id', $companyId)
             ->first();
         

@@ -1380,6 +1380,8 @@ class MauzoController extends Controller
         $user = $this->getAuthUser();
         if (!$user) return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
         $companyId = $user->company_id;
+        $barcode = trim((string) $barcode);
+        if ($barcode === '') return response()->json(['success' => false, 'message' => 'Bidhaa haipatikani kwa barcode hii'], 404);
         $product = Bidhaa::active()->where('barcode', $barcode)->where('company_id', $companyId)->first();
         if (!$product) return response()->json(['success' => false, 'message' => 'Bidhaa haipatikani kwa barcode hii'], 404);
         return response()->json(['success' => true, 'product' => ['id' => $product->id, 'jina' => $product->jina, 'bei_kuuza' => $product->bei_kuuza, 'bei_nunua' => $product->bei_nunua, 'idadi' => $product->idadi, 'aina' => $product->aina, 'kipimo' => $product->kipimo, 'barcode' => $product->barcode]]);

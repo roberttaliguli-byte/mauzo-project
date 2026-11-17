@@ -794,6 +794,7 @@
                             <tr class="barcode-row">
                                 <td class="px-3 py-2">
                                     <input type="text" name="barcode[]" placeholder="Scan barcode" 
+                                           autocomplete="off" spellcheck="false"
                                            class="barcode-input border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg p-2 w-full text-sm" 
                                            autofocus />
                                 </td>
@@ -4108,19 +4109,26 @@ class MauzoManager {
         const removeBtn = row.querySelector('.remove-barcode-row');
 
         if (barcodeInput) {
+            // Any barcode length is valid. Short internal codes (1+ characters)
+            // must work exactly like standard 8-13 digit scanner codes.
             barcodeInput.addEventListener('input', (e) => {
                 if (this.barcodeScanTimeout) clearTimeout(this.barcodeScanTimeout);
+                const value = e.target.value.trim();
+                if (!value) return;
                 this.barcodeScanTimeout = setTimeout(() => {
-                    const value = e.target.value.trim();
-                    if (value.length >= 8) this.fetchBidhaaByBarcode(e.target);
+                    if (e.target.value.trim() === value) {
+                        // Silent lookup while typing/scanner is still sending data.
+                        this.fetchBidhaaByBarcode(e.target, true);
+                    }
                 }, 300);
             });
             
-            barcodeInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
+            barcodeInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === 'NumpadEnter') {
                     e.preventDefault();
+                    if (this.barcodeScanTimeout) clearTimeout(this.barcodeScanTimeout);
                     const value = barcodeInput.value.trim();
-                    if (value.length >= 8) this.fetchBidhaaByBarcode(barcodeInput);
+                    if (value) this.fetchBidhaaByBarcode(barcodeInput);
                 }
             });
         }
@@ -4246,8 +4254,8 @@ class MauzoManager {
         }) + '/=';
     }
 
-    fetchBidhaaByBarcode(input) {
-        const barcode = input.value.trim();
+    fetchBidhaaByBarcode(input, silent = false) {
+        const barcode = (input.value || '').trim();
         if (!barcode) return;
 
         const row = input.closest('.barcode-row');
@@ -4269,9 +4277,19 @@ class MauzoManager {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            return response.json();
+        .then(async response => {
+            // 404 is a normal "barcode not found" response with a JSON message.
+            // Read the body so the user sees the real reason instead of a network error.
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (e) {
+                data = {};
+            }
+            if (!response.ok && response.status !== 404) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return data;
         })
         .then(data => {
             row.classList.remove('opacity-50', 'pointer-events-none');
@@ -4300,8 +4318,16 @@ class MauzoManager {
                 this.showNotification(`Bidhaa: ${product.jina} imeongezwa!`, 'success');
                 setTimeout(() => this.addBarcodeRow(), 200);
             } else {
-                this.clearBarcodeRow(row);
-                this.showNotification(data.message || 'Bidhaa haipatikani!', 'error');
+                // Keep the typed/scanned barcode so a partial or short code can
+                // be corrected. Only the looked-up product details are cleared.
+                if (productName) productName.value = '';
+                if (productPrice) productPrice.value = '0.00';
+                if (stockInput) stockInput.value = '0.00';
+                if (quantityInput) quantityInput.value = '1.00';
+                row.querySelector('.punguzo-input').value = '0.00';
+                row.querySelector('.total-input').value = '0.00';
+                this.updateBarcodeTotal();
+                if (!silent) this.showNotification(data.message || 'Bidhaa haipatikani!', 'error');
                 row.classList.add('bg-red-50');
                 setTimeout(() => row.classList.remove('bg-red-50'), 1000);
             }
@@ -4309,8 +4335,7 @@ class MauzoManager {
         .catch(error => {
             row.classList.remove('opacity-50', 'pointer-events-none');
             console.error('Error fetching product:', error);
-            this.showNotification('Kuna tatizo kwenye kutafuta bidhaa!', 'error');
-            this.clearBarcodeRow(row);
+            if (!silent) this.showNotification('Kuna tatizo kwenye kutafuta bidhaa!', 'error');
         });
     }
 

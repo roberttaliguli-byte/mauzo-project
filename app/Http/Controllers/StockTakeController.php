@@ -176,6 +176,10 @@ class StockTakeController extends Controller
             'barcode' => 'nullable|string|max:255', 'quantity' => 'required|numeric|min:0', 'notes' => 'nullable|string|max:500',
         ]);
 
+        if (!empty($data['barcode'])) {
+            $data['barcode'] = trim($data['barcode']);
+        }
+
         // Use barcode / name+unit to stop duplicates of products that DO exist
         $q = Bidhaa::where('company_id', $a['company_id']);
         $existing = null;

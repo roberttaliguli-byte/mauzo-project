@@ -447,8 +447,79 @@ private function processAndStoreImage($image)
         }
     }
 
+    /**
+     * Hifadhi / ongeza stock ya bidhaa kwa kutumia barcode.
+     */
+    public function storeBarcode(Request $request)
+    {
+        $validated = $request->validate([
+            'barcode' => 'required|string|max:255',
+            'jina' => 'required|string|max:255',
+            'aina' => 'nullable|string|max:255',
+            'kipimo' => 'nullable|string|max:100',
+            'idadi' => 'required|numeric|min:0.01',
+            'bei_nunua' => 'required|numeric|min:0',
+            'bei_kuuza' => 'required|numeric|min:0|gte:bei_nunua',
+            'expiry' => 'nullable|date',
+        ]);
+
+        $validated['barcode'] = trim($validated['barcode']);
+        $companyId = $this->getCompanyId();
+
+        $existing = Bidhaa::where('barcode', $validated['barcode'])
+                          ->where('company_id', $companyId)
+                          ->first();
+
+        if ($existing) {
+            $existing->update([
+                'idadi' => $existing->idadi + $validated['idadi'],
+                'bei_nunua' => $validated['bei_nunua'],
+                'bei_kuuza' => $validated['bei_kuuza'],
+                'expiry' => $validated['expiry'] ?? $existing->expiry,
+            ]);
+
+            return redirect()->route('bidhaa.index')
+                ->with('success', 'Bidhaa imeongezwa kupitia barcode (idadi imeboreshwa).');
+        }
+
+        $validated['company_id'] = $companyId;
+        Bidhaa::create($validated);
+
+        return redirect()->route('bidhaa.index')
+            ->with('success', 'Bidhaa mpya imehifadhiwa kwa barcode.');
+    }
+
+    /**
+     * Tafuta bidhaa kwa barcode (kwa mauzo / scanning).
+     */
+    public function tafutaBarcode($barcode)
+    {
+        $barcode = trim((string) $barcode);
+        if ($barcode === '') {
+            return response()->json(['message' => 'Bidhaa haijapatikana'], 404);
+        }
+
+        $bidhaa = Bidhaa::active()
+                        ->where('barcode', $barcode)
+                        ->where('company_id', $this->getCompanyId())
+                        ->first();
+
+        if (!$bidhaa) {
+            return response()->json(['message' => 'Bidhaa haijapatikana'], 404);
+        }
+
+        return response()->json($bidhaa);
+    }
+
     public function store(Request $request)
     {
+        // Scanners may append spaces/newlines. Normalize the barcode before
+        // validation so scans always match exactly what is stored/searched.
+        if ($request->exists('barcode')) {
+            $barcode = trim((string) $request->input('barcode'));
+            $request->merge(['barcode' => $barcode === '' ? null : $barcode]);
+        }
+
         $validator = Validator::make($request->all(), [
             'jina' => 'required|string|max:255',
             'aina' => 'required|string|max:255',
@@ -557,6 +628,13 @@ private function processAndStoreImage($image)
         $bidhaa = Bidhaa::where('id', $id)
                         ->where('company_id', $companyId)
                         ->firstOrFail();
+
+        // Scanners may append spaces/newlines. Normalize the barcode before
+        // validation so scans always match exactly what is stored/searched.
+        if ($request->exists('barcode')) {
+            $barcode = trim((string) $request->input('barcode'));
+            $request->merge(['barcode' => $barcode === '' ? null : $barcode]);
+        }
 
         $validator = Validator::make($request->all(), [
             'jina' => 'required|string|max:255',

@@ -212,6 +212,11 @@ class UzalishajiController extends Controller
         $companyId = $this->getCompanyId();
         $uzalishaji = Uzalishaji::where('company_id', $companyId)->findOrFail($id);
 
+        if ($request->exists('barcode')) {
+            $barcode = trim((string) $request->input('barcode'));
+            $request->merge(['barcode' => $barcode === '' ? null : $barcode]);
+        }
+
         $validator = Validator::make($request->all(), [
             'jina_bidhaa' => 'required|string|max:255',
             'kipimo' => 'required|string|max:50',
@@ -219,7 +224,7 @@ class UzalishajiController extends Controller
             'bei_nunua' => 'required|numeric|min:0',
             'bei_kuuza' => 'required|numeric|min:0',
             'bei_jumla' => 'nullable|numeric|min:0',
-            'barcode' => 'nullable|string|max:100',
+            'barcode' => 'nullable|string|max:255',
             'expiry' => 'nullable|date',
         ]);
 

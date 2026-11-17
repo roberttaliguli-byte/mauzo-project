@@ -1357,6 +1357,24 @@ function autoNotification() {
     document.addEventListener('DOMContentLoaded', function () {
         mauzoApplyTheme(mauzoGetTheme());
     });
+
+    // Barcode scanners type the code and finish with Enter. If that Enter lands
+    // on a barcode field inside a form (Add/Edit Bidhaa, etc.) the browser would
+    // submit the form too early and show validation errors. Never let Enter in a
+    // barcode field submit the form; pages that need Enter can listen themselves.
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== 'NumpadEnter') return;
+        var field = event.target;
+        if (!field || field.tagName !== 'INPUT') return;
+        var marker = ((field.name || '') + ' ' + (field.id || '') + ' ' + (field.className || '')).toLowerCase();
+        // Match real barcode value fields (barcode, barcode[], edit-barcode,
+        // comp_barcode, .barcode-input) but not unrelated ids such as
+        // barcode_kopesha_jina or barcode-kopesha-simu.
+        if (marker.indexOf('barcode') === -1) return;
+        if (marker.indexOf('barcode_') !== -1 || marker.indexOf('barcode-kopesha') !== -1) return;
+        if (!field.form) return;
+        event.preventDefault();
+    }, true);
     </script>
 
     @stack('scripts')
