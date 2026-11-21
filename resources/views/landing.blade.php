@@ -155,13 +155,13 @@
               <a href="{{ route('landing.download-arm64') }}"
                  class="btn-gold text-white px-5 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 flex-1 min-h-[56px]">
                 <i class="fab fa-android"></i>
-                ARM64
+                Pakua App (Android)
               </a>
 
               <a href="{{ route('landing.download-arm32') }}"
                  class="border border-gray-300 bg-white text-gray-800 px-5 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 flex-1 min-h-[56px]">
                 <i class="fab fa-android"></i>
-                ARM32
+                Pakua App (Older Android)
               </a>
             </div>
             <a href="{{ route('login') }}" class="border border-amber-500 text-amber-700 px-6 py-4 rounded-xl font-semibold hover:bg-amber-50 transition flex items-center justify-center flex-1 min-h-[56px]">
@@ -316,12 +316,12 @@
       <div><h5 class="text-white font-semibold">Wasiliana Nasi</h5><p class="mt-2"><i class="fas fa-phone-alt mr-2"></i> +255 685 496 334</p><p><i class="fas fa-envelope mr-2"></i> mauzosheet9@gmail.com</p><p><i class="fas fa-map-marker-alt mr-2"></i> Dar es Salaam, Tanzania</p><div class="flex flex-wrap gap-2 mt-3">
         <a href="{{ route('landing.download-arm64') }}"
            class="bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700 transition">
-          <i class="fab fa-android"></i> ARM64
+          <i class="fab fa-android"></i> Pakua App (Android)
         </a>
 
         <a href="{{ route('landing.download-arm32') }}"
            class="bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700 transition">
-          <i class="fab fa-android"></i> ARM32
+          <i class="fab fa-android"></i> Pakua App (Older Android)
         </a>
       </div></div>
     </div>
