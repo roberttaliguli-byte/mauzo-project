@@ -42,8 +42,11 @@ use App\Http\Middleware\RegistrationSecurity;
 // Public routes
 // =========================
 Route::get('/', [LandingController::class, 'index'])->name('landing');
-Route::get('/download/mauzosheet.apk', [LandingController::class, 'downloadApk'])
-    ->name('landing.download-apk');
+Route::get('/download/mauzosheet-arm64.apk', [LandingController::class, 'downloadArm64Apk'])
+    ->name('landing.download-arm64');
+
+Route::get('/download/mauzosheet-arm32.apk', [LandingController::class, 'downloadArm32Apk'])
+    ->name('landing.download-arm32');
 
 Route::middleware([RegistrationSecurity::class])->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
