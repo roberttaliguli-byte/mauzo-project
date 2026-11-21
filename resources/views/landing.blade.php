@@ -151,7 +151,7 @@
             <i class="fas fa-rocket"></i>
           </a>
           <div class="flex gap-4 flex-1">
-            <a href="#" class="border border-gray-300 bg-white/70 backdrop-blur-sm text-gray-800 px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition hover:shadow-md flex-1 min-h-[56px]">
+            <a href="{{ route('landing.download-apk') }}" download class="border border-gray-300 bg-white/70 backdrop-blur-sm text-gray-800 px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition hover:shadow-md flex-1 min-h-[56px]">
               Pakua App
               <i class="fab fa-android"></i>
             </a>
@@ -304,7 +304,7 @@
       </div>
       <div><h5 class="text-white font-semibold">Viungo</h5><ul class="space-y-2 mt-3"><li><a href="#home" class="hover:text-amber-400">Nyumbani</a></li><li><a href="#features" class="hover:text-amber-400">Vipengele</a></li><li><a href="#pricing" class="hover:text-amber-400">Bei</a></li></ul></div>
       <div><h5 class="text-white font-semibold">Msaada</h5><ul class="space-y-2 mt-3"><li><a href="#" class="hover:text-amber-400">Sera ya Faragha</a></li><li><a href="#" class="hover:text-amber-400">Masharti ya Matumizi</a></li><li><a href="{{ route('login') }}" class="hover:text-amber-400">Ingia kwenye akaunti</a></li></ul></div>
-      <div><h5 class="text-white font-semibold">Wasiliana Nasi</h5><p class="mt-2"><i class="fas fa-phone-alt mr-2"></i> +255 685 496 334</p><p><i class="fas fa-envelope mr-2"></i> mauzosheet9@gmail.com</p><p><i class="fas fa-map-marker-alt mr-2"></i> Dar es Salaam, Tanzania</p><a href="#" class="inline-block mt-3 bg-gray-800 px-5 py-2 rounded-lg hover:bg-gray-700 transition"><i class="fab fa-google-play"></i> Pakua App</a></div>
+      <div><h5 class="text-white font-semibold">Wasiliana Nasi</h5><p class="mt-2"><i class="fas fa-phone-alt mr-2"></i> +255 685 496 334</p><p><i class="fas fa-envelope mr-2"></i> mauzosheet9@gmail.com</p><p><i class="fas fa-map-marker-alt mr-2"></i> Dar es Salaam, Tanzania</p><a href="{{ route('landing.download-apk') }}" download class="inline-block mt-3 bg-gray-800 px-5 py-2 rounded-lg hover:bg-gray-700 transition"><i class="fab fa-google-play"></i> Pakua App</a></div>
     </div>
     <div class="text-center border-t border-gray-800 mt-12 pt-6 text-sm">© 2025 MauzoSheetAI. Haki zote zimehifadhiwa. Imetengenezwa kwa ajili ya wajasiriamali wa Tanzania.</div>
   </footer>

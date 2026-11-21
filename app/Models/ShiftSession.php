@@ -230,6 +230,33 @@ class ShiftSession extends Model
             ];
         }
 
+        // Sanctum tokens used by the Flutter app. Without this, sales and
+        // expenses created from the app are never attributed to an open shift.
+        $apiUser = request()->user();
+        if ($apiUser instanceof Wafanyakazi) {
+            return [
+                'company_id' => $apiUser->company_id,
+                'user_id' => null,
+                'mfanyakazi_id' => $apiUser->id,
+                'name' => $apiUser->jina,
+                'type' => 'employee',
+                'role' => $apiUser->role ?? 'mfanyakazi',
+                'can_view_all' => ($apiUser->uwezo ?? 'mdogo') === 'mkubwa',
+            ];
+        }
+
+        if ($apiUser instanceof User) {
+            return [
+                'company_id' => $apiUser->company_id,
+                'user_id' => $apiUser->id,
+                'mfanyakazi_id' => null,
+                'name' => $apiUser->name ?? $apiUser->username,
+                'type' => 'boss',
+                'role' => $apiUser->role,
+                'can_view_all' => in_array($apiUser->role, ['boss', 'admin'], true),
+            ];
+        }
+
         return null;
     }
 

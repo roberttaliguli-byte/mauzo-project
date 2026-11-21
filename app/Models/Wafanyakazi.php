@@ -6,11 +6,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Helpers\ActivityHelper;
-
+use Laravel\Sanctum\HasApiTokens;
 class Wafanyakazi extends Authenticatable
 {
     use HasFactory;
-
+    use HasApiTokens;
     protected $table = 'wafanyakazis';
 
     protected $fillable = [
