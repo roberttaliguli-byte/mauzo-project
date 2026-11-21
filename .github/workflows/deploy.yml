@@ -1,3 +1,4 @@
+
 name: Deploy Laravel to live server
 
 on:
@@ -9,24 +10,38 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SCP_HOST }}
-          username: ${{ secrets.SCP_USER }}
-          key: ${{ secrets.SCP_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          host: ${{ secrets.MAUZO_SERVER_HOST }}
+          username: root
+          key: ${{ secrets.MAUZO_SSH_PRIVATE_KEY }}
+          port: 22
+          fingerprint: ${{ secrets.MAUZO_HOST_FINGERPRINT }}
           script: |
             set -e
-            cd ${{ secrets.DEPLOY_PATH }}
-            git fetch --all
+
+            cd /var/www/mauzosheetai
+
+            echo "Pulling latest Laravel backend..."
+            git fetch origin
             git reset --hard origin/main
+
+            echo "Installing production dependencies..."
             composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+            echo "Running database migrations..."
             php artisan migrate --force
+
+            echo "Refreshing Laravel caches..."
             php artisan storage:link || true
+            php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
+
             php artisan queue:restart || true
+
             echo "Deployment finished at $(date)"
