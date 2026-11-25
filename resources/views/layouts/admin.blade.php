@@ -8,17 +8,6 @@
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <script>
-    // Colour mode follows the device/system setting automatically (shared with app layout).
-    // No manual colour modes and no chooser are offered.
-    try {
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-      }
-    } catch (e) {}
-  </script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -414,111 +403,7 @@
     .main-content {
       width: 100%;
     }
-
-    /* ============ THEMES: default | dark | colored (shared key with app layout) ============
-       Whole-page coverage: sidebar + header + main content follow the active mode.
-       dark = dark surfaces. colored = dark surfaces + orange on touch/click. */
-    html[data-theme="dark"], html[data-theme="colored"] { color-scheme: dark; }
-    html[data-theme="dark"], html[data-theme="colored"] {
-      --white: #131e35;
-      --bg-light: #0b1220;
-      --text-dark: #e2e8f0;
-      --text-light: #94a3b8;
-      --border-color: #243049;
-      --primary-light: #16223d;
-    }
-    html[data-theme="dark"] .sidebar, html[data-theme="colored"] .sidebar {
-      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
-    }
-    html[data-theme="dark"] .header, html[data-theme="colored"] .header {
-      background-color: #111c33;
-      border-color: #243049;
-    }
-    html[data-theme="dark"] .header h1, html[data-theme="colored"] .header h1 { color: #f1f5f9 !important; }
-    html[data-theme="dark"] .header p, html[data-theme="colored"] .header p { color: #94a3b8 !important; }
-    html[data-theme="dark"] .hamburger-menu span, html[data-theme="colored"] .hamburger-menu span { background-color: #e2e8f0; }
-    html[data-theme="dark"] .bg-white, html[data-theme="colored"] .bg-white { background-color: #131e35 !important; }
-    html[data-theme="dark"] .bg-gray-50, html[data-theme="colored"] .bg-gray-50 { background-color: #0f1930 !important; }
-    html[data-theme="dark"] .bg-gray-100, html[data-theme="colored"] .bg-gray-100 { background-color: #16223d !important; }
-    html[data-theme="dark"] .hover\:bg-gray-100:hover, html[data-theme="colored"] .hover\:bg-gray-100:hover { background-color: #1a2540 !important; }
-    html[data-theme="dark"] .text-gray-900, html[data-theme="colored"] .text-gray-900 { color: #f1f5f9 !important; }
-    html[data-theme="dark"] .text-gray-800, html[data-theme="colored"] .text-gray-800 { color: #e2e8f0 !important; }
-    html[data-theme="dark"] .text-gray-700, html[data-theme="colored"] .text-gray-700 { color: #cbd5e1 !important; }
-    html[data-theme="dark"] .text-gray-600, html[data-theme="colored"] .text-gray-600,
-    html[data-theme="dark"] .text-gray-500, html[data-theme="colored"] .text-gray-500 { color: #94a3b8 !important; }
-    /* Readability: darken light tinted badge backgrounds so brightened text stays legible */
-    html[data-theme="dark"] .bg-emerald-100, html[data-theme="colored"] .bg-emerald-100,
-    html[data-theme="dark"] .bg-green-100, html[data-theme="colored"] .bg-green-100,
-    html[data-theme="dark"] .bg-teal-100, html[data-theme="colored"] .bg-teal-100 { background-color: #064e3b !important; }
-    html[data-theme="dark"] .bg-blue-100, html[data-theme="colored"] .bg-blue-100,
-    html[data-theme="dark"] .bg-indigo-100, html[data-theme="colored"] .bg-indigo-100,
-    html[data-theme="dark"] .bg-sky-100, html[data-theme="colored"] .bg-sky-100 { background-color: #1e3a8a !important; }
-    html[data-theme="dark"] .bg-red-100, html[data-theme="colored"] .bg-red-100 { background-color: #7f1d1d !important; }
-    html[data-theme="dark"] .bg-amber-100, html[data-theme="colored"] .bg-amber-100,
-    html[data-theme="dark"] .bg-yellow-100, html[data-theme="colored"] .bg-yellow-100,
-    html[data-theme="dark"] .bg-orange-100, html[data-theme="colored"] .bg-orange-100 { background-color: #78350d !important; }
-    html[data-theme="dark"] .bg-purple-100, html[data-theme="colored"] .bg-purple-100 { background-color: #4c1d95 !important; }
-    html[data-theme="dark"] .bg-pink-100, html[data-theme="colored"] .bg-pink-100 { background-color: #831843 !important; }
-    /* Readability: brighten dark saturated text (same hue family, lighter shade) */
-    html[data-theme="dark"] .text-emerald-600, html[data-theme="colored"] .text-emerald-600,
-    html[data-theme="dark"] .text-emerald-700, html[data-theme="colored"] .text-emerald-700,
-    html[data-theme="dark"] .text-emerald-800, html[data-theme="colored"] .text-emerald-800,
-    html[data-theme="dark"] .text-green-600, html[data-theme="colored"] .text-green-600,
-    html[data-theme="dark"] .text-green-700, html[data-theme="colored"] .text-green-700,
-    html[data-theme="dark"] .text-green-800, html[data-theme="colored"] .text-green-800,
-    html[data-theme="dark"] .text-teal-600, html[data-theme="colored"] .text-teal-600,
-    html[data-theme="dark"] .text-teal-700, html[data-theme="colored"] .text-teal-700,
-    html[data-theme="dark"] .text-teal-800, html[data-theme="colored"] .text-teal-800 { color: #6ee7b7 !important; }
-    html[data-theme="dark"] .text-blue-600, html[data-theme="colored"] .text-blue-600,
-    html[data-theme="dark"] .text-blue-700, html[data-theme="colored"] .text-blue-700,
-    html[data-theme="dark"] .text-blue-800, html[data-theme="colored"] .text-blue-800,
-    html[data-theme="dark"] .text-indigo-600, html[data-theme="colored"] .text-indigo-600,
-    html[data-theme="dark"] .text-indigo-700, html[data-theme="colored"] .text-indigo-700,
-    html[data-theme="dark"] .text-indigo-800, html[data-theme="colored"] .text-indigo-800,
-    html[data-theme="dark"] .text-sky-700, html[data-theme="colored"] .text-sky-700,
-    html[data-theme="dark"] .text-sky-800, html[data-theme="colored"] .text-sky-800 { color: #93c5fd !important; }
-    html[data-theme="dark"] .text-red-600, html[data-theme="colored"] .text-red-600,
-    html[data-theme="dark"] .text-red-700, html[data-theme="colored"] .text-red-700,
-    html[data-theme="dark"] .text-red-800, html[data-theme="colored"] .text-red-800 { color: #fca5a5 !important; }
-    html[data-theme="dark"] .text-amber-600, html[data-theme="colored"] .text-amber-600,
-    html[data-theme="dark"] .text-amber-700, html[data-theme="colored"] .text-amber-700,
-    html[data-theme="dark"] .text-amber-800, html[data-theme="colored"] .text-amber-800,
-    html[data-theme="dark"] .text-yellow-700, html[data-theme="colored"] .text-yellow-700,
-    html[data-theme="dark"] .text-yellow-800, html[data-theme="colored"] .text-yellow-800,
-    html[data-theme="dark"] .text-orange-600, html[data-theme="colored"] .text-orange-600,
-    html[data-theme="dark"] .text-orange-700, html[data-theme="colored"] .text-orange-700,
-    html[data-theme="dark"] .text-orange-800, html[data-theme="colored"] .text-orange-800 { color: #fcd34d !important; }
-    html[data-theme="dark"] .text-purple-700, html[data-theme="colored"] .text-purple-700,
-    html[data-theme="dark"] .text-purple-800, html[data-theme="colored"] .text-purple-800 { color: #c4b5fd !important; }
-    html[data-theme="dark"] .text-pink-600, html[data-theme="colored"] .text-pink-600,
-    html[data-theme="dark"] .text-pink-700, html[data-theme="colored"] .text-pink-700 { color: #f9a8d4 !important; }
-    html[data-theme="dark"] .text-black, html[data-theme="colored"] .text-black { color: #f1f5f9 !important; }
-    html[data-theme="dark"] .border-gray-200, html[data-theme="colored"] .border-gray-200,
-    html[data-theme="dark"] .border-gray-300, html[data-theme="colored"] .border-gray-300 { border-color: #243049 !important; }
-    html[data-theme="dark"] input, html[data-theme="dark"] select, html[data-theme="dark"] textarea,
-    html[data-theme="colored"] input, html[data-theme="colored"] select, html[data-theme="colored"] textarea {
-      background-color: #0f1930;
-      color: #e2e8f0;
-      border-color: #243049;
-    }
-    html[data-theme="dark"] ::-webkit-scrollbar-track, html[data-theme="colored"] ::-webkit-scrollbar-track { background: #0f1930; }
-    html[data-theme="dark"] ::-webkit-scrollbar-thumb, html[data-theme="colored"] ::-webkit-scrollbar-thumb { background: #334155; }
-    /* colored: dark + orange on touch/click */
-    html[data-theme="colored"] button:hover,
-    html[data-theme="colored"] a[class*="bg-"]:hover {
-      background-color: #ea580c !important;
-      border-color: #ea580c !important;
-      color: #ffffff !important;
-    }
-    html[data-theme="colored"] button:active,
-    html[data-theme="colored"] a[class*="bg-"]:active,
-    html[data-theme="colored"] button:focus-visible {
-      background-color: #c2410c !important;
-      border-color: #c2410c !important;
-      color: #ffffff !important;
-    }
-    html[data-theme="colored"] .active-nav-item::after { background-color: #f97316; }
-  </style>
+</style>
 </head>
 
 <body x-data="adminApp()" x-init="init()">
@@ -1049,30 +934,6 @@ toggleNotifications() {
         }
       }
     }
-  </script>
-
-  <script>
-    // Colour mode follows the system setting automatically (prefers-color-scheme).
-    // No manual modes are stored and no toggle is rendered (same as app layout).
-    function mauzoApplySystemTheme() {
-      try {
-        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (prefersDark) {
-          document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-          document.documentElement.removeAttribute('data-theme');
-        }
-      } catch (e) {}
-    }
-    mauzoApplySystemTheme();
-    try {
-      var _themeMql = window.matchMedia('(prefers-color-scheme: dark)');
-      if (_themeMql.addEventListener) {
-        _themeMql.addEventListener('change', mauzoApplySystemTheme);
-      } else if (_themeMql.addListener) {
-        _themeMql.addListener(mauzoApplySystemTheme);
-      }
-    } catch (e) {}
   </script>
 
   @stack('scripts')
