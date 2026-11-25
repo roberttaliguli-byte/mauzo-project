@@ -9,11 +9,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <script>
-    // Apply saved theme before first paint (default | dark | colored) — shared with app layout
+    // Colour mode follows the device/system setting automatically (shared with app layout).
+    // No manual colour modes and no chooser are offered.
     try {
-      var _mt = localStorage.getItem('mauzo_theme');
-      if (_mt === 'dark' || _mt === 'colored') {
-        document.documentElement.setAttribute('data-theme', _mt);
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
       }
     } catch (e) {}
   </script>
@@ -516,7 +518,6 @@
       color: #ffffff !important;
     }
     html[data-theme="colored"] .active-nav-item::after { background-color: #f97316; }
-    html[data-theme="colored"] #mauzo-theme-toggle { color: #fb923c; }
   </style>
 </head>
 
@@ -697,17 +698,6 @@
       </div>
 
       <div class="flex items-center space-x-3 sm:space-x-4">
-        <!-- Theme Switcher: one icon cycling Default -> Dark -> Colored (synced with app) -->
-        <button
-          type="button"
-          id="mauzo-theme-toggle"
-          onclick="mauzoCycleTheme()"
-          title="Badilisha muonekano"
-          aria-label="Badilisha muonekano"
-          class="relative p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <i id="mauzo-theme-icon" class="fas fa-moon text-lg"></i>
-        </button>
         <!-- Notification Bell with New Companies Alert -->
         <div class="relative" x-data="notificationDropdown()" x-init="init()">
           <button 
@@ -1062,37 +1052,27 @@ toggleNotifications() {
   </script>
 
   <script>
-    // Theme switcher: one icon cycling default -> dark -> colored (same key as app layout)
-    var MAUZO_THEME_ORDER = ['default', 'dark', 'colored'];
-    var MAUZO_THEME_ICON = { default: 'fa-sun', dark: 'fa-moon', colored: 'fa-palette' };
-    var MAUZO_THEME_LABEL = { default: 'Default', dark: 'Dark', colored: 'Colored' };
-    function mauzoGetTheme() {
+    // Colour mode follows the system setting automatically (prefers-color-scheme).
+    // No manual modes are stored and no toggle is rendered (same as app layout).
+    function mauzoApplySystemTheme() {
       try {
-        const t = localStorage.getItem('mauzo_theme');
-        return MAUZO_THEME_ORDER.includes(t) ? t : 'default';
-      } catch (e) { return 'default'; }
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      } catch (e) {}
     }
-    function mauzoApplyTheme(t) {
-      if (t === 'default') {
-        document.documentElement.removeAttribute('data-theme');
-      } else {
-        document.documentElement.setAttribute('data-theme', t);
+    mauzoApplySystemTheme();
+    try {
+      var _themeMql = window.matchMedia('(prefers-color-scheme: dark)');
+      if (_themeMql.addEventListener) {
+        _themeMql.addEventListener('change', mauzoApplySystemTheme);
+      } else if (_themeMql.addListener) {
+        _themeMql.addListener(mauzoApplySystemTheme);
       }
-      const icon = document.getElementById('mauzo-theme-icon');
-      if (icon) icon.className = 'fas text-lg ' + (MAUZO_THEME_ICON[t] || 'fa-sun');
-      const toggle = document.getElementById('mauzo-theme-toggle');
-      if (toggle) {
-        toggle.title = 'Muonekano: ' + (MAUZO_THEME_LABEL[t] || t) + ' — bonyeza kubadilisha';
-        toggle.setAttribute('aria-label', toggle.title);
-      }
-    }
-    function mauzoCycleTheme() {
-      const cur = mauzoGetTheme();
-      const next = MAUZO_THEME_ORDER[(MAUZO_THEME_ORDER.indexOf(cur) + 1) % MAUZO_THEME_ORDER.length];
-      try { localStorage.setItem('mauzo_theme', next); } catch (e) {}
-      mauzoApplyTheme(next);
-    }
-    document.addEventListener('DOMContentLoaded', function () { mauzoApplyTheme(mauzoGetTheme()); });
+    } catch (e) {}
   </script>
 
   @stack('scripts')

@@ -15,11 +15,13 @@
     <title>@yield('title', 'MAUZO SHEET')</title>
     <style>[x-cloak]{display:none!important}</style>
     <script>
-        // Apply saved theme before first paint (default | dark | colored)
+        // Colour mode follows the device/system setting automatically.
+        // No manual colour modes and no chooser are offered.
         try {
-            var _mt = localStorage.getItem('mauzo_theme');
-            if (_mt === 'dark' || _mt === 'colored') {
-                document.documentElement.setAttribute('data-theme', _mt);
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
             }
         } catch (e) {}
     </script>
@@ -561,9 +563,6 @@
     html[data-theme="colored"] .active-nav-item::before {
         background: #f97316;
     }
-    html[data-theme="colored"] #mauzo-theme-toggle {
-        color: #fb923c;
-    }
 </style>
     @stack('styles')
 </head>
@@ -759,12 +758,6 @@
                         </div>
                         
                         <div class="flex items-center gap-1 sm:gap-2">
-                            <!-- Theme Switcher: one icon, changes with mode (Default -> Dark -> Colored) -->
-                            <button type="button" id="mauzo-theme-toggle" onclick="mauzoCycleTheme()"
-                                    title="Badilisha muonekano" aria-label="Badilisha muonekano"
-                                    class="relative p-2 transition text-secondary hover:text-green-600 rounded-full hover:bg-gray-100">
-                                <i id="mauzo-theme-icon" class="fas fa-moon text-lg"></i>
-                            </button>
                             <!-- Package Days Remaining Indicator -->
                             <div x-data="packageRemaining()" x-init="initPackageRemaining()" class="relative">
                                 <button @click="fetchPackageInfo()" 
@@ -1317,46 +1310,27 @@ function autoNotification() {
         }
     }
 
-    // Theme switcher: one icon cycling default -> dark -> colored (applies instantly, saved per browser)
-    var MAUZO_THEME_ORDER = ['default', 'dark', 'colored'];
-    var MAUZO_THEME_ICON = { default: 'fa-sun', dark: 'fa-moon', colored: 'fa-palette' };
-    var MAUZO_THEME_LABEL = { default: 'Default', dark: 'Dark', colored: 'Colored' };
-    function mauzoGetTheme() {
+    // Colour mode follows the system setting automatically (prefers-color-scheme).
+    // No manual modes are stored and no toggle is rendered.
+    function mauzoApplySystemTheme() {
         try {
-            const t = localStorage.getItem('mauzo_theme');
-            return MAUZO_THEME_ORDER.includes(t) ? t : 'default';
-        } catch (e) {
-            return 'default';
-        }
-    }
-    function mauzoApplyTheme(t) {
-        if (t === 'default') {
-            document.documentElement.removeAttribute('data-theme');
-        } else {
-            document.documentElement.setAttribute('data-theme', t);
-        }
-        // Dynamic icon: always reflects the active color mode
-        const icon = document.getElementById('mauzo-theme-icon');
-        if (icon) {
-            icon.className = 'fas text-lg ' + (MAUZO_THEME_ICON[t] || 'fa-sun');
-        }
-        const toggle = document.getElementById('mauzo-theme-toggle');
-        if (toggle) {
-            toggle.title = 'Muonekano: ' + (MAUZO_THEME_LABEL[t] || t) + ' — bonyeza kubadilisha';
-            toggle.setAttribute('aria-label', toggle.title);
-        }
-    }
-    function mauzoCycleTheme() {
-        const cur = mauzoGetTheme();
-        const next = MAUZO_THEME_ORDER[(MAUZO_THEME_ORDER.indexOf(cur) + 1) % MAUZO_THEME_ORDER.length];
-        try {
-            localStorage.setItem('mauzo_theme', next);
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (prefersDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
         } catch (e) {}
-        mauzoApplyTheme(next);
     }
-    document.addEventListener('DOMContentLoaded', function () {
-        mauzoApplyTheme(mauzoGetTheme());
-    });
+    mauzoApplySystemTheme();
+    try {
+        var _themeMql = window.matchMedia('(prefers-color-scheme: dark)');
+        if (_themeMql.addEventListener) {
+            _themeMql.addEventListener('change', mauzoApplySystemTheme);
+        } else if (_themeMql.addListener) {
+            _themeMql.addListener(mauzoApplySystemTheme);
+        }
+    } catch (e) {}
 
     // Barcode scanners type the code and finish with Enter. If that Enter lands
     // on a barcode field inside a form (Add/Edit Bidhaa, etc.) the browser would
