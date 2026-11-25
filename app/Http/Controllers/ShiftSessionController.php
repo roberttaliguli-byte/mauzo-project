@@ -467,13 +467,10 @@ class ShiftSessionController extends Controller
 
         if (!empty($products)) {
             $lines[] = '--------------------------';
-            $lines[] = 'BIDHAA ZILIZOUZWA:';
-            foreach (array_slice($products, 0, 8) as $product) {
+            $lines[] = 'BIDHAA ZILIZOUZWA (' . count($products) . '):';
+            foreach ($products as $product) {
                 $lines[] = '- ' . $product['jina'] . ': ' . number_format($product['idadi'], 0)
                     . ' x Tsh ' . number_format($product['kiasi'], 0);
-            }
-            if (count($products) > 8) {
-                $lines[] = '... na bidhaa ' . (count($products) - 8) . ' zaidi';
             }
         }
 

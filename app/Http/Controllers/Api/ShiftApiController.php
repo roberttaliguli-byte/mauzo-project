@@ -386,8 +386,8 @@ class ShiftApiController extends Controller
         }
         if (!empty($summary['products'])) {
             $lines[] = '--------------------------';
-            $lines[] = 'BIDHAA ZILIZOUZWA:';
-            foreach (array_slice($summary['products'], 0, 8) as $p) {
+            $lines[] = 'BIDHAA ZILIZOUZWA (' . count($summary['products']) . '):';
+            foreach ($summary['products'] as $p) {
                 $lines[] = '- ' . $p['jina'] . ': ' . number_format($p['idadi'], 0)
                     . ' x Tsh ' . number_format($p['kiasi'], 0);
             }
